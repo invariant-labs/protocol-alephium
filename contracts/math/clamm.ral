@@ -53,7 +53,34 @@ Contract CLAMM() extends Decimal(){
     }
     // pub fn get_next_sqrt_price_from_input() {}
     // pub fn get_next_sqrt_price_from_output() {}
-    // pub fn get_next_sqrt_price_x_up() {}
+    pub fn getNextSqrtPriceXUp(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        x: U256,
+        addX: Bool
+    ) -> U256 {
+        if (x == 0) {
+            return startingSqrtPrice
+        }
+
+        let liquidityScale = getLiquidityScale()
+        let sqrtPriceScale = getSqrtPriceScale()
+        let tokenAmountScale = getTokenAmountScale()
+
+        let deltaSqrtPrice = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+
+        let mut denominator = 1
+        if (addX == true) {
+            denominator = deltaSqrtPrice + mulToValue(startingSqrtPrice, x, tokenAmountScale) 
+        } else {
+            denominator = deltaSqrtPrice - mulToValue(startingSqrtPrice, x, tokenAmountScale)
+        }
+
+        return divValuesToTokenUp(
+            mulToValueUp(startingSqrtPrice, liquidity, liquidityScale),
+            denominator
+        )
+    }
     // pub fn get_next_sqrt_price_y_down() {}
     // pub fn calculate_amount_delta() {}
     // pub fn is_enough_amount_to_change_price() {}

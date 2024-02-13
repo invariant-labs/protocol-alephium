@@ -93,7 +93,11 @@ export namespace CLAMMTypes {
       result: CallContractResult<bigint>;
     };
     fromDecimalToValue: {
-      params: CallContractParams<{ l: bigint; lScale: bigint; rScale: bigint }>;
+      params: CallContractParams<{
+        from: bigint;
+        fromScale: bigint;
+        expectedScale: bigint;
+      }>;
       result: CallContractResult<bigint>;
     };
     divValuesUp: {
@@ -131,6 +135,15 @@ export namespace CLAMMTypes {
         sqrtPriceB: bigint;
         liquidity: bigint;
         roundingUp: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceXUp: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        x: bigint;
+        addX: boolean;
       }>;
       result: CallContractResult<bigint>;
     };
@@ -315,7 +328,7 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
       params: Omit<
         TestContractParams<
           never,
-          { l: bigint; lScale: bigint; rScale: bigint }
+          { from: bigint; fromScale: bigint; expectedScale: bigint }
         >,
         "initialFields"
       >
@@ -394,6 +407,22 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getDeltaY", params);
     },
+    getNextSqrtPriceXUp: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            startingSqrtPrice: bigint;
+            liquidity: bigint;
+            x: bigint;
+            addX: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceXUp", params);
+    },
   };
 }
 
@@ -402,7 +431,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "1ac23db42c2a98b49292954dd79de1eac93c497ff6b238f7487bdfa39d1d313a"
+    "727cfbb13ece2e81066a851c82b547af7fafa62ef1d690a8c2690779841948cb"
   )
 );
 
@@ -654,6 +683,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "getDeltaY",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceXUp: async (
+      params: CLAMMTypes.CallMethodParams<"getNextSqrtPriceXUp">
+    ): Promise<CLAMMTypes.CallMethodResult<"getNextSqrtPriceXUp">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getNextSqrtPriceXUp",
         params,
         getContractByCodeHash
       );

@@ -20,7 +20,7 @@ Abstract Contract Decimal() {
     }
 
     pub fn getTokenAmountScale() -> U256 {
-        return 1
+        return 0
     }
 
     pub fn getMaxTick() -> U256 {
@@ -53,16 +53,16 @@ Abstract Contract Decimal() {
     pub fn divValuesToTokenUp(l: U256, r: U256) -> U256 {
         return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())
     }   
+
     // SqrtPrice related
     pub fn divValuesToToken(l: U256, r: U256) -> U256 {
         return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
     }   
-    pub fn fromDecimalToValue(l: U256, lScale: U256, rScale: U256) -> U256 {
-        if (lScale > rScale) {
-            return l * (10 ** (lScale - rScale))
+    pub fn fromDecimalToValue(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
+        if (expectedScale > fromScale) {
+            return from * (10 ** (expectedScale - fromScale))
         } else {
-            let denominator = 10 ** (rScale - lScale)
-            return l / denominator
+            return from / 10 ** (fromScale - expectedScale)
         }
     }   
     // SqrtPrice related
