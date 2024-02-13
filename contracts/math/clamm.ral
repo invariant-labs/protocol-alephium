@@ -223,5 +223,11 @@ Contract CLAMM() extends Decimal(){
     //     // assert!(tickIndex > maxTick, "InvalidTickIndex")
     //     // assert!(tickIndex < minTick, "InvalidTickIndex")
     // }
-    // pub fn calculate_min_amount_out() {}
+    pub fn calculateMinAmountOut(
+        expectedAmountOut: U256,
+        slippage: U256
+    ) -> U256 {
+        let percentageScale = getPercentageScale()
+        return mulUp(expectedAmountOut, (one(percentageScale) - slippage), percentageScale)
+    }
 }

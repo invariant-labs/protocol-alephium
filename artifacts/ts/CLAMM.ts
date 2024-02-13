@@ -88,6 +88,10 @@ export namespace CLAMMTypes {
       params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
       result: CallContractResult<bigint>;
     };
+    mulUp: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     mulToValueUp: {
       params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
       result: CallContractResult<bigint>;
@@ -118,10 +122,6 @@ export namespace CLAMMTypes {
     };
     divValues: {
       params: CallContractParams<{ l: bigint; r: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    mulUp: {
-      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
       result: CallContractResult<bigint>;
     };
     almostOne: {
@@ -226,6 +226,13 @@ export namespace CLAMMTypes {
     };
     calculateMaxLiquidityPerTick: {
       params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    calcualteMinAmountOut: {
+      params: CallContractParams<{
+        expectedAmountOut: bigint;
+        slippage: bigint;
+      }>;
       result: CallContractResult<bigint>;
     };
   }
@@ -405,6 +412,14 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "mul", params);
     },
+    mulUp: async (
+      params: Omit<
+        TestContractParams<never, { l: bigint; r: bigint; rScale: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mulUp", params);
+    },
     mulToValueUp: async (
       params: Omit<
         TestContractParams<never, { l: bigint; r: bigint; rScale: bigint }>,
@@ -463,14 +478,6 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
       >
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "divValues", params);
-    },
-    mulUp: async (
-      params: Omit<
-        TestContractParams<never, { l: bigint; r: bigint; rScale: bigint }>,
-        "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "mulUp", params);
     },
     almostOne: async (
       params: Omit<
@@ -655,6 +662,17 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateMaxLiquidityPerTick", params);
     },
+    calcualteMinAmountOut: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          { expectedAmountOut: bigint; slippage: bigint }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calcualteMinAmountOut", params);
+    },
   };
 }
 
@@ -663,7 +681,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "d7fb3c2248a2af3824f123e3febcf34b0565f0451d02e699478b9aaa893a4fb6"
+    "32027a531e7a5adc004ffba3c346e8c8fc1549edf49c3ed3925d64f1ac56b263"
   )
 );
 
@@ -826,6 +844,11 @@ export class CLAMMInstance extends ContractInstance {
     ): Promise<CLAMMTypes.CallMethodResult<"mul">> => {
       return callMethod(CLAMM, this, "mul", params, getContractByCodeHash);
     },
+    mulUp: async (
+      params: CLAMMTypes.CallMethodParams<"mulUp">
+    ): Promise<CLAMMTypes.CallMethodResult<"mulUp">> => {
+      return callMethod(CLAMM, this, "mulUp", params, getContractByCodeHash);
+    },
     mulToValueUp: async (
       params: CLAMMTypes.CallMethodParams<"mulToValueUp">
     ): Promise<CLAMMTypes.CallMethodResult<"mulToValueUp">> => {
@@ -902,11 +925,6 @@ export class CLAMMInstance extends ContractInstance {
         params,
         getContractByCodeHash
       );
-    },
-    mulUp: async (
-      params: CLAMMTypes.CallMethodParams<"mulUp">
-    ): Promise<CLAMMTypes.CallMethodResult<"mulUp">> => {
-      return callMethod(CLAMM, this, "mulUp", params, getContractByCodeHash);
     },
     almostOne: async (
       params: CLAMMTypes.CallMethodParams<"almostOne">
@@ -1052,6 +1070,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "calculateMaxLiquidityPerTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calcualteMinAmountOut: async (
+      params: CLAMMTypes.CallMethodParams<"calcualteMinAmountOut">
+    ): Promise<CLAMMTypes.CallMethodResult<"calcualteMinAmountOut">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "calcualteMinAmountOut",
         params,
         getContractByCodeHash
       );
