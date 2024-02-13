@@ -1,0 +1,48 @@
+{
+  "fullNodeVersion": "v2.8.2",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": false,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "CLAMM": {
+      "sourceFile": "math/clamm.ral",
+      "sourceCodeHash": "eb4b68715db12461a59db7776ce1f1e67793d279623520b6fa18de26ad24e971",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "d5b2362a54fe34b0c9c34552d812d86a5907086b9d04551fdf3fd89e4258951d",
+      "warnings": []
+    },
+    "Decimal": {
+      "sourceFile": "math/decimal.ral",
+      "sourceCodeHash": "3efc698e774513b68658589758fb2b67e6e6b1973bb3b822c3754164a2af0b80",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "IFungibleToken": {
+      "sourceFile": "../node_modules/@alephium/web3/std/fungible_token_interface.ral",
+      "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "TokenFaucet": {
+      "sourceFile": "token.ral",
+      "sourceCodeHash": "3a12c7604f3899bde03ab81e81eac394a53e723c6e99bc38aeb722689826759f",
+      "bytecodeDebugPatch": "=20-2+67=101+3a0007e02=1+75468652063757272656e742062616c616e63652069732000=46",
+      "codeHashDebug": "a3309aa3a0dbd0c53b67a0c422316dcbc0571d8fa5f9ea2ab374b5c110f4efe2",
+      "warnings": []
+    },
+    "Withdraw": {
+      "sourceFile": "withdraw.ral",
+      "sourceCodeHash": "52423580f02f5aab7050bfb9a14b497ea4bdcb10b3444483650f3dad8e0e5330",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    }
+  }
+}

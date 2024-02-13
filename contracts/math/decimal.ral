@@ -1,0 +1,86 @@
+Abstract Contract Decimal() {
+    pub fn getSqrtPriceScale() -> U256 {
+        return 24
+    }
+
+    pub fn getLiquidityScale() -> U256 {
+        return 6
+    }
+
+    pub fn getFeeGrowthScale() -> U256 {
+        return 28
+    }
+
+    pub fn getFixedPointScale() -> U256 {
+        return 12
+    }
+
+    pub fn getPercentageScale() -> U256 {
+        return 12
+    }
+
+    pub fn getTokenAmountScale() -> U256 {
+        return 1
+    }
+
+    pub fn getMaxTick() -> U256 {
+        return 221818
+    }
+
+    pub fn getMinTick() -> I256 {
+        return -221818
+    }
+
+    pub fn getMaxSqrtPrice() -> U256 {
+        return 65535383934512647000000000000
+    }
+
+    pub fn getMinSqrtPrice() -> U256 {
+        return 15258932000000000000
+    }
+
+    pub fn getTickSearchRange() -> U256 {
+        return 256
+    }
+
+    pub fn mulToValueUp(l: U256, r: U256, rScale: U256) -> U256 {
+        return (l * r + almostOne(rScale)) / one(rScale)
+    }   
+    pub fn mulToValue(l: U256, r: U256, rScale: U256) -> U256 {
+        return (l * r) / one(rScale)
+    }   
+    // SqrtPrice related
+    pub fn divValuesToTokenUp(l: U256, r: U256) -> U256 {
+        return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())
+    }   
+    // SqrtPrice related
+    pub fn divValuesToToken(l: U256, r: U256) -> U256 {
+        return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
+    }   
+    pub fn fromDecimalToValue(l: U256, lScale: U256, rScale: U256) -> U256 {
+        if (lScale > rScale) {
+            return l * (10 ** (lScale - rScale))
+        } else {
+            let denominator = 10 ** (rScale - lScale)
+            return l / denominator
+        }
+    }   
+    // SqrtPrice related
+    pub fn divValuesUp(l: U256, r: U256) -> U256 {
+        return l * one(getSqrtPriceScale()) + (r - 1) / r
+    }   
+    pub fn divValues(l: U256, r: U256) -> U256 {
+        return l * one(getSqrtPriceScale()) / r
+    }   
+    pub fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
+        return (l * r + almostOne(rScale)) / one(rScale)
+    }
+
+    pub fn almostOne(scale: U256) -> U256 {
+        return 10 ** scale - 1
+    }
+
+    pub fn one(scale: U256) -> U256 {
+        return 10 ** scale
+    }
+}

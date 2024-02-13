@@ -1,37 +1,41 @@
-pub fn compute_swap_step() {}
-pub fn get_delta_x(
-    sqrt_price_a: U256,
-    sqt_price_b: U256,
-    liquidity: U256,
-    rounding_up: bool,
-) -> U256 {
-    let delta_price: U256 = if sqrt_price_a > sqrt_price_b {
-        sqrt_price_a - sqrt_price_b
-    } else {
-        sqrt_price_b - sqrt_price_a
-    };
-    match rounding_up {
-        // true => {
-        //     let delta_price = delta_price + U256::from(1);
-        //     let numerator = delta_price * liquidity;
-        //     let denominator = sqrt_price_a + sqrt_price_b;
-        //     numerator / denominator
-        // }
-        // false => {
-        //     let numerator = delta_price * liquidity;
-        //     let denominator = sqrt_price_a + sqrt_price_b;
-        //     numerator / denominator
-        // }
+Contract CLAMM() extends Decimal(){ 
+    // pub fn compute_swap_step() {}
+    pub fn getDeltaX(
+        sqrtPriceA: U256,
+        sqrtPriceB: U256,
+        liquidity: U256,
+        roundingUp: Bool
+    ) -> U256 {
+        let mut deltaPrice = 0u
+        if (sqrtPriceA > sqrtPriceB) {
+            deltaPrice = sqrtPriceA - sqrtPriceB
+        } else {
+            deltaPrice = sqrtPriceB - sqrtPriceA
+        }
+        let sqrtPriceScale = getSqrtPriceScale()
+        let liquidityScale = getLiquidityScale()
+        let nominator = mulToValue(deltaPrice, liquidity, liquidityScale)
+        if (roundingUp == true) {
+            return divValuesToTokenUp(
+                    nominator,
+                    mulToValue(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                )
+        } else {
+            return divValuesToToken(
+                nominator,
+                mulToValueUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+            )
+        }
     }
+    // pub fn get_delta_y() {}
+    // pub fn get_next_sqrt_price_from_input() {}
+    // pub fn get_next_sqrt_price_from_output() {}
+    // pub fn get_next_sqrt_price_x_up() {}
+    // pub fn get_next_sqrt_price_y_down() {}
+    // pub fn calculate_amount_delta() {}
+    // pub fn is_enough_amount_to_change_price() {}
+    // pub fn calculate_max_liquidity_per_tick() {}
+    // pub fn check_ticks() {}
+    // pub fn check_tick() {}
+    // pub fn calculate_min_amount_out() {}
 }
-pub fn get_delta_y() {}
-pub fn get_next_sqrt_price_from_input() {}
-pub fn get_next_sqrt_price_from_output() {}
-pub fn get_next_sqrt_price_x_up() {}
-pub fn get_next_sqrt_price_y_down() {}
-pub fn calculate_amount_delta() {}
-pub fn is_enough_amount_to_change_price() {}
-pub fn calculate_max_liquidity_per_tick() {}
-pub fn check_ticks() {}
-pub fn check_tick() {}
-pub fn calculate_min_amount_out() {}
