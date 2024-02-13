@@ -11,14 +11,14 @@
   "infos": {
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
-      "sourceCodeHash": "8fff22efa356306f91a5018d1b87efb2f08bc2921ff74f2826f3551b5d767e60",
+      "sourceCodeHash": "b9d5459b2b0f348ce4a88ad20361a7934bec0c280f5311ae65428885f745fd46",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "a80e2a67ccfc86714fd5e5ece87828abea08b9adedde7d6d983327fe0137cddf",
+      "codeHashDebug": "a297f8d6441b8b200f061c17995e8b5685b73109307e01222b2ad1e868d725b4",
       "warnings": []
     },
     "Decimal": {
       "sourceFile": "math/decimal.ral",
-      "sourceCodeHash": "9e115e24e157ddb8e24ced0ed9527fc5991b1e935c15c0f7e1b22273b8d4f800",
+      "sourceCodeHash": "8bc1f6cf824563f651235979150f576acd815c8ce452884a82b56bad6fe0c27d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -28,6 +28,13 @@
       "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
+      "warnings": []
+    },
+    "Log": {
+      "sourceFile": "math/log.ral",
+      "sourceCodeHash": "62b6485a6255489f6fd30b6cc377807040390e854c946cdd9f95337258d7bc5e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "a164dca8515c4547a97a50d7b8fe21bff48d38276ed799f0a38df5c28ca3e289",
       "warnings": []
     },
     "TokenFaucet": {

@@ -1,0 +1,145 @@
+Contract Log() {
+    pub fn getLog2Scale() -> U256 {
+        return 32
+    }
+    pub fn getLog2DoubleScale() -> U256 {
+        return 64
+    }
+    pub fn getLog2One() -> U256 {
+        return 1 << getLog2Scale()
+    }
+    pub fn getLog2Half() -> U256 {
+        return getLog2One() >> 1
+    }
+    pub fn getLog2Two() -> U256 {
+        return getLog2One() << 1
+    }
+    pub fn getLog2DoubleOne() -> U256 {
+        return 1 << getLog2DoubleScale()
+    }
+    pub fn getLog2Sqrt10001() -> U256 {
+        return 309801
+    }
+    pub fn getLog2NegativeMaxLose() -> U256 {
+        return 300000
+    }
+    pub fn getLog2MinBinaryPosition() -> U256 {
+        return 15
+    }
+    pub fn getLog2Accuracy() -> U256 {
+        return 1 << (31 - getLog2MinBinaryPosition())
+    }
+    pub fn getSqrtPriceDenominator() -> U256 {
+        return 1000000000000000000000000
+    }
+    pub fn sqrtPriceToX32(val: U256) -> U256 {
+        return val * getLog2One() / getSqrtPriceDenominator()
+    }
+    // TODO: integrate with CLAMM functions
+    pub fn getMaxSqrtPrice() -> U256 {
+        return 65535383934512647000000000000
+    }
+
+    pub fn getMinSqrtPrice() -> U256 {
+        return 15258932000000000000
+    }
+
+    pub fn log2FloorX32(mut sqrtPrice: U256) -> U256 {
+        let mut msb = 0
+
+        if (sqrtPrice >= 1 << 32) {
+            sqrtPrice = sqrtPrice >> 32
+            msb = msb | 32
+        }
+        if (sqrtPrice >= 1 << 16) {
+            sqrtPrice = sqrtPrice >> 16
+            msb = msb | 16
+        }
+        if (sqrtPrice >= 1 << 8) {
+            sqrtPrice = sqrtPrice >> 8
+            msb = msb | 8
+        }
+        if (sqrtPrice >= 1 << 4) {
+            sqrtPrice = sqrtPrice >> 4
+            msb = msb | 4
+        }
+        if (sqrtPrice >= 1 << 2) {
+            sqrtPrice = sqrtPrice >> 2
+            msb = msb | 2
+        }
+        if (sqrtPrice >= 1 << 1) {
+            msb = msb | 1
+        }
+    
+        return msb
+    }
+
+    // pub fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+    //     if (accurateTick > 0) {
+    //         return accurateTick - (accurateTick % tickSpacing)
+    //     } else {
+    //         // TODO: Add Euclid division algorithm
+    //         return accurateTick - (accurateTick % tickSpacing)
+    //     }
+    // }
+
+    // pub fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
+    //     let mut sign = true
+    //     if (sqrtPrice < getLog2One()) {
+    //         sign = false
+    //         sqrtPrice = (getLog2DoubleOne() / (sqrtPrice + 1))
+    //     }
+    //     let log2Floor = log2FloorX32(sqrtPrice >> getLog2Scale())
+    //     let mut result = log2Floor << getLog2Scale()
+    //     let mut y = (sqrtPrice) >> log2Floor
+
+    //     if (y == getLog2One()) {
+    //         return sign, result
+    //     }
+    //     let mut delta = getLog2Half()
+    //     while (delta > getLog2Accuracy()) {
+    //         y = y * y / getLog2One()
+    //         if (y >= getLog2Two()) {
+    //             result = result | delta
+    //             y = y >> 1
+    //         }
+    //         delta = delta >> 1
+    //     }
+    //     return sign, result
+    // }
+
+    // pub fn getTickAtSqrtPrice(sqrtPrice: U256, tickSpacing: U256) -> I256 {
+    //     // TODO add error enum
+    //     // assert!(sqrtPrice <= getMaxSqrtPrice() && sqrtPrice >= getMinSqrtPrice(), "sqrt price out of range")
+    //     let sqrtPricex32 = sqrtPriceToX32(sqrtPrice)
+
+    //     let (log2Sign, log2SqrtPrice) = log2IterativeApproximationX32(sqrtPriceX32)
+
+    //     let mut absFloorTick = 0
+    //     let mut nearerTick = 0
+    //     let mut fartherTick = 0
+    //     // if (log2Sign) {
+    //     //     absFloorTick = log2SqrtPrice / getLog2Sqrt10001()
+    //     //     nearerTick = absFloorTick
+    //     //     fartherTick = absFloorTick + 1
+    //     // } else {
+    //     //     absFloorTick = (log2SqrtPrice + getLog2NegativeMaxLose()) / getLog2Sqrt10001()
+    //     //     nearerTick = -absFloorTick
+    //     //     fartherTick = -absFloorTick - 1
+    //     // }
+
+    //     let nearerTickWithSpacing = allignTickToSpacing(nearerTick, tickSpacing)
+    //     let fartherTickWithSpacing = allignTickToSpacing(fartherTick, tickSpacing)
+    //     // TODO: Add algorithm and merge Log with CLAMM
+    //     // if (fartherTickWithSpacing == nearerTickWithSpacing) {
+    //     //     return nearerTickWithSpacing
+    //     // }
+    //     // return nearerTickWithSpacing
+
+
+    //     // let mut accurateTick = 0;
+    //     // if (log2Sign) {
+    //     //     let fartherTickSqrtPriceDecimal = 
+    //     // }
+    // }
+}

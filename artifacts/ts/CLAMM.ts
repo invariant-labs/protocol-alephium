@@ -148,7 +148,7 @@ export namespace CLAMMTypes {
       params: CallContractParams<{ tickIndex: bigint }>;
       result: CallContractResult<bigint>;
     };
-    compute_swap_step: {
+    computeSwapStep: {
       params: CallContractParams<{
         currentSqrtPrice: bigint;
         targetSqrtPrice: bigint;
@@ -533,7 +533,7 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateSqrtPrice", params);
     },
-    compute_swap_step: async (
+    computeSwapStep: async (
       params: Omit<
         TestContractParams<
           never,
@@ -549,7 +549,7 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
         "initialFields"
       >
     ): Promise<TestContractResult<[bigint, bigint, bigint, bigint]>> => {
-      return testMethod(this, "compute_swap_step", params);
+      return testMethod(this, "computeSwapStep", params);
     },
     getDeltaX: async (
       params: Omit<
@@ -710,7 +710,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "a80e2a67ccfc86714fd5e5ece87828abea08b9adedde7d6d983327fe0137cddf"
+    "a297f8d6441b8b200f061c17995e8b5685b73109307e01222b2ad1e868d725b4"
   )
 );
 
@@ -1004,13 +1004,13 @@ export class CLAMMInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
-    compute_swap_step: async (
-      params: CLAMMTypes.CallMethodParams<"compute_swap_step">
-    ): Promise<CLAMMTypes.CallMethodResult<"compute_swap_step">> => {
+    computeSwapStep: async (
+      params: CLAMMTypes.CallMethodParams<"computeSwapStep">
+    ): Promise<CLAMMTypes.CallMethodResult<"computeSwapStep">> => {
       return callMethod(
         CLAMM,
         this,
-        "compute_swap_step",
+        "computeSwapStep",
         params,
         getContractByCodeHash
       );

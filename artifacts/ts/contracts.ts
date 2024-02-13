@@ -3,12 +3,12 @@
 /* eslint-disable */
 
 import { Contract, ContractFactory } from "@alephium/web3";
-import { CLAMM, TokenFaucet } from ".";
+import { CLAMM, Log, TokenFaucet } from ".";
 
 let contracts: ContractFactory<any>[] | undefined = undefined;
 export function getContractByCodeHash(codeHash: string): Contract {
   if (contracts === undefined) {
-    contracts = [CLAMM, TokenFaucet];
+    contracts = [CLAMM, Log, TokenFaucet];
   }
   const c = contracts.find(
     (c) =>

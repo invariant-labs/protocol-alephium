@@ -1,4 +1,4 @@
-Contract CLAMM() extends Decimal() { 
+Contract CLAMM() extends Decimal(){ 
     pub fn computeSwapStep(
         currentSqrtPrice: U256,
         targetSqrtPrice: U256,
