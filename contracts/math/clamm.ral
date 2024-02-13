@@ -173,30 +173,30 @@ Contract CLAMM() extends Decimal(){
 
         return amountX, amountY, updateLiquidity
     }
-    
-    // pub fn isEnoughToChangePrice(
-    //     amount: U256,
-    //     startingSqrtPrice: U256,
-    //     liquidity: U256,
-    //     fee: U256,
-    //     byAmountIn: Bool,
-    //     xToY: Bool
-    // ) -> Bool {
-    //     if (liquidity == 0) {
-    //         return true
-    //     }
 
-    //     // let percentageScale = getPercentageScale()
+    pub fn isEnoughToChangePrice(
+        amount: U256,
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        fee: U256,
+        byAmountIn: Bool,
+        xToY: Bool
+    ) -> Bool {
+        if (liquidity == 0) {
+            return true
+        }
 
-    //     // let mut nextSqrtPrice = 0
-    //     // if (byAmountIn == true) {
-    //     //     let amountAfterFee = mul(amount, (one(percentageScale) - fee))
-    //     //     // return getNextSqrtPriceFromInput()
-    //     // } else {
-    //     //     // return getNextSqrtPriceFromOutput()
-    //     // }
-    //     return true
-    // }
+        let percentageScale = getPercentageScale()
+        let mut nextSqrtPrice = 0
+        if (byAmountIn == true) {
+            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+            nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
+        } else {
+            nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
+        }
+
+        return startingSqrtPrice != nextSqrtPrice
+    }
     // pub fn calculate_max_liquidity_per_tick() {}
     // pub fn check_ticks() {}
     // pub fn check_tick() {}

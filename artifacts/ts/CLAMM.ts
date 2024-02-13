@@ -205,6 +205,17 @@ export namespace CLAMMTypes {
       }>;
       result: CallContractResult<[bigint, bigint, boolean]>;
     };
+    isEnoughToChangePrice: {
+      params: CallContractParams<{
+        amount: bigint;
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        fee: bigint;
+        byAmountIn: boolean;
+        xToY: boolean;
+      }>;
+      result: CallContractResult<boolean>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -582,6 +593,24 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<[bigint, bigint, boolean]>> => {
       return testMethod(this, "calculateAmountDelta", params);
     },
+    isEnoughToChangePrice: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            amount: bigint;
+            startingSqrtPrice: bigint;
+            liquidity: bigint;
+            fee: bigint;
+            byAmountIn: boolean;
+            xToY: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "isEnoughToChangePrice", params);
+    },
   };
 }
 
@@ -590,7 +619,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "14524cf0132fd1e97ab4a355e0e0c73dfa2f20b0ae94e73959a1e849bed0a687"
+    "3052e5b282dc3c9c1a112f195ec77d5b4d316e85a6df5ed3434156c18612ae09"
   )
 );
 
@@ -935,6 +964,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "calculateAmountDelta",
+        params,
+        getContractByCodeHash
+      );
+    },
+    isEnoughToChangePrice: async (
+      params: CLAMMTypes.CallMethodParams<"isEnoughToChangePrice">
+    ): Promise<CLAMMTypes.CallMethodResult<"isEnoughToChangePrice">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "isEnoughToChangePrice",
         params,
         getContractByCodeHash
       );
