@@ -23,12 +23,21 @@ Abstract Contract Decimal() {
         return 0
     }
 
-    pub fn getMaxTick() -> U256 {
+    pub fn getGlobalMaxTick() -> U256 {
         return 221818
     }
 
-    pub fn getMinTick() -> I256 {
+    pub fn getMaxTick(tickSpacing: U256) -> U256 {
+        return getGlobalMaxTick() / tickSpacing * tickSpacing
+    }
+
+    pub fn getGlobalMinTick() -> I256 {
         return -221818
+    }
+
+    pub fn getMinTick(tickSpacing: U256) -> I256 {
+        let convertedTickSpacing = toI256!(tickSpacing)
+        return getGlobalMinTick() / convertedTickSpacing * convertedTickSpacing
     }
 
     pub fn getMaxSqrtPrice() -> U256 {

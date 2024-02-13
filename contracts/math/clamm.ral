@@ -197,8 +197,31 @@ Contract CLAMM() extends Decimal(){
 
         return startingSqrtPrice != nextSqrtPrice
     }
-    // pub fn calculate_max_liquidity_per_tick() {}
-    // pub fn check_ticks() {}
-    // pub fn check_tick() {}
+
+    pub fn calculateMaxLiquidityPerTick(
+        tickSpacing: U256
+    ) -> U256 {
+        let maxTicksAmountSqrtPriceLimited = 2 * getGlobalMaxTick() + 1
+        let ticsAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
+        let maxLiquidity = u256Max!() / ticsAmountSpacingLimited
+        return maxLiquidity
+    }
+
+    // TODO: Add error enums
+    // pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
+    //     // TODO: add error enum
+    //     // assert!(tickLower > tickUpper, "tickLower is not greater than tickUpper")
+    //     checkTick(tickLower, tickSpacing)
+    //     checkTick(tickUpper, tickSpacing)
+    // }
+
+    // pub fn checkTick(tickIndex: I256, tickSpacing: U256) -> () {
+    //     let minTick = getMinTick(tickSpacing)
+    //     let maxTick = getMaxTick(tickSpacing)
+    //     // TODO: add error enum
+    //     // assert!(tickIndex % tickSpacing == 0, "InvalidTickSpacing")
+    //     // assert!(tickIndex > maxTick, "InvalidTickIndex")
+    //     // assert!(tickIndex < minTick, "InvalidTickIndex")
+    // }
     // pub fn calculate_min_amount_out() {}
 }

@@ -56,12 +56,20 @@ export namespace CLAMMTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    getGlobalMaxTick: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
     getMaxTick: {
+      params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    getGlobalMinTick: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
     getMinTick: {
-      params: Omit<CallContractParams<{}>, "args">;
+      params: CallContractParams<{ tickSpacing: bigint }>;
       result: CallContractResult<bigint>;
     };
     getMaxSqrtPrice: {
@@ -216,6 +224,10 @@ export namespace CLAMMTypes {
       }>;
       result: CallContractResult<boolean>;
     };
+    calculateMaxLiquidityPerTick: {
+      params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -309,21 +321,45 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
         params === undefined ? {} : params
       );
     },
-    getMaxTick: async (
+    getGlobalMaxTick: async (
       params?: Omit<
         TestContractParams<never, never>,
         "testArgs" | "initialFields"
       >
     ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getMaxTick", params === undefined ? {} : params);
+      return testMethod(
+        this,
+        "getGlobalMaxTick",
+        params === undefined ? {} : params
+      );
+    },
+    getMaxTick: async (
+      params: Omit<
+        TestContractParams<never, { tickSpacing: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getMaxTick", params);
+    },
+    getGlobalMinTick: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getGlobalMinTick",
+        params === undefined ? {} : params
+      );
     },
     getMinTick: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
+      params: Omit<
+        TestContractParams<never, { tickSpacing: bigint }>,
+        "initialFields"
       >
     ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getMinTick", params === undefined ? {} : params);
+      return testMethod(this, "getMinTick", params);
     },
     getMaxSqrtPrice: async (
       params?: Omit<
@@ -611,6 +647,14 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<boolean>> => {
       return testMethod(this, "isEnoughToChangePrice", params);
     },
+    calculateMaxLiquidityPerTick: async (
+      params: Omit<
+        TestContractParams<never, { tickSpacing: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calculateMaxLiquidityPerTick", params);
+    },
   };
 }
 
@@ -619,7 +663,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "3052e5b282dc3c9c1a112f195ec77d5b4d316e85a6df5ed3434156c18612ae09"
+    "d7fb3c2248a2af3824f123e3febcf34b0565f0451d02e699478b9aaa893a4fb6"
   )
 );
 
@@ -700,25 +744,47 @@ export class CLAMMInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
+    getGlobalMaxTick: async (
+      params?: CLAMMTypes.CallMethodParams<"getGlobalMaxTick">
+    ): Promise<CLAMMTypes.CallMethodResult<"getGlobalMaxTick">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getGlobalMaxTick",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
     getMaxTick: async (
-      params?: CLAMMTypes.CallMethodParams<"getMaxTick">
+      params: CLAMMTypes.CallMethodParams<"getMaxTick">
     ): Promise<CLAMMTypes.CallMethodResult<"getMaxTick">> => {
       return callMethod(
         CLAMM,
         this,
         "getMaxTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getGlobalMinTick: async (
+      params?: CLAMMTypes.CallMethodParams<"getGlobalMinTick">
+    ): Promise<CLAMMTypes.CallMethodResult<"getGlobalMinTick">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getGlobalMinTick",
         params === undefined ? {} : params,
         getContractByCodeHash
       );
     },
     getMinTick: async (
-      params?: CLAMMTypes.CallMethodParams<"getMinTick">
+      params: CLAMMTypes.CallMethodParams<"getMinTick">
     ): Promise<CLAMMTypes.CallMethodResult<"getMinTick">> => {
       return callMethod(
         CLAMM,
         this,
         "getMinTick",
-        params === undefined ? {} : params,
+        params,
         getContractByCodeHash
       );
     },
@@ -975,6 +1041,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "isEnoughToChangePrice",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateMaxLiquidityPerTick: async (
+      params: CLAMMTypes.CallMethodParams<"calculateMaxLiquidityPerTick">
+    ): Promise<CLAMMTypes.CallMethodResult<"calculateMaxLiquidityPerTick">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "calculateMaxLiquidityPerTick",
         params,
         getContractByCodeHash
       );
