@@ -120,6 +120,22 @@ export namespace CLAMMTypes {
       params: CallContractParams<{ scale: bigint }>;
       result: CallContractResult<bigint>;
     };
+    fromDecimal: {
+      params: CallContractParams<{
+        from: bigint;
+        fromScale: bigint;
+        expectedScale: bigint;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    sqrtPriceFromTick: {
+      params: CallContractParams<{ tickIndex: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    calculateSqrtPrice: {
+      params: CallContractParams<{ tickIndex: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     getDeltaX: {
       params: CallContractParams<{
         sqrtPriceA: bigint;
@@ -146,6 +162,26 @@ export namespace CLAMMTypes {
         addX: boolean;
       }>;
       result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceYDown: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        y: bigint;
+        addY: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    calculateAmountDelta: {
+      params: CallContractParams<{
+        currentTickIndex: bigint;
+        currentSqrtPrice: bigint;
+        liquidityDelta: bigint;
+        liquiditySign: boolean;
+        upperTick: bigint;
+        lowerTick: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint, boolean]>;
     };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
@@ -375,6 +411,33 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "one", params);
     },
+    fromDecimal: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          { from: bigint; fromScale: bigint; expectedScale: bigint }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "fromDecimal", params);
+    },
+    sqrtPriceFromTick: async (
+      params: Omit<
+        TestContractParams<never, { tickIndex: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "sqrtPriceFromTick", params);
+    },
+    calculateSqrtPrice: async (
+      params: Omit<
+        TestContractParams<never, { tickIndex: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calculateSqrtPrice", params);
+    },
     getDeltaX: async (
       params: Omit<
         TestContractParams<
@@ -423,6 +486,40 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getNextSqrtPriceXUp", params);
     },
+    getNextSqrtPriceYDown: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            startingSqrtPrice: bigint;
+            liquidity: bigint;
+            y: bigint;
+            addY: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceYDown", params);
+    },
+    calculateAmountDelta: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            currentTickIndex: bigint;
+            currentSqrtPrice: bigint;
+            liquidityDelta: bigint;
+            liquiditySign: boolean;
+            upperTick: bigint;
+            lowerTick: bigint;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<[bigint, bigint, boolean]>> => {
+      return testMethod(this, "calculateAmountDelta", params);
+    },
   };
 }
 
@@ -431,7 +528,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "727cfbb13ece2e81066a851c82b547af7fafa62ef1d690a8c2690779841948cb"
+    "850a9597fe02846a0db4d9edeecd6ba3aa1c1d8d8ae9d185d989396288354da5"
   )
 );
 
@@ -665,6 +762,39 @@ export class CLAMMInstance extends ContractInstance {
     ): Promise<CLAMMTypes.CallMethodResult<"one">> => {
       return callMethod(CLAMM, this, "one", params, getContractByCodeHash);
     },
+    fromDecimal: async (
+      params: CLAMMTypes.CallMethodParams<"fromDecimal">
+    ): Promise<CLAMMTypes.CallMethodResult<"fromDecimal">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "fromDecimal",
+        params,
+        getContractByCodeHash
+      );
+    },
+    sqrtPriceFromTick: async (
+      params: CLAMMTypes.CallMethodParams<"sqrtPriceFromTick">
+    ): Promise<CLAMMTypes.CallMethodResult<"sqrtPriceFromTick">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "sqrtPriceFromTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateSqrtPrice: async (
+      params: CLAMMTypes.CallMethodParams<"calculateSqrtPrice">
+    ): Promise<CLAMMTypes.CallMethodResult<"calculateSqrtPrice">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "calculateSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
     getDeltaX: async (
       params: CLAMMTypes.CallMethodParams<"getDeltaX">
     ): Promise<CLAMMTypes.CallMethodResult<"getDeltaX">> => {
@@ -694,6 +824,28 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "getNextSqrtPriceXUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceYDown: async (
+      params: CLAMMTypes.CallMethodParams<"getNextSqrtPriceYDown">
+    ): Promise<CLAMMTypes.CallMethodResult<"getNextSqrtPriceYDown">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getNextSqrtPriceYDown",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateAmountDelta: async (
+      params: CLAMMTypes.CallMethodParams<"calculateAmountDelta">
+    ): Promise<CLAMMTypes.CallMethodResult<"calculateAmountDelta">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "calculateAmountDelta",
         params,
         getContractByCodeHash
       );

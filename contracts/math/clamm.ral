@@ -81,9 +81,99 @@ Contract CLAMM() extends Decimal(){
             denominator
         )
     }
-    // pub fn get_next_sqrt_price_y_down() {}
-    // pub fn calculate_amount_delta() {}
-    // pub fn is_enough_amount_to_change_price() {}
+    pub fn getNextSqrtPriceYDown(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        y: U256,
+        addY: Bool
+    ) -> U256 {
+        let liquidityScale = getLiquidityScale()
+        let sqrtPriceScale = getSqrtPriceScale()
+        let tokenAmountScale = getTokenAmountScale()
+
+        let numerator = fromDecimalToValue(y, tokenAmountScale, sqrtPriceScale)
+        let denominator = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+
+        if(addY == true) {
+            return startingSqrtPrice + divValues(numerator, denominator)
+        } else {
+            return startingSqrtPrice - divValuesUp(numerator, denominator)
+        }
+
+    }
+    pub fn calculateAmountDelta(
+        currentTickIndex: I256,
+        currentSqrtPrice: U256,
+        liquidityDelta: U256,
+        liquiditySign: Bool,
+        upperTick: I256,
+        lowerTick: I256
+    ) -> (U256, U256, Bool) {
+        
+        // TODO: Add error enum, assert must return number instead of string
+        // assert!(upperTick < lowerTick, "upperTick is not greater than lowerTick")
+
+        let mut amountX = 0u
+        let mut amountY = 0u
+        let mut updateLiquidity = false
+
+        if (currentTickIndex < lowerTick) {
+            let sqrtPriceA = sqrtPriceFromTick(lowerTick)
+            let sqrtPriceB = sqrtPriceFromTick(upperTick)
+            amountX = getDeltaX(
+                sqrtPriceA,
+                sqrtPriceB,
+                liquidityDelta,
+                liquiditySign
+            )
+        } else if (currentTickIndex < upperTick) {
+            amountX = getDeltaX(
+                currentSqrtPrice,
+                sqrtPriceFromTick(upperTick),
+                liquidityDelta,
+                liquiditySign
+            )
+            amountY = getDeltaY(
+                sqrtPriceFromTick(lowerTick),
+                currentSqrtPrice,
+                liquidityDelta,
+                liquiditySign
+            )
+            updateLiquidity = true
+        } else {
+            amountY = getDeltaY(
+                sqrtPriceFromTick(lowerTick),
+                sqrtPriceFromTick(upperTick),
+                liquidityDelta,
+                liquiditySign
+            )
+        }
+
+        return amountX, amountY, updateLiquidity
+    }
+    pub fn isEnoughToChangePrice(
+        amount: U256,
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        fee: U256,
+        byAmountIn: Bool,
+        xToY: Bool
+    ) -> Bool {
+        if (liquidity == 0) {
+            return true
+        }
+
+        let percentageScale = getPercentageScale()
+
+        let mut nextSqrtPrice = 0;
+        if (byAmountIn == true) {
+            let amountAfterFee = mul(amount, (one(percentageScale) - fee))
+            // return getNextSqrtPriceFromInput()
+        } else {
+            // return getNextSqrtPriceFromOutput()
+        }
+        return true
+    }
     // pub fn calculate_max_liquidity_per_tick() {}
     // pub fn check_ticks() {}
     // pub fn check_tick() {}
