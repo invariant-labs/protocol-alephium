@@ -6,15 +6,17 @@ Contract CLAMM() extends Decimal(){
         liquidity: U256,
         roundingUp: Bool
     ) -> U256 {
-        let mut deltaPrice = 0u
-        if (sqrtPriceA > sqrtPriceB) {
-            deltaPrice = sqrtPriceA - sqrtPriceB
-        } else {
-            deltaPrice = sqrtPriceB - sqrtPriceA
-        }
         let sqrtPriceScale = getSqrtPriceScale()
         let liquidityScale = getLiquidityScale()
-        let nominator = mulToValue(deltaPrice, liquidity, liquidityScale)
+
+        let mut deltaSqrtPrice = 0u
+        if (sqrtPriceA > sqrtPriceB) {
+            deltaSqrtPrice = sqrtPriceA - sqrtPriceB
+        } else {
+            deltaSqrtPrice = sqrtPriceB - sqrtPriceA
+        }
+
+        let nominator = mulToValue(deltaSqrtPrice, liquidity, liquidityScale)
         if (roundingUp == true) {
             return divValuesToTokenUp(
                     nominator,
@@ -27,7 +29,28 @@ Contract CLAMM() extends Decimal(){
             )
         }
     }
-    // pub fn get_delta_y() {}
+    pub fn getDeltaY(
+        sqrtPriceA: U256,
+        sqrtPriceB: U256,
+        liquidity: U256,
+        roundingUp: Bool
+    ) -> U256 {
+        let sqrtPriceScale = getSqrtPriceScale()
+        let liquidityScale = getLiquidityScale()
+        
+        let mut deltaSqrtPrice = 0u
+        if (sqrtPriceA > sqrtPriceB) {
+            deltaSqrtPrice = sqrtPriceA - sqrtPriceB
+        } else {
+            deltaSqrtPrice = sqrtPriceB - sqrtPriceA
+        }
+
+        if (roundingUp == true) {
+            return mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale) / one(sqrtPriceScale)
+        } else {
+            return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+        }
+    }
     // pub fn get_next_sqrt_price_from_input() {}
     // pub fn get_next_sqrt_price_from_output() {}
     // pub fn get_next_sqrt_price_x_up() {}

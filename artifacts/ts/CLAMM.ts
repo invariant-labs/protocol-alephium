@@ -125,6 +125,15 @@ export namespace CLAMMTypes {
       }>;
       result: CallContractResult<bigint>;
     };
+    getDeltaY: {
+      params: CallContractParams<{
+        sqrtPriceA: bigint;
+        sqrtPriceB: bigint;
+        liquidity: bigint;
+        roundingUp: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
   }
   export type CallMethodParams<T extends keyof CallMethodTable> =
     CallMethodTable[T]["params"];
@@ -369,6 +378,22 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getDeltaX", params);
     },
+    getDeltaY: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            sqrtPriceA: bigint;
+            sqrtPriceB: bigint;
+            liquidity: bigint;
+            roundingUp: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDeltaY", params);
+    },
   };
 }
 
@@ -377,7 +402,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "d5b2362a54fe34b0c9c34552d812d86a5907086b9d04551fdf3fd89e4258951d"
+    "1ac23db42c2a98b49292954dd79de1eac93c497ff6b238f7487bdfa39d1d313a"
   )
 );
 
@@ -618,6 +643,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "getDeltaX",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getDeltaY: async (
+      params: CLAMMTypes.CallMethodParams<"getDeltaY">
+    ): Promise<CLAMMTypes.CallMethodResult<"getDeltaY">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getDeltaY",
         params,
         getContractByCodeHash
       );
