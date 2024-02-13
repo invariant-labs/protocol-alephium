@@ -82,7 +82,7 @@ Abstract Contract Decimal() {
         if (expectedScale > fromScale) {
             return from * (10 ** (expectedScale - fromScale))
         } else {
-            return from / 10 ** (fromScale - expectedScale)
+            return from / (10 ** (fromScale - expectedScale))
         }
     }   
 
