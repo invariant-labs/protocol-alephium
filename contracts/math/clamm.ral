@@ -1,4 +1,9 @@
 Contract CLAMM() extends Decimal(){ 
+    // enum MathError {
+    //     InvalidTickIndex = 0
+    //     InvalidTickSpacing = 1
+    // }
+
     pub fn computeSwapStep(
         currentSqrtPrice: U256,
         targetSqrtPrice: U256,
@@ -124,11 +129,14 @@ Contract CLAMM() extends Decimal(){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
+        let mut delta_y = 0
         if (roundingUp) {
-            return mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale) / one(sqrtPriceScale)
+            delta_y = (mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
         } else {
-            return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+            delta_y = mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
         }
+
+        return delta_y
     }
     pub fn getNextSqrtPriceFromInput(
         startingSqrtPrice: U256,
@@ -170,7 +178,7 @@ Contract CLAMM() extends Decimal(){
 
         let deltaSqrtPrice = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
 
-        let mut denominator = 1
+        let mut denominator = 0
         if (addX) {
             denominator = deltaSqrtPrice + mulToValue(startingSqrtPrice, x, tokenAmountScale) 
         } else {
@@ -179,7 +187,7 @@ Contract CLAMM() extends Decimal(){
 
         return divValuesToTokenUp(
             mulToValueUp(startingSqrtPrice, liquidity, liquidityScale),
-            denominator
+            fromDecimalToValue(denominator, sqrtPriceScale, tokenAmountScale)
         )
     }
     pub fn getNextSqrtPriceYDown(
@@ -211,8 +219,7 @@ Contract CLAMM() extends Decimal(){
         lowerTick: I256
     ) -> (U256, U256, Bool) {
         
-        // TODO: Add error enum, assert must return number instead of string
-        // assert!(upperTick < lowerTick, "upperTick is not greater than lowerTick")
+        // assert!(upperTick < lowerTick, MathError.InvalidTickIndex)
 
         let mut amountX = 0u
         let mut amountY = 0u
@@ -286,10 +293,10 @@ Contract CLAMM() extends Decimal(){
         return maxLiquidity
     }
 
-    // TODO: Add error enums
+    // // TODO: Add error enums
     // pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
     //     // TODO: add error enum
-    //     // assert!(tickLower > tickUpper, "tickLower is not greater than tickUpper")
+    //     assert!(tickLower > tickUpper, MathError.InvalidTickIndex)
     //     checkTick(tickLower, tickSpacing)
     //     checkTick(tickUpper, tickSpacing)
     // }
@@ -297,10 +304,9 @@ Contract CLAMM() extends Decimal(){
     // pub fn checkTick(tickIndex: I256, tickSpacing: U256) -> () {
     //     let minTick = getMinTick(tickSpacing)
     //     let maxTick = getMaxTick(tickSpacing)
-    //     // TODO: add error enum
-    //     // assert!(tickIndex % tickSpacing == 0, "InvalidTickSpacing")
-    //     // assert!(tickIndex > maxTick, "InvalidTickIndex")
-    //     // assert!(tickIndex < minTick, "InvalidTickIndex")
+    //     assert!(tickIndex % tickSpacing == 0, MathError.InvalidTickSpacing)
+    //     assert!(tickIndex > maxTick, MathError.InvalidTickIndex)
+    //     assert!(tickIndex < minTick, MathError.InvalidTickIndex)
     // }
     pub fn calculateMinAmountOut(
         expectedAmountOut: U256,

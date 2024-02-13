@@ -4,7 +4,7 @@ Abstract Contract Decimal() {
     }
 
     pub fn getLiquidityScale() -> U256 {
-        return 6
+        return 5
     }
 
     pub fn getFeeGrowthScale() -> U256 {
@@ -61,7 +61,7 @@ Abstract Contract Decimal() {
     }
 
     pub fn mulToValueUp(l: U256, r: U256, rScale: U256) -> U256 {
-        return (l * r + almostOne(rScale)) / one(rScale)
+        return ((l * r) + almostOne(rScale)) / one(rScale)
     }   
 
     pub fn mulToValue(l: U256, r: U256, rScale: U256) -> U256 {
@@ -110,7 +110,6 @@ Abstract Contract Decimal() {
         } else {
             return from / 10 ** (fromScale - expectedScale)
         }
-        return from * one(getSqrtPriceScale()) / one(fromScale)
     }
 
     pub fn sqrtPriceFromTick(
@@ -194,10 +193,10 @@ Abstract Contract Decimal() {
         }
         
         if (tickIndex >= 0i) {
-            return fromDecimal(sqrtPrice, fixedPointScale, sqrtPriceScale)
+            return fromDecimalToValue(sqrtPrice, fixedPointScale, sqrtPriceScale)
         } else {
             let intermediate = one(fixedPointScale) / sqrtPrice
-            return fromDecimal(intermediate, 0, sqrtPriceScale)
+            return fromDecimalToValue(intermediate, 0, sqrtPriceScale)
         }
     }
 }
