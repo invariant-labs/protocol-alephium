@@ -76,6 +76,10 @@ export namespace CLAMMTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    mul: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     mulToValueUp: {
       params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
       result: CallContractResult<bigint>;
@@ -151,6 +155,24 @@ export namespace CLAMMTypes {
         sqrtPriceB: bigint;
         liquidity: bigint;
         roundingUp: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceFromInput: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        amount: bigint;
+        xToY: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceFromOutput: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        amount: bigint;
+        xToY: boolean;
       }>;
       result: CallContractResult<bigint>;
     };
@@ -328,6 +350,14 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
         params === undefined ? {} : params
       );
     },
+    mul: async (
+      params: Omit<
+        TestContractParams<never, { l: bigint; r: bigint; rScale: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mul", params);
+    },
     mulToValueUp: async (
       params: Omit<
         TestContractParams<never, { l: bigint; r: bigint; rScale: bigint }>,
@@ -470,6 +500,38 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getDeltaY", params);
     },
+    getNextSqrtPriceFromInput: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            startingSqrtPrice: bigint;
+            liquidity: bigint;
+            amount: bigint;
+            xToY: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceFromInput", params);
+    },
+    getNextSqrtPriceFromOutput: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          {
+            startingSqrtPrice: bigint;
+            liquidity: bigint;
+            amount: bigint;
+            xToY: boolean;
+          }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceFromOutput", params);
+    },
     getNextSqrtPriceXUp: async (
       params: Omit<
         TestContractParams<
@@ -528,7 +590,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "850a9597fe02846a0db4d9edeecd6ba3aa1c1d8d8ae9d185d989396288354da5"
+    "14524cf0132fd1e97ab4a355e0e0c73dfa2f20b0ae94e73959a1e849bed0a687"
   )
 );
 
@@ -663,6 +725,11 @@ export class CLAMMInstance extends ContractInstance {
         params === undefined ? {} : params,
         getContractByCodeHash
       );
+    },
+    mul: async (
+      params: CLAMMTypes.CallMethodParams<"mul">
+    ): Promise<CLAMMTypes.CallMethodResult<"mul">> => {
+      return callMethod(CLAMM, this, "mul", params, getContractByCodeHash);
     },
     mulToValueUp: async (
       params: CLAMMTypes.CallMethodParams<"mulToValueUp">
@@ -813,6 +880,28 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "getDeltaY",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceFromInput: async (
+      params: CLAMMTypes.CallMethodParams<"getNextSqrtPriceFromInput">
+    ): Promise<CLAMMTypes.CallMethodResult<"getNextSqrtPriceFromInput">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getNextSqrtPriceFromInput",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceFromOutput: async (
+      params: CLAMMTypes.CallMethodParams<"getNextSqrtPriceFromOutput">
+    ): Promise<CLAMMTypes.CallMethodResult<"getNextSqrtPriceFromOutput">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getNextSqrtPriceFromOutput",
         params,
         getContractByCodeHash
       );

@@ -51,8 +51,30 @@ Contract CLAMM() extends Decimal(){
             return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
         }
     }
-    // pub fn get_next_sqrt_price_from_input() {}
-    // pub fn get_next_sqrt_price_from_output() {}
+    pub fn getNextSqrtPriceFromInput(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        xToY: Bool
+    ) -> U256 {
+        if(xToY == true) {
+            return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, true)
+        } else {
+            return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, true)
+        } 
+    }
+    pub fn getNextSqrtPriceFromOutput(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        xToY: Bool
+    ) -> U256 {
+        if(xToY == true) {
+            return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, false)
+        } else {
+            return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, false)
+        }
+    }
     pub fn getNextSqrtPriceXUp(
         startingSqrtPrice: U256,
         liquidity: U256,
@@ -151,29 +173,30 @@ Contract CLAMM() extends Decimal(){
 
         return amountX, amountY, updateLiquidity
     }
-    pub fn isEnoughToChangePrice(
-        amount: U256,
-        startingSqrtPrice: U256,
-        liquidity: U256,
-        fee: U256,
-        byAmountIn: Bool,
-        xToY: Bool
-    ) -> Bool {
-        if (liquidity == 0) {
-            return true
-        }
+    
+    // pub fn isEnoughToChangePrice(
+    //     amount: U256,
+    //     startingSqrtPrice: U256,
+    //     liquidity: U256,
+    //     fee: U256,
+    //     byAmountIn: Bool,
+    //     xToY: Bool
+    // ) -> Bool {
+    //     if (liquidity == 0) {
+    //         return true
+    //     }
 
-        let percentageScale = getPercentageScale()
+    //     // let percentageScale = getPercentageScale()
 
-        let mut nextSqrtPrice = 0;
-        if (byAmountIn == true) {
-            let amountAfterFee = mul(amount, (one(percentageScale) - fee))
-            // return getNextSqrtPriceFromInput()
-        } else {
-            // return getNextSqrtPriceFromOutput()
-        }
-        return true
-    }
+    //     // let mut nextSqrtPrice = 0
+    //     // if (byAmountIn == true) {
+    //     //     let amountAfterFee = mul(amount, (one(percentageScale) - fee))
+    //     //     // return getNextSqrtPriceFromInput()
+    //     // } else {
+    //     //     // return getNextSqrtPriceFromOutput()
+    //     // }
+    //     return true
+    // }
     // pub fn calculate_max_liquidity_per_tick() {}
     // pub fn check_ticks() {}
     // pub fn check_tick() {}
