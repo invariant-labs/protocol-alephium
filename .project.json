@@ -1,0 +1,20 @@
+{
+  "fullNodeVersion": "v2.8.2",
+  "compilerOptionsUsed": {
+    "ignoreUnusedConstantsWarnings": false,
+    "ignoreUnusedVariablesWarnings": false,
+    "ignoreUnusedFieldsWarnings": false,
+    "ignoreUnusedPrivateFunctionsWarnings": false,
+    "ignoreUpdateFieldsCheckWarnings": false,
+    "ignoreCheckExternalCallerWarnings": false
+  },
+  "infos": {
+    "Invariant": {
+      "sourceFile": "invariant.ral",
+      "sourceCodeHash": "237d6c8f4ca2928cde7aac993d612c75a219c1e29d0edc8412ecf8ace3ddc382",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "e4ac1069a1aea968d177741c290e109285ba3771c8df9c94e07d80d328a4c0c3",
+      "warnings": []
+    }
+  }
+}
