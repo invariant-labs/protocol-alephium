@@ -1,0 +1,190 @@
+Abstract Contract Decimal() {
+    pub fn getSqrtPriceScale() -> U256 {
+        return 24
+    }
+
+    pub fn getLiquidityScale() -> U256 {
+        return 5
+    }
+
+    pub fn getFeeGrowthScale() -> U256 {
+        return 28
+    }
+
+    pub fn getFixedPointScale() -> U256 {
+        return 12
+    }
+
+    pub fn getPercentageScale() -> U256 {
+        return 12
+    }
+
+    pub fn getTokenAmountScale() -> U256 {
+        return 0
+    }
+
+    pub fn getGlobalMaxTick() -> U256 {
+        return 221818
+    }
+
+    pub fn getMaxTick(tickSpacing: U256) -> U256 {
+        return getGlobalMaxTick() / tickSpacing * tickSpacing
+    }
+
+    pub fn getGlobalMinTick() -> I256 {
+        return -221818
+    }
+
+    pub fn getMinTick(tickSpacing: U256) -> I256 {
+        let convertedTickSpacing = toI256!(tickSpacing)
+        return getGlobalMinTick() / convertedTickSpacing * convertedTickSpacing
+    }
+
+    pub fn getMaxSqrtPrice() -> U256 {
+        return 65535383934512647000000000000
+    }
+
+    pub fn getMinSqrtPrice() -> U256 {
+        return 15258932000000000000
+    }
+
+    pub fn getTickSearchRange() -> U256 {
+        return 256
+    }
+
+    pub fn mul(l: U256, r:U256, rScale: U256) -> U256 {
+        return (l * r) / one(rScale)
+    }
+
+    pub fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
+        return (l * r + almostOne(rScale)) / one(rScale)
+    }
+
+    pub fn mulToValueUp(l: U256, r: U256, rScale: U256) -> U256 {
+        return ((l * r) + almostOne(rScale)) / one(rScale)
+    }   
+
+    pub fn mulToValue(l: U256, r: U256, rScale: U256) -> U256 {
+        return (l * r) / one(rScale)
+    }   
+
+    // SqrtPrice related
+    pub fn divValuesToTokenUp(l: U256, r: U256) -> U256 {
+        return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())
+    }   
+
+    // SqrtPrice related
+    pub fn divValuesToToken(l: U256, r: U256) -> U256 {
+        return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
+    }   
+
+    pub fn fromDecimalToValue(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
+        if (expectedScale > fromScale) {
+            return from * (10 ** (expectedScale - fromScale))
+        } else {
+            return from / (10 ** (fromScale - expectedScale))
+        }
+    }   
+
+    // SqrtPrice related
+    pub fn divValuesUp(l: U256, r: U256) -> U256 {
+        return l * one(getSqrtPriceScale()) + (r - 1) / r
+    }   
+
+    pub fn divValues(l: U256, r: U256) -> U256 {
+        return l * one(getSqrtPriceScale()) / r
+    }   
+
+    pub fn almostOne(scale: U256) -> U256 {
+        return 10 ** scale - 1
+    }
+
+    pub fn one(scale: U256) -> U256 {
+        return 10 ** scale
+    }
+
+    pub fn sqrtPriceFromTick(
+        tickIndex: I256
+    ) -> U256 {
+        let sqrtPrice = calculateSqrtPrice(tickIndex)
+        return sqrtPrice
+    }
+
+    pub fn calculateSqrtPrice(
+        tickIndex: I256
+    ) -> U256 {
+        let mut tick = 0
+        if (tickIndex < 0i) {
+            tick = toU256!((-1) * tickIndex)
+        } else {
+            tick = toU256!(tickIndex)
+        }
+
+        let fixedPointScale = getFixedPointScale()
+        let sqrtPriceScale = getSqrtPriceScale()
+
+        let mut sqrtPrice = one(fixedPointScale)
+
+        if (tick & 0x1 != 0) {
+            sqrtPrice = sqrtPrice * 1000049998750
+        }
+        if (tick & 0x2 != 0) {
+            sqrtPrice = sqrtPrice * 1000100000000
+        }
+        if (tick & 0x4 != 0) {
+            sqrtPrice = sqrtPrice * 1000200010000
+        }
+        if (tick & 0x8 != 0) {
+            sqrtPrice = sqrtPrice * 1000400060004
+        }
+        if (tick & 0x10 != 0) {
+            sqrtPrice = sqrtPrice * 1000800280056
+        }
+        if (tick & 0x20 != 0) {
+            sqrtPrice = sqrtPrice * 1001601200560
+        }
+        if (tick & 0x40 != 0) {
+            sqrtPrice = sqrtPrice * 1003204964963
+        }
+        if (tick & 0x80 != 0) {
+            sqrtPrice = sqrtPrice * 1006420201726
+        }
+        if (tick & 0x100 != 0) {
+            sqrtPrice = sqrtPrice * 1012881622442
+        }
+        if (tick & 0x200 != 0) {
+            sqrtPrice = sqrtPrice * 1025929181080
+        }
+        if (tick & 0x400 != 0) {
+            sqrtPrice = sqrtPrice * 1052530684591
+        }
+        if (tick & 0x800 != 0) {
+            sqrtPrice = sqrtPrice * 1107820842005
+        }
+        if (tick & 0x1000 != 0) {
+            sqrtPrice = sqrtPrice * 1227267017980
+        }
+        if (tick & 0x2000 != 0) {
+            sqrtPrice = sqrtPrice * 1506184333421
+        }
+        if (tick & 0x4000 != 0) {
+            sqrtPrice = sqrtPrice * 2268591246242
+        }
+        if (tick & 0x8000 != 0) {
+            sqrtPrice = sqrtPrice * 5146506242525
+        }
+        if (tick & 0x00010000 != 0) {
+            sqrtPrice = sqrtPrice * 26486526504348
+        }
+        if (tick & 0x00020000 != 0) {
+            sqrtPrice = sqrtPrice * 701536086265529
+        }
+        
+        if (tickIndex >= 0i) {
+            return fromDecimalToValue(sqrtPrice, fixedPointScale, sqrtPriceScale)
+        } else {
+            let intermediate = one(fixedPointScale) / sqrtPrice
+            return fromDecimalToValue(intermediate, 0, sqrtPriceScale)
+        }
+    }
+}

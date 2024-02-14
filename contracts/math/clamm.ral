@@ -1,13 +1,310 @@
-pub fn compute_swap_step() {}
-pub fn get_delta_x() {}
-pub fn get_delta_y() {}
-pub fn get_next_sqrt_price_from_input() {}
-pub fn get_next_sqrt_price_from_output() {}
-pub fn get_next_sqrt_price_x_up() {}
-pub fn get_next_sqrt_price_y_down() {}
-pub fn calculate_amount_delta() {}
-pub fn is_enough_amount_to_change_price() {}
-pub fn calculate_max_liquidity_per_tick() {}
-pub fn check_ticks() {}
-pub fn check_tick() {}
-pub fn calculate_min_amount_out() {}
+Contract CLAMM() extends Log(){ 
+
+    pub fn computeSwapStep(
+        currentSqrtPrice: U256,
+        targetSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        byAmountIn: Bool,
+        fee: U256
+    ) -> (U256, U256, U256, U256) {
+        if (liquidity == 0) {
+            return targetSqrtPrice, 0, 0, 0
+        }
+
+        let percentageScale = getPercentageScale()
+
+        let xToY = currentSqrtPrice >= targetSqrtPrice
+
+        let mut nextSqrtPrice = 0
+        let mut amountIn = 0
+        let mut amountOut = 0
+
+        if (byAmountIn) {
+            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+
+            if (xToY) {
+                amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
+            } else {
+                amountIn = getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
+            }
+
+            if (amountAfterFee >= amountIn) {
+                nextSqrtPrice = targetSqrtPrice
+            } else {
+                nextSqrtPrice = getNextSqrtPriceFromInput(currentSqrtPrice, liquidity, amountAfterFee, xToY)
+            }
+        } else {
+            if (xToY) {
+                amountOut = getDeltaY(targetSqrtPrice, currentSqrtPrice, liquidity, false)
+            } else {
+                amountOut = getDeltaX(currentSqrtPrice, targetSqrtPrice, liquidity, false)
+            }
+
+            if (amount >= amountOut) {
+                nextSqrtPrice = targetSqrtPrice
+            } else {
+                nextSqrtPrice = getNextSqrtPriceFromOutput(currentSqrtPrice, liquidity, amount, xToY)
+            }
+        }
+
+        let notMax = targetSqrtPrice != nextSqrtPrice
+
+        if (xToY) {
+            if (notMax || !byAmountIn) {
+                amountIn = getDeltaX(nextSqrtPrice, currentSqrtPrice, liquidity, true)
+            }
+            if (notMax || byAmountIn) {
+                amountOut = getDeltaY(nextSqrtPrice, currentSqrtPrice, liquidity, false)
+            }
+        } else {
+            if (notMax|| !byAmountIn) {
+                amountIn = getDeltaY(currentSqrtPrice, nextSqrtPrice, liquidity, true)
+            }
+            if (notMax || byAmountIn) {
+                amountOut = getDeltaX(currentSqrtPrice, nextSqrtPrice, liquidity, false)
+            }
+        }
+
+        // Amout out can not exceed amount
+        if (byAmountIn && amountOut > amount) {
+            amountOut = amount
+        }
+
+        let mut feeAmount = 0
+        if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
+            feeAmount = amount - amountIn
+        } else {
+            feeAmount = mulUp(amount, fee, percentageScale)
+        }
+
+        return nextSqrtPrice, amountIn, amountOut, feeAmount
+    }
+    pub fn getDeltaX(
+        sqrtPriceA: U256,
+        sqrtPriceB: U256,
+        liquidity: U256,
+        roundingUp: Bool
+    ) -> U256 {
+        let sqrtPriceScale = getSqrtPriceScale()
+        let liquidityScale = getLiquidityScale()
+
+        let mut deltaSqrtPrice = 0u
+        if (sqrtPriceA > sqrtPriceB) {
+            deltaSqrtPrice = sqrtPriceA - sqrtPriceB
+        } else {
+            deltaSqrtPrice = sqrtPriceB - sqrtPriceA
+        }
+
+        let nominator = mulToValue(deltaSqrtPrice, liquidity, liquidityScale)
+        if (roundingUp == true) {
+            return divValuesToTokenUp(
+                    nominator,
+                    mulToValue(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                )
+        } else {
+            return divValuesToToken(
+                nominator,
+                mulToValueUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+            )
+        }
+    }
+    pub fn getDeltaY(
+        sqrtPriceA: U256,
+        sqrtPriceB: U256,
+        liquidity: U256,
+        roundingUp: Bool
+    ) -> U256 {
+        let sqrtPriceScale = getSqrtPriceScale()
+        let liquidityScale = getLiquidityScale()
+        
+        let mut deltaSqrtPrice = 0u
+        if (sqrtPriceA > sqrtPriceB) {
+            deltaSqrtPrice = sqrtPriceA - sqrtPriceB
+        } else {
+            deltaSqrtPrice = sqrtPriceB - sqrtPriceA
+        }
+
+        if (roundingUp) {
+            return (mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
+        } else {
+            return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+        }
+    }
+    pub fn getNextSqrtPriceFromInput(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        xToY: Bool
+    ) -> U256 {
+        if (xToY) {
+            return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, true)
+        } else {
+            return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, true)
+        } 
+    }
+    pub fn getNextSqrtPriceFromOutput(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        xToY: Bool
+    ) -> U256 {
+        if (xToY) {
+            return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, false)
+        } else {
+            return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, false)
+        }
+    }
+    pub fn getNextSqrtPriceXUp(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        x: U256,
+        addX: Bool
+    ) -> U256 {
+        if (x == 0) {
+            return startingSqrtPrice
+        }
+
+        let liquidityScale = getLiquidityScale()
+        let sqrtPriceScale = getSqrtPriceScale()
+        let tokenAmountScale = getTokenAmountScale()
+
+        let deltaSqrtPrice = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+
+        let mut denominator = 0
+        if (addX) {
+            denominator = deltaSqrtPrice + mulToValue(startingSqrtPrice, x, tokenAmountScale) 
+        } else {
+            denominator = deltaSqrtPrice - mulToValue(startingSqrtPrice, x, tokenAmountScale)
+        }
+
+        return divValuesToTokenUp(
+            mulToValueUp(startingSqrtPrice, liquidity, liquidityScale),
+            fromDecimalToValue(denominator, sqrtPriceScale, tokenAmountScale)
+        )
+    }
+    pub fn getNextSqrtPriceYDown(
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        y: U256,
+        addY: Bool
+    ) -> U256 {
+        let liquidityScale = getLiquidityScale()
+        let sqrtPriceScale = getSqrtPriceScale()
+        let tokenAmountScale = getTokenAmountScale()
+
+        let numerator = fromDecimalToValue(y, tokenAmountScale, sqrtPriceScale)
+        let denominator = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+
+        if (addY) {
+            return startingSqrtPrice + divValues(numerator, denominator)
+        } else {
+            return startingSqrtPrice - divValuesUp(numerator, denominator)
+        }
+
+    }
+    pub fn calculateAmountDelta(
+        currentTickIndex: I256,
+        currentSqrtPrice: U256,
+        liquidityDelta: U256,
+        liquiditySign: Bool,
+        upperTick: I256,
+        lowerTick: I256
+    ) -> (U256, U256, Bool) {
+        
+        // TODO add error enum
+        // assert!(upperTick < lowerTick, MathError.InvalidTickIndex)
+
+        let mut amountX = 0u
+        let mut amountY = 0u
+        let mut updateLiquidity = false
+
+        if (currentTickIndex < lowerTick) {
+            amountX = getDeltaX(
+                sqrtPriceFromTick(lowerTick),
+                sqrtPriceFromTick(upperTick),
+                liquidityDelta,
+                liquiditySign
+            )
+        } else if (currentTickIndex < upperTick) {
+            amountX = getDeltaX(
+                currentSqrtPrice,
+                sqrtPriceFromTick(upperTick),
+                liquidityDelta,
+                liquiditySign
+            )
+            amountY = getDeltaY(
+                sqrtPriceFromTick(lowerTick),
+                currentSqrtPrice,
+                liquidityDelta,
+                liquiditySign
+            )
+            updateLiquidity = true
+        } else {
+            amountY = getDeltaY(
+                sqrtPriceFromTick(lowerTick),
+                sqrtPriceFromTick(upperTick),
+                liquidityDelta,
+                liquiditySign
+            )
+        }
+
+        return amountX, amountY, updateLiquidity
+    }
+
+    pub fn isEnoughToChangePrice(
+        amount: U256,
+        startingSqrtPrice: U256,
+        liquidity: U256,
+        fee: U256,
+        byAmountIn: Bool,
+        xToY: Bool
+    ) -> Bool {
+        if (liquidity == 0) {
+            return true
+        }
+
+        let percentageScale = getPercentageScale()
+        let mut nextSqrtPrice = 0
+        if (byAmountIn == true) {
+            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+            nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
+        } else {
+            nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
+        }
+
+        return startingSqrtPrice != nextSqrtPrice
+    }
+
+    pub fn calculateMaxLiquidityPerTick(
+        tickSpacing: U256
+    ) -> U256 {
+        let maxTicksAmountSqrtPriceLimited = 2 * getGlobalMaxTick() + 1
+        let ticsAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
+        let maxLiquidity = u256Max!() / ticsAmountSpacingLimited
+        return maxLiquidity
+    }
+
+    // // TODO: Add error enums
+    // pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
+    //     // TODO: add error enum
+    //     assert!(tickLower > tickUpper, MathError.InvalidTickIndex)
+    //     checkTick(tickLower, tickSpacing)
+    //     checkTick(tickUpper, tickSpacing)
+    // }
+
+    // pub fn checkTick(tickIndex: I256, tickSpacing: U256) -> () {
+    //     let minTick = getMinTick(tickSpacing)
+    //     let maxTick = getMaxTick(tickSpacing)
+    //     assert!(tickIndex % tickSpacing == 0, MathError.InvalidTickSpacing)
+    //     assert!(tickIndex > maxTick, MathError.InvalidTickIndex)
+    //     assert!(tickIndex < minTick, MathError.InvalidTickIndex)
+    // }
+    pub fn calculateMinAmountOut(
+        expectedAmountOut: U256,
+        slippage: U256
+    ) -> U256 {
+        let percentageScale = getPercentageScale()
+        return mulUp(expectedAmountOut, (one(percentageScale) - slippage), percentageScale)
+    }
+}
