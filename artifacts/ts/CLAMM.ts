@@ -192,6 +192,10 @@ export namespace CLAMMTypes {
       params: CallContractParams<{ sqrtPrice: bigint }>;
       result: CallContractResult<bigint>;
     };
+    allignTickToSpacing: {
+      params: CallContractParams<{ accurateTick: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     computeSwapStep: {
       params: CallContractParams<{
         currentSqrtPrice: bigint;
@@ -703,6 +707,17 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "log2FloorX32", params);
     },
+    allignTickToSpacing: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          { accurateTick: bigint; tickSpacing: bigint }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "allignTickToSpacing", params);
+    },
     computeSwapStep: async (
       params: Omit<
         TestContractParams<
@@ -880,7 +895,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "d0b358de32bcd23478d103bbd9da6542d3334d1cc26d2d5431521e114ffdc0fd"
+    "f75c07c178f4bacdd8648440a4b841ec6d36b4605c47cafebb8998cceaeded88"
   )
 );
 
@@ -1302,6 +1317,17 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "log2FloorX32",
+        params,
+        getContractByCodeHash
+      );
+    },
+    allignTickToSpacing: async (
+      params: CLAMMTypes.CallMethodParams<"allignTickToSpacing">
+    ): Promise<CLAMMTypes.CallMethodResult<"allignTickToSpacing">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "allignTickToSpacing",
         params,
         getContractByCodeHash
       );

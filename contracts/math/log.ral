@@ -67,14 +67,19 @@ Abstract Contract Log() {
         return msb
     }
 
-    // pub fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
-    //     if (accurateTick > 0) {
-    //         return accurateTick - (accurateTick % tickSpacing)
-    //     } else {
-    //         // TODO: Add Euclid division algorithm
-    //         return accurateTick - (accurateTick % tickSpacing)
-    //     }
-    // }
+    pub fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+        if (accurateTick > 0i) {
+            return accurateTick - (accurateTick % tickSpacing)
+        } else {
+            let positiveTick = (-1) * accurateTick
+            let remainder = positiveTick % tickSpacing
+            let mut substrahend = 0i
+            if (remainder != 0i) {
+                substrahend = tickSpacing - remainder 
+            }
+            return accurateTick - substrahend
+        }
+    }
 
     // pub fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
     //     let mut sign = true

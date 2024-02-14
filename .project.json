@@ -13,7 +13,7 @@
       "sourceFile": "math/clamm.ral",
       "sourceCodeHash": "d671169d97732af97d0daedc21d8051a1baceea6236f290fb41a41e5a4051469",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "d0b358de32bcd23478d103bbd9da6542d3334d1cc26d2d5431521e114ffdc0fd",
+      "codeHashDebug": "f75c07c178f4bacdd8648440a4b841ec6d36b4605c47cafebb8998cceaeded88",
       "warnings": []
     },
     "Decimal": {
@@ -32,7 +32,7 @@
     },
     "Log": {
       "sourceFile": "math/log.ral",
-      "sourceCodeHash": "6c457cc0366df1ac2a2761abe1c4980d33bb5cfda7838ceee3158fd24cc156e2",
+      "sourceCodeHash": "723e29a01b8a6e68469f4086b652e89dcf00e4e4b50f21823968287ec77b3558",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
