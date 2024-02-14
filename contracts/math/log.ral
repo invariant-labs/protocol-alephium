@@ -1,0 +1,157 @@
+Abstract Contract Log() extends Decimal() {
+    fn getLog2Scale() -> U256 {
+        return 32
+    }
+    fn getLog2DoubleScale() -> U256 {
+        return 64
+    }
+    fn getLog2One() -> U256 {
+        return 1 << getLog2Scale()
+    }
+    fn getLog2Half() -> U256 {
+        return getLog2One() >> 1
+    }
+    fn getLog2Two() -> U256 {
+        return getLog2One() << 1
+    }
+    fn getLog2DoubleOne() -> U256 {
+        return 1 << getLog2DoubleScale()
+    }
+    fn getLog2Sqrt10001() -> U256 {
+        return 309801
+    }
+    fn getLog2NegativeMaxLose() -> U256 {
+        return 300000
+    }
+    fn getLog2MinBinaryPosition() -> U256 {
+        return 15
+    }
+    fn getLog2Accuracy() -> U256 {
+        return 1 << (31 - getLog2MinBinaryPosition())
+    }
+    fn getSqrtPriceDenominator() -> U256 {
+        return 1000000000000000000000000
+    }
+    fn sqrtPriceToX32(val: U256) -> U256 {
+        return val * getLog2One() / getSqrtPriceDenominator()
+    }
+
+    fn log2FloorX32(mut sqrtPrice: U256) -> U256 {
+        let mut msb = 0
+
+        if (sqrtPrice >= 1 << 32) {
+            sqrtPrice = sqrtPrice >> 32
+            msb = msb | 32
+        }
+        if (sqrtPrice >= 1 << 16) {
+            sqrtPrice = sqrtPrice >> 16
+            msb = msb | 16
+        }
+        if (sqrtPrice >= 1 << 8) {
+            sqrtPrice = sqrtPrice >> 8
+            msb = msb | 8
+        }
+        if (sqrtPrice >= 1 << 4) {
+            sqrtPrice = sqrtPrice >> 4
+            msb = msb | 4
+        }
+        if (sqrtPrice >= 1 << 2) {
+            sqrtPrice = sqrtPrice >> 2
+            msb = msb | 2
+        }
+        if (sqrtPrice >= 1 << 1) {
+            msb = msb | 1
+        }
+    
+        return msb
+    }
+
+    fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+        if (accurateTick > 0i) {
+            return accurateTick - (accurateTick % tickSpacing)
+        } else {
+            let positiveTick = (-1) * accurateTick
+            let remainder = positiveTick % tickSpacing
+            let mut substrahend = 0i
+            if (remainder != 0i) {
+                substrahend = tickSpacing - remainder 
+            }
+            return accurateTick - substrahend
+        }
+    }
+
+    fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
+        let mut sign = true
+        if (sqrtPrice < getLog2One()) {
+            sign = false
+            sqrtPrice = (getLog2DoubleOne() / (sqrtPrice + 1))
+        }
+        let log2Floor = log2FloorX32(sqrtPrice >> getLog2Scale())
+        let mut result = log2Floor << getLog2Scale()
+        let mut y = (sqrtPrice) >> log2Floor
+
+        if (y == getLog2One()) {
+            return sign, result
+        }
+        let mut delta = getLog2Half()
+        while (delta > getLog2Accuracy()) {
+            y = y * y / getLog2One()
+            if (y >= getLog2Two()) {
+                result = result | delta
+                y = y >> 1
+            }
+            delta = delta >> 1
+        }
+        return sign, result
+    }
+
+    pub fn getTickAtSqrtPrice(sqrtPrice: U256, tickSpacing: U256) -> I256 {
+        // TODO add error enum
+        // assert!(sqrtPrice <= getMaxSqrtPrice() && sqrtPrice >= getMinSqrtPrice(), "sqrt price out of range")
+        let sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
+
+        let (log2Sign, log2SqrtPrice) = log2IterativeApproximationX32(sqrtPriceX32)
+
+        let mut absFloorTick = 0
+        let mut nearerTick = 0i
+        let mut fartherTick = 0i
+        if (log2Sign) {
+            absFloorTick = log2SqrtPrice / getLog2Sqrt10001()
+            nearerTick = toI256!(absFloorTick)
+            fartherTick = toI256!(absFloorTick + 1)
+        } else {
+            absFloorTick = (log2SqrtPrice + getLog2NegativeMaxLose()) / getLog2Sqrt10001()
+            nearerTick = (-1) * toI256!(absFloorTick)
+            fartherTick = (-1) * toI256!(absFloorTick) - 1i
+        }
+
+        let nearerTickWithSpacing = allignTickToSpacing(nearerTick, toI256!(tickSpacing))
+        let fartherTickWithSpacing = allignTickToSpacing(fartherTick, toI256!(tickSpacing))
+        if (fartherTickWithSpacing == nearerTickWithSpacing) {
+            return nearerTickWithSpacing
+        }
+
+
+        let mut accurateTick = 0i
+        if (log2Sign) {
+            let fartherTickSqrtPriceDecimal = sqrtPriceFromTick(fartherTick)
+            if (sqrtPrice >= fartherTickSqrtPriceDecimal) {
+                accurateTick = fartherTickWithSpacing
+            } else {
+                accurateTick = nearerTickWithSpacing
+            }
+        } else {
+            let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick)
+            if (sqrtPrice <= nearerTickSqrtPriceDecimal) {
+                accurateTick = nearerTickWithSpacing
+            } else {
+                accurateTick = fartherTickWithSpacing
+            }
+        }
+        if (tickSpacing > 1)  {
+            return allignTickToSpacing(accurateTick, toI256!(tickSpacing))
+        } else {
+            return accurateTick
+        }
+    }
+}
