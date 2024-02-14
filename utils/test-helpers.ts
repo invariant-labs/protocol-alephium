@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, node, web3 } from '@alephium/web3'
-import { Invariant, Value } from '../artifacts/ts'
+import { FeeTier, Invariant } from '../artifacts/ts'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -22,25 +22,47 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(signer: SignerProvider, protocolFee: bigint, templateId: string) {
+export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
+  const feeTier = await deployFeeTier(signer)
+  const account = await signer.getSelectedAccount()
+
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
+        admin: account.address,
         protocolFee,
-        templateId
+        feeTierTemplateContractId: feeTier.contractInstance.contractId,
+        feeTierCount: 0n
       }
     })
   )
 }
 
-export async function deployValue(signer: SignerProvider) {
+export async function deployFeeTier(signer: SignerProvider) {
+  const account = await signer.getSelectedAccount()
+
   return await waitTxConfirmed(
-    Value.deploy(signer, {
+    FeeTier.deploy(signer, {
       initialFields: {
-        value: 0n
+        admin: account.address,
+        fee: 0n,
+        tickSpacing: 0n,
+        isActive: false
       }
     })
   )
+}
+
+export async function expectError(script: Promise<any>) {
+  let isError = false
+
+  try {
+    await script
+  } catch (e) {
+    isError = true
+  }
+
+  expect(isError).toBe(true)
 }
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {

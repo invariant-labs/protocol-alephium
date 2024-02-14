@@ -1,33 +1,110 @@
-Contract Value(value: U256) {
-    pub fn getValue() -> U256 {
-      return value
+Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Bool) {
+    enum FeeTierError {
+        NotAdmin = 0
+    }
+    
+    pub fn getFee() -> U256 {
+      return fee
+    }
+
+    pub fn getTickSpacing() -> U256 {
+      return tickSpacing
+    }
+
+    pub fn isActive() -> Bool {
+      return isActive
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setActive(active: Bool) -> () {
+        assert!(callerAddress!() == admin, FeeTierError.NotAdmin)
+        isActive = active
     }
 }
 
 Contract Invariant(
+    admin: Address,
     protocolFee: U256,
-    templateId: ByteVec
+    feeTierTemplateContractId: ByteVec,
+    mut feeTierCount: U256
 ) {
+    enum InvariantError {
+        InvalidTickSpacing = 0
+        InvalidFee = 1
+        NotAdmin = 2
+        FeeTierAlreadyExist = 3
+        FeeTierNotFound = 4
+    }
+
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn set(key: U256, value: U256) -> () {
+    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
-        let path = toByteVec!(key)
-        let (encodedImmFields, encodedMutFields) = Value.encodeFields!(value)
+
+        assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
+        assert!(fee <= 1000000000000, InvariantError.InvalidFee)
+        assert!(caller == admin, InvariantError.NotAdmin)
+
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(i)))
+            
+            let existingFee = contract.getFee()
+            let existingTickSpacing = contract.getTickSpacing()
+            let existingIsActive = contract.isActive()
+
+            if (!existingIsActive) {
+                contract.setActive(true)
+                return
+            }
+
+            assert!((fee != existingFee || tickSpacing != existingTickSpacing), InvariantError.FeeTierAlreadyExist)
+        }
+
+        feeTierCount = feeTierCount + 1
+        let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
         copyCreateSubContract!{caller -> ALPH: 1 alph}(
-          path,
-          templateId,
-          encodedImmFields,
-          encodedMutFields
+            toByteVec!(feeTierCount),
+            feeTierTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
         )
     }
 
-    pub fn get(key: U256) -> U256 {
-        let path = toByteVec!(key)
-        let contractId =  subContractId!(path)
-        return Value(contractId).getValue()
+    @using(checkExternalCaller = false)
+    pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(i)))
+
+            let existingFee = contract.getFee()
+            let existingTickSpacing = contract.getTickSpacing()
+            let existingIsActive = contract.isActive()
+
+            if (fee == existingFee && tickSpacing == existingTickSpacing && existingIsActive) {
+                contract.setActive(false)
+                return
+            }
+        }
+
+        assert!(false, InvariantError.FeeTierNotFound)
+    }
+
+    pub fn getFeeTierCount() -> U256 {
+        let mut count = 0
+
+        for (let mut index = 1; index <= feeTierCount; index = index + 1) {
+            let path = toByteVec!(index)
+            let contractId = subContractId!(path)
+            let contract = FeeTier(contractId)
+            let isActive = contract.isActive()
+
+            if (isActive) {
+                count = count + 1
+            }
+        }
+
+        return count
     }
 }

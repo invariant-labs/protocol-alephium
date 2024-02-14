@@ -1,9 +1,9 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { Invariant, Set } from '../artifacts/ts'
+import { AddFeeTier, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../utils/consts'
-import { deployInvariant, deployValue } from '../utils/test-helpers'
+import { deployInvariant, expectError } from '../utils/test-helpers'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -14,26 +14,97 @@ describe('invariant tests', () => {
   })
 
   test('collection', async () => {
-    const value = await deployValue(sender)
-
-    const invariantResult = await deployInvariant(sender, 0n, value.contractInstance.contractId)
+    const invariantResult = await deployInvariant(sender, 0n)
 
     const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Set.execute(sender, {
-      initialFields: { invariant: invariantResult.contractInstance.address, key: 1n, value: 2n },
+    let feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(0n)
+
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: 0n,
+        tickSpacing: 1n
+      },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    await Set.execute(sender, {
-      initialFields: { invariant: invariantResult.contractInstance.address, key: 2n, value: 5n },
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(1n)
+
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: 0n,
+        tickSpacing: 2n
+      },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const firstResult = await invariant.methods.get({ args: { key: 1n } })
-    const secondResult = await invariant.methods.get({ args: { key: 2n } })
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(2n)
 
-    expect(firstResult.returns).toBe(2n)
-    expect(secondResult.returns).toBe(5n)
+    await expectError(
+      AddFeeTier.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          fee: 0n,
+          tickSpacing: 1n
+        },
+        attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      })
+    )
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(2n)
+
+    await RemoveFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: 0n,
+        tickSpacing: 1n
+      }
+    })
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(1n)
+
+    await expectError(
+      RemoveFeeTier.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          fee: 0n,
+          tickSpacing: 1n
+        }
+      })
+    )
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(1n)
+
+    await expectError(
+      RemoveFeeTier.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          fee: 0n,
+          tickSpacing: 1n
+        }
+      })
+    )
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(1n)
+
+    await RemoveFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: 0n,
+        tickSpacing: 2n
+      }
+    })
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(0n)
   })
 })

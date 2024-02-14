@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export * from "./CLAMM";
+export * from "./FeeTier";
 export * from "./Invariant";
 export * from "./TokenFaucet";
-export * from "./Value";
 export * from "./scripts";

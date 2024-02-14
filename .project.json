@@ -9,6 +9,13 @@
     "ignoreCheckExternalCallerWarnings": false
   },
   "infos": {
+    "AddFeeTier": {
+      "sourceFile": "invariant_tx.ral",
+      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
       "sourceCodeHash": "53e05e032e95f362b02d6d8fb5b83b69853eaa3d4220d1ac2619f5bdaa1cd246",
@@ -23,6 +30,13 @@
       "codeHashDebug": "",
       "warnings": []
     },
+    "FeeTier": {
+      "sourceFile": "invariant.ral",
+      "sourceCodeHash": "df665fb0f6a4013929891619252e1c7a2d31e105becc5ee03f4e2ea586a21a66",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "f1b7c2ca34064f0c7055b0d8b424ef158173fbead0c1281f6b2d9471d39dc18b",
+      "warnings": []
+    },
     "IFungibleToken": {
       "sourceFile": "../../../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
       "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
@@ -32,9 +46,9 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "ef89e5bebcb5af921661727ab4dae56c99041107fdd4e448855ba11fb0b0756c",
+      "sourceCodeHash": "df665fb0f6a4013929891619252e1c7a2d31e105becc5ee03f4e2ea586a21a66",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "e958e6607c4aae4fd6022200008ce6e539c06f888ced2e81742081310ef0111f",
+      "codeHashDebug": "deb937656eb5e44dc340d4459fdfedea34f7ec6ee2de1540f2cde7d035a9914c",
       "warnings": []
     },
     "Log": {
@@ -44,9 +58,9 @@
       "codeHashDebug": "",
       "warnings": []
     },
-    "Set": {
+    "RemoveFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "4b8c90cb698e299e5b144aabcadb4ead55c0cca1f4f1cd5f61184e16b20a36bb",
+      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -58,15 +72,8 @@
       "codeHashDebug": "a3309aa3a0dbd0c53b67a0c422316dcbc0571d8fa5f9ea2ab374b5c110f4efe2",
       "warnings": []
     },
-    "Value": {
-      "sourceFile": "invariant.ral",
-      "sourceCodeHash": "ef89e5bebcb5af921661727ab4dae56c99041107fdd4e448855ba11fb0b0756c",
-      "bytecodeDebugPatch": "",
-      "codeHashDebug": "e4ac1069a1aea968d177741c290e109285ba3771c8df9c94e07d80d328a4c0c3",
-      "warnings": []
-    },
     "Withdraw": {
-      "sourceFile": "math/token_tx.ral",
+      "sourceFile": "token_tx.ral",
       "sourceCodeHash": "6f42aa997846601cab0b4c54b26e70b1c323ac250e1fb1f7907ef6fb8bd58898",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
