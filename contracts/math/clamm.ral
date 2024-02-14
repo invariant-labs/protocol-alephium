@@ -125,14 +125,11 @@ Contract CLAMM() extends Log(){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let mut delta_y = 0
         if (roundingUp) {
-            delta_y = (mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
+            return (mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
         } else {
-            delta_y = mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+            return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
         }
-
-        return delta_y
     }
     pub fn getNextSqrtPriceFromInput(
         startingSqrtPrice: U256,
@@ -152,7 +149,7 @@ Contract CLAMM() extends Log(){
         amount: U256,
         xToY: Bool
     ) -> U256 {
-        if (xToY == true) {
+        if (xToY) {
             return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, false)
         } else {
             return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, false)
@@ -215,6 +212,7 @@ Contract CLAMM() extends Log(){
         lowerTick: I256
     ) -> (U256, U256, Bool) {
         
+        // TODO add error enum
         // assert!(upperTick < lowerTick, MathError.InvalidTickIndex)
 
         let mut amountX = 0u
@@ -222,11 +220,9 @@ Contract CLAMM() extends Log(){
         let mut updateLiquidity = false
 
         if (currentTickIndex < lowerTick) {
-            let sqrtPriceA = sqrtPriceFromTick(lowerTick)
-            let sqrtPriceB = sqrtPriceFromTick(upperTick)
             amountX = getDeltaX(
-                sqrtPriceA,
-                sqrtPriceB,
+                sqrtPriceFromTick(lowerTick),
+                sqrtPriceFromTick(upperTick),
                 liquidityDelta,
                 liquiditySign
             )
