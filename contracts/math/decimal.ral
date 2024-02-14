@@ -1,4 +1,4 @@
-Abstract Contract Decimal() {
+Abstract Contract Decimal() extends Log(){
     pub fn getSqrtPriceScale() -> U256 {
         return 24
     }
@@ -103,15 +103,6 @@ Abstract Contract Decimal() {
         return 10 ** scale
     }
 
-    // TODO: Same as FromDecimalToValue
-    pub fn fromDecimal(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
-        if (expectedScale > fromScale) {
-            return from * (10 ** (expectedScale - fromScale))
-        } else {
-            return from / 10 ** (fromScale - expectedScale)
-        }
-    }
-
     pub fn sqrtPriceFromTick(
         tickIndex: I256
     ) -> U256 {
@@ -128,7 +119,6 @@ Abstract Contract Decimal() {
         } else {
             tick = toU256!(tickIndex)
         }
-
 
         let fixedPointScale = getFixedPointScale()
         let sqrtPriceScale = getSqrtPriceScale()

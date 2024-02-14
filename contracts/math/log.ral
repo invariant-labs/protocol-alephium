@@ -1,4 +1,5 @@
-Contract Log() {
+Abstract Contract Log() {
+    // TODO change visibility to private once completed
     pub fn getLog2Scale() -> U256 {
         return 32
     }
@@ -34,14 +35,6 @@ Contract Log() {
     }
     pub fn sqrtPriceToX32(val: U256) -> U256 {
         return val * getLog2One() / getSqrtPriceDenominator()
-    }
-    // TODO: integrate with CLAMM functions
-    pub fn getMaxSqrtPrice() -> U256 {
-        return 65535383934512647000000000000
-    }
-
-    pub fn getMinSqrtPrice() -> U256 {
-        return 15258932000000000000
     }
 
     pub fn log2FloorX32(mut sqrtPrice: U256) -> U256 {

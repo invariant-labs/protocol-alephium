@@ -3,6 +3,5 @@
 /* eslint-disable */
 
 export * from "./CLAMM";
-export * from "./Log";
 export * from "./TokenFaucet";
 export * from "./scripts";
