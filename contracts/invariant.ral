@@ -1,0 +1,33 @@
+Contract Value(value: U256) {
+    pub fn getValue() -> U256 {
+      return value
+    }
+}
+
+Contract Invariant(
+    protocolFee: U256,
+    templateId: ByteVec
+) {
+    pub fn getProtocolFee() -> U256 {
+        return protocolFee
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn set(key: U256, value: U256) -> () {
+        let caller = callerAddress!()
+        let path = toByteVec!(key)
+        let (encodedImmFields, encodedMutFields) = Value.encodeFields!(value)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+          path,
+          templateId,
+          encodedImmFields,
+          encodedMutFields
+        )
+    }
+
+    pub fn get(key: U256) -> U256 {
+        let path = toByteVec!(key)
+        let contractId =  subContractId!(path)
+        return Value(contractId).getValue()
+    }
+}
