@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, node, web3 } from '@alephium/web3'
-import { Invariant } from '../artifacts/ts'
+import { Invariant, Value } from '../artifacts/ts'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -22,11 +22,22 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
+export async function deployInvariant(signer: SignerProvider, protocolFee: bigint, templateId: string) {
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
-        protocolFee
+        protocolFee,
+        templateId
+      }
+    })
+  )
+}
+
+export async function deployValue(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Value.deploy(signer, {
+      initialFields: {
+        value: 0n
       }
     })
   )

@@ -5,7 +5,8 @@ Contract Value(value: U256) {
 }
 
 Contract Invariant(
-    protocolFee: U256
+    protocolFee: U256,
+    templateId: ByteVec
 ) {
     pub fn getProtocolFee() -> U256 {
         return protocolFee
@@ -14,17 +15,18 @@ Contract Invariant(
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn set(key: U256, value: U256) -> () {
         let caller = callerAddress!()
-
-        let contractId = copyCreateSubContract!{caller -> 1 alph}(
-            u256To8Bytes!(path),
-            barTemplateId,
-            encodedImmFields,
-            encodedMutFields
+        let path = toByteVec!(key)
+        let (encodedImmFields, encodedMutFields) = Value.encodeFields!(value)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+          path,
+          templateId,
+          encodedImmFields,
+          encodedMutFields
         )
     }
 
     pub fn get(key: U256) -> U256 {
-        let path = u256To8Bytes(key)
+        let path = toByteVec!(key)
         let contractId =  subContractId!(path)
         return Value(contractId).getValue()
     }

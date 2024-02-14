@@ -31,6 +31,7 @@ import { getContractByCodeHash } from "./contracts";
 export namespace InvariantTypes {
   export type Fields = {
     protocolFee: bigint;
+    templateId: HexString;
   };
 
   export type State = ContractState<Fields>;
@@ -38,6 +39,10 @@ export namespace InvariantTypes {
   export interface CallMethodTable {
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    get: {
+      params: CallContractParams<{ key: bigint }>;
       result: CallContractResult<bigint>;
     };
   }
@@ -73,6 +78,19 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getProtocolFee", params);
     },
+    set: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { key: bigint; value: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "set", params);
+    },
+    get: async (
+      params: TestContractParams<InvariantTypes.Fields, { key: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "get", params);
+    },
   };
 }
 
@@ -81,7 +99,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "e4ac1069a1aea968d177741c290e109285ba3771c8df9c94e07d80d328a4c0c3"
+    "e958e6607c4aae4fd6022200008ce6e539c06f888ced2e81742081310ef0111f"
   )
 );
 
@@ -106,6 +124,11 @@ export class InvariantInstance extends ContractInstance {
         params === undefined ? {} : params,
         getContractByCodeHash
       );
+    },
+    get: async (
+      params: InvariantTypes.CallMethodParams<"get">
+    ): Promise<InvariantTypes.CallMethodResult<"get">> => {
+      return callMethod(Invariant, this, "get", params, getContractByCodeHash);
     },
   };
 

@@ -1,16 +1,19 @@
 {
   "version": "v2.8.2",
   "name": "Invariant",
-  "bytecode": "010109010000000102ce0002",
-  "codeHash": "e4ac1069a1aea968d177741c290e109285ba3771c8df9c94e07d80d328a4c0c3",
+  "bytecode": "020309403a4051010000000102ce0002010302060015b417021600401703160113016413006417051704160213c40de0b6b3a7640000a21603ce0116041605c11801000103010b16004017011601cb17020c0d1602010002",
+  "codeHash": "e958e6607c4aae4fd6022200008ce6e539c06f888ced2e81742081310ef0111f",
   "fieldsSig": {
     "names": [
-      "protocolFee"
+      "protocolFee",
+      "templateId"
     ],
     "types": [
-      "U256"
+      "U256",
+      "ByteVec"
     ],
     "isMutable": [
+      false,
       false
     ]
   },
@@ -24,6 +27,43 @@
       "paramNames": [],
       "paramTypes": [],
       "paramIsMutable": [],
+      "returnTypes": [
+        "U256"
+      ]
+    },
+    {
+      "name": "set",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "key",
+        "value"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "get",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "key"
+      ],
+      "paramTypes": [
+        "U256"
+      ],
+      "paramIsMutable": [
+        false
+      ],
       "returnTypes": [
         "U256"
       ]

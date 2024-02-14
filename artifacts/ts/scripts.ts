@@ -11,3 +11,15 @@ import {
   SignerProvider,
   HexString,
 } from "@alephium/web3";
+import { default as SetScriptJson } from "../Set.ral.json";
+import { default as WithdrawScriptJson } from "../math/Withdraw.ral.json";
+
+export const Set = new ExecutableScript<{
+  invariant: HexString;
+  key: bigint;
+  value: bigint;
+}>(Script.fromJson(SetScriptJson));
+export const Withdraw = new ExecutableScript<{
+  token: HexString;
+  amount: bigint;
+}>(Script.fromJson(WithdrawScriptJson));
