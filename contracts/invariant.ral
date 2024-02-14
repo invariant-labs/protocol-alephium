@@ -1,33 +1,64 @@
-Contract Value(value: U256) {
-    pub fn getValue() -> U256 {
-      return value
-    }
-}
+// Contract Value(value: U256) {
+//     pub fn getValue() -> U256 {
+//       return value
+//     }
+// }
 
 Contract Invariant(
-    protocolFee: U256,
-    templateId: ByteVec
+    // admin: Address,
+    protocolFee: U256
+    // poolKeyTemplateContractId: ByteVec,
+    // poolKeyCount: U256
 ) {
+    // enum InvariantError {
+    //     InvalidTickSpacing = 0
+    //     InvalidFee = 1
+    //     NotAdmin = 2
+    //     FeeTierAlreadyExist = 3
+    //     FeeTierNotFound = 4
+    // }
+
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn set(key: U256, value: U256) -> () {
-        let caller = callerAddress!()
-        let path = toByteVec!(key)
-        let (encodedImmFields, encodedMutFields) = Value.encodeFields!(value)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-          path,
-          templateId,
-          encodedImmFields,
-          encodedMutFields
-        )
-    }
+    // @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    // pub fn createPool(token0: Address, token1: Address, feeIndex: U256, initSqrtPrice: U256, initTick: I256) -> () {
+        // let caller = callerAddress!()
+        // let timestamp = blockTimeStamp!()
 
-    pub fn get(key: U256) -> U256 {
-        let path = toByteVec!(key)
-        let contractId =  subContractId!(path)
-        return Value(contractId).getValue()
-    }
+        // Check if fee tier exists
+
+        // CLAMM().checkTick(initTick)
+        
+        
+
+        // assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
+        // assert!(fee <= 1000000000000, InvariantError.InvalidFee)
+        // assert!(caller == admin, InvariantError.NotAdmin)
+
+        // for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+        //     let contract = FeeTier(subContractId!(toByteVec!(i)))
+            
+        //     let existingFee = contract.getFee()
+        //     let existingTickSpacing = contract.getTickSpacing()
+        //     let existingIsActive = contract.isActive()
+
+        //     if (!existingIsActive) {
+        //         contract.setActive(true)
+        //         return
+        //     }
+
+        //     assert!((fee != existingFee || tickSpacing != existingTickSpacing), InvariantError.FeeTierAlreadyExist)
+        // }
+
+        // feeTierCount = feeTierCount + 1
+        // let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
+        // copyCreateSubContract!{caller -> ALPH: 1 alph}(
+        //     toByteVec!(feeTierCount),
+        //     feeTierTemplateContractId,
+        //     encodedImmFields,
+        //     encodedMutFields
+        // )
+    // }
 }

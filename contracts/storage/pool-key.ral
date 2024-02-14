@@ -1,0 +1,27 @@
+// Abstract Contract PoolKey(
+//     token0: Address,
+//     token1: Address,
+//     // TODO: Change to FeeTier (index?)
+//     fee: U256
+// ) {
+//     enum PoolKeyError {
+//         NotAdmin = 0
+//         TokensAreSame = 1
+//     }
+
+//     // pub fn getPoolKey() -> u8 {
+//     //     return 0
+//     // }
+
+//     // pub fn createPoolKey(token0: Address, token1: Address, fee: U256) -> PoolKey {
+//     //     return PoolKey {
+//     //         token0: token0,
+//     //         token1: token1,
+//     //         fee: fee
+//     //     }
+//     // }
+
+
+
+
+// }

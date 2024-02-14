@@ -1,4 +1,4 @@
-Contract CLAMM() extends Log(){ 
+Abstract Contract CLAMM() extends Log(){ 
 
     pub fn computeSwapStep(
         currentSqrtPrice: U256,
