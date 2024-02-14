@@ -11,14 +11,20 @@ import {
   SignerProvider,
   HexString,
 } from "@alephium/web3";
-import { default as SetScriptJson } from "../Set.ral.json";
-import { default as WithdrawScriptJson } from "../math/Withdraw.ral.json";
+import { default as AddFeeTierScriptJson } from "../AddFeeTier.ral.json";
+import { default as RemoveFeeTierScriptJson } from "../RemoveFeeTier.ral.json";
+import { default as WithdrawScriptJson } from "../Withdraw.ral.json";
 
-export const Set = new ExecutableScript<{
+export const AddFeeTier = new ExecutableScript<{
   invariant: HexString;
-  key: bigint;
-  value: bigint;
-}>(Script.fromJson(SetScriptJson));
+  fee: bigint;
+  tickSpacing: bigint;
+}>(Script.fromJson(AddFeeTierScriptJson));
+export const RemoveFeeTier = new ExecutableScript<{
+  invariant: HexString;
+  fee: bigint;
+  tickSpacing: bigint;
+}>(Script.fromJson(RemoveFeeTierScriptJson));
 export const Withdraw = new ExecutableScript<{
   token: HexString;
   amount: bigint;

@@ -30,19 +30,231 @@ import { getContractByCodeHash } from "./contracts";
 // Custom types for the contract
 export namespace InvariantTypes {
   export type Fields = {
+    admin: Address;
     protocolFee: bigint;
-    templateId: HexString;
+    feeTierTemplateContractId: HexString;
+    feeTierCount: bigint;
   };
 
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    computeSwapStep: {
+      params: CallContractParams<{
+        currentSqrtPrice: bigint;
+        targetSqrtPrice: bigint;
+        liquidity: bigint;
+        amount: bigint;
+        byAmountIn: boolean;
+        fee: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint, bigint, bigint]>;
+    };
+    getDeltaX: {
+      params: CallContractParams<{
+        sqrtPriceA: bigint;
+        sqrtPriceB: bigint;
+        liquidity: bigint;
+        roundingUp: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getDeltaY: {
+      params: CallContractParams<{
+        sqrtPriceA: bigint;
+        sqrtPriceB: bigint;
+        liquidity: bigint;
+        roundingUp: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceFromInput: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        amount: bigint;
+        xToY: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceFromOutput: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        amount: bigint;
+        xToY: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceXUp: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        x: bigint;
+        addX: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getNextSqrtPriceYDown: {
+      params: CallContractParams<{
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        y: bigint;
+        addY: boolean;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    calculateAmountDelta: {
+      params: CallContractParams<{
+        currentTickIndex: bigint;
+        currentSqrtPrice: bigint;
+        liquidityDelta: bigint;
+        liquiditySign: boolean;
+        upperTick: bigint;
+        lowerTick: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint, boolean]>;
+    };
+    isEnoughToChangePrice: {
+      params: CallContractParams<{
+        amount: bigint;
+        startingSqrtPrice: bigint;
+        liquidity: bigint;
+        fee: bigint;
+        byAmountIn: boolean;
+        xToY: boolean;
+      }>;
+      result: CallContractResult<boolean>;
+    };
+    calculateMaxLiquidityPerTick: {
+      params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    calculateMinAmountOut: {
+      params: CallContractParams<{
+        expectedAmountOut: bigint;
+        slippage: bigint;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    getTickAtSqrtPrice: {
+      params: CallContractParams<{ sqrtPrice: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    getSqrtPriceScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getLiquidityScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getFeeGrowthScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getFixedPointScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getPercentageScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getTokenAmountScale: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getGlobalMaxTick: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getMaxTick: {
+      params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    getGlobalMinTick: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getMinTick: {
+      params: CallContractParams<{ tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    getMaxSqrtPrice: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getMinSqrtPrice: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    getTickSearchRange: {
+      params: Omit<CallContractParams<{}>, "args">;
+      result: CallContractResult<bigint>;
+    };
+    mul: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    mulUp: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    mulToValueUp: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    mulToValue: {
+      params: CallContractParams<{ l: bigint; r: bigint; rScale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    divValuesToTokenUp: {
+      params: CallContractParams<{ l: bigint; r: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    divValuesToToken: {
+      params: CallContractParams<{ l: bigint; r: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    fromDecimalToValue: {
+      params: CallContractParams<{
+        from: bigint;
+        fromScale: bigint;
+        expectedScale: bigint;
+      }>;
+      result: CallContractResult<bigint>;
+    };
+    divValuesUp: {
+      params: CallContractParams<{ l: bigint; r: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    divValues: {
+      params: CallContractParams<{ l: bigint; r: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    almostOne: {
+      params: CallContractParams<{ scale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    one: {
+      params: CallContractParams<{ scale: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    sqrtPriceFromTick: {
+      params: CallContractParams<{ tickIndex: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    calculateSqrtPrice: {
+      params: CallContractParams<{ tickIndex: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
-    get: {
-      params: CallContractParams<{ key: bigint }>;
+    getFeeTierCount: {
+      params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
   }
@@ -68,28 +280,425 @@ class Factory extends ContractFactory<
     return this.contract.getInitialFieldsWithDefaultValues() as InvariantTypes.Fields;
   }
 
+  consts = {
+    InvariantError: {
+      InvalidTickSpacing: BigInt(0),
+      InvalidFee: BigInt(1),
+      NotAdmin: BigInt(2),
+      FeeTierAlreadyExist: BigInt(3),
+      FeeTierNotFound: BigInt(4),
+    },
+  };
+
   at(address: string): InvariantInstance {
     return new InvariantInstance(address);
   }
 
   tests = {
+    computeSwapStep: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          currentSqrtPrice: bigint;
+          targetSqrtPrice: bigint;
+          liquidity: bigint;
+          amount: bigint;
+          byAmountIn: boolean;
+          fee: bigint;
+        }
+      >
+    ): Promise<TestContractResult<[bigint, bigint, bigint, bigint]>> => {
+      return testMethod(this, "computeSwapStep", params);
+    },
+    getDeltaX: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          sqrtPriceA: bigint;
+          sqrtPriceB: bigint;
+          liquidity: bigint;
+          roundingUp: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDeltaX", params);
+    },
+    getDeltaY: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          sqrtPriceA: bigint;
+          sqrtPriceB: bigint;
+          liquidity: bigint;
+          roundingUp: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getDeltaY", params);
+    },
+    getNextSqrtPriceFromInput: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          startingSqrtPrice: bigint;
+          liquidity: bigint;
+          amount: bigint;
+          xToY: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceFromInput", params);
+    },
+    getNextSqrtPriceFromOutput: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          startingSqrtPrice: bigint;
+          liquidity: bigint;
+          amount: bigint;
+          xToY: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceFromOutput", params);
+    },
+    getNextSqrtPriceXUp: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          startingSqrtPrice: bigint;
+          liquidity: bigint;
+          x: bigint;
+          addX: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceXUp", params);
+    },
+    getNextSqrtPriceYDown: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          startingSqrtPrice: bigint;
+          liquidity: bigint;
+          y: bigint;
+          addY: boolean;
+        }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getNextSqrtPriceYDown", params);
+    },
+    calculateAmountDelta: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          currentTickIndex: bigint;
+          currentSqrtPrice: bigint;
+          liquidityDelta: bigint;
+          liquiditySign: boolean;
+          upperTick: bigint;
+          lowerTick: bigint;
+        }
+      >
+    ): Promise<TestContractResult<[bigint, bigint, boolean]>> => {
+      return testMethod(this, "calculateAmountDelta", params);
+    },
+    isEnoughToChangePrice: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          amount: bigint;
+          startingSqrtPrice: bigint;
+          liquidity: bigint;
+          fee: bigint;
+          byAmountIn: boolean;
+          xToY: boolean;
+        }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "isEnoughToChangePrice", params);
+    },
+    calculateMaxLiquidityPerTick: async (
+      params: TestContractParams<InvariantTypes.Fields, { tickSpacing: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calculateMaxLiquidityPerTick", params);
+    },
+    calculateMinAmountOut: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { expectedAmountOut: bigint; slippage: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calculateMinAmountOut", params);
+    },
+    getLog2Scale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Scale", params);
+    },
+    getLog2DoubleScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2DoubleScale", params);
+    },
+    getLog2One: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2One", params);
+    },
+    getLog2Half: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Half", params);
+    },
+    getLog2Two: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Two", params);
+    },
+    getLog2DoubleOne: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2DoubleOne", params);
+    },
+    getLog2Sqrt10001: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Sqrt10001", params);
+    },
+    getLog2NegativeMaxLose: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2NegativeMaxLose", params);
+    },
+    getLog2MinBinaryPosition: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2MinBinaryPosition", params);
+    },
+    getLog2Accuracy: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Accuracy", params);
+    },
+    getSqrtPriceDenominator: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getSqrtPriceDenominator", params);
+    },
+    sqrtPriceToX32: async (
+      params: TestContractParams<InvariantTypes.Fields, { val: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "sqrtPriceToX32", params);
+    },
+    log2FloorX32: async (
+      params: TestContractParams<InvariantTypes.Fields, { sqrtPrice: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "log2FloorX32", params);
+    },
+    allignTickToSpacing: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { accurateTick: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "allignTickToSpacing", params);
+    },
+    log2IterativeApproximationX32: async (
+      params: TestContractParams<InvariantTypes.Fields, { sqrtPrice: bigint }>
+    ): Promise<TestContractResult<[boolean, bigint]>> => {
+      return testMethod(this, "log2IterativeApproximationX32", params);
+    },
+    getTickAtSqrtPrice: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { sqrtPrice: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTickAtSqrtPrice", params);
+    },
+    getSqrtPriceScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getSqrtPriceScale", params);
+    },
+    getLiquidityScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLiquidityScale", params);
+    },
+    getFeeGrowthScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getFeeGrowthScale", params);
+    },
+    getFixedPointScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getFixedPointScale", params);
+    },
+    getPercentageScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getPercentageScale", params);
+    },
+    getTokenAmountScale: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTokenAmountScale", params);
+    },
+    getGlobalMaxTick: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getGlobalMaxTick", params);
+    },
+    getMaxTick: async (
+      params: TestContractParams<InvariantTypes.Fields, { tickSpacing: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getMaxTick", params);
+    },
+    getGlobalMinTick: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getGlobalMinTick", params);
+    },
+    getMinTick: async (
+      params: TestContractParams<InvariantTypes.Fields, { tickSpacing: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getMinTick", params);
+    },
+    getMaxSqrtPrice: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getMaxSqrtPrice", params);
+    },
+    getMinSqrtPrice: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getMinSqrtPrice", params);
+    },
+    getTickSearchRange: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTickSearchRange", params);
+    },
+    mul: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint; rScale: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mul", params);
+    },
+    mulUp: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint; rScale: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mulUp", params);
+    },
+    mulToValueUp: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint; rScale: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mulToValueUp", params);
+    },
+    mulToValue: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint; rScale: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "mulToValue", params);
+    },
+    divValuesToTokenUp: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "divValuesToTokenUp", params);
+    },
+    divValuesToToken: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "divValuesToToken", params);
+    },
+    fromDecimalToValue: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { from: bigint; fromScale: bigint; expectedScale: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "fromDecimalToValue", params);
+    },
+    divValuesUp: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "divValuesUp", params);
+    },
+    divValues: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { l: bigint; r: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "divValues", params);
+    },
+    almostOne: async (
+      params: TestContractParams<InvariantTypes.Fields, { scale: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "almostOne", params);
+    },
+    one: async (
+      params: TestContractParams<InvariantTypes.Fields, { scale: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "one", params);
+    },
+    sqrtPriceFromTick: async (
+      params: TestContractParams<InvariantTypes.Fields, { tickIndex: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "sqrtPriceFromTick", params);
+    },
+    calculateSqrtPrice: async (
+      params: TestContractParams<InvariantTypes.Fields, { tickIndex: bigint }>
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "calculateSqrtPrice", params);
+    },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getProtocolFee", params);
     },
-    set: async (
+    addFeeTier: async (
       params: TestContractParams<
         InvariantTypes.Fields,
-        { key: bigint; value: bigint }
+        { fee: bigint; tickSpacing: bigint }
       >
     ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "set", params);
+      return testMethod(this, "addFeeTier", params);
     },
-    get: async (
-      params: TestContractParams<InvariantTypes.Fields, { key: bigint }>
+    removeFeeTier: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "removeFeeTier", params);
+    },
+    getFeeTierCount: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "get", params);
+      return testMethod(this, "getFeeTierCount", params);
     },
   };
 }
@@ -99,7 +708,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "e958e6607c4aae4fd6022200008ce6e539c06f888ced2e81742081310ef0111f"
+    "537aa8ff8c2cc8bb018197f385d5128d1e02405e38972a757876063fd1f5a9f7"
   )
 );
 
@@ -114,6 +723,418 @@ export class InvariantInstance extends ContractInstance {
   }
 
   methods = {
+    computeSwapStep: async (
+      params: InvariantTypes.CallMethodParams<"computeSwapStep">
+    ): Promise<InvariantTypes.CallMethodResult<"computeSwapStep">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "computeSwapStep",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getDeltaX: async (
+      params: InvariantTypes.CallMethodParams<"getDeltaX">
+    ): Promise<InvariantTypes.CallMethodResult<"getDeltaX">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getDeltaX",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getDeltaY: async (
+      params: InvariantTypes.CallMethodParams<"getDeltaY">
+    ): Promise<InvariantTypes.CallMethodResult<"getDeltaY">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getDeltaY",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceFromInput: async (
+      params: InvariantTypes.CallMethodParams<"getNextSqrtPriceFromInput">
+    ): Promise<
+      InvariantTypes.CallMethodResult<"getNextSqrtPriceFromInput">
+    > => {
+      return callMethod(
+        Invariant,
+        this,
+        "getNextSqrtPriceFromInput",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceFromOutput: async (
+      params: InvariantTypes.CallMethodParams<"getNextSqrtPriceFromOutput">
+    ): Promise<
+      InvariantTypes.CallMethodResult<"getNextSqrtPriceFromOutput">
+    > => {
+      return callMethod(
+        Invariant,
+        this,
+        "getNextSqrtPriceFromOutput",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceXUp: async (
+      params: InvariantTypes.CallMethodParams<"getNextSqrtPriceXUp">
+    ): Promise<InvariantTypes.CallMethodResult<"getNextSqrtPriceXUp">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getNextSqrtPriceXUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getNextSqrtPriceYDown: async (
+      params: InvariantTypes.CallMethodParams<"getNextSqrtPriceYDown">
+    ): Promise<InvariantTypes.CallMethodResult<"getNextSqrtPriceYDown">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getNextSqrtPriceYDown",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateAmountDelta: async (
+      params: InvariantTypes.CallMethodParams<"calculateAmountDelta">
+    ): Promise<InvariantTypes.CallMethodResult<"calculateAmountDelta">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "calculateAmountDelta",
+        params,
+        getContractByCodeHash
+      );
+    },
+    isEnoughToChangePrice: async (
+      params: InvariantTypes.CallMethodParams<"isEnoughToChangePrice">
+    ): Promise<InvariantTypes.CallMethodResult<"isEnoughToChangePrice">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "isEnoughToChangePrice",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateMaxLiquidityPerTick: async (
+      params: InvariantTypes.CallMethodParams<"calculateMaxLiquidityPerTick">
+    ): Promise<
+      InvariantTypes.CallMethodResult<"calculateMaxLiquidityPerTick">
+    > => {
+      return callMethod(
+        Invariant,
+        this,
+        "calculateMaxLiquidityPerTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateMinAmountOut: async (
+      params: InvariantTypes.CallMethodParams<"calculateMinAmountOut">
+    ): Promise<InvariantTypes.CallMethodResult<"calculateMinAmountOut">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "calculateMinAmountOut",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getTickAtSqrtPrice: async (
+      params: InvariantTypes.CallMethodParams<"getTickAtSqrtPrice">
+    ): Promise<InvariantTypes.CallMethodResult<"getTickAtSqrtPrice">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getTickAtSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getSqrtPriceScale: async (
+      params?: InvariantTypes.CallMethodParams<"getSqrtPriceScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getSqrtPriceScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getSqrtPriceScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getLiquidityScale: async (
+      params?: InvariantTypes.CallMethodParams<"getLiquidityScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getLiquidityScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getLiquidityScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getFeeGrowthScale: async (
+      params?: InvariantTypes.CallMethodParams<"getFeeGrowthScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getFeeGrowthScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getFeeGrowthScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getFixedPointScale: async (
+      params?: InvariantTypes.CallMethodParams<"getFixedPointScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getFixedPointScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getFixedPointScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getPercentageScale: async (
+      params?: InvariantTypes.CallMethodParams<"getPercentageScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getPercentageScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getPercentageScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getTokenAmountScale: async (
+      params?: InvariantTypes.CallMethodParams<"getTokenAmountScale">
+    ): Promise<InvariantTypes.CallMethodResult<"getTokenAmountScale">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getTokenAmountScale",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getGlobalMaxTick: async (
+      params?: InvariantTypes.CallMethodParams<"getGlobalMaxTick">
+    ): Promise<InvariantTypes.CallMethodResult<"getGlobalMaxTick">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getGlobalMaxTick",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getMaxTick: async (
+      params: InvariantTypes.CallMethodParams<"getMaxTick">
+    ): Promise<InvariantTypes.CallMethodResult<"getMaxTick">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getMaxTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getGlobalMinTick: async (
+      params?: InvariantTypes.CallMethodParams<"getGlobalMinTick">
+    ): Promise<InvariantTypes.CallMethodResult<"getGlobalMinTick">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getGlobalMinTick",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getMinTick: async (
+      params: InvariantTypes.CallMethodParams<"getMinTick">
+    ): Promise<InvariantTypes.CallMethodResult<"getMinTick">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getMinTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getMaxSqrtPrice: async (
+      params?: InvariantTypes.CallMethodParams<"getMaxSqrtPrice">
+    ): Promise<InvariantTypes.CallMethodResult<"getMaxSqrtPrice">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getMaxSqrtPrice",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getMinSqrtPrice: async (
+      params?: InvariantTypes.CallMethodParams<"getMinSqrtPrice">
+    ): Promise<InvariantTypes.CallMethodResult<"getMinSqrtPrice">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getMinSqrtPrice",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    getTickSearchRange: async (
+      params?: InvariantTypes.CallMethodParams<"getTickSearchRange">
+    ): Promise<InvariantTypes.CallMethodResult<"getTickSearchRange">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getTickSearchRange",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    mul: async (
+      params: InvariantTypes.CallMethodParams<"mul">
+    ): Promise<InvariantTypes.CallMethodResult<"mul">> => {
+      return callMethod(Invariant, this, "mul", params, getContractByCodeHash);
+    },
+    mulUp: async (
+      params: InvariantTypes.CallMethodParams<"mulUp">
+    ): Promise<InvariantTypes.CallMethodResult<"mulUp">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "mulUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    mulToValueUp: async (
+      params: InvariantTypes.CallMethodParams<"mulToValueUp">
+    ): Promise<InvariantTypes.CallMethodResult<"mulToValueUp">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "mulToValueUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    mulToValue: async (
+      params: InvariantTypes.CallMethodParams<"mulToValue">
+    ): Promise<InvariantTypes.CallMethodResult<"mulToValue">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "mulToValue",
+        params,
+        getContractByCodeHash
+      );
+    },
+    divValuesToTokenUp: async (
+      params: InvariantTypes.CallMethodParams<"divValuesToTokenUp">
+    ): Promise<InvariantTypes.CallMethodResult<"divValuesToTokenUp">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "divValuesToTokenUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    divValuesToToken: async (
+      params: InvariantTypes.CallMethodParams<"divValuesToToken">
+    ): Promise<InvariantTypes.CallMethodResult<"divValuesToToken">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "divValuesToToken",
+        params,
+        getContractByCodeHash
+      );
+    },
+    fromDecimalToValue: async (
+      params: InvariantTypes.CallMethodParams<"fromDecimalToValue">
+    ): Promise<InvariantTypes.CallMethodResult<"fromDecimalToValue">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "fromDecimalToValue",
+        params,
+        getContractByCodeHash
+      );
+    },
+    divValuesUp: async (
+      params: InvariantTypes.CallMethodParams<"divValuesUp">
+    ): Promise<InvariantTypes.CallMethodResult<"divValuesUp">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "divValuesUp",
+        params,
+        getContractByCodeHash
+      );
+    },
+    divValues: async (
+      params: InvariantTypes.CallMethodParams<"divValues">
+    ): Promise<InvariantTypes.CallMethodResult<"divValues">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "divValues",
+        params,
+        getContractByCodeHash
+      );
+    },
+    almostOne: async (
+      params: InvariantTypes.CallMethodParams<"almostOne">
+    ): Promise<InvariantTypes.CallMethodResult<"almostOne">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "almostOne",
+        params,
+        getContractByCodeHash
+      );
+    },
+    one: async (
+      params: InvariantTypes.CallMethodParams<"one">
+    ): Promise<InvariantTypes.CallMethodResult<"one">> => {
+      return callMethod(Invariant, this, "one", params, getContractByCodeHash);
+    },
+    sqrtPriceFromTick: async (
+      params: InvariantTypes.CallMethodParams<"sqrtPriceFromTick">
+    ): Promise<InvariantTypes.CallMethodResult<"sqrtPriceFromTick">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "sqrtPriceFromTick",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateSqrtPrice: async (
+      params: InvariantTypes.CallMethodParams<"calculateSqrtPrice">
+    ): Promise<InvariantTypes.CallMethodResult<"calculateSqrtPrice">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "calculateSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
     getProtocolFee: async (
       params?: InvariantTypes.CallMethodParams<"getProtocolFee">
     ): Promise<InvariantTypes.CallMethodResult<"getProtocolFee">> => {
@@ -125,10 +1146,16 @@ export class InvariantInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
-    get: async (
-      params: InvariantTypes.CallMethodParams<"get">
-    ): Promise<InvariantTypes.CallMethodResult<"get">> => {
-      return callMethod(Invariant, this, "get", params, getContractByCodeHash);
+    getFeeTierCount: async (
+      params?: InvariantTypes.CallMethodParams<"getFeeTierCount">
+    ): Promise<InvariantTypes.CallMethodResult<"getFeeTierCount">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getFeeTierCount",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
     },
   };
 
