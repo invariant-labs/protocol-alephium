@@ -119,18 +119,16 @@ Abstract Contract Decimal() {
         return sqrtPrice
     }
 
-    // pub fn abs(
-    //     x: I256
-    // ) -> U256 {
-    //     let mask = x >> 255i
-    //     return toU256!((x + mask) ^ mask)
-    // }
-
     pub fn calculateSqrtPrice(
         tickIndex: I256
     ) -> U256 {
-        // TODO: check if it takes absolute value
-        let tick = toU256!(tickIndex)
+        let mut tick = 0
+        if (tickIndex < 0i) {
+            tick = toU256!((-1) * tickIndex)
+        } else {
+            tick = toU256!(tickIndex)
+        }
+
 
         let fixedPointScale = getFixedPointScale()
         let sqrtPriceScale = getSqrtPriceScale()

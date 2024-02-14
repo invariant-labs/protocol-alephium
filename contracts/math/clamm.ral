@@ -1,8 +1,4 @@
 Contract CLAMM() extends Decimal(){ 
-    // enum MathError {
-    //     InvalidTickIndex = 0
-    //     InvalidTickSpacing = 1
-    // }
 
     pub fn computeSwapStep(
         currentSqrtPrice: U256,

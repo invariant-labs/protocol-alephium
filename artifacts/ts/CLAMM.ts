@@ -710,7 +710,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "54744d0c8d530f9120e52778153f6f9cd4d47bb7f6fd230278d569ead010765a"
+    "778268f31022e07aea5408484a67364bc96ab80b1dfa53fdba33908e254355b2"
   )
 );
 
