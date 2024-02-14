@@ -24,7 +24,7 @@
       "warnings": []
     },
     "IFungibleToken": {
-      "sourceFile": "../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
+      "sourceFile": "../node_modules/@alephium/web3/std/fungible_token_interface.ral",
       "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
@@ -32,7 +32,7 @@
     },
     "Log": {
       "sourceFile": "math/log.ral",
-      "sourceCodeHash": "27700468f7adf63ad4b43855b0c31ab5e97edb1dd12b43f4ce2cc49c5bcb9f09",
+      "sourceCodeHash": "7c40f0d8e5e6900f3e03fff1ba1116769077c442779e7861d4afa0601aa1f55a",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
