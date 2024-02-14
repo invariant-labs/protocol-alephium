@@ -32,6 +32,10 @@ export namespace CLAMMTypes {
   export type State = Omit<ContractState<any>, "fields">;
 
   export interface CallMethodTable {
+    getTickAtSqrtPrice: {
+      params: CallContractParams<{ sqrtPrice: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     getSqrtPriceScale: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -138,62 +142,6 @@ export namespace CLAMMTypes {
     };
     calculateSqrtPrice: {
       params: CallContractParams<{ tickIndex: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    getLog2Scale: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2DoubleScale: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2One: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2Half: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2Two: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2DoubleOne: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2Sqrt10001: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2NegativeMaxLose: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2MinBinaryPosition: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getLog2Accuracy: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    getSqrtPriceDenominator: {
-      params: Omit<CallContractParams<{}>, "args">;
-      result: CallContractResult<bigint>;
-    };
-    sqrtPriceToX32: {
-      params: CallContractParams<{ val: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    log2FloorX32: {
-      params: CallContractParams<{ sqrtPrice: bigint }>;
-      result: CallContractResult<bigint>;
-    };
-    allignTickToSpacing: {
-      params: CallContractParams<{ accurateTick: bigint; tickSpacing: bigint }>;
       result: CallContractResult<bigint>;
     };
     computeSwapStep: {
@@ -315,6 +263,170 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
   }
 
   tests = {
+    getLog2Scale: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2Scale",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2DoubleScale: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2DoubleScale",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2One: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2One", params === undefined ? {} : params);
+    },
+    getLog2Half: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2Half",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2Two: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getLog2Two", params === undefined ? {} : params);
+    },
+    getLog2DoubleOne: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2DoubleOne",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2Sqrt10001: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2Sqrt10001",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2NegativeMaxLose: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2NegativeMaxLose",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2MinBinaryPosition: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2MinBinaryPosition",
+        params === undefined ? {} : params
+      );
+    },
+    getLog2Accuracy: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getLog2Accuracy",
+        params === undefined ? {} : params
+      );
+    },
+    getSqrtPriceDenominator: async (
+      params?: Omit<
+        TestContractParams<never, never>,
+        "testArgs" | "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(
+        this,
+        "getSqrtPriceDenominator",
+        params === undefined ? {} : params
+      );
+    },
+    sqrtPriceToX32: async (
+      params: Omit<TestContractParams<never, { val: bigint }>, "initialFields">
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "sqrtPriceToX32", params);
+    },
+    log2FloorX32: async (
+      params: Omit<
+        TestContractParams<never, { sqrtPrice: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "log2FloorX32", params);
+    },
+    allignTickToSpacing: async (
+      params: Omit<
+        TestContractParams<
+          never,
+          { accurateTick: bigint; tickSpacing: bigint }
+        >,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "allignTickToSpacing", params);
+    },
+    log2IterativeApproximationX32: async (
+      params: Omit<
+        TestContractParams<never, { sqrtPrice: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<[boolean, bigint]>> => {
+      return testMethod(this, "log2IterativeApproximationX32", params);
+    },
+    getTickAtSqrtPrice: async (
+      params: Omit<
+        TestContractParams<never, { sqrtPrice: bigint; tickSpacing: bigint }>,
+        "initialFields"
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "getTickAtSqrtPrice", params);
+    },
     getSqrtPriceScale: async (
       params?: Omit<
         TestContractParams<never, never>,
@@ -570,154 +682,6 @@ class Factory extends ContractFactory<CLAMMInstance, {}> {
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateSqrtPrice", params);
     },
-    getLog2Scale: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2Scale",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2DoubleScale: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2DoubleScale",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2One: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getLog2One", params === undefined ? {} : params);
-    },
-    getLog2Half: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2Half",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2Two: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "getLog2Two", params === undefined ? {} : params);
-    },
-    getLog2DoubleOne: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2DoubleOne",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2Sqrt10001: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2Sqrt10001",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2NegativeMaxLose: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2NegativeMaxLose",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2MinBinaryPosition: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2MinBinaryPosition",
-        params === undefined ? {} : params
-      );
-    },
-    getLog2Accuracy: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getLog2Accuracy",
-        params === undefined ? {} : params
-      );
-    },
-    getSqrtPriceDenominator: async (
-      params?: Omit<
-        TestContractParams<never, never>,
-        "testArgs" | "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(
-        this,
-        "getSqrtPriceDenominator",
-        params === undefined ? {} : params
-      );
-    },
-    sqrtPriceToX32: async (
-      params: Omit<TestContractParams<never, { val: bigint }>, "initialFields">
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "sqrtPriceToX32", params);
-    },
-    log2FloorX32: async (
-      params: Omit<
-        TestContractParams<never, { sqrtPrice: bigint }>,
-        "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "log2FloorX32", params);
-    },
-    allignTickToSpacing: async (
-      params: Omit<
-        TestContractParams<
-          never,
-          { accurateTick: bigint; tickSpacing: bigint }
-        >,
-        "initialFields"
-      >
-    ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "allignTickToSpacing", params);
-    },
     computeSwapStep: async (
       params: Omit<
         TestContractParams<
@@ -895,7 +859,7 @@ export const CLAMM = new Factory(
   Contract.fromJson(
     CLAMMContractJson,
     "",
-    "f75c07c178f4bacdd8648440a4b841ec6d36b4605c47cafebb8998cceaeded88"
+    "09387c4c29acc287e58003af8f7393bfa4ff295f923554a9462e3ad1d48ba4c7"
   )
 );
 
@@ -910,6 +874,17 @@ export class CLAMMInstance extends ContractInstance {
   }
 
   methods = {
+    getTickAtSqrtPrice: async (
+      params: CLAMMTypes.CallMethodParams<"getTickAtSqrtPrice">
+    ): Promise<CLAMMTypes.CallMethodResult<"getTickAtSqrtPrice">> => {
+      return callMethod(
+        CLAMM,
+        this,
+        "getTickAtSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
     getSqrtPriceScale: async (
       params?: CLAMMTypes.CallMethodParams<"getSqrtPriceScale">
     ): Promise<CLAMMTypes.CallMethodResult<"getSqrtPriceScale">> => {
@@ -1174,160 +1149,6 @@ export class CLAMMInstance extends ContractInstance {
         CLAMM,
         this,
         "calculateSqrtPrice",
-        params,
-        getContractByCodeHash
-      );
-    },
-    getLog2Scale: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2Scale">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2Scale">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2Scale",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2DoubleScale: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2DoubleScale">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2DoubleScale">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2DoubleScale",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2One: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2One">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2One">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2One",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2Half: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2Half">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2Half">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2Half",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2Two: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2Two">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2Two">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2Two",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2DoubleOne: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2DoubleOne">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2DoubleOne">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2DoubleOne",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2Sqrt10001: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2Sqrt10001">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2Sqrt10001">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2Sqrt10001",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2NegativeMaxLose: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2NegativeMaxLose">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2NegativeMaxLose">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2NegativeMaxLose",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2MinBinaryPosition: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2MinBinaryPosition">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2MinBinaryPosition">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2MinBinaryPosition",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getLog2Accuracy: async (
-      params?: CLAMMTypes.CallMethodParams<"getLog2Accuracy">
-    ): Promise<CLAMMTypes.CallMethodResult<"getLog2Accuracy">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getLog2Accuracy",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    getSqrtPriceDenominator: async (
-      params?: CLAMMTypes.CallMethodParams<"getSqrtPriceDenominator">
-    ): Promise<CLAMMTypes.CallMethodResult<"getSqrtPriceDenominator">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "getSqrtPriceDenominator",
-        params === undefined ? {} : params,
-        getContractByCodeHash
-      );
-    },
-    sqrtPriceToX32: async (
-      params: CLAMMTypes.CallMethodParams<"sqrtPriceToX32">
-    ): Promise<CLAMMTypes.CallMethodResult<"sqrtPriceToX32">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "sqrtPriceToX32",
-        params,
-        getContractByCodeHash
-      );
-    },
-    log2FloorX32: async (
-      params: CLAMMTypes.CallMethodParams<"log2FloorX32">
-    ): Promise<CLAMMTypes.CallMethodResult<"log2FloorX32">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "log2FloorX32",
-        params,
-        getContractByCodeHash
-      );
-    },
-    allignTickToSpacing: async (
-      params: CLAMMTypes.CallMethodParams<"allignTickToSpacing">
-    ): Promise<CLAMMTypes.CallMethodResult<"allignTickToSpacing">> => {
-      return callMethod(
-        CLAMM,
-        this,
-        "allignTickToSpacing",
         params,
         getContractByCodeHash
       );

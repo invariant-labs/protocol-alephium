@@ -1,4 +1,4 @@
-Abstract Contract Decimal() extends Log(){
+Abstract Contract Decimal() {
     pub fn getSqrtPriceScale() -> U256 {
         return 24
     }
