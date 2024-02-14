@@ -26,9 +26,9 @@ Contract Invariant(
     admin: Address,
     protocolFee: U256,
     feeTierTemplateContractId: ByteVec,
-    mut feeTierCount: U256,
-    poolKeyTemplateContractId: ByteVec,
-    mut poolKeyCount: U256
+    mut feeTierCount: U256
+    // poolKeyTemplateContractId: ByteVec,
+    // poolKeyCount: U256
 ) extends CLAMM() {
     enum InvariantError {
         InvalidTickSpacing = 0

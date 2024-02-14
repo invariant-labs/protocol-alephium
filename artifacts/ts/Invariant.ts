@@ -281,6 +281,7 @@ class Factory extends ContractFactory<
   }
 
   consts = {
+    CLAMMError: { InvalidTickIndex: BigInt(0), InvalidTickSpacing: BigInt(1) },
     InvariantError: {
       InvalidTickSpacing: BigInt(0),
       InvalidFee: BigInt(1),
@@ -422,6 +423,22 @@ class Factory extends ContractFactory<
       params: TestContractParams<InvariantTypes.Fields, { tickSpacing: bigint }>
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateMaxLiquidityPerTick", params);
+    },
+    checkTicks: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { tickLower: bigint; tickUpper: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "checkTicks", params);
+    },
+    checkTick: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { tickIndex: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "checkTick", params);
     },
     calculateMinAmountOut: async (
       params: TestContractParams<
@@ -708,7 +725,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "537aa8ff8c2cc8bb018197f385d5128d1e02405e38972a757876063fd1f5a9f7"
+    "1fb91c627757b2255e60d226d862f2b010b73f5163720c15ec7dc07d7cf3f31d"
   )
 );
 

@@ -18,21 +18,21 @@
     },
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
-      "sourceCodeHash": "12ed90c79d5b0698e16de8007e703616d3279e04ba3b99b0f24815628832e121",
+      "sourceCodeHash": "8442141abf542f8d076cfbff47e71fa95b7e851fcebe2ac9bdfff7e9dad62a59",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "Decimal": {
       "sourceFile": "math/decimal.ral",
-      "sourceCodeHash": "7a8277d34cd9c41b7d903cc8e93ec8749d9597da0b937e7f30e8b55c1aa37d5e",
+      "sourceCodeHash": "9ad0021c75ace9539b310126600bdc321d19108f9b5224117f86e3d13884f635",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "FeeTier": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "b27d90ff8bddb87bf4beeeaa5ed826499cf027c5e63c83585408dc4b48bee2e6",
+      "sourceCodeHash": "3016cc664edf1f2f0027a451ad38f5ea70a6725a606a47261a509e17aa789d95",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "f1b7c2ca34064f0c7055b0d8b424ef158173fbead0c1281f6b2d9471d39dc18b",
       "warnings": []
@@ -46,14 +46,21 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "b27d90ff8bddb87bf4beeeaa5ed826499cf027c5e63c83585408dc4b48bee2e6",
+      "sourceCodeHash": "3016cc664edf1f2f0027a451ad38f5ea70a6725a606a47261a509e17aa789d95",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "537aa8ff8c2cc8bb018197f385d5128d1e02405e38972a757876063fd1f5a9f7",
+      "codeHashDebug": "1fb91c627757b2255e60d226d862f2b010b73f5163720c15ec7dc07d7cf3f31d",
       "warnings": []
     },
     "Log": {
       "sourceFile": "math/log.ral",
       "sourceCodeHash": "7c40f0d8e5e6900f3e03fff1ba1116769077c442779e7861d4afa0601aa1f55a",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "PoolKey": {
+      "sourceFile": "storage/pool-key.ral",
+      "sourceCodeHash": "cc2900e48e4f8a382ee052a725fb6a41a7e5ba028519459c3695176a08048ac4",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
