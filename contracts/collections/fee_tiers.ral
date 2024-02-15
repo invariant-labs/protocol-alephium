@@ -1,7 +1,7 @@
 Abstract Contract FeeTiers(
     feeTierTemplateContractId: ByteVec,
     mut feeTierCount: U256
-) {
+) extends InvariantErrors() {
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
     pub fn feeTiersAdd(caller: Address, fee: U256, tickSpacing: U256) -> () {
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {

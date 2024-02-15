@@ -11,7 +11,7 @@
   "infos": {
     "AddFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -19,6 +19,20 @@
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
       "sourceCodeHash": "8442141abf542f8d076cfbff47e71fa95b7e851fcebe2ac9bdfff7e9dad62a59",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CollectionsPrefixes": {
+      "sourceFile": "collections/prefixes.ral",
+      "sourceCodeHash": "215bb636b2cc55a03bb595bfd46271af80ef6293c78d0133f0bf1e1f2cea3068",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreatePool": {
+      "sourceFile": "invariant_tx.ral",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -39,7 +53,7 @@
     },
     "FeeTiers": {
       "sourceFile": "collections/fee_tiers.ral",
-      "sourceCodeHash": "93ae46b1a666e7afedeab8d542937d6b8223af046aa99e76979c51ea0e8f83ec",
+      "sourceCodeHash": "ad0047c649c86f2cc6b182e472cd1b961003380a3ca311561ee6a0d337587173",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -53,9 +67,16 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "0b1a9eb69a344a35c653bc208a119a9e41fbcf5b83d426ae62f5faba77d9d47a",
+      "sourceCodeHash": "1e4732617d8d0c1dbaea7050f98a91ab456e0aecdf54355aa8a39e822b02d53f",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "bc0060b79f7570bb17820b77d88c75b0015305fa0034b99a95057b4caabe077a",
+      "codeHashDebug": "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340",
+      "warnings": []
+    },
+    "InvariantErrors": {
+      "sourceFile": "storage/errors.ral",
+      "sourceCodeHash": "d2ec016524deabf37e3a44e019e07af7e8db802ed88518708782ec87b07428ef",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "Log": {
@@ -73,15 +94,15 @@
       "warnings": []
     },
     "PoolKey": {
-      "sourceFile": "storage/pool-key.ral",
-      "sourceCodeHash": "efbfd76982583dceb4485ddc316d59c3af695c47f1f1b6d898e46fb1c84b684f",
+      "sourceFile": "storage/pool_key.ral",
+      "sourceCodeHash": "a58ec9be08f797f7af83b73c9671ab4c2004e7650580b4beb9a61f86e0d13aec",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "RemoveFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []

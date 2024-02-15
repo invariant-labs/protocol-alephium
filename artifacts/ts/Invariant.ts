@@ -34,8 +34,8 @@ export namespace InvariantTypes {
     protocolFee: bigint;
     feeTierTemplateContractId: HexString;
     feeTierCount: bigint;
-    poolKeyCount: bigint;
     poolTemplateContractId: HexString;
+    poolKeyCount: bigint;
   };
 
   export type State = ContractState<Fields>;
@@ -271,7 +271,8 @@ export namespace InvariantTypes {
       params: CallContractParams<{
         token0: Address;
         token1: Address;
-        fee: HexString;
+        fee: bigint;
+        tickSpacing: bigint;
       }>;
       result: CallContractResult<HexString>;
     };
@@ -320,9 +321,9 @@ class Factory extends ContractFactory<
       FeeTierNotFound: BigInt(4),
       InvalidInitTick: BigInt(5),
       PoolAlreadyExist: BigInt(6),
+      TokensAreSame: BigInt(7),
     },
-    PoolKeyError: { TokensAreSame: BigInt(0) },
-    InvariantCollection: { FeeTiers: BigInt(0) },
+    InvariantCollection: { FeeTiers: BigInt(0), PoolKeys: BigInt(1) },
   };
 
   at(address: string): InvariantInstance {
@@ -776,7 +777,7 @@ class Factory extends ContractFactory<
     createPoolKey: async (
       params: TestContractParams<
         InvariantTypes.Fields,
-        { token0: Address; token1: Address; fee: HexString }
+        { token0: Address; token1: Address; fee: bigint; tickSpacing: bigint }
       >
     ): Promise<TestContractResult<HexString>> => {
       return testMethod(this, "createPoolKey", params);
@@ -792,7 +793,8 @@ class Factory extends ContractFactory<
         {
           token0: Address;
           token1: Address;
-          feeTier: HexString;
+          fee: bigint;
+          tickSpacing: bigint;
           initSqrtPrice: bigint;
           initTick: bigint;
         }
@@ -842,7 +844,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "bc0060b79f7570bb17820b77d88c75b0015305fa0034b99a95057b4caabe077a"
+    "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340"
   )
 );
 

@@ -107,4 +107,24 @@ describe('invariant tests', () => {
     feeTier = await invariant.methods.getFeeTierCount()
     expect(feeTier.returns).toEqual(0n)
   })
+  test('init pool', async () => {
+    const invariantResult = await deployInvariant(sender, 0n)
+
+    const invariant = Invariant.at(invariantResult.contractInstance.address)
+
+    let feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(0n)
+
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: 0n,
+        tickSpacing: 1n
+      },
+      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+    })
+
+    feeTier = await invariant.methods.getFeeTierCount()
+    expect(feeTier.returns).toEqual(1n)
+  })
 })

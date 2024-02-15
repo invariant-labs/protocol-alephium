@@ -1,19 +1,17 @@
-Abstract Contract PoolKey() {
-    enum PoolKeyError {
-        TokensAreSame = 0
-    }
-
+Abstract Contract PoolKey() extends CollectionsPrefixes(), InvariantErrors() {
     pub fn createPoolKey(
         token0: Address,
         token1: Address,
-        fee: FeeTier
+        fee: U256,
+        tickSpacing: U256
         ) -> ByteVec {
 
-        assert!(token0 != token1, PoolKeyError.TokensAreSame)
+        assert!(token0 != token1, InvariantError.TokensAreSame)
 
+        let prefix = toByteVec!(InvariantCollection.PoolKeys)
         let token0Bytes = toByteVec!(token0)
         let token1Bytes = toByteVec!(token1)
-        let feeTierBytes = toByteVec!(fee.getFee()) ++ toByteVec!(fee.getTickSpacing())
+        let feeTierBytes = toByteVec!(fee) ++ toByteVec!(tickSpacing)
 
         // TODO: Find a way to compare tokens
         // ByteVec && Address cannot have in-equality chcek in if statement
@@ -27,6 +25,7 @@ Abstract Contract PoolKey() {
         // } else {
         //     return token1Bytes ++ token0Bytes ++ feeTierBytes
         // }
-        return token1Bytes ++ token0Bytes ++ feeTierBytes
+
+        return prefix ++ token1Bytes ++ token0Bytes ++ feeTierBytes
     }
 }
