@@ -1,0 +1,124 @@
+Contract Pool(
+    poolKey: ByteVec,
+    mut poolLiquidity: U256,
+    poolCurrentSqrtPrice: U256,
+    poolCurrentTickIndex: I256,
+    mut feeGrowthGlobalX: U256,
+    mut feeGrowthGlobalY: U256,
+    mut feeProtocolTokenX: U256,
+    mut feeProtocolTokenY: U256,
+    startTimestamp: U256,
+    lastTimestamp: U256,
+    feeReceiver: Address,
+    exist: Bool
+) extends CLAMM(), Decimal() {
+        
+        pub fn getPoolKey() -> ByteVec {
+            return poolKey
+        }
+        pub fn getPoolLiquidity() -> U256 {
+            return poolLiquidity
+        }
+        pub fn getPoolCurrentSqrtPrice() -> U256 {
+            return poolCurrentSqrtPrice
+        }
+        pub fn getPoolCurrentTickIndex() -> I256 {
+            return poolCurrentTickIndex
+        }
+        pub fn getFeeGrowthGlobalX() -> U256 {
+            return feeGrowthGlobalX
+        }
+        pub fn getFeeGrowthGrobalY() -> U256 {
+            return feeGrowthGlobalY
+        }
+        pub fn getFeeProtocolTokenX() -> U256 {
+            return feeProtocolTokenX
+        }
+        pub fn getFeeProtocolTokenY() -> U256 {
+            return feeProtocolTokenY
+        }
+        pub fn getStartTimestamp() -> U256 {
+            return startTimestamp
+        }
+        pub fn getLastTimestamp() -> U256 {
+            return lastTimestamp
+        }
+        pub fn getFeeReceiver() -> Address {
+            return feeReceiver
+        }
+        pub fn getExist() -> Bool {
+            return exist
+        }
+
+        @using(updateFields = true, checkExternalCaller = false)
+        pub fn addFee(amount: U256, inX: Bool, protocolFee: U256) -> () {
+            let invariantProtocolFee = mulUp(amount, protocolFee, getPercentageScale())
+
+            let poolFee = amount - invariantProtocolFee
+
+            if (poolFee == 0 && invariantProtocolFee == 0 || getPoolLiquidity() == 0) {
+                return
+            }
+
+            let feeGrowth = feeGrowthFromFee(getPoolLiquidity(), poolFee)
+
+            if (inX) {
+                feeGrowthGlobalX = wrappingAdd(feeGrowthGlobalX, feeGrowth)
+                feeProtocolTokenX = feeProtocolTokenX + invariantProtocolFee
+            } else {
+                feeGrowthGlobalY = wrappingAdd(feeGrowthGlobalY, feeGrowth)
+                feeProtocolTokenY = feeProtocolTokenY + invariantProtocolFee
+            }
+            return
+        }
+        
+        @using(updateFields = true, checkExternalCaller = false)
+        pub fn updateLiquidity(liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+            let (x, y, updateLiquidity) = calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
+            if (!updateLiquidity) {
+                return x, y
+            }
+
+            if (liquiditySign) {
+                poolLiquidity = poolLiquidity + liquidityDelta
+            } else {
+                poolLiquidity = poolLiquidity - liquidityDelta
+            }
+            return x, y
+        }
+
+        // TODO
+        // pub fn crossTick(
+        //     nextSqrtPrice: U256,
+        //     amountIn: U256,
+        //     amountOut: U256,
+        //     feeAmount: U256,
+        //     swapLimit: U256,
+        //     tick: U256,
+        //     remainingAmount: U256,
+        //     byAmountIn: Bool,
+        //     xToY: Bool,
+        //     currentTimestamp: U256,
+        //     protocolFee: U256,
+        //     feeTier: FeeTier
+        //     ) -> (U256,Bool) {
+        //     let mut hasCrossed = false
+        //     let mut totalAmount = 0
+        //     let fee = feeTier.getFee()
+
+        //     if nextSqrtPrice == swapLimit {
+        //         let isEnoughToCross = isEnoughToChangePrice(remainingAmount, nextSqrtPrice, getPoolLiquidity(), fee, byAmountIn, xToY)
+        //         if( !xToY || isEnoughToCross) {     
+        //         }
+        //     }
+        // }
+
+        @using(updateFields = true, checkExternalCaller = false)
+        pub fn withdrawProtocolFee() -> (U256, U256) {
+            let x = feeProtocolTokenX
+            let y = feeProtocolTokenY
+            feeProtocolTokenX = 0
+            feeProtocolTokenY = 0
+            return x, y
+        }
+}

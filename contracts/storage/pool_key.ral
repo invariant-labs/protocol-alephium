@@ -1,0 +1,31 @@
+Abstract Contract PoolKey() extends CollectionsPrefixes(), InvariantErrors() {
+    pub fn createPoolKey(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256
+        ) -> ByteVec {
+
+        assert!(token0 != token1, InvariantError.TokensAreSame)
+
+        let prefix = toByteVec!(InvariantCollection.PoolKeys)
+        let token0Bytes = toByteVec!(token0)
+        let token1Bytes = toByteVec!(token1)
+        let feeTierBytes = toByteVec!(fee) ++ toByteVec!(tickSpacing)
+
+        // TODO: Find a way to compare tokens
+        // ByteVec && Address cannot have in-equality chcek in if statement
+        //
+        // Okey, i see what you mean now. 
+        // Yeah you can do equality check in if statement for Address or ByteVec, 
+        // non-equality check is only for I256/U256
+        //
+        // if (token0Bytes < token1Bytes) {
+        //     return token0Bytes ++ token1Bytes ++ feeTierBytes
+        // } else {
+        //     return token1Bytes ++ token0Bytes ++ feeTierBytes
+        // }
+
+        return prefix ++ token1Bytes ++ token0Bytes ++ feeTierBytes
+    }
+}

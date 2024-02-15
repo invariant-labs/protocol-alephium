@@ -1,4 +1,8 @@
-Contract CLAMM() extends Log(){ 
+Abstract Contract CLAMM() extends Log(){ 
+    enum CLAMMError {
+        InvalidTickIndex = 0
+        InvalidTickSpacing = 1
+    }
 
     pub fn computeSwapStep(
         currentSqrtPrice: U256,
@@ -211,9 +215,7 @@ Contract CLAMM() extends Log(){
         upperTick: I256,
         lowerTick: I256
     ) -> (U256, U256, Bool) {
-        
-        // TODO add error enum
-        // assert!(upperTick < lowerTick, MathError.InvalidTickIndex)
+        assert!(upperTick < lowerTick, CLAMMError.InvalidTickIndex)
 
         let mut amountX = 0u
         let mut amountY = 0u
@@ -279,27 +281,25 @@ Contract CLAMM() extends Log(){
     pub fn calculateMaxLiquidityPerTick(
         tickSpacing: U256
     ) -> U256 {
-        let maxTicksAmountSqrtPriceLimited = 2 * getGlobalMaxTick() + 1
+        let maxTicksAmountSqrtPriceLimited = 2 * toU256!(getGlobalMaxTick()) + 1
         let ticsAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
         let maxLiquidity = u256Max!() / ticsAmountSpacingLimited
         return maxLiquidity
     }
 
-    // // TODO: Add error enums
-    // pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
-    //     // TODO: add error enum
-    //     assert!(tickLower > tickUpper, MathError.InvalidTickIndex)
-    //     checkTick(tickLower, tickSpacing)
-    //     checkTick(tickUpper, tickSpacing)
-    // }
+    pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
+        assert!(tickLower > tickUpper, CLAMMError.InvalidTickIndex)
+        checkTick(tickLower, tickSpacing)
+        checkTick(tickUpper, tickSpacing)
+    }
 
-    // pub fn checkTick(tickIndex: I256, tickSpacing: U256) -> () {
-    //     let minTick = getMinTick(tickSpacing)
-    //     let maxTick = getMaxTick(tickSpacing)
-    //     assert!(tickIndex % tickSpacing == 0, MathError.InvalidTickSpacing)
-    //     assert!(tickIndex > maxTick, MathError.InvalidTickIndex)
-    //     assert!(tickIndex < minTick, MathError.InvalidTickIndex)
-    // }
+    pub fn checkTick(tickIndex: I256, tickSpacing: U256) -> () {
+        let minTick = getMinTick(tickSpacing)
+        let maxTick = getMaxTick(tickSpacing)
+        assert!(tickIndex % toI256!(tickSpacing) == 0i, CLAMMError.InvalidTickSpacing)
+        assert!(tickIndex > maxTick, CLAMMError.InvalidTickIndex)
+        assert!(tickIndex < minTick, CLAMMError.InvalidTickIndex)
+    }
     pub fn calculateMinAmountOut(
         expectedAmountOut: U256,
         slippage: U256

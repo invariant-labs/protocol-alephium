@@ -2,22 +2,43 @@ Contract Invariant(
     admin: Address,
     protocolFee: U256,
     feeTierTemplateContractId: ByteVec,
-    mut feeTierCount: U256
-) extends FeeTiers(feeTierTemplateContractId, feeTierCount) {
-    enum InvariantError {
-        InvalidTickSpacing = 0
-        InvalidFee = 1
-        NotAdmin = 2
-        FeeTierAlreadyExist = 3
-        FeeTierNotFound = 4
-    }
-
-    enum InvariantCollection {
-        FeeTiers = 0
-    }
-
+    mut feeTierCount: U256,
+    poolTemplateContractId: ByteVec,
+    mut poolKeyCount: U256
+) extends FeeTiers(feeTierTemplateContractId, feeTierCount), CLAMM(), PoolKey(), CollectionsPrefixes() { //PoolKeys(poolTemplateContractId, poolKeyCount)
     pub fn getProtocolFee() -> U256 {
         return protocolFee
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
+        let caller = callerAddress!()
+        let timestamp = blockTimeStamp!()
+        assert!(feeTierExist(fee, tickSpacing), InvariantError.FeeTierNotFound)
+    
+        let poolKey = createPoolKey(token0, token1, fee, tickSpacing)
+        poolKeyCount = poolKeyCount + 1
+
+        if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
+            let maxTick = getMaxTick(tickSpacing)
+            let maxSqrtPrice = sqrtPriceFromTick(maxTick)
+            assert!(initSqrtPrice == maxSqrtPrice, InvariantError.InvalidInitTick)
+        } else {
+            let lowerBound = sqrtPriceFromTick(initTick)
+            let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
+            assert!(initSqrtPrice < lowerBound && initSqrtPrice >= upperBound, InvariantError.InvalidInitTick)
+        }
+        
+        let poolContract = Pool(subContractId!(poolKey))
+        assert!(!poolContract.getExist(), InvariantError.PoolAlreadyExist)   
+
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(poolKey, 0, initSqrtPrice, initTick, 0, 0, 0, 0, timestamp, timestamp, caller, true)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            poolKey,
+            poolTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)

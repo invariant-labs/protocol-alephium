@@ -11,21 +11,35 @@
   "infos": {
     "AddFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
-      "sourceCodeHash": "53e05e032e95f362b02d6d8fb5b83b69853eaa3d4220d1ac2619f5bdaa1cd246",
+      "sourceCodeHash": "8442141abf542f8d076cfbff47e71fa95b7e851fcebe2ac9bdfff7e9dad62a59",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "58517dcdc423d7955ba12be639f9bd77b09117a6eaae3e877dc3c8d50819fda3",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CollectionsPrefixes": {
+      "sourceFile": "collections/prefixes.ral",
+      "sourceCodeHash": "215bb636b2cc55a03bb595bfd46271af80ef6293c78d0133f0bf1e1f2cea3068",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreatePool": {
+      "sourceFile": "invariant_tx.ral",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "Decimal": {
       "sourceFile": "math/decimal.ral",
-      "sourceCodeHash": "7a8277d34cd9c41b7d903cc8e93ec8749d9597da0b937e7f30e8b55c1aa37d5e",
+      "sourceCodeHash": "67aa8cfb9e382510292c3f74c0a564df21630231c1055c495fd8fed1d08774c5",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -39,13 +53,13 @@
     },
     "FeeTiers": {
       "sourceFile": "collections/fee_tiers.ral",
-      "sourceCodeHash": "93ae46b1a666e7afedeab8d542937d6b8223af046aa99e76979c51ea0e8f83ec",
+      "sourceCodeHash": "ad0047c649c86f2cc6b182e472cd1b961003380a3ca311561ee6a0d337587173",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "IFungibleToken": {
-      "sourceFile": "../../../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
+      "sourceFile": "../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
       "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
@@ -53,9 +67,16 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "a650600776a82842dc8d60115e92159b48abe85b263089589b4b0e1f684aebc2",
+      "sourceCodeHash": "1e4732617d8d0c1dbaea7050f98a91ab456e0aecdf54355aa8a39e822b02d53f",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "d35c553849b23274920abf99ceb8d1f5b50399bf7da0edf4cda3d657ef7c63e9",
+      "codeHashDebug": "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340",
+      "warnings": []
+    },
+    "InvariantErrors": {
+      "sourceFile": "storage/errors.ral",
+      "sourceCodeHash": "d2ec016524deabf37e3a44e019e07af7e8db802ed88518708782ec87b07428ef",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "Log": {
@@ -65,9 +86,23 @@
       "codeHashDebug": "",
       "warnings": []
     },
+    "Pool": {
+      "sourceFile": "storage/pool.ral",
+      "sourceCodeHash": "0209a08fc1741dd7a52ad16917ac34427605b6aa40f18921d9d501286e237eea",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "0ce64a76169c7e7dcdf59f3b2b72fc43b4466c7600b250506537c0932be25089",
+      "warnings": []
+    },
+    "PoolKey": {
+      "sourceFile": "storage/pool_key.ral",
+      "sourceCodeHash": "a58ec9be08f797f7af83b73c9671ab4c2004e7650580b4beb9a61f86e0d13aec",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
     "RemoveFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "a88d9512389499f6420626857278b393be8551cfd7855463b12330ae99ec4038",
+      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
