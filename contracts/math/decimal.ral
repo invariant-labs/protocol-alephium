@@ -188,4 +188,26 @@ Abstract Contract Decimal() {
             return fromDecimalToValue(intermediate, 0, sqrtPriceScale)
         }
     }
+
+    // FeeGrowth related
+    pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
+        return fee * getFeeGrowthScale() * getLiquidityScale() / liquidity
+    }
+
+    pub fn wrappingAdd(a: U256, b: U256) -> U256 {
+        let u256Max = u256Max!()
+        if (b > u256Max - a) {
+            return (b - (u256Max - a)) - 1
+        } else {
+            return a + b
+        }
+    }
+    pub fn wrappingSub(a: U256, b: U256) -> U256 {
+        let u256Max = u256Max!()
+        if (b > a) {
+            return u256Max - (b - a) + 1
+        } else {
+            return a - b
+        }
+    }
 }

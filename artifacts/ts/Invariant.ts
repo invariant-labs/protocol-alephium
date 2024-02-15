@@ -251,6 +251,18 @@ export namespace InvariantTypes {
       params: CallContractParams<{ tickIndex: bigint }>;
       result: CallContractResult<bigint>;
     };
+    feeGrowthFromFee: {
+      params: CallContractParams<{ liquidity: bigint; fee: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    wrappingAdd: {
+      params: CallContractParams<{ a: bigint; b: bigint }>;
+      result: CallContractResult<bigint>;
+    };
+    wrappingSub: {
+      params: CallContractParams<{ a: bigint; b: bigint }>;
+      result: CallContractResult<bigint>;
+    };
     createPoolKey: {
       params: CallContractParams<{
         token0: Address;
@@ -704,6 +716,30 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateSqrtPrice", params);
     },
+    feeGrowthFromFee: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { liquidity: bigint; fee: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "feeGrowthFromFee", params);
+    },
+    wrappingAdd: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { a: bigint; b: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "wrappingAdd", params);
+    },
+    wrappingSub: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { a: bigint; b: bigint }
+      >
+    ): Promise<TestContractResult<bigint>> => {
+      return testMethod(this, "wrappingSub", params);
+    },
     createPoolKey: async (
       params: TestContractParams<
         InvariantTypes.Fields,
@@ -760,7 +796,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "889a79ab2caa2a5f86269244a94fc317ffb15942da9a6b30c36f6a768e4bf0fd"
+    "8f7015d7b701f8c4894c2a6b054db940eb4d0d4b1b410e0bcf3ec363732a98f5"
   )
 );
 
@@ -1183,6 +1219,39 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "calculateSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
+    feeGrowthFromFee: async (
+      params: InvariantTypes.CallMethodParams<"feeGrowthFromFee">
+    ): Promise<InvariantTypes.CallMethodResult<"feeGrowthFromFee">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeGrowthFromFee",
+        params,
+        getContractByCodeHash
+      );
+    },
+    wrappingAdd: async (
+      params: InvariantTypes.CallMethodParams<"wrappingAdd">
+    ): Promise<InvariantTypes.CallMethodResult<"wrappingAdd">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "wrappingAdd",
+        params,
+        getContractByCodeHash
+      );
+    },
+    wrappingSub: async (
+      params: InvariantTypes.CallMethodParams<"wrappingSub">
+    ): Promise<InvariantTypes.CallMethodResult<"wrappingSub">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "wrappingSub",
         params,
         getContractByCodeHash
       );
