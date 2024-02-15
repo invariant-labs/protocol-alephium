@@ -1,33 +1,9 @@
-Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Bool) {
-    enum FeeTierError {
-        NotAdmin = 0
-    }
-    
-    pub fn getFee() -> U256 {
-      return fee
-    }
-
-    pub fn getTickSpacing() -> U256 {
-      return tickSpacing
-    }
-
-    pub fn isActive() -> Bool {
-      return isActive
-    }
-
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn setActive(active: Bool) -> () {
-        assert!(callerAddress!() == admin, FeeTierError.NotAdmin)
-        isActive = active
-    }
-}
-
 Contract Invariant(
     admin: Address,
     protocolFee: U256,
     feeTierTemplateContractId: ByteVec,
     mut feeTierCount: U256
-) {
+) extends FeeTiers(feeTierTemplateContractId, feeTierCount) {
     enum InvariantError {
         InvalidTickSpacing = 0
         InvalidFee = 1
@@ -36,11 +12,15 @@ Contract Invariant(
         FeeTierNotFound = 4
     }
 
+    enum InvariantCollection {
+        FeeTiers = 0
+    }
+
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
-    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
 
@@ -48,63 +28,36 @@ Contract Invariant(
         assert!(fee <= 1000000000000, InvariantError.InvalidFee)
         assert!(caller == admin, InvariantError.NotAdmin)
 
-        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
-            let contract = FeeTier(subContractId!(toByteVec!(i)))
-            
-            let existingFee = contract.getFee()
-            let existingTickSpacing = contract.getTickSpacing()
-            let existingIsActive = contract.isActive()
-
-            if (!existingIsActive) {
-                contract.setActive(true)
-                return
-            }
-
-            assert!((fee != existingFee || tickSpacing != existingTickSpacing), InvariantError.FeeTierAlreadyExist)
-        }
-
-        feeTierCount = feeTierCount + 1
-        let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            toByteVec!(feeTierCount),
-            feeTierTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
+        feeTiersAdd{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }
 
     @using(checkExternalCaller = false)
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
-        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
-            let contract = FeeTier(subContractId!(toByteVec!(i)))
+        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
 
-            let existingFee = contract.getFee()
-            let existingTickSpacing = contract.getTickSpacing()
-            let existingIsActive = contract.isActive()
-
-            if (fee == existingFee && tickSpacing == existingTickSpacing && existingIsActive) {
-                contract.setActive(false)
-                return
-            }
-        }
-
-        assert!(false, InvariantError.FeeTierNotFound)
+        feeTiersRemove(fee, tickSpacing)
     }
 
+    pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {
+        return feeTiersContains(fee, tickSpacing)
+    }
+
+    // TODO: remove if possible after implementing get fee tiers
     pub fn getFeeTierCount() -> U256 {
         let mut count = 0
 
         for (let mut index = 1; index <= feeTierCount; index = index + 1) {
-            let path = toByteVec!(index)
-            let contractId = subContractId!(path)
-            let contract = FeeTier(contractId)
-            let isActive = contract.isActive()
+            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(index)))
 
-            if (isActive) {
+            if (contract.isActive()) {
                 count = count + 1
             }
         }
 
         return count
     }
+
+
+    // TODO: implement
+    pub fn getFeeTiers() -> () {}
 }

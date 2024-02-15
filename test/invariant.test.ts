@@ -27,7 +27,7 @@ describe('invariant tests', () => {
         fee: 0n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
 
     feeTier = await invariant.methods.getFeeTierCount()

@@ -39,9 +39,17 @@ export namespace InvariantTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    feeTiersContains: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
+    };
+    feeTierExist: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
     };
     getFeeTierCount: {
       params: Omit<CallContractParams<{}>, "args">;
@@ -78,6 +86,7 @@ class Factory extends ContractFactory<
       FeeTierAlreadyExist: BigInt(3),
       FeeTierNotFound: BigInt(4),
     },
+    InvariantCollection: { FeeTiers: BigInt(0) },
   };
 
   at(address: string): InvariantInstance {
@@ -85,6 +94,30 @@ class Factory extends ContractFactory<
   }
 
   tests = {
+    feeTiersAdd: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { caller: Address; fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersAdd", params);
+    },
+    feeTiersRemove: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersRemove", params);
+    },
+    feeTiersContains: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTiersContains", params);
+    },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
@@ -106,10 +139,23 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "removeFeeTier", params);
     },
+    feeTierExist: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTierExist", params);
+    },
     getFeeTierCount: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getFeeTierCount", params);
+    },
+    getFeeTiers: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "getFeeTiers", params);
     },
   };
 }
@@ -119,7 +165,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "deb937656eb5e44dc340d4459fdfedea34f7ec6ee2de1540f2cde7d035a9914c"
+    "d35c553849b23274920abf99ceb8d1f5b50399bf7da0edf4cda3d657ef7c63e9"
   )
 );
 
@@ -134,6 +180,17 @@ export class InvariantInstance extends ContractInstance {
   }
 
   methods = {
+    feeTiersContains: async (
+      params: InvariantTypes.CallMethodParams<"feeTiersContains">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTiersContains">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTiersContains",
+        params,
+        getContractByCodeHash
+      );
+    },
     getProtocolFee: async (
       params?: InvariantTypes.CallMethodParams<"getProtocolFee">
     ): Promise<InvariantTypes.CallMethodResult<"getProtocolFee">> => {
@@ -142,6 +199,17 @@ export class InvariantInstance extends ContractInstance {
         this,
         "getProtocolFee",
         params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    feeTierExist: async (
+      params: InvariantTypes.CallMethodParams<"feeTierExist">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTierExist">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTierExist",
+        params,
         getContractByCodeHash
       );
     },

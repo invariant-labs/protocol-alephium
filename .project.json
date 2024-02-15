@@ -1,5 +1,5 @@
 {
-  "fullNodeVersion": "v2.8.2",
+  "fullNodeVersion": "v2.8.3",
   "compilerOptionsUsed": {
     "ignoreUnusedConstantsWarnings": false,
     "ignoreUnusedVariablesWarnings": false,
@@ -31,10 +31,17 @@
       "warnings": []
     },
     "FeeTier": {
-      "sourceFile": "invariant.ral",
-      "sourceCodeHash": "df665fb0f6a4013929891619252e1c7a2d31e105becc5ee03f4e2ea586a21a66",
+      "sourceFile": "storage/fee_tier.ral",
+      "sourceCodeHash": "dcb4c0ec7e42a9ed418f26daa0c1e581d479e11860b2bda2c79f6d63f2d5a738",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "f1b7c2ca34064f0c7055b0d8b424ef158173fbead0c1281f6b2d9471d39dc18b",
+      "warnings": []
+    },
+    "FeeTiers": {
+      "sourceFile": "collections/fee_tiers.ral",
+      "sourceCodeHash": "93ae46b1a666e7afedeab8d542937d6b8223af046aa99e76979c51ea0e8f83ec",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "IFungibleToken": {
@@ -46,9 +53,9 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "df665fb0f6a4013929891619252e1c7a2d31e105becc5ee03f4e2ea586a21a66",
+      "sourceCodeHash": "a650600776a82842dc8d60115e92159b48abe85b263089589b4b0e1f684aebc2",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "deb937656eb5e44dc340d4459fdfedea34f7ec6ee2de1540f2cde7d035a9914c",
+      "codeHashDebug": "d35c553849b23274920abf99ceb8d1f5b50399bf7da0edf4cda3d657ef7c63e9",
       "warnings": []
     },
     "Log": {

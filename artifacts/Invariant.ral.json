@@ -1,8 +1,8 @@
 {
-  "version": "v2.8.2",
+  "version": "v2.8.3",
   "name": "Invariant",
-  "bytecode": "04040940ac4100413f010000000102ce01020103020a00405cb4170216010c331601134064321b0c7b160013c1e8d4a51000320d7b1602ce00450e7b0d17031603a000324c4029160340cb17040c0d1604010017050c0d1604010117060c0d16040102170716074b06030d0c1604010302160016053016011606301b0f7b16030d2a17034a7fd3a0000d2aa100b2160016011303640313016417091708160213c40de0b6b3a7640000a2a00040ce0216081609c118010002070040310d17021602a000324c4028160240cb17030c0d1603010017040c0d1603010117050c0d160301021706160016042f160116052f1a16061a4c06040d0c160301030216020d2a17024a7fd404107b010000060140220c17000d17011601a000324c1816014017021602cb1703160317040c0d16040102170516054c0416000d2a170016010d2a17014a24160002",
-  "codeHash": "deb937656eb5e44dc340d4459fdfedea34f7ec6ee2de1540f2cde7d035a9914c",
+  "bytecode": "0409407a40c54109411241504162416f41a441aa010303070040470d17031603a000324c40260c4016034044cb17040c0d160401024b06030d0c160401030216010c0d160401003016020c0d16040101301b0f7b16030d2a17034a7fd6a0000d2aa100b2160116021303640313016417061705160013c40de0b6b3a7640000a20c4016034044ce0216051606c1180100020400402e0d17021602a000324c40250c4016024044cb170316000c0d160301002f16010c0d160301012f1a0c0d160301021a4c06040d0c160301030216020d2a17024a7fd704107b010002040140290d17021602a000324c40210c4016024044cb170316000c0d160301002f16010c0d160301012f1a0c0d160301021a4c02030216020d2a17024a7fdb0402010000000102ce010201030203001cb4170216010c331601134064321b0c7b160013c1e8d4a51000320d7b1602ce00450e7b160213c40de0b6b3a7640000a21602160016010000010002020008b4ce00450e7b1600160100010100020201041600160100020201000003011f0c17000d17011601a000324c150c4016014044cb17020c0d160201024c0416000d2a170016010d2a17014a27160002010000000000",
+  "codeHash": "d35c553849b23274920abf99ceb8d1f5b50399bf7da0edf4cda3d657ef7c63e9",
   "fieldsSig": {
     "names": [
       "admin",
@@ -25,6 +25,68 @@
   },
   "eventsSig": [],
   "functions": [
+    {
+      "name": "feeTiersAdd",
+      "usePreapprovedAssets": true,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "caller",
+        "fee",
+        "tickSpacing"
+      ],
+      "paramTypes": [
+        "Address",
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "feeTiersRemove",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fee",
+        "tickSpacing"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": []
+    },
+    {
+      "name": "feeTiersContains",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fee",
+        "tickSpacing"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "Bool"
+      ]
+    },
     {
       "name": "getProtocolFee",
       "usePreapprovedAssets": false,
@@ -76,6 +138,27 @@
       "returnTypes": []
     },
     {
+      "name": "feeTierExist",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [
+        "fee",
+        "tickSpacing"
+      ],
+      "paramTypes": [
+        "U256",
+        "U256"
+      ],
+      "paramIsMutable": [
+        false,
+        false
+      ],
+      "returnTypes": [
+        "Bool"
+      ]
+    },
+    {
       "name": "getFeeTierCount",
       "usePreapprovedAssets": false,
       "useAssetsInContract": false,
@@ -86,6 +169,16 @@
       "returnTypes": [
         "U256"
       ]
+    },
+    {
+      "name": "getFeeTiers",
+      "usePreapprovedAssets": false,
+      "useAssetsInContract": false,
+      "isPublic": true,
+      "paramNames": [],
+      "paramTypes": [],
+      "paramIsMutable": [],
+      "returnTypes": []
     }
   ],
   "constants": [],
@@ -126,6 +219,18 @@
           "value": {
             "type": "U256",
             "value": "4"
+          }
+        }
+      ]
+    },
+    {
+      "name": "InvariantCollection",
+      "fields": [
+        {
+          "name": "FeeTiers",
+          "value": {
+            "type": "U256",
+            "value": "0"
           }
         }
       ]
