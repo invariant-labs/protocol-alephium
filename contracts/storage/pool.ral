@@ -1,0 +1,71 @@
+Contract Pool(
+    poolKey: ByteVec,
+    poolLiquidity: U256,
+    poolCurrentSqrtPrice: U256,
+    poolCurrentTickIndex: I256,
+    feeGrowthGlobalX: U256,
+    feeGrowthGlobalY: U256,
+    feeProtocolTokenX: U256,
+    feeProtocolTokenY: U256,
+    startTimestamp: U256,
+    lastTimestamp: U256,
+    feeReceiver: Address,
+    exist: Bool
+) extends CLAMM() {
+        
+        pub fn getPoolKey() -> ByteVec {
+            return poolKey
+        }
+        pub fn getPoolLiquidity() -> U256 {
+            return poolLiquidity
+        }
+        pub fn getPoolCurrentSqrtPrice() -> U256 {
+            return poolCurrentSqrtPrice
+        }
+        pub fn getPoolCurrentTickIndex() -> I256 {
+            return poolCurrentTickIndex
+        }
+        pub fn getFeeGrowthGlobalX() -> U256 {
+            return feeGrowthGlobalX
+        }
+        pub fn getFeeGrowthGrobalY() -> U256 {
+            return feeGrowthGlobalY
+        }
+        pub fn getFeeProtocolTokenX() -> U256 {
+            return feeProtocolTokenX
+        }
+        pub fn getFeeProtocolTokenY() -> U256 {
+            return feeProtocolTokenY
+        }
+        pub fn getStartTimestamp() -> U256 {
+            return startTimestamp
+        }
+        pub fn getLastTimestamp() -> U256 {
+            return lastTimestamp
+        }
+        pub fn getFeeReceiver() -> Address {
+            return feeReceiver
+        }
+        pub fn getExist() -> Bool {
+            return exist
+        }
+
+
+        // pub fn isTickValid(initSqrtPrice: U256, initTick: I256, tickSpacing: U256) -> Bool {
+        //     if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
+        //         let maxTick = getMaxTick(tickSpacing)
+        //         let maxSqrtPrice = sqrtPriceFromTick(maxTick)
+        //         if (initSqrtPrice != maxSqrtPrice) {
+        //             return false
+        //         }
+        //     } else {
+        //         let lowerBound = sqrtPriceFromTick(initTick)
+        //         let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
+        //         if(initSqrtPrice >= upperBound || initSqrtPrice < lowerBound) {
+        //             return false
+        //         }
+        //     }
+        //     return true
+        // }
+
+}

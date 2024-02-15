@@ -32,7 +32,7 @@
     },
     "FeeTier": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "3016cc664edf1f2f0027a451ad38f5ea70a6725a606a47261a509e17aa789d95",
+      "sourceCodeHash": "844c454e72e37f637018321ddc3b17d32f4c25f9b3051e424a3fcbfe0028815b",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "f1b7c2ca34064f0c7055b0d8b424ef158173fbead0c1281f6b2d9471d39dc18b",
       "warnings": []
@@ -46,9 +46,9 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "3016cc664edf1f2f0027a451ad38f5ea70a6725a606a47261a509e17aa789d95",
+      "sourceCodeHash": "844c454e72e37f637018321ddc3b17d32f4c25f9b3051e424a3fcbfe0028815b",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "1fb91c627757b2255e60d226d862f2b010b73f5163720c15ec7dc07d7cf3f31d",
+      "codeHashDebug": "889a79ab2caa2a5f86269244a94fc317ffb15942da9a6b30c36f6a768e4bf0fd",
       "warnings": []
     },
     "Log": {
@@ -58,9 +58,16 @@
       "codeHashDebug": "",
       "warnings": []
     },
+    "Pool": {
+      "sourceFile": "storage/pool.ral",
+      "sourceCodeHash": "ebca2ea8ac855b002adff2d578e0de1ebf6ccadc2a0596b78fbe8783a5dc4a4c",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "86586384a5578bafe282c0a922426bfb2481f01891d3eea0ffbcc72a1ffdf5a6",
+      "warnings": []
+    },
     "PoolKey": {
       "sourceFile": "storage/pool-key.ral",
-      "sourceCodeHash": "cc2900e48e4f8a382ee052a725fb6a41a7e5ba028519459c3695176a08048ac4",
+      "sourceCodeHash": "efbfd76982583dceb4485ddc316d59c3af695c47f1f1b6d898e46fb1c84b684f",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []

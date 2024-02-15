@@ -34,6 +34,8 @@ export namespace InvariantTypes {
     protocolFee: bigint;
     feeTierTemplateContractId: HexString;
     feeTierCount: bigint;
+    poolKeyCount: bigint;
+    poolTemplateContractId: HexString;
   };
 
   export type State = ContractState<Fields>;
@@ -249,6 +251,14 @@ export namespace InvariantTypes {
       params: CallContractParams<{ tickIndex: bigint }>;
       result: CallContractResult<bigint>;
     };
+    createPoolKey: {
+      params: CallContractParams<{
+        token0: Address;
+        token1: Address;
+        fee: HexString;
+      }>;
+      result: CallContractResult<HexString>;
+    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -288,7 +298,10 @@ class Factory extends ContractFactory<
       NotAdmin: BigInt(2),
       FeeTierAlreadyExist: BigInt(3),
       FeeTierNotFound: BigInt(4),
+      InvalidInitTick: BigInt(5),
+      PoolAlreadyExist: BigInt(6),
     },
+    PoolKeyError: { TokensAreSame: BigInt(0) },
   };
 
   at(address: string): InvariantInstance {
@@ -691,10 +704,32 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateSqrtPrice", params);
     },
+    createPoolKey: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { token0: Address; token1: Address; fee: HexString }
+      >
+    ): Promise<TestContractResult<HexString>> => {
+      return testMethod(this, "createPoolKey", params);
+    },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getProtocolFee", params);
+    },
+    createPool: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          token0: Address;
+          token1: Address;
+          feeTier: HexString;
+          initSqrtPrice: bigint;
+          initTick: bigint;
+        }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "createPool", params);
     },
     addFeeTier: async (
       params: TestContractParams<
@@ -725,7 +760,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "1fb91c627757b2255e60d226d862f2b010b73f5163720c15ec7dc07d7cf3f31d"
+    "889a79ab2caa2a5f86269244a94fc317ffb15942da9a6b30c36f6a768e4bf0fd"
   )
 );
 
@@ -1148,6 +1183,17 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "calculateSqrtPrice",
+        params,
+        getContractByCodeHash
+      );
+    },
+    createPoolKey: async (
+      params: InvariantTypes.CallMethodParams<"createPoolKey">
+    ): Promise<InvariantTypes.CallMethodResult<"createPoolKey">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "createPoolKey",
         params,
         getContractByCodeHash
       );

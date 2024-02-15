@@ -1,24 +1,32 @@
-Abstract Contract PoolKey(
-    admin: Address,
-    token0: Address,
-    token1: Address,
-    // TODO: Change to FeeTier (index?)
-    fee: FeeTier
-) {
+Abstract Contract PoolKey() {
     enum PoolKeyError {
-        NotAdmin = 0
-        TokensAreSame = 1
+        TokensAreSame = 0
     }
 
-    // pub fn getPoolKey() -> u8 {
-    //     return 0
-    // }
+    pub fn createPoolKey(
+        token0: Address,
+        token1: Address,
+        fee: FeeTier
+        ) -> ByteVec {
 
-    // pub fn createPoolKey(token0: Address, token1: Address, fee: U256) -> PoolKey {
-    //     return PoolKey {
-    //         token0: token0,
-    //         token1: token1,
-    //         fee: fee
-    //     }
-    // }
+        assert!(token0 != token1, PoolKeyError.TokensAreSame)
+
+        let token0Bytes = toByteVec!(token0)
+        let token1Bytes = toByteVec!(token1)
+        let feeTierBytes = toByteVec!(fee.getFee()) ++ toByteVec!(fee.getTickSpacing())
+
+        // TODO: Find a way to compare tokens
+        // ByteVec && Address cannot have in-equality chcek in if statement
+        //
+        // Okey, i see what you mean now. 
+        // Yeah you can do equality check in if statement for Address or ByteVec, 
+        // non-equality check is only for I256/U256
+        //
+        // if (token0Bytes < token1Bytes) {
+        //     return token0Bytes ++ token1Bytes ++ feeTierBytes
+        // } else {
+        //     return token1Bytes ++ token0Bytes ++ feeTierBytes
+        // }
+        return token1Bytes ++ token0Bytes ++ feeTierBytes
+    }
 }
