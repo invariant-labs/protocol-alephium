@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, node, web3 } from '@alephium/web3'
-import { FeeTier, Invariant } from '../artifacts/ts'
+import { FeeTier, Invariant, Pool } from '../artifacts/ts'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -24,6 +24,7 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
 
 export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
   const feeTier = await deployFeeTier(signer)
+  const pool = await deployPool(signer)
   const account = await signer.getSelectedAccount()
 
   return await waitTxConfirmed(
@@ -32,7 +33,9 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         admin: account.address,
         protocolFee,
         feeTierTemplateContractId: feeTier.contractInstance.contractId,
-        feeTierCount: 0n
+        feeTierCount: 0n,
+        poolTemplateContractId: pool.contractInstance.contractId,
+        poolKeyCount: 0n
       }
     })
   )
@@ -48,6 +51,29 @@ export async function deployFeeTier(signer: SignerProvider) {
         fee: 0n,
         tickSpacing: 0n,
         isActive: false
+      }
+    })
+  )
+}
+
+export async function deployPool(signer: SignerProvider) {
+  const account = await signer.getSelectedAccount()
+
+  return await waitTxConfirmed(
+    Pool.deploy(signer, {
+      initialFields: {
+        poolKey: '',
+        poolLiquidity: 0n,
+        poolCurrentSqrtPrice: 0n,
+        poolCurrentTickIndex: 0n,
+        feeGrowthGlobalX: 0n,
+        feeGrowthGlobalY: 0n,
+        feeProtocolTokenX: 0n,
+        feeProtocolTokenY: 0n,
+        startTimestamp: 0n,
+        lastTimestamp: 0n,
+        feeReceiver: account.address,
+        exist: true
       }
     })
   )

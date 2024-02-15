@@ -2,15 +2,15 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, Invariant, RemoveFeeTier } from '../artifacts/ts'
-import { testPrivateKeys } from '../utils/consts'
-import { deployInvariant, expectError } from '../utils/test-helpers'
+import { testPrivateKeys } from '../src/consts'
+import { deployInvariant, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
 describe('invariant tests', () => {
   beforeAll(async () => {
-    sender = await getSigner(ONE_ALPH * 10n, 0)
+    sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
   test('collection', async () => {
