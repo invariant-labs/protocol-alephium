@@ -1,0 +1,53 @@
+Abstract Contract FeeTiers(
+    feeTierTemplateContractId: ByteVec,
+    mut feeTierCount: U256
+) {
+    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    pub fn feeTiersAdd(caller: Address, fee: U256, tickSpacing: U256) -> () {
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+    
+            if (!contract.isActive()) {
+                contract.setActive(true)
+                return
+            }
+    
+            assert!((fee != contract.getFee() || tickSpacing != contract.getTickSpacing()), InvariantError.FeeTierAlreadyExist)
+        }
+    
+        feeTierCount = feeTierCount + 1
+        let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i),
+            feeTierTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn feeTiersRemove(fee: U256, tickSpacing: U256) -> () {
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+
+            if (fee == contract.getFee() && tickSpacing == contract.getTickSpacing() && contract.isActive()) {
+                contract.setActive(false)
+                return
+            }
+        }
+
+        assert!(false, InvariantError.FeeTierNotFound)
+    }
+
+    pub fn feeTiersContains(fee: U256, tickSpacing: U256) -> Bool {
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+
+            if (fee == contract.getFee() && tickSpacing == contract.getTickSpacing() && contract.isActive()) {
+                return true
+            }
+        }
+
+        return false
+    }
+}

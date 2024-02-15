@@ -1,33 +1,63 @@
-Contract Value(value: U256) {
-    pub fn getValue() -> U256 {
-      return value
-    }
-}
-
 Contract Invariant(
+    admin: Address,
     protocolFee: U256,
-    templateId: ByteVec
-) {
+    feeTierTemplateContractId: ByteVec,
+    mut feeTierCount: U256
+) extends FeeTiers(feeTierTemplateContractId, feeTierCount) {
+    enum InvariantError {
+        InvalidTickSpacing = 0
+        InvalidFee = 1
+        NotAdmin = 2
+        FeeTierAlreadyExist = 3
+        FeeTierNotFound = 4
+    }
+
+    enum InvariantCollection {
+        FeeTiers = 0
+    }
+
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn set(key: U256, value: U256) -> () {
+    pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
-        let path = toByteVec!(key)
-        let (encodedImmFields, encodedMutFields) = Value.encodeFields!(value)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-          path,
-          templateId,
-          encodedImmFields,
-          encodedMutFields
-        )
+
+        assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
+        assert!(fee <= 1000000000000, InvariantError.InvalidFee)
+        assert!(caller == admin, InvariantError.NotAdmin)
+
+        feeTiersAdd{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }
 
-    pub fn get(key: U256) -> U256 {
-        let path = toByteVec!(key)
-        let contractId =  subContractId!(path)
-        return Value(contractId).getValue()
+    @using(checkExternalCaller = false)
+    pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
+        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+
+        feeTiersRemove(fee, tickSpacing)
     }
+
+    pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {
+        return feeTiersContains(fee, tickSpacing)
+    }
+
+    // TODO: remove if possible after implementing get fee tiers
+    pub fn getFeeTierCount() -> U256 {
+        let mut count = 0
+
+        for (let mut index = 1; index <= feeTierCount; index = index + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(index)))
+
+            if (contract.isActive()) {
+                count = count + 1
+            }
+        }
+
+        return count
+    }
+
+
+    // TODO: implement
+    pub fn getFeeTiers() -> () {}
 }

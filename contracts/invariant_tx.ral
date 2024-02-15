@@ -1,3 +1,7 @@
-TxScript Set(invariant: Invariant, key: U256, value: U256) {
-    invariant.set{callerAddress!() -> ALPH: 1 alph}(key, value)
+TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
+    invariant.addFeeTier{callerAddress!() -> ALPH: 1 alph}(fee, tickSpacing)
+}
+
+TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
+    invariant.removeFeeTier(fee, tickSpacing)
 }

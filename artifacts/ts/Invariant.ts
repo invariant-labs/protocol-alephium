@@ -30,19 +30,29 @@ import { getContractByCodeHash } from "./contracts";
 // Custom types for the contract
 export namespace InvariantTypes {
   export type Fields = {
+    admin: Address;
     protocolFee: bigint;
-    templateId: HexString;
+    feeTierTemplateContractId: HexString;
+    feeTierCount: bigint;
   };
 
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    feeTiersContains: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
-    get: {
-      params: CallContractParams<{ key: bigint }>;
+    feeTierExist: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
+    };
+    getFeeTierCount: {
+      params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
   }
@@ -68,28 +78,84 @@ class Factory extends ContractFactory<
     return this.contract.getInitialFieldsWithDefaultValues() as InvariantTypes.Fields;
   }
 
+  consts = {
+    InvariantError: {
+      InvalidTickSpacing: BigInt(0),
+      InvalidFee: BigInt(1),
+      NotAdmin: BigInt(2),
+      FeeTierAlreadyExist: BigInt(3),
+      FeeTierNotFound: BigInt(4),
+    },
+    InvariantCollection: { FeeTiers: BigInt(0) },
+  };
+
   at(address: string): InvariantInstance {
     return new InvariantInstance(address);
   }
 
   tests = {
+    feeTiersAdd: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { caller: Address; fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersAdd", params);
+    },
+    feeTiersRemove: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersRemove", params);
+    },
+    feeTiersContains: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTiersContains", params);
+    },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getProtocolFee", params);
     },
-    set: async (
+    addFeeTier: async (
       params: TestContractParams<
         InvariantTypes.Fields,
-        { key: bigint; value: bigint }
+        { fee: bigint; tickSpacing: bigint }
       >
     ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "set", params);
+      return testMethod(this, "addFeeTier", params);
     },
-    get: async (
-      params: TestContractParams<InvariantTypes.Fields, { key: bigint }>
+    removeFeeTier: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "removeFeeTier", params);
+    },
+    feeTierExist: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTierExist", params);
+    },
+    getFeeTierCount: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
-      return testMethod(this, "get", params);
+      return testMethod(this, "getFeeTierCount", params);
+    },
+    getFeeTiers: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "getFeeTiers", params);
     },
   };
 }
@@ -99,7 +165,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "e958e6607c4aae4fd6022200008ce6e539c06f888ced2e81742081310ef0111f"
+    "d35c553849b23274920abf99ceb8d1f5b50399bf7da0edf4cda3d657ef7c63e9"
   )
 );
 
@@ -114,6 +180,17 @@ export class InvariantInstance extends ContractInstance {
   }
 
   methods = {
+    feeTiersContains: async (
+      params: InvariantTypes.CallMethodParams<"feeTiersContains">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTiersContains">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTiersContains",
+        params,
+        getContractByCodeHash
+      );
+    },
     getProtocolFee: async (
       params?: InvariantTypes.CallMethodParams<"getProtocolFee">
     ): Promise<InvariantTypes.CallMethodResult<"getProtocolFee">> => {
@@ -125,10 +202,27 @@ export class InvariantInstance extends ContractInstance {
         getContractByCodeHash
       );
     },
-    get: async (
-      params: InvariantTypes.CallMethodParams<"get">
-    ): Promise<InvariantTypes.CallMethodResult<"get">> => {
-      return callMethod(Invariant, this, "get", params, getContractByCodeHash);
+    feeTierExist: async (
+      params: InvariantTypes.CallMethodParams<"feeTierExist">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTierExist">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTierExist",
+        params,
+        getContractByCodeHash
+      );
+    },
+    getFeeTierCount: async (
+      params?: InvariantTypes.CallMethodParams<"getFeeTierCount">
+    ): Promise<InvariantTypes.CallMethodResult<"getFeeTierCount">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "getFeeTierCount",
+        params === undefined ? {} : params,
+        getContractByCodeHash
+      );
     },
   };
 

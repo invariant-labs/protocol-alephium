@@ -1,0 +1,23 @@
+Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Bool) {
+    enum FeeTierError {
+        NotAdmin = 0
+    }
+    
+    pub fn getFee() -> U256 {
+      return fee
+    }
+
+    pub fn getTickSpacing() -> U256 {
+      return tickSpacing
+    }
+
+    pub fn isActive() -> Bool {
+      return isActive
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setActive(active: Bool) -> () {
+        assert!(callerAddress!() == admin, FeeTierError.NotAdmin)
+        isActive = active
+    }
+}
