@@ -41,6 +41,10 @@ export namespace InvariantTypes {
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
+    feeTiersContains: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     computeSwapStep: {
       params: CallContractParams<{
         currentSqrtPrice: bigint;
@@ -275,6 +279,10 @@ export namespace InvariantTypes {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
     };
+    feeTierExist: {
+      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
+      result: CallContractResult<boolean>;
+    };
     getFeeTierCount: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -314,6 +322,7 @@ class Factory extends ContractFactory<
       PoolAlreadyExist: BigInt(6),
     },
     PoolKeyError: { TokensAreSame: BigInt(0) },
+    InvariantCollection: { FeeTiers: BigInt(0) },
   };
 
   at(address: string): InvariantInstance {
@@ -321,6 +330,30 @@ class Factory extends ContractFactory<
   }
 
   tests = {
+    feeTiersAdd: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { caller: Address; fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersAdd", params);
+    },
+    feeTiersRemove: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "feeTiersRemove", params);
+    },
+    feeTiersContains: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTiersContains", params);
+    },
     computeSwapStep: async (
       params: TestContractParams<
         InvariantTypes.Fields,
@@ -783,10 +816,23 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<null>> => {
       return testMethod(this, "removeFeeTier", params);
     },
+    feeTierExist: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { fee: bigint; tickSpacing: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "feeTierExist", params);
+    },
     getFeeTierCount: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getFeeTierCount", params);
+    },
+    getFeeTiers: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "getFeeTiers", params);
     },
   };
 }
@@ -796,7 +842,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "8f7015d7b701f8c4894c2a6b054db940eb4d0d4b1b410e0bcf3ec363732a98f5"
+    "bc0060b79f7570bb17820b77d88c75b0015305fa0034b99a95057b4caabe077a"
   )
 );
 
@@ -811,6 +857,17 @@ export class InvariantInstance extends ContractInstance {
   }
 
   methods = {
+    feeTiersContains: async (
+      params: InvariantTypes.CallMethodParams<"feeTiersContains">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTiersContains">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTiersContains",
+        params,
+        getContractByCodeHash
+      );
+    },
     computeSwapStep: async (
       params: InvariantTypes.CallMethodParams<"computeSwapStep">
     ): Promise<InvariantTypes.CallMethodResult<"computeSwapStep">> => {
@@ -1275,6 +1332,17 @@ export class InvariantInstance extends ContractInstance {
         this,
         "getProtocolFee",
         params === undefined ? {} : params,
+        getContractByCodeHash
+      );
+    },
+    feeTierExist: async (
+      params: InvariantTypes.CallMethodParams<"feeTierExist">
+    ): Promise<InvariantTypes.CallMethodResult<"feeTierExist">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "feeTierExist",
+        params,
         getContractByCodeHash
       );
     },
