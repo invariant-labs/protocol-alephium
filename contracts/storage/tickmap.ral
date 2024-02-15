@@ -1,0 +1,68 @@
+Contract Tickmap(
+    tickmapKey: ByteVec,
+    bitmap: [U256; 254]
+) extends CLAMM() {
+    const TickLimit = 44364i
+    const TickSearchRange = 256i
+
+    enum TickmapError {
+        TickNotDivislbeBySpacing = 0
+    }
+    pub fn getTickmapKey() -> ByteVec {
+        return tickmapKey
+    }
+
+    pub fn getBitmap() -> [U256; 254] {
+        return bitmap
+    }
+
+    fn tickToPosition(idx: I256, tickSpacing: U256) -> (U256,U256) {
+        assert!(idx % toI256!(tickSpacing) == 0i, TickmapError.TickNotDivislbeBySpacing)
+
+        let bitmapIndex = idx / toI256!(tickSpacing) + toI256!(5505) + TickLimit
+
+        let byte = bitmapIndex / 8i
+        let bit = bitmapIndex % 8i
+
+        return toU256!(byte), toU256!(bit)        
+    }
+
+    pub fn getSearchLimit(idx: I256, tickSpacing: U256, up: Bool) -> I256 {
+        let index = idx / toI256!(tickSpacing)
+
+        let mut limit = 0i
+
+        if (up) {
+            let arrayLimitUp = TickLimit - 1i
+            let rangeLimitUp = index + TickSearchRange
+            let priceLimitUp = getGlobalMaxTick() / toI256!(tickSpacing)
+            let mut smallest = arrayLimitUp
+            if (rangeLimitUp < smallest) {
+                smallest = rangeLimitUp
+            }
+            if (priceLimitUp < smallest) {
+                smallest = priceLimitUp
+            }
+            limit = smallest
+        } else {
+            let arrayLimitDown = (-1) * TickLimit + 1i
+            let rangeLimitDown = index - TickSearchRange
+            let priceLimitDown = getGlobalMinTick() / toI256!(tickSpacing)
+            let mut highest = arrayLimitDown
+            if (rangeLimitDown > highest) {
+                highest = rangeLimitDown
+            }
+            if (priceLimitDown > highest) {
+                highest = priceLimitDown
+            }
+            limit = highest
+        }
+        
+        return limit * toI256!(tickSpacing)
+    }
+
+    pub fn flip(value: Bool, idx: I256, tickSpacing: U256) -> () {}
+    // pub fn get(idx: I256, tickSpacing: U256) -> Bool {}
+    // pub fn nextInitialized() -> () {}
+    // pub fn prevInitialized() -> () {}
+}
