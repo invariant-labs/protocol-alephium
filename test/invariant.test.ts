@@ -1,7 +1,7 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { AddressType, DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, Invariant, RemoveFeeTier } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
 import { deployInvariant, expectError } from '../src/utils'
 
@@ -126,5 +126,17 @@ describe('invariant tests', () => {
 
     feeTier = await invariant.methods.getFeeTierCount()
     expect(feeTier.returns).toEqual(1n)
+
+    // CreatePool.execute(sender, {
+    //   initialFields: {
+    //     invariant: invariant.contractId,
+    //     token0: '1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH',
+    //     token1: '2DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH',
+    //     fee: 0n,
+    //     tickSpacing: 1n,
+    //     initSqrtPrice: 10n ** 24n,
+    //     initTick: 0n
+    //   }
+    // })
   })
 })
