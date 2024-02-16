@@ -98,17 +98,7 @@ Contract Invariant(
             secondsOutside = currentTimestamp - poolStartTimestamp
         }
 
-        tickAdd(caller, poolKey, index, true)
-
-        // let tickKey = toByteVec!(InvariantCollection.Ticks) ++ poolKey ++ toByteVec!(index)
-        // let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(caller, index, true, 0, 0, sqrtPriceFromTick(index), feeGrowthOutsideX, feeGrowthOutisdeY, secondsOutside)
-        // copyCreateSubContract!{caller -> ALPH: 1 alph}(
-        //     tickKey,
-        //     tickTemplateContractId,
-        //     encodedImmFields,
-        //     encodedMutFields
-        // )
-        // tickCount = tickCount + 1       
+        tickAdd(caller, poolKey, index, true)  
         // Flip bit in tickmap
     }
 
