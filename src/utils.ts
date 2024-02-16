@@ -1,5 +1,6 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import { FeeTier, Invariant, Pool, PoolKey } from '../artifacts/ts'
+import { Tick } from '../artifacts/ts/Tick'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -26,6 +27,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const feeTier = await deployFeeTier(signer)
   const poolKey = await deployPoolKey(signer)
   const pool = await deployPool(signer)
+  const tick = await deployTick(signer)
   const account = await signer.getSelectedAccount()
 
   return await waitTxConfirmed(
@@ -37,7 +39,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         feeTierCount: 0n,
         poolKeyTemplateContractId: poolKey.contractInstance.contractId,
         poolKeyCount: 0n,
-        poolTemplateContractId: pool.contractInstance.contractId
+        poolTemplateContractId: pool.contractInstance.contractId,
+        tickTemplateContractId: tick.contractInstance.contractId
       }
     })
   )
@@ -84,6 +87,23 @@ export async function deployPool(signer: SignerProvider) {
         startTimestamp: 0n,
         lastTimestamp: 0n,
         feeReceiver: ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployTick(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Tick.deploy(signer, {
+      initialFields: {
+        idx: 0n,
+        tickSign: false,
+        liquidityChange: 0n,
+        liquidityGross: 0n,
+        tickSqrtPrice: 0n,
+        tickFeeGrowthOutsideX: 0n,
+        tickFeeGrowthOutsideY: 0n,
+        tickSecondsOutside: 0n
       }
     })
   )

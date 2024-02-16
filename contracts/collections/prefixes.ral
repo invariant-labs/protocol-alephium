@@ -3,5 +3,6 @@ Abstract Contract CollectionsPrefixes() {
         FeeTiers = 0
         PoolKeys = 1
         Pools = 2
+        Ticks = 3
     }
 }

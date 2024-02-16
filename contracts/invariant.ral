@@ -5,7 +5,8 @@ Contract Invariant(
     mut feeTierCount: U256,
     poolKeyTemplateContractId: ByteVec,
     mut poolKeyCount: U256,
-    poolTemplateContractId: ByteVec
+    poolTemplateContractId: ByteVec,
+    tickTemplateContractId: ByteVec
 ) extends FeeTiers(feeTierTemplateContractId, feeTierCount), PoolKeys(poolKeyTemplateContractId, poolKeyCount), Pools(poolTemplateContractId), CLAMM(), CollectionsPrefixes() {
     pub fn getProtocolFee() -> U256 {
         return protocolFee
@@ -74,6 +75,35 @@ Contract Invariant(
         return count
     }
 
+    // TODO: Should not be pub
+    @using(checkExternalCaller = false)
+    pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
+        let currentTimestamp = blockTimeStamp!()
+        let caller = callerAddress!()
+        let belowCurrentTick = index <= poolCurrentIndex
+
+        checkTick(index, tickSpacing)
+
+        
+        let mut feeGrowthOutsideX = 0
+        let mut feeGrowthOutisdeY = 0
+        let mut secondsOutside = 0
+        if (belowCurrentTick) {
+            feeGrowthOutsideX = poolFeeGrowthGlobalX
+            feeGrowthOutisdeY = poolFeeGrowthGlobalY
+            secondsOutside = currentTimestamp - poolStartTimestamp
+        }
+
+        let tickKey = toByteVec!(InvariantCollection.Ticks) ++ poolKey ++ toByteVec!(index)
+        let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(index, true, 0, 0, sqrtPriceFromTick(index), feeGrowthOutsideX, feeGrowthOutisdeY, secondsOutside)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            tickKey,
+            tickTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )       
+        // Flip bit in tickmap
+    }
 
     // TODO: implement
     pub fn getFeeTiers() -> () {}
