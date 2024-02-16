@@ -39,7 +39,7 @@
     },
     "Decimal": {
       "sourceFile": "math/decimal.ral",
-      "sourceCodeHash": "67aa8cfb9e382510292c3f74c0a564df21630231c1055c495fd8fed1d08774c5",
+      "sourceCodeHash": "aaebd089e9551b7afab50b23ca2bae37960f9a2cae06c0fc6456154822905772",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -98,6 +98,13 @@
       "sourceCodeHash": "a58ec9be08f797f7af83b73c9671ab4c2004e7650580b4beb9a61f86e0d13aec",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
+      "warnings": []
+    },
+    "Position": {
+      "sourceFile": "storage/position.ral",
+      "sourceCodeHash": "8e117536c017842706463e492d6b4ae1014b7cc4c56debe84823d5bcce58e4ae",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "9adc2c77531902dc639247d430e28b97de411e03d48a5c9da71a52a6b6d1fbee",
       "warnings": []
     },
     "RemoveFeeTier": {

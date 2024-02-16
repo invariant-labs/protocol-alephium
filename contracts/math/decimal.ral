@@ -210,4 +210,17 @@ Abstract Contract Decimal() {
             return a - b
         }
     }
+
+    // // FeeGrowth related
+    // pub fn calculateFeeGrowthInside(
+    //     tickLowerIndex: I256,
+    //     tickLowerFeeGrowthOutsideX: U256,
+    //     tickLowerFeeGrowthOutsideY: U256,
+    //     tickUpperIndex: I256,
+    //     tickUpperFeeGrowthOutsideX: U256,
+    //     tickUpperFeeGrowthOutsideY: U256,
+    //     tickCurrent: I256,
+    //     feeGrowthGlobalX: U256,
+    //     feeGrowthGlobalY: U256
+    // ) -> (U256,U256) {}
 }

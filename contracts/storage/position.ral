@@ -1,26 +1,26 @@
 Contract Position(
     positionKey: ByteVec,
-    poolKey: ByteVec,
-    posLiquidity: U256,
+    relatedPoolKey: ByteVec,
+    mut posLiquidity: U256,
     posLowerTickIndex: I256,
     posUpperTickIndex: I256,
-    posFeeGrowthInsideX: U256,
-    posFeeGrowthInsideY: U256,
+    mut posFeeGrowthInsideX: U256,
+    mut posFeeGrowthInsideY: U256,
     lastBlockNumber: U256,
-    posTokensOwedX: U256,
-    posTokensOwedY: U256,
-
+    mut posTokensOwedX: U256,
+    mut posTokensOwedY: U256
 ) extends CLAMM(), Decimal() {
     enum PositionError {
-        PositionNotFound = 0
+        InsufficientLiquidity = 0
+        EmptyPositionPokes = 1
     }
 
-    pub fn getPositionKey() -> BytVec {
+    pub fn getPositionKey() -> ByteVec {
         return positionKey
     }
 
-    pub fn getPoolKey() -> ByteVec {
-        return poolKey
+    pub fn getRelatedPoolKey() -> ByteVec {
+        return relatedPoolKey
     }
 
     pub fn getPosLiquidity() -> U256 {
@@ -56,38 +56,69 @@ Contract Position(
     }
 
 
-    pub fn modify(
-        poolKey: ByteVec,
-        lowerTickKey: ByteVec,
-        upperTickKey: ByteVec,
-        upperTick: I256,
-        lowerTick: I256,
-        liquidityDelta: U256,
-        add: Bool,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256, U256) {}
+    // pub fn modify(
+    //     poolKey: ByteVec,
+    //     lowerTickKey: ByteVec,
+    //     upperTickKey: ByteVec,
+    //     upperTick: I256,
+    //     lowerTick: I256,
+    //     liquidityDelta: U256,
+    //     add: Bool,
+    //     currentTimestamp: U256,
+    //     tickSpacing: U256
+    // ) -> (U256, U256) {
+    //     // Get Pool
+    //     // Update pool Timestamp
 
+    //     let maxLiquidityPerTick = calculateMaxLiquidityPerTick(tickSpacing)
+
+    //     // get lower tick and update
+    //     // get upper tick and update
+
+    //     let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside()
+    // }
+
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn updatePos(
         sign: Bool,
         liquidityDelta: U256,
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
-    ) -> () {}
+    ) -> () {
+        assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
+
+        let tokensOwedX = wrappingSub(posFeeGrowthInsideX, posFeeGrowthInsideX)
+        let tokensOwedY = wrappingSub(posFeeGrowthInsideY, posFeeGrowthInsideY)
+
+        posLiquidity = calculateNewLiquidity(sign, liquidityDelta)
+        posFeeGrowthInsideX = feeGrowthInsideX
+        posFeeGrowthInsideY = feeGrowthInsideY
+
+        posTokensOwedX = tokensOwedX
+        posTokensOwedY = tokensOwedY
+        return
+    }
 
     pub fn calculateNewLiquidity(
         sign: Bool,
         liquidityDelta: U256
-    ) -> U256 {}
+    ) -> U256 {
+        assert!(sign || posLiquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
+        if (sign) {
+            return posLiquidity + liquidityDelta
+        } else {
+            return posLiquidity - liquidityDelta
+        }
+    }
 
-    pub fn claimFee(
-        poolKey: ByteVec,
-        lowerTickKey: ByteVec,
-        upperTickKey: ByteVec,
-        lowerTickIndex: I256,
-        upperTickIndex: I256,
-        currentTimestamp: U256
-    ) -> (U256, U256) {}
+    // pub fn claimFee(
+    //     poolKey: ByteVec,
+    //     lowerTickKey: ByteVec,
+    //     upperTickKey: ByteVec,
+    //     lowerTickIndex: I256,
+    //     upperTickIndex: I256,
+    //     currentTimestamp: U256
+    // ) -> (U256, U256) {}
 
     // Most likely will be moved to collection layer & main contract
     // pub fn create() -> () {}
