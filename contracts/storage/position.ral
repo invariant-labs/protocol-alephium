@@ -55,7 +55,6 @@ Contract Position(
         return posTokensOwedY
     }
 
-
     // pub fn modify(
     //     poolKey: ByteVec,
     //     lowerTickKey: ByteVec,
@@ -75,8 +74,8 @@ Contract Position(
     //     // get lower tick and update
     //     // get upper tick and update
 
-    //     let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside()
-    // }
+    //     // let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside()
+    }
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn updatePos(

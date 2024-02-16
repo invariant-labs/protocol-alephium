@@ -267,6 +267,20 @@ export namespace InvariantTypes {
       params: CallContractParams<{ a: bigint; b: bigint }>;
       result: CallContractResult<bigint>;
     };
+    calculateFeeGrowthInside: {
+      params: CallContractParams<{
+        tickLowerIndex: bigint;
+        tickLowerFeeGrowthOutsideX: bigint;
+        tickLowerFeeGrowthOutsideY: bigint;
+        tickUpperIndex: bigint;
+        tickUpperFeeGrowthOutsideX: bigint;
+        tickUpperFeeGrowthOutsideY: bigint;
+        tickCurrent: bigint;
+        globalFeeGrowthX: bigint;
+        globalFeeGrowthY: bigint;
+      }>;
+      result: CallContractResult<[bigint, bigint]>;
+    };
     createPoolKey: {
       params: CallContractParams<{
         token0: Address;
@@ -774,6 +788,24 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "wrappingSub", params);
     },
+    calculateFeeGrowthInside: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          tickLowerIndex: bigint;
+          tickLowerFeeGrowthOutsideX: bigint;
+          tickLowerFeeGrowthOutsideY: bigint;
+          tickUpperIndex: bigint;
+          tickUpperFeeGrowthOutsideX: bigint;
+          tickUpperFeeGrowthOutsideY: bigint;
+          tickCurrent: bigint;
+          globalFeeGrowthX: bigint;
+          globalFeeGrowthY: bigint;
+        }
+      >
+    ): Promise<TestContractResult<[bigint, bigint]>> => {
+      return testMethod(this, "calculateFeeGrowthInside", params);
+    },
     createPoolKey: async (
       params: TestContractParams<
         InvariantTypes.Fields,
@@ -844,7 +876,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340"
+    "0c5922baeaebd821ee7bad9940faba52affe09c424a62b6c40b039239ef00031"
   )
 );
 
@@ -1311,6 +1343,17 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "wrappingSub",
+        params,
+        getContractByCodeHash
+      );
+    },
+    calculateFeeGrowthInside: async (
+      params: InvariantTypes.CallMethodParams<"calculateFeeGrowthInside">
+    ): Promise<InvariantTypes.CallMethodResult<"calculateFeeGrowthInside">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "calculateFeeGrowthInside",
         params,
         getContractByCodeHash
       );

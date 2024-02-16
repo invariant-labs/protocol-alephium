@@ -212,15 +212,44 @@ Abstract Contract Decimal() {
     }
 
     // // FeeGrowth related
-    // pub fn calculateFeeGrowthInside(
-    //     tickLowerIndex: I256,
-    //     tickLowerFeeGrowthOutsideX: U256,
-    //     tickLowerFeeGrowthOutsideY: U256,
-    //     tickUpperIndex: I256,
-    //     tickUpperFeeGrowthOutsideX: U256,
-    //     tickUpperFeeGrowthOutsideY: U256,
-    //     tickCurrent: I256,
-    //     feeGrowthGlobalX: U256,
-    //     feeGrowthGlobalY: U256
-    // ) -> (U256,U256) {}
+    pub fn calculateFeeGrowthInside(
+        tickLowerIndex: I256,
+        tickLowerFeeGrowthOutsideX: U256,
+        tickLowerFeeGrowthOutsideY: U256,
+        tickUpperIndex: I256,
+        tickUpperFeeGrowthOutsideX: U256,
+        tickUpperFeeGrowthOutsideY: U256,
+        tickCurrent: I256,
+        globalFeeGrowthX: U256,
+        globalFeeGrowthY: U256
+    ) -> (U256,U256) {
+        let currentAboveLower = tickCurrent >= tickLowerIndex
+        let currentBelowUpper = tickCurrent < tickUpperIndex
+
+        let mut feeGrowthBelowX = 0
+        let mut feeGrowthBelowY = 0
+        let mut feeGrowthAboveX = 0
+        let mut feeGrowthAboveY = 0
+
+        if (currentAboveLower) {
+            feeGrowthBelowX = tickLowerFeeGrowthOutsideX
+            feeGrowthBelowY = tickLowerFeeGrowthOutsideY
+        } else {
+            feeGrowthBelowX = wrappingSub(globalFeeGrowthX, tickLowerFeeGrowthOutsideX)
+            feeGrowthBelowY = wrappingSub(globalFeeGrowthY, tickLowerFeeGrowthOutsideY)
+        }
+
+        if (currentBelowUpper) {
+            feeGrowthAboveX = tickUpperFeeGrowthOutsideX
+            feeGrowthAboveY = tickUpperFeeGrowthOutsideY
+        } else {
+            feeGrowthAboveX = wrappingSub(globalFeeGrowthX, tickUpperFeeGrowthOutsideX)
+            feeGrowthAboveY = wrappingSub(globalFeeGrowthY, tickUpperFeeGrowthOutsideY)
+        }
+
+        let feeGrowthInsideX = wrappingSub(wrappingSub(globalFeeGrowthX, feeGrowthBelowX), feeGrowthAboveX)
+        let feeGrowthInsideY = wrappingSub(wrappingSub(globalFeeGrowthY, feeGrowthBelowY), feeGrowthAboveY)
+
+        return feeGrowthInsideX, feeGrowthInsideY
+    }
 }
