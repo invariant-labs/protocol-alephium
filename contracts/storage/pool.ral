@@ -12,7 +12,7 @@ Contract Pool(
     feeReceiver: Address
 ) extends CLAMM(), Decimal() {
     enum PoolError {
-        NotAdmin = 0
+        NotAdmin = 300
     }
 
     pub fn getPoolLiquidity() -> U256 {

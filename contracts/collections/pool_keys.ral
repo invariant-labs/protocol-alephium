@@ -1,6 +1,6 @@
 Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-    pub fn poolKeysAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+    fn poolKeysAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
     
@@ -17,7 +17,7 @@ Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount:
         )
     }
 
-    pub fn poolKeysContains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
+    fn poolKeysContains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
 
@@ -29,19 +29,7 @@ Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount:
         return false
     }
 
-    pub fn createPoolKey(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        assert!(token0 != token1, InvariantError.TokensAreSame)
-
-        let swappedPoolKeyExist = poolKeysContains(token1, token0, fee, tickSpacing)
-
-        if (swappedPoolKeyExist) {
-            return generatePoolKey(token1, token0, fee, tickSpacing)
-        } else {
-            return generatePoolKey(token0, token1, fee, tickSpacing)
-        }
-    }
-
-    pub fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
         return toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
     }
 }

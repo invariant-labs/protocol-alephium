@@ -11,43 +11,31 @@ Contract Invariant(
         return protocolFee
     }
 
-    // @using(updateFields = true, checkExternalCaller = false)
-    // pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
-    //     let caller = callerAddress!()
-    //     let timestamp = blockTimeStamp!()
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
+        let caller = callerAddress!()
+        let contractAddress = selfAddress!()
+        let timestamp = blockTimeStamp!()
 
-    //     assert!(feeTierContains(fee, tickSpacing), InvariantError.FeeTierNotFound)
-    
-    //     poolKeyCount = poolKeyCount + 1
+        assert!(feeTiersContains(fee, tickSpacing), InvariantError.FeeTierNotFound)
 
-    //     if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
-    //         let maxTick = getMaxTick(tickSpacing)
-    //         let maxSqrtPrice = sqrtPriceFromTick(maxTick)
-    //         assert!(initSqrtPrice == maxSqrtPrice, InvariantError.InvalidInitTick)
-    //     } else {
-    //         let lowerBound = sqrtPriceFromTick(initTick)
-    //         let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
-    //         assert!(initSqrtPrice < lowerBound && initSqrtPrice >= upperBound, InvariantError.InvalidInitTick)
-    //     }
-        
-    //     let swappedPoolKeyExist = poolKeyExist(token1, token0, fee, tickSpacing)
+        checkTick(initTick, tickSpacing)
 
-    //     if (!swappedPoolKeyExist) {
-    //         poolKeyExist = poolKeyExist(token0, token1, fee, tickSpacing)
+        assert!(token0 != token1, InvariantError.TokensAreSame)
 
-    //         assert!(!poolKeyExist, InvariantError.PoolKeyExist)
-    //     }
+        let poolKeyExist = poolKeysContains(token0, token1, fee, tickSpacing)
 
-    //     let poolKey = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(poolKeyCount)))
+        if (!poolKeyExist) {
+            let swappedPoolKeyExist = poolKeysContains(token0, token1, fee, tickSpacing)
 
-    //     let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(pool initSqrtPrice, initTick, 0, 0, 0, 0, timestamp, timestamp)
-    //     copyCreateSubContract!{caller -> ALPH: 1 alph}(
-    //         poolKey,
-    //         poolTemplateContractId,
-    //         encodedImmFields,
-    //         encodedMutFields
-    //     )
-    // }
+            assert!(!swappedPoolKeyExist, InvariantError.PoolKeyAlreadyExist)
+        }
+
+        checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice)
+
+        poolKeysAdd{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing)
+        poolsAdd{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
+    }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {

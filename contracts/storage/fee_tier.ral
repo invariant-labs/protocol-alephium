@@ -1,6 +1,6 @@
 Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Bool) {
     enum FeeTierError {
-        NotAdmin = 0
+        NotAdmin = 200
     }
     
     pub fn getFee() -> U256 {
