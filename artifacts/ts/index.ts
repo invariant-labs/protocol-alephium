@@ -5,5 +5,6 @@
 export * from "./FeeTier";
 export * from "./Invariant";
 export * from "./Pool";
+export * from "./PoolKey";
 export * from "./TokenFaucet";
 export * from "./scripts";

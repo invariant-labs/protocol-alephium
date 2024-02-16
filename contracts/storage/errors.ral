@@ -5,8 +5,8 @@ Abstract Contract InvariantErrors() {
         NotAdmin = 2
         FeeTierAlreadyExist = 3
         FeeTierNotFound = 4
-        InvalidInitTick = 5
-        PoolAlreadyExist = 6
-        TokensAreSame = 7
+        PoolAlreadyExist = 5
+        TokensAreSame = 6
+        PoolKeyAlreadyExist = 7
     }
 }

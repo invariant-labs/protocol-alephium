@@ -1,0 +1,16 @@
+Abstract Contract Pools(poolTemplateContractId: ByteVec) {
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn poolAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+        let poolKey = createPoolKey(token0, token1, fee, tickSpacing)
+
+        assert!(!contractExists!(subContractId!(poolKey)), InvariantError.PoolAlreadyExist)
+
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            toByteVec!(InvariantCollection.Pools) ++ poolKey,
+            poolTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )
+    }
+}

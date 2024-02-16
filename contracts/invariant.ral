@@ -3,43 +3,51 @@ Contract Invariant(
     protocolFee: U256,
     feeTierTemplateContractId: ByteVec,
     mut feeTierCount: U256,
-    poolTemplateContractId: ByteVec,
-    mut poolKeyCount: U256
-) extends FeeTiers(feeTierTemplateContractId, feeTierCount), CLAMM(), PoolKey(), CollectionsPrefixes() { //PoolKeys(poolTemplateContractId, poolKeyCount)
+    poolKeyTemplateContractId: ByteVec,
+    mut poolKeyCount: U256,
+    poolTemplateContractId: ByteVec
+) extends FeeTiers(feeTierTemplateContractId, feeTierCount), PoolKeys(poolKeyTemplateContractId, poolKeyCount), Pools(poolTemplateContractId), CLAMM(), CollectionsPrefixes() {
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
-        let caller = callerAddress!()
-        let timestamp = blockTimeStamp!()
-        assert!(feeTierExist(fee, tickSpacing), InvariantError.FeeTierNotFound)
+    // @using(updateFields = true, checkExternalCaller = false)
+    // pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
+    //     let caller = callerAddress!()
+    //     let timestamp = blockTimeStamp!()
+
+    //     assert!(feeTierContains(fee, tickSpacing), InvariantError.FeeTierNotFound)
     
-        let poolKey = createPoolKey(token0, token1, fee, tickSpacing)
-        poolKeyCount = poolKeyCount + 1
+    //     poolKeyCount = poolKeyCount + 1
 
-        if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
-            let maxTick = getMaxTick(tickSpacing)
-            let maxSqrtPrice = sqrtPriceFromTick(maxTick)
-            assert!(initSqrtPrice == maxSqrtPrice, InvariantError.InvalidInitTick)
-        } else {
-            let lowerBound = sqrtPriceFromTick(initTick)
-            let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
-            assert!(initSqrtPrice < lowerBound && initSqrtPrice >= upperBound, InvariantError.InvalidInitTick)
-        }
+    //     if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
+    //         let maxTick = getMaxTick(tickSpacing)
+    //         let maxSqrtPrice = sqrtPriceFromTick(maxTick)
+    //         assert!(initSqrtPrice == maxSqrtPrice, InvariantError.InvalidInitTick)
+    //     } else {
+    //         let lowerBound = sqrtPriceFromTick(initTick)
+    //         let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
+    //         assert!(initSqrtPrice < lowerBound && initSqrtPrice >= upperBound, InvariantError.InvalidInitTick)
+    //     }
         
-        let poolContract = Pool(subContractId!(poolKey))
-        assert!(!poolContract.getExist(), InvariantError.PoolAlreadyExist)   
+    //     let swappedPoolKeyExist = poolKeyExist(token1, token0, fee, tickSpacing)
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(poolKey, 0, initSqrtPrice, initTick, 0, 0, 0, 0, timestamp, timestamp, caller, true)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            poolKey,
-            poolTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
-    }
+    //     if (!swappedPoolKeyExist) {
+    //         poolKeyExist = poolKeyExist(token0, token1, fee, tickSpacing)
+
+    //         assert!(!poolKeyExist, InvariantError.PoolKeyExist)
+    //     }
+
+    //     let poolKey = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(poolKeyCount)))
+
+    //     let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(pool initSqrtPrice, initTick, 0, 0, 0, 0, timestamp, timestamp)
+    //     copyCreateSubContract!{caller -> ALPH: 1 alph}(
+    //         poolKey,
+    //         poolTemplateContractId,
+    //         encodedImmFields,
+    //         encodedMutFields
+    //     )
+    // }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {

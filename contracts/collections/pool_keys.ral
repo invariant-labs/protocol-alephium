@@ -1,53 +1,47 @@
-// Abstract Contract PoolKeys(
-//     poolKeyTemplateContractId: ByteVec,
-//     mut poolKeyCount: U256
-// ) {
-//     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-//     pub fn poolKeysAdd(caller: Address, fee: U256, tickSpacing: U256) -> () {
-//         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-//             let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
+    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    pub fn poolKeysAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+        for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
+            let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
     
-//             if (!contract.isActive()) {
-//                 contract.setActive(true)
-//                 return
-//             }
+            assert!(token0 != contract.getToken0() || token1 != contract.getToken1() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), InvariantError.PoolKeyAlreadyExist)
+        }
     
-//             assert!((fee != contract.getFee() || tickSpacing != contract.getTickSpacing()), InvariantError.FeeTierAlreadyExist)
-//         }
-    
-//         poolKeyCount = poolKeyCount + 1
-//         let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
-//         copyCreateSubContract!{caller -> ALPH: 1 alph}(
-//             toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i),
-//             feeTierTemplateContractId,
-//             encodedImmFields,
-//             encodedMutFields
-//         )
-//     }
+        poolKeyCount = poolKeyCount + 1
+        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(token0, token1, fee, tickSpacing)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i),
+            poolKeyTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )
+    }
 
-//     @using(checkExternalCaller = false)
-//     pub fn poolKeysRemove(fee: U256, tickSpacing: U256) -> () {
-//         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-//             let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+    pub fn poolKeysContains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
+        for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
+            let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
 
-//             if (fee == contract.getFee() && tickSpacing == contract.getTickSpacing() && contract.isActive()) {
-//                 contract.setActive(false)
-//                 return
-//             }
-//         }
+            if (token0 == contract.getToken0() && token1 == contract.getToken1() && fee == contract.getFee() && tickSpacing == contract.getTickSpacing()) {
+                return true
+            }
+        }
 
-//         assert!(false, InvariantError.FeeTierNotFound)
-//     }
+        return false
+    }
 
-//     pub fn poolKeysContains(fee: U256, tickSpacing: U256) -> Bool {
-//         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-//             let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(i)))
+    pub fn createPoolKey(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        assert!(token0 != token1, InvariantError.TokensAreSame)
 
-//             if (fee == contract.getFee() && tickSpacing == contract.getTickSpacing() && contract.isActive()) {
-//                 return true
-//             }
-//         }
+        let swappedPoolKeyExist = poolKeysContains(token1, token0, fee, tickSpacing)
 
-//         return false
-//     }
-// } 
+        if (swappedPoolKeyExist) {
+            return generatePoolKey(token1, token0, fee, tickSpacing)
+        } else {
+            return generatePoolKey(token0, token1, fee, tickSpacing)
+        }
+    }
+
+    pub fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    }
+}

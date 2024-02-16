@@ -6,6 +6,6 @@ TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
     invariant.removeFeeTier(fee, tickSpacing)
 }
 
-TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
-    invariant.createPool(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
-}
+// TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
+//     invariant.createPool(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
+// }

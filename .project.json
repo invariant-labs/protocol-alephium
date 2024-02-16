@@ -11,7 +11,7 @@
   "infos": {
     "AddFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "949be25509650c9bbae425f2e038bbedcda51e8921ba65654d9a1eb98438547d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -25,14 +25,7 @@
     },
     "CollectionsPrefixes": {
       "sourceFile": "collections/prefixes.ral",
-      "sourceCodeHash": "215bb636b2cc55a03bb595bfd46271af80ef6293c78d0133f0bf1e1f2cea3068",
-      "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
-      "warnings": []
-    },
-    "CreatePool": {
-      "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "3dd0998f1433bf8ab4e61d73a47b84be84c83bef02f6b329058bcd089cf4a309",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -59,7 +52,7 @@
       "warnings": []
     },
     "IFungibleToken": {
-      "sourceFile": "../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
+      "sourceFile": "../../../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
       "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
@@ -67,14 +60,14 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "1e4732617d8d0c1dbaea7050f98a91ab456e0aecdf54355aa8a39e822b02d53f",
+      "sourceCodeHash": "d73956dc243099f2ec186d30682c14988ad82bdf538474dc524ee25e3fbb6fbe",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340",
+      "codeHashDebug": "110d700d947f8039caecfda30cb4851e7ffd3af8c1a6a86fb4f598db1a73ca14",
       "warnings": []
     },
     "InvariantErrors": {
       "sourceFile": "storage/errors.ral",
-      "sourceCodeHash": "d2ec016524deabf37e3a44e019e07af7e8db802ed88518708782ec87b07428ef",
+      "sourceCodeHash": "1dbc1937371ec7b9c0b825247385b81f03d6cfc3216d2cf528ef6fa1bb60e9cf",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -88,21 +81,35 @@
     },
     "Pool": {
       "sourceFile": "storage/pool.ral",
-      "sourceCodeHash": "0209a08fc1741dd7a52ad16917ac34427605b6aa40f18921d9d501286e237eea",
+      "sourceCodeHash": "08aef1b6beda4a28986e0d0babaeaeca64899824c41c7e35a1e385a2968320f5",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "0ce64a76169c7e7dcdf59f3b2b72fc43b4466c7600b250506537c0932be25089",
+      "codeHashDebug": "000d0268a383476ca9110d4fb4ca4e1d2d8d753eda131a790a7d768c54eb49a3",
       "warnings": []
     },
     "PoolKey": {
       "sourceFile": "storage/pool_key.ral",
-      "sourceCodeHash": "a58ec9be08f797f7af83b73c9671ab4c2004e7650580b4beb9a61f86e0d13aec",
+      "sourceCodeHash": "a5357437a70a3746f7d0bcdcee7f70dc8c2bc20d314ae78dc3b8052ff932222f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "d9c9fab84f779f2e90ca9e9b1fafd6d9c9dc0f8b84256169e20961f9c917bab8",
+      "warnings": []
+    },
+    "PoolKeys": {
+      "sourceFile": "collections/pool_keys.ral",
+      "sourceCodeHash": "95b344029265d936578fb3efe717d45e6d1ea6e7f16d0bb5c2fa437038582633",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "Pools": {
+      "sourceFile": "collections/pools.ral",
+      "sourceCodeHash": "c8e48100fcfc06e24ace47561356443bdaefd2541b6bce98a35396bef2817cbc",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "RemoveFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "949be25509650c9bbae425f2e038bbedcda51e8921ba65654d9a1eb98438547d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
