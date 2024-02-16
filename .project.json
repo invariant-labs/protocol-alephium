@@ -67,14 +67,14 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "a6c8aa8d557dc02601e7911de3ad74a7b915b8f4ac110eaa2c12905c64bc0a16",
+      "sourceCodeHash": "6bbcb53b0b6caf5023e467cb89a4a11601bd2ba55e818f0a3046630406b1ea3d",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "64f5924914c1cbd57648c6be8129e10a5e2fca54ecff6c81a192bfbadcdf6031",
+      "codeHashDebug": "cc336395c6100c2f1d62a1f73bf26c37f4b5cb537efb4942984ebfa397a59dbc",
       "warnings": []
     },
     "InvariantErrors": {
       "sourceFile": "storage/errors.ral",
-      "sourceCodeHash": "d2ec016524deabf37e3a44e019e07af7e8db802ed88518708782ec87b07428ef",
+      "sourceCodeHash": "1f7b0d4fdd7f5aa47503bc5bc6a220e61be7d1df4ca5ea6b973505b122716738",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -109,9 +109,16 @@
     },
     "Tick": {
       "sourceFile": "storage/tick.ral",
-      "sourceCodeHash": "0c178eced39f187eb73b176e7ad4c6cfe0cb2c82ddab7f37a2acb4c3fc00295f",
+      "sourceCodeHash": "f26f0af840c629978ab25a5844fd60725bb858b02e48f99aa0bf847590f37276",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "e56662cc2b388806373922c98be9cab6ab39efecf06ffc1270948a120a20341f",
+      "codeHashDebug": "7a554b90a4bd98b54189fe2bb3a3372aae35e1297686c7ef96f95879f3004db6",
+      "warnings": []
+    },
+    "Ticks": {
+      "sourceFile": "collections/ticks.ral",
+      "sourceCodeHash": "1c98039e6803ec9e6d47343d3e1ddc8228eef1c442471b51509988e0d3a63985",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
       "warnings": []
     },
     "TokenFaucet": {

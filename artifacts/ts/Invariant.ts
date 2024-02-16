@@ -278,6 +278,10 @@ export namespace InvariantTypes {
       }>;
       result: CallContractResult<HexString>;
     };
+    tickExist: {
+      params: CallContractParams<{ poolKey: HexString; index: bigint }>;
+      result: CallContractResult<[boolean, boolean, bigint]>;
+    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -324,6 +328,8 @@ class Factory extends ContractFactory<
       InvalidInitTick: BigInt(5),
       PoolAlreadyExist: BigInt(6),
       TokensAreSame: BigInt(7),
+      TickAlreadyExist: BigInt(8),
+      TickNotFound: BigInt(9),
     },
     InvariantCollection: {
       FeeTiers: BigInt(0),
@@ -788,6 +794,30 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<HexString>> => {
       return testMethod(this, "createPoolKey", params);
     },
+    tickAdd: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { caller: Address; poolKey: HexString; initTick: bigint; sign: boolean }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "tickAdd", params);
+    },
+    tickExist: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { poolKey: HexString; index: bigint }
+      >
+    ): Promise<TestContractResult<[boolean, boolean, bigint]>> => {
+      return testMethod(this, "tickExist", params);
+    },
+    deinitializeTick: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { poolKey: HexString; index: bigint }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "deinitializeTick", params);
+    },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<bigint>> => {
@@ -866,7 +896,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "64f5924914c1cbd57648c6be8129e10a5e2fca54ecff6c81a192bfbadcdf6031"
+    "cc336395c6100c2f1d62a1f73bf26c37f4b5cb537efb4942984ebfa397a59dbc"
   )
 );
 
@@ -1344,6 +1374,17 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "createPoolKey",
+        params,
+        getContractByCodeHash
+      );
+    },
+    tickExist: async (
+      params: InvariantTypes.CallMethodParams<"tickExist">
+    ): Promise<InvariantTypes.CallMethodResult<"tickExist">> => {
+      return callMethod(
+        Invariant,
+        this,
+        "tickExist",
         params,
         getContractByCodeHash
       );

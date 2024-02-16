@@ -7,7 +7,7 @@ Contract Invariant(
     mut poolKeyCount: U256,
     tickTemplateContractId: ByteVec,
     mut tickCount: U256
-) extends FeeTiers(feeTierTemplateContractId, feeTierCount), CLAMM(), PoolKey(), CollectionsPrefixes() { //PoolKeys(poolTemplateContractId, poolKeyCount)
+) extends FeeTiers(feeTierTemplateContractId, feeTierCount), CLAMM(), PoolKey(), CollectionsPrefixes(), Ticks(tickTemplateContractId, tickCount)   { // , 
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
@@ -81,7 +81,7 @@ Contract Invariant(
     }
 
     // TODO: Should not be pub
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
         let currentTimestamp = blockTimeStamp!()
         let caller = callerAddress!()
@@ -89,7 +89,6 @@ Contract Invariant(
 
         checkTick(index, tickSpacing)
 
-        
         let mut feeGrowthOutsideX = 0
         let mut feeGrowthOutisdeY = 0
         let mut secondsOutside = 0
@@ -99,15 +98,17 @@ Contract Invariant(
             secondsOutside = currentTimestamp - poolStartTimestamp
         }
 
-        let tickKey = toByteVec!(InvariantCollection.Ticks) ++ poolKey ++ toByteVec!(index)
-        let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(tickKey, index, true, 0, 0, sqrtPriceFromTick(index), feeGrowthOutsideX, feeGrowthOutisdeY, secondsOutside)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            tickKey,
-            tickTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
-        tickCount = tickCount + 1       
+        tickAdd(caller, poolKey, index, true)
+
+        // let tickKey = toByteVec!(InvariantCollection.Ticks) ++ poolKey ++ toByteVec!(index)
+        // let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(caller, index, true, 0, 0, sqrtPriceFromTick(index), feeGrowthOutsideX, feeGrowthOutisdeY, secondsOutside)
+        // copyCreateSubContract!{caller -> ALPH: 1 alph}(
+        //     tickKey,
+        //     tickTemplateContractId,
+        //     encodedImmFields,
+        //     encodedMutFields
+        // )
+        // tickCount = tickCount + 1       
         // Flip bit in tickmap
     }
 

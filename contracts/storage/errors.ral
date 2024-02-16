@@ -8,5 +8,7 @@ Abstract Contract InvariantErrors() {
         InvalidInitTick = 5
         PoolAlreadyExist = 6
         TokensAreSame = 7
+        TickAlreadyExist = 8
+        TickNotFound = 9
     }
 }
