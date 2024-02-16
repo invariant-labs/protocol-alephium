@@ -25,7 +25,7 @@
     },
     "CollectionsPrefixes": {
       "sourceFile": "collections/prefixes.ral",
-      "sourceCodeHash": "215bb636b2cc55a03bb595bfd46271af80ef6293c78d0133f0bf1e1f2cea3068",
+      "sourceCodeHash": "344cf410455f65e524e4fae1eb9c1c1a8c56a112e9f2ebe0ec14b28edc8c66a0",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -67,9 +67,9 @@
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "1e4732617d8d0c1dbaea7050f98a91ab456e0aecdf54355aa8a39e822b02d53f",
+      "sourceCodeHash": "a6c8aa8d557dc02601e7911de3ad74a7b915b8f4ac110eaa2c12905c64bc0a16",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340",
+      "codeHashDebug": "64f5924914c1cbd57648c6be8129e10a5e2fca54ecff6c81a192bfbadcdf6031",
       "warnings": []
     },
     "InvariantErrors": {
@@ -105,6 +105,13 @@
       "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
+      "warnings": []
+    },
+    "Tick": {
+      "sourceFile": "storage/tick.ral",
+      "sourceCodeHash": "0c178eced39f187eb73b176e7ad4c6cfe0cb2c82ddab7f37a2acb4c3fc00295f",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "e56662cc2b388806373922c98be9cab6ab39efecf06ffc1270948a120a20341f",
       "warnings": []
     },
     "TokenFaucet": {

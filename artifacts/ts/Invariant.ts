@@ -36,6 +36,8 @@ export namespace InvariantTypes {
     feeTierCount: bigint;
     poolTemplateContractId: HexString;
     poolKeyCount: bigint;
+    tickTemplateContractId: HexString;
+    tickCount: bigint;
   };
 
   export type State = ContractState<Fields>;
@@ -323,7 +325,11 @@ class Factory extends ContractFactory<
       PoolAlreadyExist: BigInt(6),
       TokensAreSame: BigInt(7),
     },
-    InvariantCollection: { FeeTiers: BigInt(0), PoolKeys: BigInt(1) },
+    InvariantCollection: {
+      FeeTiers: BigInt(0),
+      PoolKeys: BigInt(1),
+      Ticks: BigInt(2),
+    },
   };
 
   at(address: string): InvariantInstance {
@@ -831,6 +837,22 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getFeeTierCount", params);
     },
+    createTick: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        {
+          poolKey: HexString;
+          tickSpacing: bigint;
+          index: bigint;
+          poolCurrentIndex: bigint;
+          poolFeeGrowthGlobalX: bigint;
+          poolFeeGrowthGlobalY: bigint;
+          poolStartTimestamp: bigint;
+        }
+      >
+    ): Promise<TestContractResult<null>> => {
+      return testMethod(this, "createTick", params);
+    },
     getFeeTiers: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<null>> => {
@@ -844,7 +866,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "aeee3698f9e003ec01a1ee3bd0061129f13b8f5c5d51a37c9b5a2d697a8a6340"
+    "64f5924914c1cbd57648c6be8129e10a5e2fca54ecff6c81a192bfbadcdf6031"
   )
 );
 
