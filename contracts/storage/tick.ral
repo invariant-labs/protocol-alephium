@@ -1,15 +1,21 @@
 Contract Tick(
+    admin: Address,
     idx: I256,
     mut tickSign: Bool,
     mut liquidityChange: U256,
     mut liquidityGross: U256,
     tickSqrtPrice: U256,
-    tickFeeGrowthOutsideX: U256,
-    tickFeeGrowthOutsideY: U256,
-    tickSecondsOutside: U256
+    mut tickFeeGrowthOutsideX: U256,
+    mut tickFeeGrowthOutsideY: U256,
+    mut tickSecondsOutside: U256,
+    mut isInitialized: Bool
 ) extends CLAMM(), Decimal() {
     enum TickError {
         InvalidTickLiquidity = 0
+    }
+
+    pub fn getAdmin() -> Address {
+        return admin
     }
 
     pub fn getIdx() -> I256 {
@@ -44,12 +50,45 @@ Contract Tick(
         return tickSecondsOutside
     }
 
+    pub fn getIsInitialized() -> Bool {
+        return isInitialized
+    }
+
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn updateTick(liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
      liquidityGross = calculateNewLiquidityGross(isDeposit, liquidityDelta, maxLiquidityPerTick)
      let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
      updateLiquidityChange(liquidityDelta, updateLiquiditySign)   
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn reinitializeTick(index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolTimestamp: U256, currentTimestamp: U256) -> () {
+        let belowCurrentTick = index <= poolCurrentIndex
+
+        tickSign = true
+        isInitialized = true
+        if (belowCurrentTick) {
+            tickFeeGrowthOutsideX = poolFeeGrowthGlobalX
+            tickFeeGrowthOutsideY = poolFeeGrowthGlobalY
+            tickSecondsOutside = currentTimestamp - poolTimestamp
+        } else {
+            tickFeeGrowthOutsideX = 0
+            tickFeeGrowthOutsideY = 0
+            tickSecondsOutside = 0
+        }
+        return
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn deinitializeTick() -> () {
+        isInitialized = false
+        tickFeeGrowthOutsideX = 0
+        tickFeeGrowthOutsideY = 0
+        tickSecondsOutside = 0
+        liquidityChange = 0
+        liquidityGross = 0
+        return
     }
 
     @using(updateFields = true, checkExternalCaller = false)

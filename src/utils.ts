@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools } from '../artifacts/ts'
+import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools, Ticks } from '../artifacts/ts'
 import { Tick } from '../artifacts/ts/Tick'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -31,6 +31,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const pools = await deployPools(signer)
   const pool = await deployPool(signer)
   const tick = await deployTick(signer)
+  const ticks = await deployTicks(signer)
   const account = await signer.getSelectedAccount()
 
   return await waitTxConfirmed(
@@ -48,6 +49,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolsContractId: ZERO_ADDRESS,
         poolsTemplateContractId: pools.contractInstance.contractId,
         poolTemplateContractId: pool.contractInstance.contractId,
+        ticksContractId: ZERO_ADDRESS,
+        ticksTemplateContractId: ticks.contractInstance.contractId,
         tickTemplateContractId: tick.contractInstance.contractId
       }
     })
@@ -74,6 +77,17 @@ export async function deployFeeTiers(signer: SignerProvider) {
         admin: ZERO_ADDRESS,
         feeTierTemplateContractId: ZERO_ADDRESS,
         feeTierCount: 0n
+      }
+    })
+  )
+}
+
+export async function deployTicks(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Ticks.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        tickTemplateContractId: ZERO_ADDRESS
       }
     })
   )
@@ -139,6 +153,7 @@ export async function deployTick(signer: SignerProvider) {
   return await waitTxConfirmed(
     Tick.deploy(signer, {
       initialFields: {
+        admin: ZERO_ADDRESS,
         idx: 0n,
         tickSign: false,
         liquidityChange: 0n,
@@ -146,7 +161,8 @@ export async function deployTick(signer: SignerProvider) {
         tickSqrtPrice: 0n,
         tickFeeGrowthOutsideX: 0n,
         tickFeeGrowthOutsideY: 0n,
-        tickSecondsOutside: 0n
+        tickSecondsOutside: 0n,
+        isInitialized: false
       }
     })
   )

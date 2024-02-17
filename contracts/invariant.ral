@@ -11,6 +11,8 @@ Contract Invariant(
     mut poolsContractId: ByteVec,
     poolsTemplateContractId: ByteVec,
     poolTemplateContractId: ByteVec,
+    mut ticksContractId: ByteVec,
+    ticksTemplateContractId: ByteVec,
     tickTemplateContractId: ByteVec
 ) extends CLAMM() {
     enum InvariantError {
@@ -38,6 +40,9 @@ Contract Invariant(
         
         let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(selfAddress!(), poolTemplateContractId)
         poolsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolsTemplateContractId, poolsEncodedImmFields, poolsEncodedMutFields)
+
+        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId)
+        ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
 
         init = true
     }
@@ -105,7 +110,7 @@ Contract Invariant(
     }
 
     // TODO: Should not be pub
-    @using(checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
         let currentTimestamp = blockTimeStamp!()
         let caller = callerAddress!()
@@ -113,7 +118,6 @@ Contract Invariant(
 
         checkTick(index, tickSpacing)
 
-        
         let mut feeGrowthOutsideX = 0
         let mut feeGrowthOutisdeY = 0
         let mut secondsOutside = 0
@@ -122,16 +126,14 @@ Contract Invariant(
             feeGrowthOutisdeY = poolFeeGrowthGlobalY
             secondsOutside = currentTimestamp - poolStartTimestamp
         }
-
-        let tickKey = poolKey ++ toByteVec!(index)
-        let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(index, true, 0, 0, sqrtPriceFromTick(index), feeGrowthOutsideX, feeGrowthOutisdeY, secondsOutside)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            tickKey,
-            tickTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )       
+        Ticks(ticksContractId).add{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, index, true)
         // Flip bit in tickmap
+    }
+
+
+    // TODO: remove at the end
+    pub fn tickExist(poolKey: ByteVec, index: I256) -> (Bool, Bool) {
+        return Ticks(ticksContractId).exist(poolKey, index)
     }
 
     // TODO: implement
