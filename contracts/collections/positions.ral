@@ -1,12 +1,64 @@
 Contract Positions(admin: Address, positionTemplateContractId: ByteVec) extends CLAMM() {
-    pub fn add(caller: Address, placeholder: ByteVec) -> () {
-        assert!(caller == admin, 0)
-        assert!(placeholder == positionTemplateContractId, 1)
+    enum PositionsError {
+        NotAdmin = 2001
+        NotFound = 2002
+        TooManyPositions = 2003
+    }
+    @using(checkExternalCaller = false)
+    pub fn add(caller: Address, positionCounterTemplateId: ByteVec, poolKey: ByteVec, liquidityDelta: U256, lowerTickIdx: I256, upperTickIdx: I256, lastBlock: U256) -> () {
+        assert!(callerAddress!() == admin, PositionsError.NotAdmin)
+        let length = getLength(caller, positionCounterTemplateId)
+
+        let (encodedImmFields, encodedMutFields) = Position.encodeFields!(poolKey, liquidityDelta, lowerTickIdx, upperTickIdx, 0, 0, lastBlock, 0, 0, true)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            poolKey ++ toByteVec!(caller) ++ toByteVec!(length),
+            positionTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )    
+        PositionsCounter(positionCounterTemplateId ++ toByteVec!(caller)).increment()
+
         return
     }
-    // pub fn update() {}
-    // pub fn remove() {}
-    // pub fn transfer() {}
-    // pub fn get() {}
-    // pub fn getAll() {}
+
+    @using(checkExternalCaller = false)
+    pub fn remove(caller: Address, positionCounterTemplateId: ByteVec, index: U256) -> () {
+        assert!(callerAddress!() == admin, PositionsError.NotAdmin)
+        let length = getLength(caller, positionCounterTemplateId)
+        assert!(length - 1 >= index, PositionsError.NotFound)
+        let position = Position(positionTemplateContractId ++ toByteVec!(caller) ++ toByteVec!(index))
+        assert!(!position.getIsOpen(), PositionsError.NotFound)
+        position.close()
+        return
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn transfer(caller: Address, recipient: Address, positionCounterTemplateId: ByteVec, index: U256) -> () {
+        assert!(callerAddress!() == admin, PositionsError.NotAdmin)
+        let ownerLength = getLength(caller, positionCounterTemplateId)
+        assert!(ownerLength - 1 >= index, PositionsError.NotFound)
+        let position = Position(positionTemplateContractId ++ toByteVec!(caller) ++ toByteVec!(index))
+        assert!(position.getIsOpen(), PositionsError.NotFound)
+        // TODO: Add transfer unclaimed fees
+        remove(caller, positionCounterTemplateId, index)
+        add(recipient, positionCounterTemplateId, position.getRelatedPoolKey(), position.getPosLiquidity(), position.getPosLowerTickIndex(), position.getPosUpperTickIndex(), position.getLastBlockNumber())
+        return
+    }
+
+    pub fn getId(caller: Address, poolKey: ByteVec, index: U256) -> ByteVec {
+        return poolKey ++ toByteVec!(caller) ++ toByteVec!(index)
+    }
+
+    pub fn getIds(caller: Address, poolKey: ByteVec, positionCounterId: ByteVec) -> [ByteVec; 100] {
+        let length = getLength(caller, positionCounterId)
+        assert!(length <= 100, PositionsError.TooManyPositions)
+        let mut ids = [toByteVec!(0); 100]
+        for (let mut i = 0; i < length; i = i + 1) {
+            ids[i] = poolKey ++ toByteVec!(caller) ++ toByteVec!(i)
+        }
+        return ids
+    }
+    fn getLength(owner: Address,positionCounterId: ByteVec) -> U256 {
+        return PositionsCounter(positionCounterId ++ toByteVec!(owner)).get()
+    }
 }

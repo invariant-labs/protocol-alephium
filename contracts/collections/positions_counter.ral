@@ -1,0 +1,21 @@
+Contract PositionsCounter(admin: Address, mut positionsLength: U256) {
+    enum PositionsCounterError {
+        NotAdmin = 3001
+    }
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn increment() -> () {
+        assert!(callerAddress!() == admin, PositionsCounterError.NotAdmin)
+        positionsLength = positionsLength + 1
+        return 
+    }
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn decrement() -> () {
+        assert!(callerAddress!() == admin, PositionsCounterError.NotAdmin)
+        positionsLength = positionsLength - 1 
+        return
+    }
+    pub fn get() -> U256 {
+        assert!(callerAddress!() == admin, PositionsCounterError.NotAdmin)
+        return positionsLength
+    }
+}

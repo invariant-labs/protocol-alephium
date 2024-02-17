@@ -7,7 +7,8 @@ Contract Position(
     mut posFeeGrowthInsideY: U256,
     lastBlockNumber: U256,
     mut posTokensOwedX: U256,
-    mut posTokensOwedY: U256
+    mut posTokensOwedY: U256,
+    mut isOpen: Bool
 ) extends CLAMM(), Decimal() {
     enum PositionError {
         InsufficientLiquidity = 0
@@ -48,6 +49,17 @@ Contract Position(
 
     pub fn getPosTokensOwedY() -> U256 {
         return posTokensOwedY
+    }
+
+    pub fn getIsOpen() -> Bool {
+        return isOpen
+    }
+
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn close() -> () {
+        isOpen = false
+        return
     }
 
     @using(updateFields = false, checkExternalCaller = false)
@@ -141,8 +153,4 @@ Contract Position(
 
         return owedX, owedY
     }
-
-    // Most likely will be moved to collection layer & main contract
-    // pub fn create() -> () {}
-    // pub fn remove() -> () {}
 }
