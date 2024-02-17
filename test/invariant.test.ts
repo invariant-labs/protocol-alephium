@@ -1,7 +1,7 @@
-import { AddressType, DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
-import { getSigner } from '@alephium/web3-test'
+import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
+import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Invariant, RemoveFeeTier } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, Init, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
 import { deployInvariant, expectError } from '../src/utils'
 
@@ -18,6 +18,11 @@ describe('invariant tests', () => {
 
     const invariant = Invariant.at(invariantResult.contractInstance.address)
 
+    await Init.execute(sender, {
+      initialFields: { invariant: invariant.contractId },
+      attoAlphAmount: ONE_ALPH * 3n + DUST_AMOUNT * 2n
+    })
+
     let feeTier = await invariant.methods.getFeeTierCount()
     expect(feeTier.returns).toEqual(0n)
 
@@ -27,7 +32,7 @@ describe('invariant tests', () => {
         fee: 0n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
     feeTier = await invariant.methods.getFeeTierCount()
@@ -107,10 +112,16 @@ describe('invariant tests', () => {
     feeTier = await invariant.methods.getFeeTierCount()
     expect(feeTier.returns).toEqual(0n)
   })
-  test('init pool', async () => {
+
+  test('create pool', async () => {
     const invariantResult = await deployInvariant(sender, 0n)
 
     const invariant = Invariant.at(invariantResult.contractInstance.address)
+
+    await Init.execute(sender, {
+      initialFields: { invariant: invariant.contractId },
+      attoAlphAmount: ONE_ALPH * 3n + DUST_AMOUNT * 2n
+    })
 
     let feeTier = await invariant.methods.getFeeTierCount()
     expect(feeTier.returns).toEqual(0n)
@@ -121,22 +132,20 @@ describe('invariant tests', () => {
         fee: 0n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    feeTier = await invariant.methods.getFeeTierCount()
-    expect(feeTier.returns).toEqual(1n)
-
-    // CreatePool.execute(sender, {
-    //   initialFields: {
-    //     invariant: invariant.contractId,
-    //     token0: '1DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH',
-    //     token1: '2DrDyTr9RpRsQnDnXo2YRiPzPW4ooHX5LLoqXrqfMrpQH',
-    //     fee: 0n,
-    //     tickSpacing: 1n,
-    //     initSqrtPrice: 10n ** 24n,
-    //     initTick: 0n
-    //   }
-    // })
+    await CreatePool.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: 0n,
+        tickSpacing: 1n,
+        initSqrtPrice: 1000000000000000000000000n,
+        initTick: 0n
+      },
+      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+    })
   })
 })

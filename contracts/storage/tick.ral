@@ -1,5 +1,4 @@
 Contract Tick(
-    tickKey: ByteVec,
     idx: I256,
     mut tickSign: Bool,
     mut liquidityChange: U256,
@@ -11,9 +10,6 @@ Contract Tick(
 ) extends CLAMM(), Decimal() {
     enum TickError {
         InvalidTickLiquidity = 0
-    }
-    pub fn getTickKey() -> ByteVec {
-        return tickKey
     }
 
     pub fn getIdx() -> I256 {
