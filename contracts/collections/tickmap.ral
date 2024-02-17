@@ -1,0 +1,67 @@
+Contract Tickmap(
+    chunkTemplateContractId: ByteVec
+) extends CLAMM() {
+    enum TickmapErrors {
+        InvalidTickRange = 0
+        TickAndTickSpacingMismatch = 1
+    }
+
+    fn getChunkSize() -> U256 {
+        return 64
+    }
+
+    fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
+        assert!(tick > getGlobalMinTick() && tick < getGlobalMaxTick(), TickmapErrors.InvalidTickRange)
+        assert!(tick % toI256!(tickSpacing) == 0i, TickmapErrors.TickAndTickSpacingMismatch)
+    
+        let bitmapIndex = toU256!(tick + getGlobalMaxTick()) / tickSpacing
+    
+        let chunk = bitmapIndex / getChunkSize()
+        let bit = bitmapIndex % getChunkSize()
+    
+        return chunk, bit
+    }
+
+    fn getBitAtPosition(value: U256, position: U256) -> Bool {
+        return (value >> position) & 1 == 1
+    }
+
+    fn flipBitAtPosition(value: U256, position: U256) -> U256 {
+        return value ^ (1 << position)
+    }
+
+    pub fn get(tick: I256, tickSpacing: U256) -> Bool {
+        let (chunk, bit) = tickToPosition(tick, tickSpacing)
+
+        let subContractId = subContractId!(toByteVec!(chunk))
+        let exists = contractExists!(subContractId)
+
+        if (!exists) {
+            return false
+        } else {
+            let contract = Chunk(subContractId)
+            return getBitAtPosition(contract.get(), bit)
+        }
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn flip(tick: I256, tickSpacing: U256) -> () {
+        let (chunk, bit) = tickToPosition(tick, tickSpacing)
+
+        let subContractId = subContractId!(toByteVec!(chunk))
+        let exists = contractExists!(subContractId)
+
+        if (!exists) {
+            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(flipBitAtPosition(0, bit))
+            copyCreateSubContract!{callerAddress!() -> ALPH: 1 alph}(
+                toByteVec!(chunk),
+                chunkTemplateContractId,
+                encodedImmFields,
+                encodedMutFields
+            )
+        } else {
+            let contract = Chunk(subContractId)
+            contract.set(flipBitAtPosition(contract.get(), bit))
+        }
+    }
+}

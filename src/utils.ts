@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools } from '../artifacts/ts'
+import { Chunk, FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools, Tickmap } from '../artifacts/ts'
 import { Tick } from '../artifacts/ts/Tick'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -147,6 +147,26 @@ export async function deployTick(signer: SignerProvider) {
         tickFeeGrowthOutsideX: 0n,
         tickFeeGrowthOutsideY: 0n,
         tickSecondsOutside: 0n
+      }
+    })
+  )
+}
+
+export async function deployChunk(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Chunk.deploy(signer, {
+      initialFields: {
+        value: 0n
+      }
+    })
+  )
+}
+
+export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId?: string) {
+  return await waitTxConfirmed(
+    Tickmap.deploy(signer, {
+      initialFields: {
+        chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS
       }
     })
   )
