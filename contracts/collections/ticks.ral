@@ -1,0 +1,61 @@
+Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() {
+    enum TicksError {
+        NotAdmin = 1000
+        TickNotFound = 1001
+        TickAlreadyExist = 1002
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn add(
+        caller: Address,
+        poolKey: ByteVec,
+        initTick: I256,
+        sign: Bool
+    ) -> () {
+        assert!(callerAddress!() == admin, TicksError.NotAdmin)
+
+        let (doesExist, isTickInitialized) = exist(poolKey, initTick) 
+
+        assert!(!doesExist && !isTickInitialized, TicksError.TickAlreadyExist)
+        
+        if(doesExist && !isTickInitialized) {
+            let _ = Tick(poolKey ++ toByteVec!(initTick))
+            // contract.reinitializeTick()
+            return
+        } else {
+            let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, sqrtPriceFromTick(initTick), 0, 0, 0, true)
+            copyCreateSubContract!{caller -> ALPH: 1 alph}(
+                poolKey ++ toByteVec!(initTick),
+                tickTemplateContractId,
+                encodedImmFields,
+                encodedMutFields
+            )   
+            return
+        }
+    }
+
+    pub fn exist(
+        poolKey: ByteVec,
+        index: I256
+    ) -> (Bool, Bool) {
+        if(contractExists!(subContractId!(poolKey ++ toByteVec!(index)))) {
+            let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
+            return true, contract.getIsInitialized()
+        }
+        return false, false
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn deinitializeTick(
+        poolKey: ByteVec,
+        index: I256
+    ) -> () {
+        assert!(callerAddress!() == admin, TicksError.NotAdmin)
+        let (doesExist, isTickInitialized) = exist(poolKey, index)
+        assert!(doesExist && isTickInitialized, TicksError.TickNotFound)
+        let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
+        contract.deinitializeTick()
+        return
+    }
+
+}

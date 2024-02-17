@@ -11,28 +11,28 @@
   "infos": {
     "AddFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "f7bcd60ada4731f331b4d4ad8e3a52f7fb43f02fc1dc40a2f6f51a0f91d786f9",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "CLAMM": {
       "sourceFile": "math/clamm.ral",
-      "sourceCodeHash": "8442141abf542f8d076cfbff47e71fa95b7e851fcebe2ac9bdfff7e9dad62a59",
-      "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
-      "warnings": []
-    },
-    "CollectionsPrefixes": {
-      "sourceFile": "collections/prefixes.ral",
-      "sourceCodeHash": "215bb636b2cc55a03bb595bfd46271af80ef6293c78d0133f0bf1e1f2cea3068",
+      "sourceCodeHash": "e7b0fb19614db90c60a84401ee636fc75c18e00a8b6e4dbd929b61567c94ae1a",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "CreatePool": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "f7bcd60ada4731f331b4d4ad8e3a52f7fb43f02fc1dc40a2f6f51a0f91d786f9",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "",
+      "warnings": []
+    },
+    "CreateTick": {
+      "sourceFile": "invariant_tx.ral",
+      "sourceCodeHash": "f7bcd60ada4731f331b4d4ad8e3a52f7fb43f02fc1dc40a2f6f51a0f91d786f9",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
@@ -46,37 +46,30 @@
     },
     "FeeTier": {
       "sourceFile": "storage/fee_tier.ral",
-      "sourceCodeHash": "dcb4c0ec7e42a9ed418f26daa0c1e581d479e11860b2bda2c79f6d63f2d5a738",
+      "sourceCodeHash": "5a4f89acb39d2c97eb19fbaa410454e8808ec6048f133eb9991c1460ada03455",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "f1b7c2ca34064f0c7055b0d8b424ef158173fbead0c1281f6b2d9471d39dc18b",
+      "codeHashDebug": "0c216ea0c433ff984c06f614a69c235039ad70573c18ab95ccbd3b5544e0df3e",
       "warnings": []
     },
     "FeeTiers": {
       "sourceFile": "collections/fee_tiers.ral",
-      "sourceCodeHash": "ad0047c649c86f2cc6b182e472cd1b961003380a3ca311561ee6a0d337587173",
+      "sourceCodeHash": "701100ad740f129aee7a1b59a8ae747ffc0c7f83257ebed4b835883d5bf45419",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
+      "codeHashDebug": "b33b308a04b2c996f3f8dd828b334e7e12c531bb38e2ed4db469e81c8471ec04",
       "warnings": []
     },
-    "IFungibleToken": {
-      "sourceFile": "../../../.npm/_npx/f1b120e1b513c04c/node_modules/@alephium/web3/std/fungible_token_interface.ral",
-      "sourceCodeHash": "6809cb06fb20fa7edf529461998beeebd12b1636d439612cca2f84214dbf4a20",
+    "Init": {
+      "sourceFile": "invariant_tx.ral",
+      "sourceCodeHash": "f7bcd60ada4731f331b4d4ad8e3a52f7fb43f02fc1dc40a2f6f51a0f91d786f9",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
     "Invariant": {
       "sourceFile": "invariant.ral",
-      "sourceCodeHash": "1e4732617d8d0c1dbaea7050f98a91ab456e0aecdf54355aa8a39e822b02d53f",
+      "sourceCodeHash": "a9515c027b38105b95ed4d2a0f4b6006d3b89e747a04edfa620e9a58366f42bf",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "0c5922baeaebd821ee7bad9940faba52affe09c424a62b6c40b039239ef00031",
-      "warnings": []
-    },
-    "InvariantErrors": {
-      "sourceFile": "storage/errors.ral",
-      "sourceCodeHash": "d2ec016524deabf37e3a44e019e07af7e8db802ed88518708782ec87b07428ef",
-      "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
+      "codeHashDebug": "3e8f25c2cf5d1a1606c5a8e24b0b394942059f38bc9745af204ce47fa989600b",
       "warnings": []
     },
     "Log": {
@@ -88,44 +81,65 @@
     },
     "Pool": {
       "sourceFile": "storage/pool.ral",
-      "sourceCodeHash": "0209a08fc1741dd7a52ad16917ac34427605b6aa40f18921d9d501286e237eea",
+      "sourceCodeHash": "a3784a692af94847f2a927a74ed97885142b6785870ce087ccbe32e35a537ff0",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "a0dc10bb1f691ff3ea053a217322d43df93c6b66e990bc2d1b167d350fc6a0b8",
+      "codeHashDebug": "d8eb46fed35945a4f95b2f31e6f6030b4e249a5ecd7d3fe07339fcdc7122cfc1",
       "warnings": []
     },
     "PoolKey": {
       "sourceFile": "storage/pool_key.ral",
-      "sourceCodeHash": "a58ec9be08f797f7af83b73c9671ab4c2004e7650580b4beb9a61f86e0d13aec",
+      "sourceCodeHash": "a5357437a70a3746f7d0bcdcee7f70dc8c2bc20d314ae78dc3b8052ff932222f",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
+      "codeHashDebug": "d9c9fab84f779f2e90ca9e9b1fafd6d9c9dc0f8b84256169e20961f9c917bab8",
+      "warnings": []
+    },
+    "PoolKeys": {
+      "sourceFile": "collections/pool_keys.ral",
+      "sourceCodeHash": "ea0bd93c82077e77af63a1078dae2a9a05b08597893f1165122d67fc08fc9eb3",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "78fd1f1ce8ed0c1414e5d4c14f86ea5ea8c41a377acc11c5c64f742fd943ecb6",
+      "warnings": []
+    },
+    "Pools": {
+      "sourceFile": "collections/pools.ral",
+      "sourceCodeHash": "fb43c22de2ff75ed4fafbe262e2f8f7ccc3bc4f9df94a1da41e94f22df7b448e",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "416b13145b9bf5ade5e950091418765991074c1e3eb2453133c79a28f3441e03",
       "warnings": []
     },
     "Position": {
       "sourceFile": "storage/position.ral",
-      "sourceCodeHash": "8e117536c017842706463e492d6b4ae1014b7cc4c56debe84823d5bcce58e4ae",
+      "sourceCodeHash": "d214dd551771b023f17e058137d9fb29083347290dff20963b6717983bf71b1a",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "37a9d07acdb05535d112fd9633423f92974ce43f980fa4b4abf184abe934ab4b",
+      "codeHashDebug": "9eda8ceb4ff463b7e8a3796bf5cc47c3d3c965839554fb130e08595e0c2e3af8",
+      "warnings": []
+    },
+    "Positions": {
+      "sourceFile": "collections/positions.ral",
+      "sourceCodeHash": "1dec11bf40c4eccf2457418760043bfaa363a6ef9fee11dbff42102d34cc8025",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "d32479a13308cee49b91849883704310ac3ee47be05bb9c04ff35492952e57c7",
       "warnings": []
     },
     "RemoveFeeTier": {
       "sourceFile": "invariant_tx.ral",
-      "sourceCodeHash": "c34fd2f16e237ac2e5d8e61826c49affc2d4af35aa1b02789d09958b8b484f5d",
+      "sourceCodeHash": "f7bcd60ada4731f331b4d4ad8e3a52f7fb43f02fc1dc40a2f6f51a0f91d786f9",
       "bytecodeDebugPatch": "",
       "codeHashDebug": "",
       "warnings": []
     },
-    "TokenFaucet": {
-      "sourceFile": "token.ral",
-      "sourceCodeHash": "5f78785ecc8732a20daf0ed4e466b27c24caf42f20efb253a634e9a9d044314d",
-      "bytecodeDebugPatch": "=20-2+67=101+3a0007e02=1+75468652063757272656e742062616c616e63652069732000=46",
-      "codeHashDebug": "a3309aa3a0dbd0c53b67a0c422316dcbc0571d8fa5f9ea2ab374b5c110f4efe2",
+    "Tick": {
+      "sourceFile": "storage/tick.ral",
+      "sourceCodeHash": "f26f0af840c629978ab25a5844fd60725bb858b02e48f99aa0bf847590f37276",
+      "bytecodeDebugPatch": "",
+      "codeHashDebug": "09b4117d71a7566ccfb76b9dbe2e2a5f0ca292c0a4a426467588d16e300be3ad",
       "warnings": []
     },
-    "Withdraw": {
-      "sourceFile": "token_tx.ral",
-      "sourceCodeHash": "6f42aa997846601cab0b4c54b26e70b1c323ac250e1fb1f7907ef6fb8bd58898",
+    "Ticks": {
+      "sourceFile": "collections/ticks.ral",
+      "sourceCodeHash": "4508f476847d129e4c4220e3f1aff363ea98d0c189ceae2f9c067ad650d678ec",
       "bytecodeDebugPatch": "",
-      "codeHashDebug": "",
+      "codeHashDebug": "856bdfcf6f0c06e6b6c45c16a6cfea5fff34891443fd46507be4cc814391dae3",
       "warnings": []
     }
   }

@@ -1,0 +1,12 @@
+Contract Positions(admin: Address, positionTemplateContractId: ByteVec) extends CLAMM() {
+    pub fn add(caller: Address, placeholder: ByteVec) -> () {
+        assert!(caller == admin, 0)
+        assert!(placeholder == positionTemplateContractId, 1)
+        return
+    }
+    // pub fn update() {}
+    // pub fn remove() {}
+    // pub fn transfer() {}
+    // pub fn get() {}
+    // pub fn getAll() {}
+}

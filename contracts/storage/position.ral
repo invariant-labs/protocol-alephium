@@ -1,5 +1,4 @@
 Contract Position(
-    positionKey: ByteVec,
     relatedPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
@@ -13,10 +12,6 @@ Contract Position(
     enum PositionError {
         InsufficientLiquidity = 0
         EmptyPositionPokes = 1
-    }
-
-    pub fn getPositionKey() -> ByteVec {
-        return positionKey
     }
 
     pub fn getRelatedPoolKey() -> ByteVec {
@@ -55,26 +50,44 @@ Contract Position(
         return posTokensOwedY
     }
 
-    // pub fn modify(
-    //     poolKey: ByteVec,
-    //     lowerTickKey: ByteVec,
-    //     upperTickKey: ByteVec,
-    //     upperTick: I256,
-    //     lowerTick: I256,
-    //     liquidityDelta: U256,
-    //     add: Bool,
-    //     currentTimestamp: U256,
-    //     tickSpacing: U256
-    // ) -> (U256, U256) {
-    //     // Get Pool
-    //     // Update pool Timestamp
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn modify(
+        poolContractId: ByteVec,
+        lowerTickContractId: ByteVec,
+        upperTickContractId: ByteVec,
+        liquidityDelta: U256,
+        add: Bool,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        let poolContract = Pool(poolContractId)
+        poolContract.setLastTimestamp(currentTimestamp)
 
-    //     let maxLiquidityPerTick = calculateMaxLiquidityPerTick(tickSpacing)
+        let maxLiquidityPerTick = calculateMaxLiquidityPerTick(tickSpacing)
 
-    //     // get lower tick and update
-    //     // get upper tick and update
+        let lowerTickContract = Tick(lowerTickContractId)
+        let upperTickContract = Tick(upperTickContractId)
 
-    //     // let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside()
+
+        lowerTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, false, add)
+        upperTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, true, add)
+
+        let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
+            lowerTickContract.getIdx(),
+            lowerTickContract.getTickFeeGrowthOutsideX(),
+            lowerTickContract.getTickFeeGrowthOutsideY(),
+            upperTickContract.getIdx(),
+            upperTickContract.getTickFeeGrowthOutsideX(),
+            upperTickContract.getTickFeeGrowthOutsideY(),
+            poolContract.getPoolCurrentTickIndex(),
+            poolContract.getFeeGrowthGlobalX(),
+            poolContract.getFeeGrowthGlobalY()
+        )
+
+        updatePos(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+
+        let (x, y) = poolContract.updateLiquidity(liquidityDelta, add, upperTickContract.getIdx(), lowerTickContract.getIdx())
+        return x, y
     }
 
     @using(updateFields = true, checkExternalCaller = false)

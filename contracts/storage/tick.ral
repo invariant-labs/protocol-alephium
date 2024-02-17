@@ -1,0 +1,123 @@
+Contract Tick(
+    admin: Address,
+    idx: I256,
+    mut tickSign: Bool,
+    mut liquidityChange: U256,
+    mut liquidityGross: U256,
+    tickSqrtPrice: U256,
+    mut tickFeeGrowthOutsideX: U256,
+    mut tickFeeGrowthOutsideY: U256,
+    mut tickSecondsOutside: U256,
+    mut isInitialized: Bool
+) extends CLAMM(), Decimal() {
+    enum TickError {
+        InvalidTickLiquidity = 0
+    }
+
+    pub fn getAdmin() -> Address {
+        return admin
+    }
+
+    pub fn getIdx() -> I256 {
+        return idx
+    }
+
+    pub fn getTickSign() -> Bool {
+        return tickSign
+    }
+
+    pub fn getLiquidityChange() -> U256 {
+        return liquidityChange
+    }
+
+    pub fn getLiquidityGross() -> U256 {
+        return liquidityGross
+    }
+
+    pub fn getTickSqrtPrice() -> U256 {
+        return tickSqrtPrice
+    }
+
+    pub fn getTickFeeGrowthOutsideX() -> U256 {
+        return tickFeeGrowthOutsideX
+    }
+
+    pub fn getTickFeeGrowthOutsideY() -> U256 {
+        return tickFeeGrowthOutsideY
+    }
+
+    pub fn getTickSecondsOutside() -> U256 {
+        return tickSecondsOutside
+    }
+
+    pub fn getIsInitialized() -> Bool {
+        return isInitialized
+    }
+
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn updateTick(liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
+     liquidityGross = calculateNewLiquidityGross(isDeposit, liquidityDelta, maxLiquidityPerTick)
+     let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
+     updateLiquidityChange(liquidityDelta, updateLiquiditySign)   
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn reinitializeTick(index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolTimestamp: U256, currentTimestamp: U256) -> () {
+        let belowCurrentTick = index <= poolCurrentIndex
+
+        tickSign = true
+        isInitialized = true
+        if (belowCurrentTick) {
+            tickFeeGrowthOutsideX = poolFeeGrowthGlobalX
+            tickFeeGrowthOutsideY = poolFeeGrowthGlobalY
+            tickSecondsOutside = currentTimestamp - poolTimestamp
+        } else {
+            tickFeeGrowthOutsideX = 0
+            tickFeeGrowthOutsideY = 0
+            tickSecondsOutside = 0
+        }
+        return
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn deinitializeTick() -> () {
+        isInitialized = false
+        tickFeeGrowthOutsideX = 0
+        tickFeeGrowthOutsideY = 0
+        tickSecondsOutside = 0
+        liquidityChange = 0
+        liquidityGross = 0
+        return
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    fn updateLiquidityChange(liquidityDelta: U256, add: Bool) -> () {
+        if (tickSign && !add || !tickSign && add) {
+            if (liquidityChange > liquidityDelta) {
+                liquidityChange = liquidityChange - liquidityDelta
+            } else {
+                liquidityChange = liquidityDelta - liquidityChange
+                tickSign = !tickSign
+            }
+        } else {
+            liquidityChange = liquidityChange + liquidityDelta
+        }
+        return
+    }
+
+    fn calculateNewLiquidityGross(sign: Bool, liquidityDelta: U256, maxLiquidityPerTick: U256) -> U256 {
+        assert!(sign && liquidityGross >= liquidityDelta, TickError.InvalidTickLiquidity)
+
+        let mut newLiquidity = 0
+        if (sign) {
+            newLiquidity = liquidityGross + liquidityDelta
+        } else {
+            newLiquidity = liquidityGross - liquidityDelta
+        }
+
+        assert!(!sign && newLiquidity < maxLiquidityPerTick, TickError.InvalidTickLiquidity)
+
+        return newLiquidity
+    }
+}

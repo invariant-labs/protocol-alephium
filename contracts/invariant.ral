@@ -1,83 +1,146 @@
 Contract Invariant(
+    mut init: Bool,
     admin: Address,
     protocolFee: U256,
+    mut feeTiersContractId: ByteVec,
+    feeTiersTemplateContractId: ByteVec,
     feeTierTemplateContractId: ByteVec,
-    mut feeTierCount: U256,
+    mut poolKeysContractId: ByteVec,
+    poolKeysTemplateContractId: ByteVec,
+    poolKeyTemplateContractId: ByteVec,
+    mut poolsContractId: ByteVec,
+    poolsTemplateContractId: ByteVec,
     poolTemplateContractId: ByteVec,
-    mut poolKeyCount: U256
-) extends FeeTiers(feeTierTemplateContractId, feeTierCount), CLAMM(), PoolKey(), CollectionsPrefixes() { //PoolKeys(poolTemplateContractId, poolKeyCount)
+    mut ticksContractId: ByteVec,
+    ticksTemplateContractId: ByteVec,
+    tickTemplateContractId: ByteVec
+    // mut positionsContractId: ByteVec,
+    // positionsTemplateContractId: ByteVec,
+    // positionTempalteContractId: ByteVec
+) extends CLAMM() {
+    enum InvariantError {
+        NotAdmin = 0
+        AlreadyInitialized = 1
+        NotInitialized = 2
+        InvalidTickSpacing = 3
+        InvalidFee = 4
+        FeeTierNotFound = 5
+        TokensAreSame = 6
+        PoolKeyAlreadyExist = 7
+        TickAndSqrtPriceMismatch = 8
+    }
+
+    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    pub fn init() -> () {
+        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        assert!(!init, InvariantError.AlreadyInitialized)
+
+        let (feeTiersEncodedImmFields, feeTiersEncodedMutFields) = FeeTiers.encodeFields!(selfAddress!(), feeTierTemplateContractId, 0)
+        feeTiersContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(feeTiersTemplateContractId, feeTiersEncodedImmFields, feeTiersEncodedMutFields)
+        
+        let (poolKeysEncodedImmFields, poolKeysEncodedMutFields) = PoolKeys.encodeFields!(selfAddress!(), poolKeyTemplateContractId, 0)
+        poolKeysContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolKeysTemplateContractId, poolKeysEncodedImmFields, poolKeysEncodedMutFields)
+        
+        let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(selfAddress!(), poolTemplateContractId)
+        poolsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolsTemplateContractId, poolsEncodedImmFields, poolsEncodedMutFields)
+
+        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId)
+        ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
+
+        // let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId)
+        // positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
+
+        init = true
+    }
+    
     pub fn getProtocolFee() -> U256 {
         return protocolFee
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
+        assert!(init, InvariantError.NotInitialized)
+
         let caller = callerAddress!()
+        let contractAddress = selfAddress!()
         let timestamp = blockTimeStamp!()
-        assert!(feeTierExist(fee, tickSpacing), InvariantError.FeeTierNotFound)
-    
-        let poolKey = createPoolKey(token0, token1, fee, tickSpacing)
-        poolKeyCount = poolKeyCount + 1
 
-        if (initTick + toI256!(tickSpacing) > getMaxTick(tickSpacing)) {
-            let maxTick = getMaxTick(tickSpacing)
-            let maxSqrtPrice = sqrtPriceFromTick(maxTick)
-            assert!(initSqrtPrice == maxSqrtPrice, InvariantError.InvalidInitTick)
-        } else {
-            let lowerBound = sqrtPriceFromTick(initTick)
-            let upperBound = sqrtPriceFromTick(initTick + toI256!(tickSpacing))
-            assert!(initSqrtPrice < lowerBound && initSqrtPrice >= upperBound, InvariantError.InvalidInitTick)
+        assert!(FeeTiers(feeTiersContractId).contains(fee, tickSpacing), InvariantError.FeeTierNotFound)
+
+        checkTick(initTick, tickSpacing)
+
+        assert!(token0 != token1, InvariantError.TokensAreSame)
+
+        let poolKeyExist = PoolKeys(poolKeysContractId).contains(token0, token1, fee, tickSpacing)
+
+        if (!poolKeyExist) {
+            let swappedPoolKeyExist = PoolKeys(poolKeysContractId).contains(token0, token1, fee, tickSpacing)
+
+            assert!(!swappedPoolKeyExist, InvariantError.PoolKeyAlreadyExist)
         }
-        
-        let poolContract = Pool(subContractId!(poolKey))
-        assert!(!poolContract.getExist(), InvariantError.PoolAlreadyExist)   
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(poolKey, 0, initSqrtPrice, initTick, 0, 0, 0, 0, timestamp, timestamp, caller, true)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            poolKey,
-            poolTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
+        assert!(checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
+
+        PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
+        assert!(init, InvariantError.NotInitialized)
+
         let caller = callerAddress!()
 
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= 1000000000000, InvariantError.InvalidFee)
         assert!(caller == admin, InvariantError.NotAdmin)
 
-        feeTiersAdd{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
+        FeeTiers(feeTiersContractId).add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }
 
     @using(checkExternalCaller = false)
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
+        assert!(init, InvariantError.NotInitialized)
         assert!(callerAddress!() == admin, InvariantError.NotAdmin)
 
-        feeTiersRemove(fee, tickSpacing)
+        FeeTiers(feeTiersContractId).remove(fee, tickSpacing)
     }
 
     pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {
-        return feeTiersContains(fee, tickSpacing)
+        return FeeTiers(feeTiersContractId).contains(fee, tickSpacing)
     }
 
     // TODO: remove if possible after implementing get fee tiers
     pub fn getFeeTierCount() -> U256 {
-        let mut count = 0
-
-        for (let mut index = 1; index <= feeTierCount; index = index + 1) {
-            let contract = FeeTier(subContractId!(toByteVec!(InvariantCollection.FeeTiers) ++ toByteVec!(index)))
-
-            if (contract.isActive()) {
-                count = count + 1
-            }
-        }
-
-        return count
+        return FeeTiers(feeTiersContractId).count()
     }
 
+    // TODO: Should not be pub
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
+        let currentTimestamp = blockTimeStamp!()
+        let caller = callerAddress!()
+        let belowCurrentTick = index <= poolCurrentIndex
+
+        checkTick(index, tickSpacing)
+
+        let mut feeGrowthOutsideX = 0
+        let mut feeGrowthOutisdeY = 0
+        let mut secondsOutside = 0
+        if (belowCurrentTick) {
+            feeGrowthOutsideX = poolFeeGrowthGlobalX
+            feeGrowthOutisdeY = poolFeeGrowthGlobalY
+            secondsOutside = currentTimestamp - poolStartTimestamp
+        }
+        Ticks(ticksContractId).add{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, index, true)
+        // Flip bit in tickmap
+    }
+
+
+    // TODO: remove at the end
+    pub fn tickExist(poolKey: ByteVec, index: I256) -> (Bool, Bool) {
+        return Ticks(ticksContractId).exist(poolKey, index)
+    }
 
     // TODO: implement
     pub fn getFeeTiers() -> () {}
