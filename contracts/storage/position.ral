@@ -99,8 +99,8 @@ Contract Position(
     ) -> () {
         assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
 
-        let tokensOwedX = wrappingSub(posFeeGrowthInsideX, posFeeGrowthInsideX)
-        let tokensOwedY = wrappingSub(posFeeGrowthInsideY, posFeeGrowthInsideY)
+        let tokensOwedX = toFee(wrappingSub(posFeeGrowthInsideX, posFeeGrowthInsideX), posLiquidity)
+        let tokensOwedY = toFee(wrappingSub(posFeeGrowthInsideY, posFeeGrowthInsideY), posLiquidity)
 
         posLiquidity = calculateNewLiquidity(sign, liquidityDelta)
         posFeeGrowthInsideX = feeGrowthInsideX
@@ -123,14 +123,24 @@ Contract Position(
         }
     }
 
-    // pub fn claimFee(
-    //     poolKey: ByteVec,
-    //     lowerTickKey: ByteVec,
-    //     upperTickKey: ByteVec,
-    //     lowerTickIndex: I256,
-    //     upperTickIndex: I256,
-    //     currentTimestamp: U256
-    // ) -> (U256, U256) {}
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn claimFee(
+        poolContractId: ByteVec,
+        lowerTickContractId: ByteVec,
+        upperTickContractId: ByteVec,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        modify(poolContractId, lowerTickContractId, upperTickContractId, 0, true, currentTimestamp, tickSpacing)
+
+        let owedX = posTokensOwedX
+        let owedY = posTokensOwedY
+
+        posTokensOwedX = 0
+        posTokensOwedY = 0
+
+        return owedX, owedY
+    }
 
     // Most likely will be moved to collection layer & main contract
     // pub fn create() -> () {}

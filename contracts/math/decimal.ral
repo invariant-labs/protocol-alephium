@@ -252,4 +252,9 @@ Abstract Contract Decimal() {
 
         return feeGrowthInsideX, feeGrowthInsideY
     }
+
+    // FeeGrowth related
+    pub fn toFee(fee: U256, liquidity: U256) -> U256 {
+        return fee * liquidity / (10 ** (getFeeGrowthScale() + getLiquidityScale()))
+    }
 }
