@@ -110,7 +110,7 @@ Contract Invariant(
     }
 
     // TODO: Should not be pub
-    @using(checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
         let currentTimestamp = blockTimeStamp!()
         let caller = callerAddress!()
@@ -126,10 +126,14 @@ Contract Invariant(
             feeGrowthOutisdeY = poolFeeGrowthGlobalY
             secondsOutside = currentTimestamp - poolStartTimestamp
         }
-
-        // tickAdd(caller, poolKey, index, true)  
-        Ticks(ticksContractId).add(caller, poolKey, index, true)
+        Ticks(ticksContractId).add{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, index, true)
         // Flip bit in tickmap
+    }
+
+
+    // TODO: remove at the end
+    pub fn tickExist(poolKey: ByteVec, index: I256) -> (Bool, Bool) {
+        return Ticks(ticksContractId).exist(poolKey, index)
     }
 
     // TODO: implement

@@ -5,7 +5,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() 
         TickAlreadyExist = 1002
     }
 
-    @using(preapprovedAssets = false, checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn add(
         caller: Address,
         poolKey: ByteVec,
@@ -14,11 +14,11 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() 
     ) -> () {
         assert!(callerAddress!() == admin, TicksError.NotAdmin)
 
-        let (exist, isTickInitialized) = tickExist(poolKey, initTick) 
+        let (doesExist, isTickInitialized) = exist(poolKey, initTick) 
 
-        assert!(exist && !isTickInitialized, TicksError.TickAlreadyExist)
+        assert!(!doesExist && !isTickInitialized, TicksError.TickAlreadyExist)
         
-        if(exist && !isTickInitialized) {
+        if(doesExist && !isTickInitialized) {
             let _ = Tick(poolKey ++ toByteVec!(initTick))
             // contract.reinitializeTick()
             return
@@ -34,7 +34,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() 
         }
     }
 
-    pub fn tickExist(
+    pub fn exist(
         poolKey: ByteVec,
         index: I256
     ) -> (Bool, Bool) {
@@ -50,8 +50,9 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() 
         poolKey: ByteVec,
         index: I256
     ) -> () {
-        let (exist, isTickInitialized) = tickExist(poolKey, index)
-        assert!(exist && isTickInitialized, TicksError.TickNotFound)
+        assert!(callerAddress!() == admin, TicksError.NotAdmin)
+        let (doesExist, isTickInitialized) = exist(poolKey, index)
+        assert!(doesExist && isTickInitialized, TicksError.TickNotFound)
         let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
         contract.deinitializeTick()
         return
