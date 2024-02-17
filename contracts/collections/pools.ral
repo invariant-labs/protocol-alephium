@@ -1,16 +1,27 @@
-Abstract Contract Pools(poolTemplateContractId: ByteVec) {
+Contract Pools(admin: Address, poolTemplateContractId: ByteVec) {
+    enum PoolsError {
+        NotAdmin = 300
+        PoolAlreadyExist = 301
+    }
+
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    fn poolsAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+    pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+        assert!(callerAddress!() == admin, PoolsError.NotAdmin)
+        
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        assert!(!contractExists!(subContractId!(poolKey)), InvariantError.PoolAlreadyExist)
+        assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
         let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            toByteVec!(InvariantCollection.Pools) ++ poolKey,
+        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+            poolKey,
             poolTemplateContractId,
             encodedImmFields,
             encodedMutFields
         )
+    }
+
+    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
     }
 }

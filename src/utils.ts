@@ -1,5 +1,5 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { FeeTier, Invariant, Pool, PoolKey } from '../artifacts/ts'
+import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools } from '../artifacts/ts'
 import { Tick } from '../artifacts/ts/Tick'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -25,7 +25,10 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
 
 export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
   const feeTier = await deployFeeTier(signer)
+  const feeTiers = await deployFeeTiers(signer)
   const poolKey = await deployPoolKey(signer)
+  const poolKeys = await deployPoolKeys(signer)
+  const pools = await deployPools(signer)
   const pool = await deployPool(signer)
   const tick = await deployTick(signer)
   const account = await signer.getSelectedAccount()
@@ -33,12 +36,17 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
+        init: false,
         admin: account.address,
         protocolFee,
+        feeTiersContractId: ZERO_ADDRESS,
+        feeTiersTemplateContractId: feeTiers.contractInstance.contractId,
         feeTierTemplateContractId: feeTier.contractInstance.contractId,
-        feeTierCount: 0n,
+        poolKeysContractId: ZERO_ADDRESS,
+        poolKeysTemplateContractId: poolKeys.contractInstance.contractId,
         poolKeyTemplateContractId: poolKey.contractInstance.contractId,
-        poolKeyCount: 0n,
+        poolsContractId: ZERO_ADDRESS,
+        poolsTemplateContractId: pools.contractInstance.contractId,
         poolTemplateContractId: pool.contractInstance.contractId,
         tickTemplateContractId: tick.contractInstance.contractId
       }
@@ -59,6 +67,18 @@ export async function deployFeeTier(signer: SignerProvider) {
   )
 }
 
+export async function deployFeeTiers(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    FeeTiers.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        feeTierTemplateContractId: ZERO_ADDRESS,
+        feeTierCount: 0n
+      }
+    })
+  )
+}
+
 export async function deployPoolKey(signer: SignerProvider) {
   return await waitTxConfirmed(
     PoolKey.deploy(signer, {
@@ -67,6 +87,18 @@ export async function deployPoolKey(signer: SignerProvider) {
         token1: ZERO_ADDRESS,
         fee: 0n,
         tickSpacing: 0n
+      }
+    })
+  )
+}
+
+export async function deployPoolKeys(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    PoolKeys.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        poolKeyTemplateContractId: ZERO_ADDRESS,
+        poolKeyCount: 0n
       }
     })
   )
@@ -87,6 +119,17 @@ export async function deployPool(signer: SignerProvider) {
         startTimestamp: 0n,
         lastTimestamp: 0n,
         feeReceiver: ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployPools(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Pools.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        poolTemplateContractId: ZERO_ADDRESS
       }
     })
   )

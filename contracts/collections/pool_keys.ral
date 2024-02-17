@@ -1,25 +1,32 @@
-Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
+Contract PoolKeys(admin: Address, poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
+    enum PoolKeysError {
+        NotAdmin = 200
+        PoolKeyAlreadyExist = 201
+    }
+
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-    fn poolKeysAdd(caller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+    pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+        assert!(callerAddress!() == admin, PoolKeysError.NotAdmin)
+
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-            let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
+            let contract = PoolKey(subContractId!(toByteVec!(i)))
     
-            assert!(token0 != contract.getToken0() || token1 != contract.getToken1() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), InvariantError.PoolKeyAlreadyExist)
+            assert!(token0 != contract.getToken0() || token1 != contract.getToken1() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), PoolKeysError.PoolKeyAlreadyExist)
         }
     
         poolKeyCount = poolKeyCount + 1
         let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(token0, token1, fee, tickSpacing)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i),
+        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+            toByteVec!(i),
             poolKeyTemplateContractId,
             encodedImmFields,
             encodedMutFields
         )
     }
 
-    fn poolKeysContains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
+    pub fn contains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-            let contract = PoolKey(subContractId!(toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(i)))
+            let contract = PoolKey(subContractId!(toByteVec!(i)))
 
             if (token0 == contract.getToken0() && token1 == contract.getToken1() && fee == contract.getFee() && tickSpacing == contract.getTickSpacing()) {
                 return true
@@ -27,9 +34,5 @@ Abstract Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount:
         }
 
         return false
-    }
-
-    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        return toByteVec!(InvariantCollection.PoolKeys) ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
     }
 }
