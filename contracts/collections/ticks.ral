@@ -1,11 +1,11 @@
-Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, mut tickCount: U256) extends CLAMM() {
+Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() {
     enum TicksError {
         NotAdmin = 1000
         TickNotFound = 1001
         TickAlreadyExist = 1002
     }
 
-    @using(preapprovedAssets = false, updateFields = true, checkExternalCaller = false)
+    @using(preapprovedAssets = false, checkExternalCaller = false)
     pub fn add(
         caller: Address,
         poolKey: ByteVec,
@@ -14,23 +14,22 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, mut tickCount: U
     ) -> () {
         assert!(callerAddress!() == admin, TicksError.NotAdmin)
 
-        let (exist, isTickInitialized, listIndex) = tickExist(poolKey, initTick) 
+        let (exist, isTickInitialized) = tickExist(poolKey, initTick) 
 
         assert!(exist && !isTickInitialized, TicksError.TickAlreadyExist)
         
         if(exist && !isTickInitialized) {
-            let _ = Tick(subContractId!(toByteVec!(2) ++ poolKey ++ toByteVec!(listIndex)))
+            let _ = Tick(poolKey ++ toByteVec!(initTick))
             // contract.reinitializeTick()
             return
         } else {
             let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, sqrtPriceFromTick(initTick), 0, 0, 0, true)
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
-                toByteVec!(2) ++ poolKey ++ toByteVec!(listIndex),
+                poolKey ++ toByteVec!(initTick),
                 tickTemplateContractId,
                 encodedImmFields,
                 encodedMutFields
             )   
-            tickCount = tickCount + 1 
             return
         }
     }
@@ -38,16 +37,12 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, mut tickCount: U
     pub fn tickExist(
         poolKey: ByteVec,
         index: I256
-    ) -> (Bool, Bool, U256) {
-        for (let mut i = 1; i <= tickCount; i = i + 1) {
-            let contract = Tick(subContractId!(toByteVec!(2) ++ poolKey ++ toByteVec!(tickCount)))
-
-            if (contract.getIdx() == index) {
-                return true, contract.getIsInitialized(), i
-            }
+    ) -> (Bool, Bool) {
+        if(contractExists!(subContractId!(poolKey ++ toByteVec!(index)))) {
+            let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
+            return true, contract.getIsInitialized()
         }
-
-        return false, false, 0
+        return false, false
     }
 
     @using(checkExternalCaller = false)
@@ -55,9 +50,9 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, mut tickCount: U
         poolKey: ByteVec,
         index: I256
     ) -> () {
-        let (exist, isTickInitialized, listIndex) = tickExist(poolKey, index)
+        let (exist, isTickInitialized) = tickExist(poolKey, index)
         assert!(exist && isTickInitialized, TicksError.TickNotFound)
-        let contract = Tick(subContractId!(toByteVec!(2) ++ poolKey ++ toByteVec!(listIndex)))
+        let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
         contract.deinitializeTick()
         return
     }

@@ -87,8 +87,7 @@ export async function deployTicks(signer: SignerProvider) {
     Ticks.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        tickTemplateContractId: ZERO_ADDRESS,
-        tickCount: 0n
+        tickTemplateContractId: ZERO_ADDRESS
       }
     })
   )

@@ -832,7 +832,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "c01a045c239d2ad030708e3e07228c45384cb6813be916137c782610361b5b84"
+    "477bfc80478e92e1629e3492d37ed953b0abf601f0a39e3d20b3e614e07fce51"
   )
 );
 
