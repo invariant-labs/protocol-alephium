@@ -30,23 +30,26 @@ import { getContractByCodeHash } from "./contracts";
 // Custom types for the contract
 export namespace InvariantTypes {
   export type Fields = {
+    init: boolean;
     admin: Address;
     protocolFee: bigint;
+    feeTiersContractId: HexString;
+    feeTiersTemplateContractId: HexString;
     feeTierTemplateContractId: HexString;
-    feeTierCount: bigint;
+    poolKeysContractId: HexString;
+    poolKeysTemplateContractId: HexString;
+    poolKeyTemplateContractId: HexString;
+    poolsContractId: HexString;
+    poolsTemplateContractId: HexString;
     poolTemplateContractId: HexString;
-    poolKeyCount: bigint;
+    ticksContractId: HexString;
+    ticksTemplateContractId: HexString;
     tickTemplateContractId: HexString;
-    tickCount: bigint;
   };
 
   export type State = ContractState<Fields>;
 
   export interface CallMethodTable {
-    feeTiersContains: {
-      params: CallContractParams<{ fee: bigint; tickSpacing: bigint }>;
-      result: CallContractResult<boolean>;
-    };
     computeSwapStep: {
       params: CallContractParams<{
         currentSqrtPrice: bigint;
@@ -144,6 +147,14 @@ export namespace InvariantTypes {
         slippage: bigint;
       }>;
       result: CallContractResult<bigint>;
+    };
+    checkTickToSqrtPriceRelationship: {
+      params: CallContractParams<{
+        tickIndex: bigint;
+        tickSpacing: bigint;
+        sqrtPrice: bigint;
+      }>;
+      result: CallContractResult<boolean>;
     };
     getTickAtSqrtPrice: {
       params: CallContractParams<{ sqrtPrice: bigint; tickSpacing: bigint }>;
@@ -269,19 +280,6 @@ export namespace InvariantTypes {
       params: CallContractParams<{ a: bigint; b: bigint }>;
       result: CallContractResult<bigint>;
     };
-    createPoolKey: {
-      params: CallContractParams<{
-        token0: Address;
-        token1: Address;
-        fee: bigint;
-        tickSpacing: bigint;
-      }>;
-      result: CallContractResult<HexString>;
-    };
-    tickExist: {
-      params: CallContractParams<{ poolKey: HexString; index: bigint }>;
-      result: CallContractResult<[boolean, boolean, bigint]>;
-    };
     getProtocolFee: {
       params: Omit<CallContractParams<{}>, "args">;
       result: CallContractResult<bigint>;
@@ -318,23 +316,20 @@ class Factory extends ContractFactory<
   }
 
   consts = {
-    CLAMMError: { InvalidTickIndex: BigInt(0), InvalidTickSpacing: BigInt(1) },
-    InvariantError: {
-      InvalidTickSpacing: BigInt(0),
-      InvalidFee: BigInt(1),
-      NotAdmin: BigInt(2),
-      FeeTierAlreadyExist: BigInt(3),
-      FeeTierNotFound: BigInt(4),
-      InvalidInitTick: BigInt(5),
-      PoolAlreadyExist: BigInt(6),
-      TokensAreSame: BigInt(7),
-      TickAlreadyExist: BigInt(8),
-      TickNotFound: BigInt(9),
+    CLAMMError: {
+      InvalidTickIndex: BigInt(100),
+      InvalidTickSpacing: BigInt(101),
     },
-    InvariantCollection: {
-      FeeTiers: BigInt(0),
-      PoolKeys: BigInt(1),
-      Ticks: BigInt(2),
+    InvariantError: {
+      NotAdmin: BigInt(0),
+      AlreadyInitialized: BigInt(1),
+      NotInitialized: BigInt(2),
+      InvalidTickSpacing: BigInt(3),
+      InvalidFee: BigInt(4),
+      FeeTierNotFound: BigInt(5),
+      TokensAreSame: BigInt(6),
+      PoolKeyAlreadyExist: BigInt(7),
+      TickAndSqrtPriceMismatch: BigInt(8),
     },
   };
 
@@ -343,30 +338,6 @@ class Factory extends ContractFactory<
   }
 
   tests = {
-    feeTiersAdd: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { caller: Address; fee: bigint; tickSpacing: bigint }
-      >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "feeTiersAdd", params);
-    },
-    feeTiersRemove: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { fee: bigint; tickSpacing: bigint }
-      >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "feeTiersRemove", params);
-    },
-    feeTiersContains: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { fee: bigint; tickSpacing: bigint }
-      >
-    ): Promise<TestContractResult<boolean>> => {
-      return testMethod(this, "feeTiersContains", params);
-    },
     computeSwapStep: async (
       params: TestContractParams<
         InvariantTypes.Fields,
@@ -518,6 +489,14 @@ class Factory extends ContractFactory<
       >
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "calculateMinAmountOut", params);
+    },
+    checkTickToSqrtPriceRelationship: async (
+      params: TestContractParams<
+        InvariantTypes.Fields,
+        { tickIndex: bigint; tickSpacing: bigint; sqrtPrice: bigint }
+      >
+    ): Promise<TestContractResult<boolean>> => {
+      return testMethod(this, "checkTickToSqrtPriceRelationship", params);
     },
     getLog2Scale: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
@@ -786,37 +765,10 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "wrappingSub", params);
     },
-    createPoolKey: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { token0: Address; token1: Address; fee: bigint; tickSpacing: bigint }
-      >
-    ): Promise<TestContractResult<HexString>> => {
-      return testMethod(this, "createPoolKey", params);
-    },
-    tickAdd: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { caller: Address; poolKey: HexString; initTick: bigint; sign: boolean }
-      >
+    init: async (
+      params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "tickAdd", params);
-    },
-    tickExist: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { poolKey: HexString; index: bigint }
-      >
-    ): Promise<TestContractResult<[boolean, boolean, bigint]>> => {
-      return testMethod(this, "tickExist", params);
-    },
-    deinitializeTick: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        { poolKey: HexString; index: bigint }
-      >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "deinitializeTick", params);
+      return testMethod(this, "init", params);
     },
     getProtocolFee: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
@@ -867,22 +819,6 @@ class Factory extends ContractFactory<
     ): Promise<TestContractResult<bigint>> => {
       return testMethod(this, "getFeeTierCount", params);
     },
-    createTick: async (
-      params: TestContractParams<
-        InvariantTypes.Fields,
-        {
-          poolKey: HexString;
-          tickSpacing: bigint;
-          index: bigint;
-          poolCurrentIndex: bigint;
-          poolFeeGrowthGlobalX: bigint;
-          poolFeeGrowthGlobalY: bigint;
-          poolStartTimestamp: bigint;
-        }
-      >
-    ): Promise<TestContractResult<null>> => {
-      return testMethod(this, "createTick", params);
-    },
     getFeeTiers: async (
       params: Omit<TestContractParams<InvariantTypes.Fields, never>, "testArgs">
     ): Promise<TestContractResult<null>> => {
@@ -896,7 +832,7 @@ export const Invariant = new Factory(
   Contract.fromJson(
     InvariantContractJson,
     "",
-    "cc336395c6100c2f1d62a1f73bf26c37f4b5cb537efb4942984ebfa397a59dbc"
+    "c01a045c239d2ad030708e3e07228c45384cb6813be916137c782610361b5b84"
   )
 );
 
@@ -911,17 +847,6 @@ export class InvariantInstance extends ContractInstance {
   }
 
   methods = {
-    feeTiersContains: async (
-      params: InvariantTypes.CallMethodParams<"feeTiersContains">
-    ): Promise<InvariantTypes.CallMethodResult<"feeTiersContains">> => {
-      return callMethod(
-        Invariant,
-        this,
-        "feeTiersContains",
-        params,
-        getContractByCodeHash
-      );
-    },
     computeSwapStep: async (
       params: InvariantTypes.CallMethodParams<"computeSwapStep">
     ): Promise<InvariantTypes.CallMethodResult<"computeSwapStep">> => {
@@ -1045,6 +970,19 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "calculateMinAmountOut",
+        params,
+        getContractByCodeHash
+      );
+    },
+    checkTickToSqrtPriceRelationship: async (
+      params: InvariantTypes.CallMethodParams<"checkTickToSqrtPriceRelationship">
+    ): Promise<
+      InvariantTypes.CallMethodResult<"checkTickToSqrtPriceRelationship">
+    > => {
+      return callMethod(
+        Invariant,
+        this,
+        "checkTickToSqrtPriceRelationship",
         params,
         getContractByCodeHash
       );
@@ -1363,28 +1301,6 @@ export class InvariantInstance extends ContractInstance {
         Invariant,
         this,
         "wrappingSub",
-        params,
-        getContractByCodeHash
-      );
-    },
-    createPoolKey: async (
-      params: InvariantTypes.CallMethodParams<"createPoolKey">
-    ): Promise<InvariantTypes.CallMethodResult<"createPoolKey">> => {
-      return callMethod(
-        Invariant,
-        this,
-        "createPoolKey",
-        params,
-        getContractByCodeHash
-      );
-    },
-    tickExist: async (
-      params: InvariantTypes.CallMethodParams<"tickExist">
-    ): Promise<InvariantTypes.CallMethodResult<"tickExist">> => {
-      return callMethod(
-        Invariant,
-        this,
-        "tickExist",
         params,
         getContractByCodeHash
       );

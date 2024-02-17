@@ -1,7 +1,7 @@
 Abstract Contract CLAMM() extends Log(){ 
     enum CLAMMError {
-        InvalidTickIndex = 0
-        InvalidTickSpacing = 1
+        InvalidTickIndex = 100
+        InvalidTickSpacing = 101
     }
 
     pub fn computeSwapStep(
@@ -297,8 +297,8 @@ Abstract Contract CLAMM() extends Log(){
         let minTick = getMinTick(tickSpacing)
         let maxTick = getMaxTick(tickSpacing)
         assert!(tickIndex % toI256!(tickSpacing) == 0i, CLAMMError.InvalidTickSpacing)
-        assert!(tickIndex > maxTick, CLAMMError.InvalidTickIndex)
-        assert!(tickIndex < minTick, CLAMMError.InvalidTickIndex)
+        assert!(tickIndex < maxTick, CLAMMError.InvalidTickIndex)
+        assert!(tickIndex > minTick, CLAMMError.InvalidTickIndex)
     }
     pub fn calculateMinAmountOut(
         expectedAmountOut: U256,
@@ -306,5 +306,25 @@ Abstract Contract CLAMM() extends Log(){
     ) -> U256 {
         let percentageScale = getPercentageScale()
         return mulUp(expectedAmountOut, (one(percentageScale) - slippage), percentageScale)
+    }
+
+    pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {
+        if (tickIndex + toI256!(tickSpacing) > getGlobalMaxTick()) {
+            let maxTick = getMaxTick(tickSpacing)
+            let maxSqrtPrice = sqrtPriceFromTick(maxTick)
+            
+            if (sqrtPrice != maxSqrtPrice) {
+                return false
+            }
+        } else {
+            let lowerBound = sqrtPriceFromTick(tickIndex)
+            let upperBound = sqrtPriceFromTick(tickIndex + toI256!(tickSpacing))
+
+            if (sqrtPrice >= upperBound || sqrtPrice < lowerBound) {
+                return false
+            }
+        }
+
+        return true
     }
 }

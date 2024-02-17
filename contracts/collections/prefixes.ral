@@ -1,7 +1,0 @@
-Abstract Contract CollectionsPrefixes() {
-    enum InvariantCollection {
-        FeeTiers = 0
-        PoolKeys = 1
-        Ticks = 2
-    }
-}
