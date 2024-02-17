@@ -309,7 +309,7 @@ Abstract Contract CLAMM() extends Log(){
     }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {
-        if (tickIndex > getMaxTick(tickSpacing)) {
+        if (tickIndex + toI256!(tickSpacing) > getGlobalMaxTick()) {
             let maxTick = getMaxTick(tickSpacing)
             let maxSqrtPrice = sqrtPriceFromTick(maxTick)
             

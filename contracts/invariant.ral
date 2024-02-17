@@ -22,6 +22,7 @@ Contract Invariant(
         FeeTierNotFound = 5
         TokensAreSame = 6
         PoolKeyAlreadyExist = 7
+        TickAndSqrtPriceMismatch = 8
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
@@ -67,7 +68,7 @@ Contract Invariant(
             assert!(!swappedPoolKeyExist, InvariantError.PoolKeyAlreadyExist)
         }
 
-        checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice)
+        assert!(checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing)
         Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
