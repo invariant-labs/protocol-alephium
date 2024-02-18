@@ -79,14 +79,6 @@ Abstract Contract Decimal() {
         return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
     }   
 
-    pub fn fromDecimalToValue(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
-        if (expectedScale > fromScale) {
-            return from * (10 ** (expectedScale - fromScale))
-        } else {
-            return from / (10 ** (fromScale - expectedScale))
-        }
-    }   
-
     // SqrtPrice related
     pub fn divValuesUp(l: U256, r: U256) -> U256 {
         return l * one(getSqrtPriceScale()) + (r - 1) / r
@@ -126,66 +118,78 @@ Abstract Contract Decimal() {
 
         let mut sqrtPrice = one(fixedPointScale)
 
+        
+
         if (tick & 0x1 != 0) {
-            sqrtPrice = sqrtPrice * 1000049998750
+            sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** fixedPointScale)
         }
         if (tick & 0x2 != 0) {
-            sqrtPrice = sqrtPrice * 1000100000000
+            sqrtPrice = (sqrtPrice * 1000100000000) / (10 ** fixedPointScale)
         }
         if (tick & 0x4 != 0) {
-            sqrtPrice = sqrtPrice * 1000200010000
+            sqrtPrice = (sqrtPrice * 1000200010000) / (10 ** fixedPointScale)
         }
         if (tick & 0x8 != 0) {
-            sqrtPrice = sqrtPrice * 1000400060004
+            sqrtPrice = (sqrtPrice * 1000400060004) / (10 ** fixedPointScale)
         }
         if (tick & 0x10 != 0) {
-            sqrtPrice = sqrtPrice * 1000800280056
+            sqrtPrice = (sqrtPrice * 1000800280056)  / (10 ** fixedPointScale)
         }
         if (tick & 0x20 != 0) {
-            sqrtPrice = sqrtPrice * 1001601200560
+            sqrtPrice = (sqrtPrice * 1001601200560) / (10 ** fixedPointScale)
         }
         if (tick & 0x40 != 0) {
-            sqrtPrice = sqrtPrice * 1003204964963
+            sqrtPrice = (sqrtPrice * 1003204964963) / (10 ** fixedPointScale)
         }
         if (tick & 0x80 != 0) {
-            sqrtPrice = sqrtPrice * 1006420201726
+            sqrtPrice = (sqrtPrice * 1006420201726) / (10 ** fixedPointScale)
         }
         if (tick & 0x100 != 0) {
-            sqrtPrice = sqrtPrice * 1012881622442
+            sqrtPrice = (sqrtPrice * 1012881622442) / (10 ** fixedPointScale)
         }
         if (tick & 0x200 != 0) {
-            sqrtPrice = sqrtPrice * 1025929181080
+            sqrtPrice = (sqrtPrice * 1025929181080) / (10 ** fixedPointScale)
         }
         if (tick & 0x400 != 0) {
-            sqrtPrice = sqrtPrice * 1052530684591
+            sqrtPrice = (sqrtPrice * 1052530684591) / (10 ** fixedPointScale)
         }
         if (tick & 0x800 != 0) {
-            sqrtPrice = sqrtPrice * 1107820842005
+            sqrtPrice = (sqrtPrice * 1107820842005) / (10 ** fixedPointScale)
         }
         if (tick & 0x1000 != 0) {
-            sqrtPrice = sqrtPrice * 1227267017980
+            sqrtPrice = (sqrtPrice * 1227267017980) / (10 ** fixedPointScale)
         }
         if (tick & 0x2000 != 0) {
-            sqrtPrice = sqrtPrice * 1506184333421
+            sqrtPrice = (sqrtPrice * 1506184333421) / (10 ** fixedPointScale)
         }
         if (tick & 0x4000 != 0) {
-            sqrtPrice = sqrtPrice * 2268591246242
+            sqrtPrice = (sqrtPrice * 2268591246242) / (10 ** fixedPointScale)
         }
         if (tick & 0x8000 != 0) {
-            sqrtPrice = sqrtPrice * 5146506242525
+            sqrtPrice = (sqrtPrice * 5146506242525) / (10 ** fixedPointScale)
         }
         if (tick & 0x00010000 != 0) {
-            sqrtPrice = sqrtPrice * 26486526504348
+            sqrtPrice = (sqrtPrice * 26486526504348) / (10 ** fixedPointScale)
         }
         if (tick & 0x00020000 != 0) {
-            sqrtPrice = sqrtPrice * 701536086265529
+            sqrtPrice = (sqrtPrice * 701536086265529) / (10 ** fixedPointScale)
         }
-        
+
         if (tickIndex >= 0i) {
             return fromDecimalToValue(sqrtPrice, fixedPointScale, sqrtPriceScale)
         } else {
-            let intermediate = one(fixedPointScale) / sqrtPrice
-            return fromDecimalToValue(intermediate, 0, sqrtPriceScale)
+            let intermediate = one(sqrtPriceScale) / sqrtPrice 
+            return fromDecimalToValue(intermediate, fixedPointScale, sqrtPriceScale)
+        }
+    }
+
+    pub fn fromDecimalToValue(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
+        if (expectedScale > fromScale) {
+            let multiplierScale = expectedScale - fromScale
+            return from * (10 ** multiplierScale)
+        } else {
+            let denominatorScale = fromScale - expectedScale
+            return from / (10 ** denominatorScale)
         }
     }
 

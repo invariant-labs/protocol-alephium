@@ -19,7 +19,46 @@ describe('math tests', () => {
   test('deploy', async () => {
     const invariantResult = await deployInvariant(sender, 0n)
   })
+  test('calculate sqrt price', async () => {
+    const invariantResult = await deployInvariant(sender, 0n)
+    const clamm = Invariant.at(invariantResult.contractInstance.address)
 
+    {
+      const params = { args: { tickIndex: 30n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1001501050455000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 20n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1001000450120000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 10n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1000500100010000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 0n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1000000000000000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -10n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(999500149965000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -20n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(999000549780000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -30n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(998501199320000000000000n)
+    }
+  })
   test('get delta x', async () => {
     const invariantResult = await deployInvariant(sender, 0n)
     const clamm = Invariant.at(invariantResult.contractInstance.address)
