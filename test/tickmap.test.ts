@@ -56,5 +56,16 @@ describe('tickmap tests', () => {
       args: { tick: -10n, tickSpacing: 1n, poolKey: '' }
     })
     expect(prevInitialized2.returns).toEqual([false, 0n])
+
+    const closerLimit = await tickmap.contractInstance.methods.getCloserLimit({
+      args: {
+        sqrtPriceLimit: 1001000450120014000570000000000000000000000000000n,
+        xToY: false,
+        currentTick: 10n,
+        tickSpacing: 1n,
+        poolKey: ''
+      }
+    })
+    expect(closerLimit.returns).toEqual([1001000450120014000560000000000000000000000000000n, true, 20n, true])
   })
 })

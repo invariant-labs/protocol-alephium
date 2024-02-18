@@ -4,6 +4,7 @@ Contract Tickmap(
     enum TickmapErrors {
         InvalidTickRange = 0
         TickAndTickSpacingMismatch = 1
+        LimitReached = 2
     }
 
     fn getChunkSize() -> U256 {
@@ -96,6 +97,42 @@ Contract Tickmap(
         }
 
         return false, 0i
+    }
+
+    pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
+        let mut closesTickBool = false
+        let mut closesTickIndex = 0i
+        
+        if (xToY) {
+            let (closesTickBoolXtoY, closesTickIndexXtoY) = prevInitialized(currentTick, tickSpacing, poolKey)
+            closesTickBool = closesTickBoolXtoY
+            closesTickIndex = closesTickIndexXtoY
+        } else {
+            let (closesTickBoolYtoX, closesTickIndexYtoX) = nextInitialized(currentTick, tickSpacing, poolKey)
+            closesTickBool = closesTickBoolYtoX
+            closesTickIndex = closesTickIndexYtoX
+        }
+
+        if (closesTickBool) {
+            let sqrtPriceExist = calculateSqrtPrice(closesTickIndex)
+
+            if ((xToY && sqrtPriceExist > sqrtPriceLimit) || (!xToY && sqrtPriceExist < sqrtPriceLimit)) {
+                return sqrtPriceExist, true, closesTickIndex, true
+            } else {
+                return sqrtPriceExist, false, 0i, false
+            }
+        } else {
+            let index = getSearchLimit(currentTick, tickSpacing, !xToY)
+            let sqrtPriceNotExist = calculateSqrtPrice(index)
+
+            assert!(currentTick != index, TickmapErrors.LimitReached)
+
+            if ((xToY && sqrtPriceNotExist > sqrtPriceLimit) || (!xToY && sqrtPriceNotExist < sqrtPriceLimit)) {
+                return sqrtPriceNotExist, true, index, false
+            } else {
+                return sqrtPriceNotExist, false, 0i, false
+            }
+        }
     }
 
     pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
