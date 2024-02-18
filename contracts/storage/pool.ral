@@ -9,10 +9,11 @@ Contract Pool(
     mut feeProtocolTokenY: U256,
     startTimestamp: U256,
     lastTimestamp: U256,
-    feeReceiver: Address
+    mut feeReceiver: Address
 ) extends CLAMM(), Decimal() {
     enum PoolError {
         NotAdmin = 300
+        NotFeeReceiver = 301
     }
 
     pub fn getPoolLiquidity() -> U256 {
@@ -53,6 +54,13 @@ Contract Pool(
     
     pub fn getFeeReceiver() -> Address {
         return feeReceiver
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setFeeReceiver(caller: Address, recipient: Address) -> () {
+        assert!(caller == feeReceiver, PoolError.NotFeeReceiver)
+        feeReceiver = recipient
+        return
     }
 
     @using(updateFields = true, checkExternalCaller = false)
