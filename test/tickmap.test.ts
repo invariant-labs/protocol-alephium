@@ -18,33 +18,43 @@ describe('tickmap tests', () => {
     const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
 
     const getBefore = await tickmap.contractInstance.methods.get({
-      args: { tick: 0n, tickSpacing: 1n }
+      args: { tick: 0n, tickSpacing: 1n, poolKey: '' }
     })
     expect(getBefore.returns).toEqual(false)
 
     await Flip.execute(sender, {
-      initialFields: { tickmap: tickmap.contractInstance.contractId, tick: 0n, tickSpacing: 1n },
+      initialFields: { tickmap: tickmap.contractInstance.contractId, tick: 0n, tickSpacing: 1n, poolKey: '' },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
     const getAfter = await tickmap.contractInstance.methods.get({
-      args: { tick: 0n, tickSpacing: 1n }
+      args: { tick: 0n, tickSpacing: 1n, poolKey: '' }
     })
     expect(getAfter.returns).toEqual(true)
 
     await Flip.execute(sender, {
-      initialFields: { tickmap: tickmap.contractInstance.contractId, tick: 20n, tickSpacing: 1n },
+      initialFields: { tickmap: tickmap.contractInstance.contractId, tick: 20n, tickSpacing: 1n, poolKey: '' },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
     const nextInitialized1 = await tickmap.contractInstance.methods.nextInitialized({
-      args: { tick: 10n, tickSpacing: 1n }
+      args: { tick: 10n, tickSpacing: 1n, poolKey: '' }
     })
     expect(nextInitialized1.returns).toEqual([true, 20n])
 
     const nextInitialized2 = await tickmap.contractInstance.methods.nextInitialized({
-      args: { tick: 30n, tickSpacing: 1n }
+      args: { tick: 30n, tickSpacing: 1n, poolKey: '' }
     })
     expect(nextInitialized2.returns).toEqual([false, 0n])
+
+    const prevInitialized1 = await tickmap.contractInstance.methods.prevInitialized({
+      args: { tick: 30n, tickSpacing: 1n, poolKey: '' }
+    })
+    expect(prevInitialized1.returns).toEqual([true, 20n])
+
+    const prevInitialized2 = await tickmap.contractInstance.methods.prevInitialized({
+      args: { tick: -10n, tickSpacing: 1n, poolKey: '' }
+    })
+    expect(prevInitialized2.returns).toEqual([false, 0n])
   })
 })
