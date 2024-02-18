@@ -8,6 +8,7 @@ Contract PositionsCounter(admin: Address, mut positionsLength: U256) {
         positionsLength = positionsLength + 1
         return 
     }
+    // TODO: in case of future destroying contracts in order to reduce deploy fees
     @using(updateFields = true, checkExternalCaller = false)
     pub fn decrement() -> () {
         assert!(callerAddress!() == admin, PositionsCounterError.NotAdmin)

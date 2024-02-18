@@ -54,10 +54,10 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolTemplateContractId: pool.contractInstance.contractId,
         ticksContractId: ZERO_ADDRESS,
         ticksTemplateContractId: ticks.contractInstance.contractId,
-        tickTemplateContractId: tick.contractInstance.contractId
-        // positionsContractId: ZERO_ADDRESS,
-        // positionsTemplateContractId: positions.contractInstance.contractId,
-        // positionTempalteContractId: position.contractInstance.contractId
+        tickTemplateContractId: tick.contractInstance.contractId,
+        positionsContractId: ZERO_ADDRESS,
+        positionsTemplateContractId: positions.contractInstance.contractId,
+        positionTempalteContractId: position.contractInstance.contractId
       }
     })
   )
@@ -111,7 +111,8 @@ export async function deployPosition(signer: SignerProvider) {
         posFeeGrowthInsideY: 0n,
         lastBlockNumber: 0n,
         posTokensOwedX: 0n,
-        posTokensOwedY: 0n
+        posTokensOwedY: 0n,
+        isOpen: false
       }
     })
   )

@@ -13,10 +13,10 @@ Contract Invariant(
     poolTemplateContractId: ByteVec,
     mut ticksContractId: ByteVec,
     ticksTemplateContractId: ByteVec,
-    tickTemplateContractId: ByteVec
-    // mut positionsContractId: ByteVec,
-    // positionsTemplateContractId: ByteVec,
-    // positionTempalteContractId: ByteVec
+    tickTemplateContractId: ByteVec,
+    mut positionsContractId: ByteVec,
+    positionsTemplateContractId: ByteVec,
+    positionTempalteContractId: ByteVec
 ) extends CLAMM() {
     enum InvariantError {
         NotAdmin = 0
@@ -47,8 +47,8 @@ Contract Invariant(
         let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId)
         ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
 
-        // let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId)
-        // positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
+        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId)
+        positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
 
         init = true
     }
