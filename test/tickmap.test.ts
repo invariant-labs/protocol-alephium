@@ -31,5 +31,20 @@ describe('tickmap tests', () => {
       args: { tick: 0n, tickSpacing: 1n }
     })
     expect(getAfter.returns).toEqual(true)
+
+    await Flip.execute(sender, {
+      initialFields: { tickmap: tickmap.contractInstance.contractId, tick: 20n, tickSpacing: 1n },
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+    })
+
+    const nextInitialized1 = await tickmap.contractInstance.methods.nextInitialized({
+      args: { tick: 10n, tickSpacing: 1n }
+    })
+    expect(nextInitialized1.returns).toEqual([true, 20n])
+
+    const nextInitialized2 = await tickmap.contractInstance.methods.nextInitialized({
+      args: { tick: 30n, tickSpacing: 1n }
+    })
+    expect(nextInitialized2.returns).toEqual([false, 0n])
   })
 })

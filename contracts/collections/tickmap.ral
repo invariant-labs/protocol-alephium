@@ -10,6 +10,10 @@ Contract Tickmap(
         return 64
     }
 
+    fn getTickSearchRange() -> I256 {
+        return 256i
+    }
+
     fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
         assert!(tick > getGlobalMinTick() && tick < getGlobalMaxTick(), TickmapErrors.InvalidTickRange)
         assert!(tick % toI256!(tickSpacing) == 0i, TickmapErrors.TickAndTickSpacingMismatch)
@@ -28,6 +32,82 @@ Contract Tickmap(
 
     fn flipBitAtPosition(value: U256, position: U256) -> U256 {
         return value ^ (1 << position)
+    }
+
+
+    fn getSearchLimit(tick: I256, tickSpacing: U256, up: Bool) -> I256 {
+        let index = tick / toI256!(tickSpacing)
+
+        let mut limit = 0i
+
+        if (up) {
+            let rangeLimitUp = index + getTickSearchRange()
+            let sqrtPriceLimitUp = getGlobalMaxTick() / toI256!(tickSpacing)
+
+            if (rangeLimitUp < sqrtPriceLimitUp) {
+                limit = rangeLimitUp
+            } else {
+                limit = sqrtPriceLimitUp
+            }
+        } else {
+            let rangeLimitDown = index - getTickSearchRange()
+            let sqrtPriceLimitDown = getGlobalMinTick() / toI256!(tickSpacing)
+
+            if (rangeLimitDown > sqrtPriceLimitDown) {
+                limit = rangeLimitDown
+            } else {
+                limit = sqrtPriceLimitDown
+            }
+        }
+
+        return limit * toI256!(tickSpacing)
+    }
+
+    pub fn nextInitialized(tick: I256, tickSpacing: U256) -> (Bool, I256) {
+        let limit = getSearchLimit(tick, tickSpacing, true)
+
+        if (tick + toI256!(tickSpacing) > getGlobalMaxTick()) {
+            return false, 0i
+        }
+
+        let (mut chunk, mut bit) = tickToPosition(tick + toI256!(tickSpacing), tickSpacing)
+        let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
+
+        while (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingChunk)) {
+            let mut shifted = getChunk(chunk) >> bit
+
+            if (shifted != 0) {
+                while (shifted % 2 == 0) {
+                    shifted = shifted >> 1
+                    bit = bit + 1
+                }
+
+                if (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
+                    let index = chunk * getChunkSize() + bit
+
+                    return true, toI256!(index) - (getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                } else {
+                    return false, 0i
+                }
+            }
+
+            chunk = chunk + 1
+            bit = 0
+        }
+
+        return false, 0i
+    }
+
+    fn getChunk(chunk: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(chunk))
+        let exists = contractExists!(subContractId)
+
+        if (!exists) {
+            return 0
+        } else {
+            let contract = Chunk(subContractId)
+            return contract.get()
+        }
     }
 
     pub fn get(tick: I256, tickSpacing: U256) -> Bool {
