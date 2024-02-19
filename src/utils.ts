@@ -284,6 +284,22 @@ export async function balanceOf(tokenId: string, address: string): Promise<bigin
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
 
+export function decodeFeeTiers(string: string) {
+  const parts = string.split('627265616b')
+  const feeTiers: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 3) {
+    const feeTier = {
+      fee: decodeU256(parts[i]),
+      tickSpacing: decodeU256(parts[i + 1])
+    }
+
+    feeTiers.push(feeTier)
+  }
+
+  return feeTiers
+}
+
 export function decodePools(string: string) {
   const parts = string.split('627265616b')
   const pools: any[] = []

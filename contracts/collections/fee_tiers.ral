@@ -71,4 +71,15 @@ Contract FeeTiers(admin: Address, feeTierTemplateContractId: ByteVec, mut feeTie
 
         return count
     }
+
+    pub fn getAll() -> ByteVec {
+        let mut feeTiersBytes = b``
+
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(i)))
+            feeTiersBytes = feeTiersBytes ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+        }
+
+        return feeTiersBytes
+    }
 }
