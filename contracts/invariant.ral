@@ -163,4 +163,10 @@ Contract Invariant(
     pub fn getTick(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> (Bool, ByteVec) {
         return Ticks(ticksContractId).get(CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
+
+    pub fn isTickInitialized(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> Bool {
+        let poolKey = CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing)
+
+        return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
+    }
 }

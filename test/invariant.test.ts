@@ -233,6 +233,12 @@ describe('invariant tests', () => {
 
     expect(tick.returns[0]).toBe(false)
 
+    const isTickInitialized = await invariant.methods.isTickInitialized({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n, index: 0n }
+    })
+
+    expect(isTickInitialized.returns).toBe(false)
+
     {
       const params = { args: { poolKey, index } }
       const [doesExist, isInitialized] = (await invariant.methods.tickExist(params)).returns
