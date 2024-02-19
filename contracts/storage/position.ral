@@ -155,11 +155,12 @@ Contract Position(
         return owedX, owedY
     }
 
+    @using(checkExternalCaller = false)
     pub fn remove(
         poolKey: ByteVec,
-        currentTimestamp: U256,
         lowerTickId: ByteVec,
         upperTickId: ByteVec,
+        currentTimestamp: U256,
         tickSpacing: U256
     ) -> (U256,U256,Bool, Bool) {
         let liquidityDelta = getPosLiquidity()

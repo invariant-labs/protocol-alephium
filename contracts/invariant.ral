@@ -25,6 +25,7 @@ Contract Invariant(
     clammContractId: ByteVec
 ) {
     event CreatePositionEvent(address: Address, pool: ByteVec, liquidity: U256, lowerTickIndex: I256, upperTickIndex: I256, currentSqrtPrice: U256)
+    event RemovePositionEvent(address: Address, pool: ByteVec, liquidity: U256, lowerTickIndex: I256, upperTickIndex: I256, currentSqrtPrice: U256)
 
     enum InvariantError {
         NotAdmin = 0
@@ -223,24 +224,36 @@ Contract Invariant(
         fee: U256,
         tickSpacing: U256,
         index: U256
-    ) -> () {
+    ) -> (U256, U256) {
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-
-        let positionId = Positions(positionsContractId).getId(selfAddress!(), index, poolKey)
+        let pool = Pool(poolKey)
+        let positionId = Positions(positionsContractId).getId(selfAddress!(), poolKey, index)
         let position = Position(positionId)
         let withdrawedLiquidity = position.getPosLiquidity()
 
-        let lowerTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, lowerTickIndex)
-        let upperTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, upperTickIndex)
+        let lowerTickIndex = position.getPosLowerTickIndex()
+        let upperTickIndex = position.getPosUpperTickIndex()
+        let lowerTickId = poolKey ++ toByteVec!(lowerTickIndex)
+        let upperTickId = poolKey ++ toByteVec!(upperTickIndex)
+        
         let (amountX, amountY, deinitializeLowerTick, deinitializeUpperTick) = position.remove(poolKey, lowerTickId, upperTickId, timestamp, tickSpacing)
-        // Update Pool
-        // Deinitialize ticks
-        // Close position
-        // Transfer tokens
-        // Emit event
+        if (deinitializeLowerTick) {
+            Ticks(ticksContractId).deinitializeTick(poolKey, lowerTickIndex)
+        }
+        if (deinitializeUpperTick) {
+            Ticks(ticksContractId).deinitializeTick(poolKey, upperTickIndex)
+        }
 
+        Positions(positionsContractId).remove(caller, poolKey, index)
+
+        transferTokenFromSelf!(caller, toByteVec!(token0), amountX)
+        transferTokenFromSelf!(caller, toByteVec!(token1), amountY)
+
+        emit RemovePositionEvent(caller, poolKey, withdrawedLiquidity, lowerTickIndex, upperTickIndex, pool.getPoolCurrentSqrtPrice())
+
+        return amountX, amountY
     }
 
     fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
