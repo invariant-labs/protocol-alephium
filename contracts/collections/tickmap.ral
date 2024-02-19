@@ -1,7 +1,8 @@
 Contract Tickmap(
     admin: Address,
-    chunkTemplateContractId: ByteVec
-) extends CLAMM() {
+    chunkTemplateContractId: ByteVec,
+    clammContractId: ByteVec
+) {
     enum TickmapErrors {
         NotAdmin = 400
         InvalidTickIndex = 401
@@ -18,10 +19,10 @@ Contract Tickmap(
     }
 
     fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
-        assert!(tick >= getGlobalMinTick() && tick <= getGlobalMaxTick(), TickmapErrors.InvalidTickIndex)
+        assert!(tick >= CLAMM(clammContractId).getGlobalMinTick() && tick <= CLAMM(clammContractId).getGlobalMaxTick(), TickmapErrors.InvalidTickIndex)
         assert!(tick % toI256!(tickSpacing) == 0i, TickmapErrors.TickAndTickSpacingMismatch)
     
-        let bitmapIndex = toU256!(tick + getGlobalMaxTick()) / tickSpacing
+        let bitmapIndex = toU256!(tick + CLAMM(clammContractId).getGlobalMaxTick()) / tickSpacing
     
         let chunk = bitmapIndex / getChunkSize()
         let bit = bitmapIndex % getChunkSize()
@@ -45,7 +46,7 @@ Contract Tickmap(
 
         if (up) {
             let rangeLimitUp = index + getTickSearchRange()
-            let sqrtPriceLimitUp = getGlobalMaxTick() / toI256!(tickSpacing)
+            let sqrtPriceLimitUp = CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing)
 
             if (rangeLimitUp < sqrtPriceLimitUp) {
                 limit = rangeLimitUp
@@ -54,7 +55,7 @@ Contract Tickmap(
             }
         } else {
             let rangeLimitDown = index - getTickSearchRange()
-            let sqrtPriceLimitDown = getGlobalMinTick() / toI256!(tickSpacing)
+            let sqrtPriceLimitDown = CLAMM(clammContractId).getGlobalMinTick() / toI256!(tickSpacing)
 
             if (rangeLimitDown > sqrtPriceLimitDown) {
                 limit = rangeLimitDown
@@ -69,7 +70,7 @@ Contract Tickmap(
     pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, true)
 
-        if (tick + toI256!(tickSpacing) > getGlobalMaxTick()) {
+        if (tick + toI256!(tickSpacing) > CLAMM(clammContractId).getGlobalMaxTick()) {
             return false, 0i
         }
 
@@ -88,7 +89,7 @@ Contract Tickmap(
                 if (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
                     let index = chunk * getChunkSize() + bit
 
-                    return true, toI256!(index) - (getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                    return true, toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
@@ -119,7 +120,7 @@ Contract Tickmap(
                 if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
                     let index = chunk * getChunkSize() + bit
 
-                    return true, toI256!(index) - (getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                    return true, toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
@@ -147,7 +148,7 @@ Contract Tickmap(
         }
 
         if (closesTickBool) {
-            let sqrtPriceExist = calculateSqrtPrice(closesTickIndex)
+            let sqrtPriceExist = CLAMM(clammContractId).calculateSqrtPrice(closesTickIndex)
 
             if ((xToY && sqrtPriceExist > sqrtPriceLimit) || (!xToY && sqrtPriceExist < sqrtPriceLimit)) {
                 return sqrtPriceExist, true, closesTickIndex, true
@@ -156,7 +157,7 @@ Contract Tickmap(
             }
         } else {
             let index = getSearchLimit(currentTick, tickSpacing, !xToY)
-            let sqrtPriceNotExist = calculateSqrtPrice(index)
+            let sqrtPriceNotExist = CLAMM(clammContractId).calculateSqrtPrice(index)
 
             assert!(currentTick != index, TickmapErrors.LimitReached)
 

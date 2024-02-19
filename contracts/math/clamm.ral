@@ -1,4 +1,4 @@
-Abstract Contract CLAMM() extends Log(){ 
+Contract CLAMM() extends Log(){ 
     enum CLAMMError {
         InvalidTickIndex = 100
         InvalidTickSpacing = 101

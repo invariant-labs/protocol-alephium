@@ -1,5 +1,6 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, toApiByteVec, web3 } from '@alephium/web3'
 import {
+  CLAMM,
   Chunk,
   FeeTier,
   FeeTiers,
@@ -51,6 +52,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const positions = await deployPositions(signer)
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
+  const clamm = await deployCLAMM(signer)
 
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -75,7 +77,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         positionTempalteContractId: position.contractInstance.contractId,
         tickmapContractId: ZERO_ADDRESS,
         tickmapTemplateContractId: tickmap.contractInstance.contractId,
-        chunkTemplateContractId: chunk.contractInstance.contractId
+        chunkTemplateContractId: chunk.contractInstance.contractId,
+        clammContractId: clamm.contractInstance.contractId
       }
     })
   )
@@ -111,7 +114,8 @@ export async function deployPositions(signer: SignerProvider) {
     Positions.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        positionTemplateContractId: ZERO_ADDRESS
+        positionTemplateContractId: ZERO_ADDRESS,
+        clammContractId: ZERO_ADDRESS
       }
     })
   )
@@ -130,7 +134,8 @@ export async function deployPosition(signer: SignerProvider) {
         lastBlockNumber: 0n,
         posTokensOwedX: 0n,
         posTokensOwedY: 0n,
-        isOpen: false
+        isOpen: false,
+        clammContractId: ZERO_ADDRESS
       }
     })
   )
@@ -141,7 +146,8 @@ export async function deployTicks(signer: SignerProvider) {
     Ticks.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        tickTemplateContractId: ZERO_ADDRESS
+        tickTemplateContractId: ZERO_ADDRESS,
+        clammContractId: ZERO_ADDRESS
       }
     })
   )
@@ -186,7 +192,8 @@ export async function deployPool(signer: SignerProvider) {
         feeProtocolTokenY: 0n,
         startTimestamp: 0n,
         lastTimestamp: 0n,
-        feeReceiver: ZERO_ADDRESS
+        feeReceiver: ZERO_ADDRESS,
+        clammContractId: ZERO_ADDRESS
       }
     })
   )
@@ -197,7 +204,8 @@ export async function deployPools(signer: SignerProvider) {
     Pools.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        poolTemplateContractId: ZERO_ADDRESS
+        poolTemplateContractId: ZERO_ADDRESS,
+        clammContractId: ZERO_ADDRESS
       }
     })
   )
@@ -232,13 +240,27 @@ export async function deployChunk(signer: SignerProvider) {
   )
 }
 
-export async function deployTickmap(signer: SignerProvider, admin?: string, chunkTemplateContractId?: string) {
+export async function deployTickmap(
+  signer: SignerProvider,
+  admin?: string,
+  chunkTemplateContractId?: string,
+  clammContractId?: string
+) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
         admin: admin ?? ZERO_ADDRESS,
-        chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS
+        chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS,
+        clammContractId: clammContractId ?? ZERO_ADDRESS
       }
+    })
+  )
+}
+
+export async function deployCLAMM(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    CLAMM.deploy(signer, {
+      initialFields: {}
     })
   )
 }

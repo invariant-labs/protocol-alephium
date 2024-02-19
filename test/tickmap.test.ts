@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
-import { deployChunk, deployTickmap } from '../src/utils'
+import { deployCLAMM, deployChunk, deployTickmap } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -15,7 +15,13 @@ describe('tickmap tests', () => {
 
   test('flip and get works', async () => {
     const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, sender.address, chunk.contractInstance.contractId)
+    const clamm = await deployCLAMM(sender)
+    const tickmap = await deployTickmap(
+      sender,
+      sender.address,
+      chunk.contractInstance.contractId,
+      clamm.contractInstance.contractId
+    )
 
     const getBefore = await tickmap.contractInstance.methods.get({
       args: { tick: 0n, tickSpacing: 1n, poolKey: '' }
@@ -59,13 +65,13 @@ describe('tickmap tests', () => {
 
     const closerLimit = await tickmap.contractInstance.methods.getCloserLimit({
       args: {
-        sqrtPriceLimit: 1001000450120014000570000000000000000000000000000n,
+        sqrtPriceLimit: 1001000450120000000000001n,
         xToY: false,
         currentTick: 10n,
         tickSpacing: 1n,
         poolKey: ''
       }
     })
-    expect(closerLimit.returns).toEqual([1001000450120014000560000000000000000000000000000n, true, 20n, true])
+    expect(closerLimit.returns).toEqual([1001000450120000000000000n, true, 20n, true])
   })
 })
