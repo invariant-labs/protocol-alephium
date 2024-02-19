@@ -14,7 +14,6 @@ Contract Pool(
 ) extends Decimal() {
     enum PoolError {
         NotAdmin = 300
-        NotFeeReceiver = 301
     }
 
     pub fn getPoolLiquidity() -> U256 {
@@ -58,8 +57,8 @@ Contract Pool(
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setFeeReceiver(caller: Address, recipient: Address) -> () {
-        assert!(caller == feeReceiver, PoolError.NotFeeReceiver)
+    pub fn setFeeReceiver(recipient: Address) -> () {
+        assert!(callerAddress!() == admin, PoolError.NotAdmin)
         feeReceiver = recipient
         return
     }
