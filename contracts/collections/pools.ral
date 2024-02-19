@@ -1,4 +1,4 @@
-Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) {
+Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) extends Utils() {
     enum PoolsError {
         NotAdmin = 300
         PoolAlreadyExist = 301
@@ -8,7 +8,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
     pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
         assert!(callerAddress!() == admin, PoolsError.NotAdmin)
         
-        let poolKey = CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing)
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
@@ -22,16 +22,16 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
     }
 
     pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
-        let mut pool = b``
+        let mut poolBytes = b``
 
-        let subContractId = subContractId!(CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing))
+        let subContractId = subContractId!(generatePoolKey(token0, token1, fee, tickSpacing))
 
         if (!contractExists!(subContractId)) {
             return false, b``
         }
 
         let contract = Pool(subContractId)
-        pool = pool 
+        poolBytes = poolBytes
         ++ toByteVec!(contract.getPoolLiquidity()) ++ b`break` 
         ++ toByteVec!(contract.getPoolCurrentSqrtPrice()) ++ b`break` 
         ++ toByteVec!(contract.getPoolCurrentTickIndex()) ++ b`break` 
@@ -43,6 +43,6 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         ++ toByteVec!(contract.getLastTimestamp()) ++ b`break`
         ++ toByteVec!(contract.getFeeReceiver())
 
-        return true, pool
+        return true, poolBytes
     }
 }

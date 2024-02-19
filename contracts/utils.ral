@@ -1,0 +1,5 @@
+Abstract Contract Utils() {
+    pub fn generatePoolKey(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return toByteVec!(token0) ++ toByteVec!(token1) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    }
+}

@@ -59,7 +59,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
     }
 
     pub fn get(poolKey: ByteVec, index: I256) -> (Bool, ByteVec) {
-        let mut tick = b``
+        let mut tickBytes = b``
 
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
@@ -68,7 +68,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
         }
 
         let contract = Tick(subContractId)
-        tick = tick 
+        tickBytes = tickBytes
         ++ toByteVec!(contract.getTickSign()) ++ b`break` 
         ++ toByteVec!(contract.getLiquidityChange()) ++ b`break` 
         ++ toByteVec!(contract.getLiquidityGross()) ++ b`break` 
@@ -77,6 +77,6 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
         ++ toByteVec!(contract.getTickFeeGrowthOutsideY()) ++ b`break`
         ++ toByteVec!(contract.getTickSecondsOutside())
 
-        return true, tick
+        return true, tickBytes
     }
 }

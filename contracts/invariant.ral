@@ -21,7 +21,7 @@ Contract Invariant(
     tickmapTemplateContractId: ByteVec,
     chunkTemplateContractId: ByteVec,
     clammContractId: ByteVec
-) {
+) extends Utils() {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -161,11 +161,11 @@ Contract Invariant(
     }
 
     pub fn getTick(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> (Bool, ByteVec) {
-        return Ticks(ticksContractId).get(CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing), index)
+        return Ticks(ticksContractId).get(generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
 
     pub fn isTickInitialized(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> Bool {
-        let poolKey = CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing)
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
