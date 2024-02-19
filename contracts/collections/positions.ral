@@ -1,44 +1,56 @@
-Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammContractId: ByteVec) {
+Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammContractId: ByteVec, positionsCounterContractId: ByteVec) {
     enum PositionsError {
         NotAdmin = 2001
         NotFound = 2002
         TooManyPositions = 2003
     }
-    @using(checkExternalCaller = false)
-    pub fn add(caller: Address, positionCounterTemplateId: ByteVec, poolKey: ByteVec, liquidityDelta: U256, lowerTickIdx: I256, upperTickIdx: I256, lastBlock: U256, feeX: U256, feeY: U256, tokensX: U256, tokensY: U256) -> () {
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn add(
+        caller: Address,
+        poolKey: ByteVec,
+        liquidityDelta: U256,
+        lowerTickIdx: I256,
+        upperTickIdx: I256,
+        lastBlock: U256,
+        feeX: U256,
+        feeY: U256,
+        tokensX: U256,
+        tokensY: U256
+    ) -> ByteVec {
         assert!(callerAddress!() == admin, PositionsError.NotAdmin)
-        let length = getLength(caller, poolKey, positionCounterTemplateId)
+        let length = getLength(caller, poolKey)
+        let positionId = poolKey ++ toByteVec!(caller) ++ toByteVec!(length)
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(poolKey, liquidityDelta, lowerTickIdx, upperTickIdx, feeX, feeY, lastBlock, tokensX, tokensY, true, clammContractId)
         copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            poolKey ++ toByteVec!(caller) ++ toByteVec!(length),
+            positionId,
             positionTemplateContractId,
             encodedImmFields,
             encodedMutFields
         )
-        PositionsCounter(positionCounterTemplateId ++ toByteVec!(caller)).increment()
-        return
+        PositionsCounter(positionsCounterContractId ++ toByteVec!(caller)).increment()
+        return positionId
     }
 
     @using(checkExternalCaller = false)
-    pub fn remove(caller: Address, poolKey: ByteVec, positionCounterTemplateId: ByteVec, index: U256) -> () {
+    pub fn remove(caller: Address, poolKey: ByteVec, index: U256) -> () {
         assert!(callerAddress!() == admin, PositionsError.NotAdmin)
-        let length = getLength(caller, poolKey, positionCounterTemplateId)
+        let length = getLength(caller, poolKey)
         assert!(length - 1 >= index, PositionsError.NotFound)
-        let position = Position(positionTemplateContractId ++ toByteVec!(caller) ++ toByteVec!(index))
+        let position = Position(positionsCounterContractId ++ toByteVec!(caller) ++ toByteVec!(index))
         assert!(!position.getIsOpen(), PositionsError.NotFound)
         position.close()
         return
     }
 
-    @using(checkExternalCaller = false)
-    pub fn transfer(caller: Address, recipient: Address, poolKey: ByteVec, positionCounterTemplateId: ByteVec, index: U256) -> () {
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn transfer(caller: Address, recipient: Address, poolKey: ByteVec, index: U256) -> () {
         assert!(callerAddress!() == admin, PositionsError.NotAdmin)
-        let ownerLength = getLength(caller, poolKey, positionCounterTemplateId)
+        let ownerLength = getLength(caller, poolKey)
         assert!(ownerLength - 1 >= index, PositionsError.NotFound)
         let position = Position(positionTemplateContractId ++ toByteVec!(caller) ++ toByteVec!(index))
         assert!(position.getIsOpen(), PositionsError.NotFound)
-        remove(caller, poolKey, positionCounterTemplateId, index)
-        add(recipient, positionCounterTemplateId, position.getRelatedPoolKey(), position.getPosLiquidity(), position.getPosLowerTickIndex(), position.getPosUpperTickIndex(), position.getLastBlockNumber(), position.getPosFeeGrowthInsideX(), position.getPosFeeGrowthInsideY(), position.getPosTokensOwedX(), position.getPosTokensOwedY())
+        remove(caller, poolKey, index)
+        add{caller -> ALPH: 1 alph}(recipient, position.getRelatedPoolKey(), position.getPosLiquidity(), position.getPosLowerTickIndex(), position.getPosUpperTickIndex(), position.getLastBlockNumber(), position.getPosFeeGrowthInsideX(), position.getPosFeeGrowthInsideY(), position.getPosTokensOwedX(), position.getPosTokensOwedY())
         return
     }
 
@@ -46,8 +58,8 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
         return poolKey ++ toByteVec!(caller) ++ toByteVec!(index)
     }
 
-    pub fn getIds(caller: Address, poolKey: ByteVec, positionCounterId: ByteVec) -> [ByteVec; 100] {
-        let length = getLength(caller, poolKey, positionCounterId)
+    pub fn getIds(caller: Address, poolKey: ByteVec) -> [ByteVec; 100] {
+        let length = getLength(caller, poolKey)
         assert!(length <= 100, PositionsError.TooManyPositions)
         let mut ids = [toByteVec!(0); 100]
         for (let mut i = 0; i < length; i = i + 1) {
@@ -55,14 +67,14 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
         }
         return ids
     }
-    fn getLength(owner: Address, poolKey: ByteVec, positionCounterId: ByteVec) -> U256 {
-        if(contractExists!(subContractId!(positionCounterId ++ toByteVec!(owner)))) {
-            return PositionsCounter(positionCounterId ++ toByteVec!(owner)).get()
+    fn getLength(owner: Address, poolKey: ByteVec) -> U256 {
+        if(contractExists!(subContractId!(positionsCounterContractId ++ toByteVec!(owner)))) {
+            return PositionsCounter(positionsCounterContractId ++ toByteVec!(owner)).get()
         } else {
             let (counterEncodedImmFields, counterEncodedMutFields) = PositionsCounter.encodeFields!(admin, 0)
             copyCreateSubContract!{owner -> ALPH: 1 alph}(
                 poolKey ++ toByteVec!(owner),
-                positionCounterId,
+                positionsCounterContractId,
                 counterEncodedImmFields,
                 counterEncodedMutFields
             )

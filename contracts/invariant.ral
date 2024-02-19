@@ -17,11 +17,15 @@ Contract Invariant(
     mut positionsContractId: ByteVec,
     positionsTemplateContractId: ByteVec,
     positionTempalteContractId: ByteVec,
+    mut positionsCounterContractId: ByteVec,
+    positionsCounterTemplateContractId: ByteVec,
     mut tickmapContractId: ByteVec,
     tickmapTemplateContractId: ByteVec,
     chunkTemplateContractId: ByteVec,
     clammContractId: ByteVec
 ) {
+    event CreatePositionEvent(address: Address, pool: ByteVec, liquidity: U256, lowerTickIndex: I256, upperTickIndex: I256, currentSqrtPrice: U256)
+
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -32,7 +36,10 @@ Contract Invariant(
         TokensAreSame = 6
         PoolKeyAlreadyExist = 7
         TickAndSqrtPriceMismatch = 8
+        ZeroLiquidity = 9
+        PriceLimitReached = 10
     }
+    
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
     pub fn init() -> () {
@@ -51,7 +58,10 @@ Contract Invariant(
         let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId, clammContractId)
         ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
 
-        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId, clammContractId)
+        let (positionsCounterEncodedImmFields, positionsCounterEncodedMutFields) = PositionsCounter.encodeFields!(selfAddress!(), 0)   
+        positionsCounterContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsCounterTemplateContractId, positionsCounterEncodedImmFields, positionsCounterEncodedMutFields)
+
+        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId, clammContractId, positionsCounterContractId)
         positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
 
         let (tickmapEncodedImmFields, tickmapEncodedMutFields) = Tickmap.encodeFields!(selfAddress!(), chunkTemplateContractId, clammContractId)
@@ -124,23 +134,39 @@ Contract Invariant(
 
     // TODO: Should not be pub
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
+    fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256) -> ByteVec {
         let currentTimestamp = blockTimeStamp!()
         let caller = callerAddress!()
-        let belowCurrentTick = index <= poolCurrentIndex
+        let ticks = Ticks(ticksContractId)
+        let pool = Pool(poolKey)
+        let belowCurrentTick = index <= pool.getPoolCurrentTickIndex()
 
         CLAMM(clammContractId).checkTick(index, tickSpacing)
+
+        let (doesTickExist, isTickInitialiazed) = ticks.exist(poolKey, index)         
 
         let mut feeGrowthOutsideX = 0
         let mut feeGrowthOutisdeY = 0
         let mut secondsOutside = 0
         if (belowCurrentTick) {
-            feeGrowthOutsideX = poolFeeGrowthGlobalX
-            feeGrowthOutisdeY = poolFeeGrowthGlobalY
-            secondsOutside = currentTimestamp - poolStartTimestamp
+            feeGrowthOutsideX = pool.getFeeGrowthGlobalX()
+            feeGrowthOutisdeY = pool.getFeeGrowthGlobalY()
+            secondsOutside = currentTimestamp - pool.getLastTimestamp()
         }
-        Ticks(ticksContractId).add{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, index, true)
-        // Flip bit in tickmap
+
+        if (!doesTickExist && !isTickInitialiazed) {
+            ticks.add{caller -> ALPH: 1 alph}(caller, poolKey, index, true)
+        }
+        if (doesTickExist && !isTickInitialiazed) {
+            ticks.reinitializeTick(poolKey, index, pool.getPoolCurrentTickIndex(), feeGrowthOutsideX, feeGrowthOutisdeY, pool.getLastTimestamp(), currentTimestamp)
+        }
+
+        let tickContractId = subContractId!(poolKey ++ toByteVec!(index))
+        
+        Ticks(ticksContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, index, true)
+        Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(index, tickSpacing, poolKey)
+
+        return tickContractId
     }
 
 
@@ -151,4 +177,46 @@ Contract Invariant(
 
     // TODO: implement
     pub fn getFeeTiers() -> () {}
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn createPosition(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        lowerTickIndex: I256,
+        upperTickIndex: I256,
+        liquidityDelta: U256,
+        slippageLimitLower: U256,
+        slippageLimitUpper: U256
+    ) -> ByteVec {
+        let caller = callerAddress!()
+        let timestamp = blockTimeStamp!()
+
+        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
+        
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let pool = Pool(poolKey)
+        let positions = Positions(positionsContractId)
+        let currentPoolSqrtPrice = pool.getPoolCurrentSqrtPrice()
+
+        assert!(currentPoolSqrtPrice >= slippageLimitLower && currentPoolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
+
+        let lowerTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, lowerTickIndex)
+        let upperTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, upperTickIndex)
+
+        let positionId = positions.add{caller -> ALPH: 2 alph}(caller, poolKey, liquidityDelta, lowerTickIndex, upperTickIndex, timestamp, 0, 0, 0, 0)
+        let position = Position(positionId)
+        let (requiredX, requiredY) = position.modify(poolKey, lowerTickId, upperTickId, liquidityDelta, true, timestamp, tickSpacing)
+
+        transferTokenToSelf!(caller, toByteVec!(token0), requiredX)
+        transferTokenToSelf!(caller, toByteVec!(token1), requiredY)
+
+        emit CreatePositionEvent(caller, poolKey, liquidityDelta, lowerTickIndex, upperTickIndex, currentPoolSqrtPrice)
+        return positionId
+    }
+
+    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    }
 }

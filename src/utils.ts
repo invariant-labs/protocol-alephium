@@ -10,6 +10,7 @@ import {
   PoolKeys,
   Pools,
   Position,
+  PositionsCounter,
   Tickmap,
   Ticks
 } from '../artifacts/ts'
@@ -49,7 +50,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const tick = await deployTick(signer)
   const ticks = await deployTicks(signer)
   const position = await deployPosition(signer)
-  const positions = await deployPositions(signer)
+  const positionsCounter = await deployPositionsCounter(signer)
+  const positions = await deployPositions(signer, positionsCounter.contractInstance.contractId)
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
   const clamm = await deployCLAMM(signer)
@@ -74,6 +76,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         tickTemplateContractId: tick.contractInstance.contractId,
         positionsContractId: ZERO_ADDRESS,
         positionsTemplateContractId: positions.contractInstance.contractId,
+        positionsCounterContractId: ZERO_ADDRESS,
+        positionsCounterTemplateContractId: positionsCounter.contractInstance.contractId,
         positionTempalteContractId: position.contractInstance.contractId,
         tickmapContractId: ZERO_ADDRESS,
         tickmapTemplateContractId: tickmap.contractInstance.contractId,
@@ -109,13 +113,25 @@ export async function deployFeeTiers(signer: SignerProvider) {
   )
 }
 
-export async function deployPositions(signer: SignerProvider) {
+export async function deployPositions(signer: SignerProvider, counterId: string) {
   return await waitTxConfirmed(
     Positions.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
         positionTemplateContractId: ZERO_ADDRESS,
+        positionsCounterContractId: counterId,
         clammContractId: ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployPositionsCounter(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    PositionsCounter.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        positionsLength: 0n
       }
     })
   )

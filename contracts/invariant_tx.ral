@@ -1,5 +1,5 @@
 TxScript Init(invariant: Invariant) {
-    invariant.init{callerAddress!() -> ALPH: 6 alph}()
+    invariant.init{callerAddress!() -> ALPH: 7 alph}()
 }
 
 TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
@@ -14,6 +14,6 @@ TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee:
     invariant.createPool{callerAddress!() -> ALPH: 2 alph}(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
 }
 
-TxScript CreateTick(invariant: Invariant, poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256){
-    invariant.createTick{callerAddress!() -> ALPH: 1 alph}(poolKey, tickSpacing, index, poolCurrentIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, poolStartTimestamp)
+TxScript CreatePosition(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, lowerTickIndex: I256, upperTickIndex: I256, liquidityDelta: U256, slippageLimitLower: U256, slippageLimitUpper: U256) {
+    invariant.createPosition{callerAddress!() -> ALPH: 4 alph}(token0, token1, fee, tickSpacing, lowerTickIndex, upperTickIndex, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }

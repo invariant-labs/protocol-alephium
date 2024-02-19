@@ -18,20 +18,14 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
 
         assert!(!doesExist && !isTickInitialized, TicksError.TickAlreadyExist)
         
-        if(doesExist && !isTickInitialized) {
-            let _ = Tick(poolKey ++ toByteVec!(initTick))
-            // contract.reinitializeTick()
-            return
-        } else {
-            let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, CLAMM(clammContractId).sqrtPriceFromTick(initTick), 0, 0, 0, true)
-            copyCreateSubContract!{caller -> ALPH: 1 alph}(
-                poolKey ++ toByteVec!(initTick),
-                tickTemplateContractId,
-                encodedImmFields,
-                encodedMutFields
-            )   
-            return
-        }
+        let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, CLAMM(clammContractId).sqrtPriceFromTick(initTick), 0, 0, 0, true)
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            poolKey ++ toByteVec!(initTick),
+            tickTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )   
+        return
     }
 
     pub fn exist(
@@ -43,6 +37,29 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
             return true, contract.getIsInitialized()
         }
         return false, false
+    }
+
+    pub fn get(poolKey: ByteVec, index: I256) -> ByteVec {
+        return poolKey ++ toByteVec!(index)
+    }
+
+
+    @using(checkExternalCaller = false)
+    pub fn reinitializeTick(
+        poolKey: ByteVec,
+        index: I256,
+        poolCurrentIndex: I256,
+        poolFeeGrowthGlobalX: U256,
+        poolFeeGrowthGlobalY: U256,
+        poolTimestamp: U256,
+        currentTimestamp: U256
+    ) -> () {
+        assert!(callerAddress!() == admin, TicksError.NotAdmin)
+        let (doesExist, isTickInitialized) = exist(poolKey, index)
+        assert!(doesExist && !isTickInitialized, TicksError.TickNotFound)
+        let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
+        contract.reinitializeTick(index, poolCurrentIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, poolTimestamp, currentTimestamp)
+        return
     }
 
     @using(checkExternalCaller = false)
