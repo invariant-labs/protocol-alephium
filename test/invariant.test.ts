@@ -3,7 +3,7 @@ import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, CreateTick, Init, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
-import { decodePools, deployInvariant, expectError } from '../src/utils'
+import { decodePool, decodePools, deployInvariant, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -208,6 +208,24 @@ describe('invariant tests', () => {
     // expect(parsedPools[0].token1).toBe(testAddress)
     expect(parsedPools[0].fee).toBe(100n)
     expect(parsedPools[0].tickSpacing).toBe(1n)
+
+    const pool = await invariant.methods.getPool({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n }
+    })
+
+    expect(pool.returns[0]).toBe(true)
+    const parsedPool = decodePool(pool.returns[1])
+
+    expect(parsedPool.poolLiquidity).toBe(0n)
+    expect(parsedPool.poolCurrentSqrtPrice).toBe(1000000000000000000000000n)
+    expect(parsedPool.poolCurrentTickIndex).toBe(0n)
+    expect(parsedPool.feeGrowthGlobalX).toBe(0n)
+    expect(parsedPool.feeGrowthGlobalY).toBe(0n)
+    expect(parsedPool.feeProtocolTokenX).toBe(0n)
+    expect(parsedPool.feeProtocolTokenY).toBe(0n)
+    expect(parsedPool.startTimestamp).toBeGreaterThan(0n)
+    expect(parsedPool.lastTimestamp).toBeGreaterThan(0n)
+    // expect(parsedPool.feeReceiver).toBe(sender.address)
 
     {
       const params = { args: { poolKey, index } }

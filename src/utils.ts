@@ -16,7 +16,6 @@ import {
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { compactUnsignedIntCodec } from './compact-int-codec'
-import { PoolType } from './schema'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -285,16 +284,16 @@ export async function balanceOf(tokenId: string, address: string): Promise<bigin
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
 
-export function decodePools(string: string): PoolType[] {
+export function decodePools(string: string) {
   const parts = string.split('627265616b')
-  const pools: PoolType[] = []
+  const pools: any[] = []
 
   for (let i = 0; i < parts.length - 1; i += 4) {
     const pool = {
       token0: parts[i],
       token1: parts[i + 1],
-      fee: BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(parts[i + 2])))),
-      tickSpacing: BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(parts[i + 3]))))
+      fee: decodeU256(parts[i + 2]),
+      tickSpacing: decodeU256(parts[i + 3])
     }
 
     pools.push(pool)
@@ -303,6 +302,39 @@ export function decodePools(string: string): PoolType[] {
   return pools
 }
 
+export function decodePool(string: string) {
+  const parts = string.split('627265616b')
+  const pool = {
+    poolLiquidity: 0n,
+    poolCurrentSqrtPrice: 0n,
+    poolCurrentTickIndex: 0n,
+    feeGrowthGlobalX: 0n,
+    feeGrowthGlobalY: 0n,
+    feeProtocolTokenX: 0n,
+    feeProtocolTokenY: 0n,
+    startTimestamp: 0n,
+    lastTimestamp: 0n,
+    feeReceiver: ''
+  }
+
+  pool.poolLiquidity = decodeU256(parts[0])
+  pool.poolCurrentSqrtPrice = decodeU256(parts[1])
+  pool.poolCurrentTickIndex = decodeU256(parts[2])
+  pool.feeGrowthGlobalX = decodeU256(parts[3])
+  pool.feeGrowthGlobalY = decodeU256(parts[4])
+  pool.feeProtocolTokenX = decodeU256(parts[5])
+  pool.feeProtocolTokenY = decodeU256(parts[6])
+  pool.startTimestamp = decodeU256(parts[7])
+  pool.lastTimestamp = decodeU256(parts[8])
+  pool.feeReceiver = parts[9]
+
+  return pool
+}
+
 export const hexToBytes = (hex: string): Uint8Array => {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
+}
+
+export const decodeU256 = (string: string) => {
+  return BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(string))))
 }

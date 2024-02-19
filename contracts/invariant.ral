@@ -155,4 +155,8 @@ Contract Invariant(
     pub fn getPools() -> ByteVec {
         return PoolKeys(poolKeysContractId).getAll()
     }
+
+    pub fn getPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
+        return Pools(poolsContractId).get(token0, token1, fee, tickSpacing)
+    }
 }
