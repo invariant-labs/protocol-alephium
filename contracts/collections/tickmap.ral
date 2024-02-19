@@ -4,7 +4,7 @@ Contract Tickmap(
 ) extends CLAMM() {
     enum TickmapErrors {
         NotAdmin = 400
-        InvalidTickRange = 401
+        InvalidTickIndex = 401
         TickAndTickSpacingMismatch = 402
         LimitReached = 403
     }
@@ -18,7 +18,7 @@ Contract Tickmap(
     }
 
     fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
-        assert!(tick > getGlobalMinTick() && tick < getGlobalMaxTick(), TickmapErrors.InvalidTickRange)
+        assert!(tick >= getGlobalMinTick() && tick <= getGlobalMaxTick(), TickmapErrors.InvalidTickIndex)
         assert!(tick % toI256!(tickSpacing) == 0i, TickmapErrors.TickAndTickSpacingMismatch)
     
         let bitmapIndex = toU256!(tick + getGlobalMaxTick()) / tickSpacing
