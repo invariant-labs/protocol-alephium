@@ -205,4 +205,14 @@ describe('invariant tests', () => {
       const [doesExist, isInitialized] = (await invariant.methods.tickExist(params)).returns
     }
   })
+  test('check fee receiver', async () => {
+    const invariantResult = await deployInvariant(sender, 0n)
+
+    const invariant = Invariant.at(invariantResult.contractInstance.address)
+
+    await Init.execute(sender, {
+      initialFields: { invariant: invariant.contractId },
+      attoAlphAmount: ONE_ALPH * 4n + DUST_AMOUNT * 2n
+    })
+  })
 })

@@ -61,16 +61,18 @@ Contract Invariant(
     }
 
     @using(checkExternalCaller = false)
-    pub fn withdrawProtocolFee(poolKey: ByteVec) -> () {
+    pub fn withdrawProtocolFee(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
-
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let pool = Pool(poolKey)
 
         assert!(pool.getFeeReceiver() == caller, InvariantError.NotFeeReceiver)
 
-        let (_, _) = pool.withdrawProtocolFee()
+        let (feeProtocolTokenX, feeProtocolTokenY) = pool.withdrawProtocolFee()
 
-        // Transfer tokens
+        transferTokenFromSelf!(caller, toByteVec!(token0), feeProtocolTokenX)
+        transferTokenFromSelf!(caller, toByteVec!(token1), feeProtocolTokenY)
+        
         return
     }
 
@@ -172,4 +174,8 @@ Contract Invariant(
 
     // TODO: implement
     pub fn getFeeTiers() -> () {}
+
+    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    }
 }
