@@ -181,8 +181,9 @@ Contract Invariant(
         return Ticks(ticksContractId).exist(poolKey, index)
     }
 
-    // TODO: implement
-    pub fn getFeeTiers() -> () {}
+    pub fn getFeeTiers() -> ByteVec {
+        return FeeTiers(feeTiersContractId).getAll()
+    }
 
     pub fn getPools() -> ByteVec {
         return PoolKeys(poolKeysContractId).getAll()
