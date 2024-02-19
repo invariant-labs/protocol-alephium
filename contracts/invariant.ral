@@ -21,7 +21,7 @@ Contract Invariant(
     tickmapTemplateContractId: ByteVec,
     chunkTemplateContractId: ByteVec,
     clammContractId: ByteVec
-) {
+) extends Utils() {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -184,7 +184,21 @@ Contract Invariant(
     // TODO: implement
     pub fn getFeeTiers() -> () {}
 
-    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    pub fn getPools() -> ByteVec {
+        return PoolKeys(poolKeysContractId).getAll()
+    }
+
+    pub fn getPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
+        return Pools(poolsContractId).get(token0, token1, fee, tickSpacing)
+    }
+
+    pub fn getTick(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> (Bool, ByteVec) {
+        return Ticks(ticksContractId).get(generatePoolKey(token0, token1, fee, tickSpacing), index)
+    }
+
+    pub fn isTickInitialized(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> Bool {
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+        return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
 }
