@@ -1,4 +1,4 @@
-Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) {
+Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) extends Utils() {
     enum PoolsError {
         NotAdmin = 300
         PoolAlreadyExist = 301
@@ -21,7 +21,28 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         )
     }
 
-    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
+        let mut poolBytes = b``
+
+        let subContractId = subContractId!(generatePoolKey(token0, token1, fee, tickSpacing))
+
+        if (!contractExists!(subContractId)) {
+            return false, b``
+        }
+
+        let contract = Pool(subContractId)
+        poolBytes = poolBytes
+        ++ toByteVec!(contract.getPoolLiquidity()) ++ b`break` 
+        ++ toByteVec!(contract.getPoolCurrentSqrtPrice()) ++ b`break` 
+        ++ toByteVec!(contract.getPoolCurrentTickIndex()) ++ b`break` 
+        ++ toByteVec!(contract.getFeeGrowthGlobalX()) ++ b`break`
+        ++ toByteVec!(contract.getFeeGrowthGlobalY()) ++ b`break`
+        ++ toByteVec!(contract.getFeeProtocolTokenX()) ++ b`break`
+        ++ toByteVec!(contract.getFeeProtocolTokenY()) ++ b`break`
+        ++ toByteVec!(contract.getStartTimestamp()) ++ b`break`
+        ++ toByteVec!(contract.getLastTimestamp()) ++ b`break`
+        ++ toByteVec!(contract.getFeeReceiver())
+
+        return true, poolBytes
     }
 }
