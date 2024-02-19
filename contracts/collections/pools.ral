@@ -8,7 +8,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
     pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
         assert!(callerAddress!() == admin, PoolsError.NotAdmin)
         
-        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let poolKey = CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
@@ -24,7 +24,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
     pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
         let mut pool = b``
 
-        let subContractId = subContractId!(generatePoolKey(token0, token1, fee, tickSpacing))
+        let subContractId = subContractId!(CLAMM(clammContractId).generatePoolKey(token0, token1, fee, tickSpacing))
 
         if (!contractExists!(subContractId)) {
             return false, b``
@@ -44,9 +44,5 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         ++ toByteVec!(contract.getFeeReceiver())
 
         return true, pool
-    }
-
-    fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
     }
 }

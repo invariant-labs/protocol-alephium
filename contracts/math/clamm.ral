@@ -328,4 +328,8 @@ Contract CLAMM() extends Log(){
 
         return true
     }
+
+    pub fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
+        return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+    }
 }

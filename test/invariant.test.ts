@@ -227,6 +227,12 @@ describe('invariant tests', () => {
     expect(parsedPool.lastTimestamp).toBeGreaterThan(0n)
     // expect(parsedPool.feeReceiver).toBe(sender.address)
 
+    const tick = await invariant.methods.getTick({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n, index: 0n }
+    })
+
+    expect(tick.returns[0]).toBe(false)
+
     {
       const params = { args: { poolKey, index } }
       const [doesExist, isInitialized] = (await invariant.methods.tickExist(params)).returns

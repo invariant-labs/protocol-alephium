@@ -331,6 +331,29 @@ export function decodePool(string: string) {
   return pool
 }
 
+export const decodeTick = (string: string) => {
+  const parts = string.split('627265616b')
+  const tick = {
+    tickSign: false,
+    liquidityChange: 0n,
+    liquidityGross: 0n,
+    tickSqrtPrice: 0n,
+    tickFeeGrowthOutsideX: 0n,
+    tickFeeGrowthOutsideY: 0n,
+    tickSecondsOutside: 0n
+  }
+
+  tick.tickSign = parts[0] === '01'
+  tick.liquidityChange = decodeU256(parts[1])
+  tick.liquidityGross = decodeU256(parts[2])
+  tick.tickSqrtPrice = decodeU256(parts[3])
+  tick.tickFeeGrowthOutsideX = decodeU256(parts[4])
+  tick.tickFeeGrowthOutsideY = decodeU256(parts[5])
+  tick.tickSecondsOutside = decodeU256(parts[6])
+
+  return tick
+}
+
 export const hexToBytes = (hex: string): Uint8Array => {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 }
