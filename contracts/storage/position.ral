@@ -8,8 +8,9 @@ Contract Position(
     lastBlockNumber: U256,
     mut posTokensOwedX: U256,
     mut posTokensOwedY: U256,
-    mut isOpen: Bool
-) extends CLAMM(), Decimal() {
+    mut isOpen: Bool,
+    clammContractId: ByteVec
+) extends Decimal() {
     enum PositionError {
         InsufficientLiquidity = 0
         EmptyPositionPokes = 1
@@ -75,7 +76,7 @@ Contract Position(
         let poolContract = Pool(poolContractId)
         poolContract.setLastTimestamp(currentTimestamp)
 
-        let maxLiquidityPerTick = calculateMaxLiquidityPerTick(tickSpacing)
+        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
 
         let lowerTickContract = Tick(lowerTickContractId)
         let upperTickContract = Tick(upperTickContractId)

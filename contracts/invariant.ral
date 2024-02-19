@@ -16,8 +16,12 @@ Contract Invariant(
     tickTemplateContractId: ByteVec,
     mut positionsContractId: ByteVec,
     positionsTemplateContractId: ByteVec,
-    positionTempalteContractId: ByteVec
-) extends CLAMM() {
+    positionTempalteContractId: ByteVec,
+    mut tickmapContractId: ByteVec,
+    tickmapTemplateContractId: ByteVec,
+    chunkTemplateContractId: ByteVec,
+    clammContractId: ByteVec
+) {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -41,15 +45,18 @@ Contract Invariant(
         let (poolKeysEncodedImmFields, poolKeysEncodedMutFields) = PoolKeys.encodeFields!(selfAddress!(), poolKeyTemplateContractId, 0)
         poolKeysContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolKeysTemplateContractId, poolKeysEncodedImmFields, poolKeysEncodedMutFields)
         
-        let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(selfAddress!(), poolTemplateContractId)
+        let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(selfAddress!(), poolTemplateContractId, clammContractId)
         poolsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolsTemplateContractId, poolsEncodedImmFields, poolsEncodedMutFields)
 
-        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId)
+        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId, clammContractId)
         ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
 
-        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId)
+        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId, clammContractId)
         positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
 
+        let (tickmapEncodedImmFields, tickmapEncodedMutFields) = Tickmap.encodeFields!(selfAddress!(), chunkTemplateContractId, clammContractId)
+        tickmapContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(tickmapTemplateContractId, tickmapEncodedImmFields, tickmapEncodedMutFields)
+        
         init = true
     }
     
@@ -67,7 +74,7 @@ Contract Invariant(
 
         assert!(FeeTiers(feeTiersContractId).contains(fee, tickSpacing), InvariantError.FeeTierNotFound)
 
-        checkTick(initTick, tickSpacing)
+        CLAMM(clammContractId).checkTick(initTick, tickSpacing)
 
         assert!(token0 != token1, InvariantError.TokensAreSame)
 
@@ -79,7 +86,7 @@ Contract Invariant(
             assert!(!swappedPoolKeyExist, InvariantError.PoolKeyAlreadyExist)
         }
 
-        assert!(checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
+        assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing)
         Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
@@ -122,7 +129,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let belowCurrentTick = index <= poolCurrentIndex
 
-        checkTick(index, tickSpacing)
+        CLAMM(clammContractId).checkTick(index, tickSpacing)
 
         let mut feeGrowthOutsideX = 0
         let mut feeGrowthOutisdeY = 0

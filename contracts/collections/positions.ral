@@ -1,4 +1,4 @@
-Contract Positions(admin: Address, positionTemplateContractId: ByteVec) extends CLAMM() {
+Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammContractId: ByteVec) {
     enum PositionsError {
         NotAdmin = 2001
         NotFound = 2002
@@ -8,7 +8,7 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec) extends 
     pub fn add(caller: Address, positionCounterTemplateId: ByteVec, poolKey: ByteVec, liquidityDelta: U256, lowerTickIdx: I256, upperTickIdx: I256, lastBlock: U256, feeX: U256, feeY: U256, tokensX: U256, tokensY: U256) -> () {
         assert!(callerAddress!() == admin, PositionsError.NotAdmin)
         let length = getLength(caller, poolKey, positionCounterTemplateId)
-        let (encodedImmFields, encodedMutFields) = Position.encodeFields!(poolKey, liquidityDelta, lowerTickIdx, upperTickIdx, feeX, feeY, lastBlock, tokensX, tokensY, true)
+        let (encodedImmFields, encodedMutFields) = Position.encodeFields!(poolKey, liquidityDelta, lowerTickIdx, upperTickIdx, feeX, feeY, lastBlock, tokensX, tokensY, true, clammContractId)
         copyCreateSubContract!{caller -> ALPH: 1 alph}(
             poolKey ++ toByteVec!(caller) ++ toByteVec!(length),
             positionTemplateContractId,

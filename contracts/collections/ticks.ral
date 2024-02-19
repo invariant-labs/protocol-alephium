@@ -1,4 +1,4 @@
-Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() {
+Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId: ByteVec) {
     enum TicksError {
         NotAdmin = 1000
         TickNotFound = 1001
@@ -23,7 +23,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec) extends CLAMM() 
             // contract.reinitializeTick()
             return
         } else {
-            let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, sqrtPriceFromTick(initTick), 0, 0, 0, true)
+            let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, CLAMM(clammContractId).sqrtPriceFromTick(initTick), 0, 0, 0, true)
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 poolKey ++ toByteVec!(initTick),
                 tickTemplateContractId,

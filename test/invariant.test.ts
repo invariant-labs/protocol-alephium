@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, toApiByteVec, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Init, Invariant, RemoveFeeTier, CreateTick } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, CreateTick, Init, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
 import { deployInvariant, expectError } from '../src/utils'
 
@@ -20,7 +20,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -120,7 +120,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -155,7 +155,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()

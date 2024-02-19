@@ -1,0 +1,10 @@
+Contract Chunk(mut value: U256) {
+    pub fn get() -> U256 {
+        return value
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn set(updatedValue: U256) -> () {
+        value = updatedValue
+    }
+}
