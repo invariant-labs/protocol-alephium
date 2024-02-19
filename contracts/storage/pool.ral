@@ -9,7 +9,7 @@ Contract Pool(
     mut feeProtocolTokenY: U256,
     startTimestamp: U256,
     mut lastTimestamp: U256,
-    feeReceiver: Address,
+    mut feeReceiver: Address,
     clammContractId: ByteVec
 ) extends Decimal() {
     enum PoolError {
@@ -56,6 +56,13 @@ Contract Pool(
         return feeReceiver
     }
 
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setFeeReceiver(recipient: Address) -> () {
+        assert!(callerAddress!() == admin, PoolError.NotAdmin)
+        feeReceiver = recipient
+        return
+    }
+    
     @using(updateFields = true, checkExternalCaller = false)
     pub fn setLastTimestamp(v: U256) -> () {
         lastTimestamp = v

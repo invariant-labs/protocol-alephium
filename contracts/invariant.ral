@@ -1,7 +1,7 @@
 Contract Invariant(
     mut init: Bool,
     admin: Address,
-    protocolFee: U256,
+    mut protocolFee: U256,
     mut feeTiersContractId: ByteVec,
     feeTiersTemplateContractId: ByteVec,
     feeTierTemplateContractId: ByteVec,
@@ -32,6 +32,7 @@ Contract Invariant(
         TokensAreSame = 6
         PoolKeyAlreadyExist = 7
         TickAndSqrtPriceMismatch = 8
+        NotFeeReceiver = 9
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
@@ -62,6 +63,37 @@ Contract Invariant(
     
     pub fn getProtocolFee() -> U256 {
         return protocolFee
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn changeProtocolFee(newProtocolFee: U256) -> () {
+        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        protocolFee = newProtocolFee
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn withdrawProtocolFee(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+        let caller = callerAddress!()
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let pool = Pool(poolKey)
+
+        assert!(pool.getFeeReceiver() == caller, InvariantError.NotFeeReceiver)
+
+        let (feeProtocolTokenX, feeProtocolTokenY) = pool.withdrawProtocolFee()
+
+        transferTokenFromSelf!(caller, toByteVec!(token0), feeProtocolTokenX)
+        transferTokenFromSelf!(caller, toByteVec!(token1), feeProtocolTokenY)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn changeFeeReceiver(token0: Address, token1: Address, fee: U256, tickSpacing: U256, newFeeReceiver: Address) -> () {
+        let caller = callerAddress!()
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let pool = Pool(poolKey)
+
+        assert!(admin == caller, InvariantError.NotFeeReceiver)
+
+        pool.setFeeReceiver(newFeeReceiver)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)

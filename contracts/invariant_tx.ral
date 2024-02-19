@@ -17,3 +17,11 @@ TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee:
 TxScript CreateTick(invariant: Invariant, poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256){
     invariant.createTick{callerAddress!() -> ALPH: 1 alph}(poolKey, tickSpacing, index, poolCurrentIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, poolStartTimestamp)
 }
+
+TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
+    invariant.changeProtocolFee(newFee)
+}
+
+TxScript ChangeFeeReceiver(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
+    invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
+}
