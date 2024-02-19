@@ -1,10 +1,12 @@
 Contract Tickmap(
+    admin: Address,
     chunkTemplateContractId: ByteVec
 ) extends CLAMM() {
     enum TickmapErrors {
-        InvalidTickRange = 0
-        TickAndTickSpacingMismatch = 1
-        LimitReached = 2
+        NotAdmin = 400
+        InvalidTickRange = 401
+        TickAndTickSpacingMismatch = 402
+        LimitReached = 403
     }
 
     fn getChunkSize() -> U256 {
@@ -99,6 +101,37 @@ Contract Tickmap(
         return false, 0i
     }
 
+    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+        let limit = getSearchLimit(tick, tickSpacing, false)
+        let (mut chunk, mut bit) = tickToPosition(tick, tickSpacing)
+        let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
+
+        while (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
+            let mut mask = 1 << bit
+            let value = getChunk(chunk, poolKey)
+
+            if (value % (mask << 1) > 0) {
+                while (value & mask == 0) {
+                    mask = mask >> 1
+                    bit = bit - 1
+                }
+
+                if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
+                    let index = chunk * getChunkSize() + bit
+
+                    return true, toI256!(index) - (getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                } else {
+                    return false, 0i
+                }
+            }
+
+            chunk = chunk - 1
+            bit = getChunkSize() - 1
+        }
+
+        return false, 0i
+    }
+
     pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
         let mut closesTickBool = false
         let mut closesTickIndex = 0i
@@ -135,37 +168,6 @@ Contract Tickmap(
         }
     }
 
-    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
-        let limit = getSearchLimit(tick, tickSpacing, false)
-        let (mut chunk, mut bit) = tickToPosition(tick, tickSpacing)
-        let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
-
-        while (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-            let mut mask = 1 << bit
-            let value = getChunk(chunk, poolKey)
-
-            if (value % (mask << 1) > 0) {
-                while (value & mask == 0) {
-                    mask = mask >> 1
-                    bit = bit - 1
-                }
-
-                if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                    let index = chunk * getChunkSize() + bit
-
-                    return true, toI256!(index) - (getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
-                } else {
-                    return false, 0i
-                }
-            }
-
-            chunk = chunk - 1
-            bit = getChunkSize() - 1
-        }
-
-        return false, 0i
-    }
-
     fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
         let subContractId = subContractId!(poolKey ++ toByteVec!(chunk))
         let exists = contractExists!(subContractId)
@@ -186,6 +188,8 @@ Contract Tickmap(
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn flip(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+        assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
+
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
 
         let id = poolKey ++ toByteVec!(chunk)

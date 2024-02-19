@@ -24,6 +24,8 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
 }
 
 export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
+  const account = await signer.getSelectedAccount()
+
   const feeTier = await deployFeeTier(signer)
   const feeTiers = await deployFeeTiers(signer)
   const poolKey = await deployPoolKey(signer)
@@ -31,7 +33,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const pools = await deployPools(signer)
   const pool = await deployPool(signer)
   const tick = await deployTick(signer)
-  const account = await signer.getSelectedAccount()
+  const chunk = await deployChunk(signer)
+  const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
 
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -48,7 +51,10 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolsContractId: ZERO_ADDRESS,
         poolsTemplateContractId: pools.contractInstance.contractId,
         poolTemplateContractId: pool.contractInstance.contractId,
-        tickTemplateContractId: tick.contractInstance.contractId
+        tickTemplateContractId: tick.contractInstance.contractId,
+        tickmapContractId: ZERO_ADDRESS,
+        tickmapTemplateContractId: tickmap.contractInstance.contractId,
+        chunkTemplateContractId: chunk.contractInstance.contractId
       }
     })
   )
@@ -162,10 +168,11 @@ export async function deployChunk(signer: SignerProvider) {
   )
 }
 
-export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId?: string) {
+export async function deployTickmap(signer: SignerProvider, admin?: string, chunkTemplateContractId?: string) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
+        admin: admin ?? ZERO_ADDRESS,
         chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS
       }
     })

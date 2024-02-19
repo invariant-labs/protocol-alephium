@@ -15,7 +15,7 @@ describe('tickmap tests', () => {
 
   test('flip and get works', async () => {
     const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender, sender.address, chunk.contractInstance.contractId)
 
     const getBefore = await tickmap.contractInstance.methods.get({
       args: { tick: 0n, tickSpacing: 1n, poolKey: '' }

@@ -20,7 +20,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 3n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 4n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -120,7 +120,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 3n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 4n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
