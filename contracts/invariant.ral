@@ -348,5 +348,10 @@ Contract Invariant(
 
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
-    
+
+    pub fn getPosition(token0: Address, token1: Address, fee: U256, tickSpacing: U256, owner: Address, index: U256) -> (Bool, ByteVec) {
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+        return Positions(positionsContractId).get(owner, index, poolKey)
+    }
 }

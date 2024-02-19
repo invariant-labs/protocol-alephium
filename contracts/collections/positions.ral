@@ -81,4 +81,29 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
             return 0   
         }
     }
+
+    pub fn get(owner: Address, index: U256, poolKey: ByteVec) -> (Bool, ByteVec) {
+        let positionId = poolKey ++ toByteVec!(owner) ++ toByteVec!(index)
+        
+        let mut positionBytes = b``
+        
+        let subContractId = subContractId!(positionId)
+
+        if (!contractExists!(subContractId)) {
+            return false, b``
+        }
+
+        let contract = Position(subContractId)
+        positionBytes = positionBytes
+        ++ toByteVec!(contract.getPosLiquidity()) ++ b`break` 
+        ++ toByteVec!(contract.getPosLowerTickIndex()) ++ b`break` 
+        ++ toByteVec!(contract.getPosUpperTickIndex()) ++ b`break` 
+        ++ toByteVec!(contract.getPosFeeGrowthInsideX()) ++ b`break`
+        ++ toByteVec!(contract.getPosFeeGrowthInsideY()) ++ b`break`
+        ++ toByteVec!(contract.getLastBlockNumber()) ++ b`break`
+        ++ toByteVec!(contract.getPosTokensOwedX()) ++ b`break`
+        ++ toByteVec!(contract.getPosTokensOwedY())
+
+        return true, positionBytes
+    }
 }

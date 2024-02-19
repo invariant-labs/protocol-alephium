@@ -370,6 +370,32 @@ export const decodeTick = (string: string) => {
   return tick
 }
 
+export const decodePosition = (string: string) => {
+  const parts = string.split('627265616b')
+
+  const position = {
+    posLiquidity: 0n,
+    posLowerTickIndex: 0n,
+    posUpperTickIndex: 0n,
+    posFeeGrowthInsideX: 0n,
+    posFeeGrowthInsideY: 0n,
+    lastBlockNumber: 0n,
+    posTokensOwedX: 0n,
+    posTokensOwedY: 0n
+  }
+
+  position.posLiquidity = decodeU256(parts[0])
+  position.posLowerTickIndex = decodeU256(parts[1])
+  position.posUpperTickIndex = decodeU256(parts[2])
+  position.posFeeGrowthInsideX = decodeU256(parts[3])
+  position.posFeeGrowthInsideY = decodeU256(parts[4])
+  position.lastBlockNumber = decodeU256(parts[5])
+  position.posTokensOwedX = decodeU256(parts[6])
+  position.posTokensOwedY = decodeU256(parts[7])
+
+  return position
+}
+
 export const hexToBytes = (hex: string): Uint8Array => {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 }
