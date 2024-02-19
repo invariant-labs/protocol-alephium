@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, toApiByteVec, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Init, Invariant, RemoveFeeTier, CreateTick } from '../artifacts/ts'
+import { AddFeeTier, ChangeProtocolFee, CreatePool, CreateTick, Init, Invariant, RemoveFeeTier } from '../artifacts/ts'
 import { testPrivateKeys } from '../src/consts'
 import { deployInvariant, expectError } from '../src/utils'
 
@@ -20,7 +20,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -120,7 +120,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -155,7 +155,7 @@ describe('invariant tests', () => {
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 5n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
     let feeTier = await invariant.methods.getFeeTierCount()
@@ -205,14 +205,23 @@ describe('invariant tests', () => {
       const [doesExist, isInitialized] = (await invariant.methods.tickExist(params)).returns
     }
   })
-  test('check fee receiver', async () => {
+  test('protocol fee', async () => {
     const invariantResult = await deployInvariant(sender, 0n)
-
     const invariant = Invariant.at(invariantResult.contractInstance.address)
 
     await Init.execute(sender, {
       initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: ONE_ALPH * 4n + DUST_AMOUNT * 2n
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
+
+    const currentFee = (await invariant.methods.getProtocolFee()).returns
+    expect(currentFee).toEqual(0n)
+
+    await ChangeProtocolFee.execute(sender, {
+      initialFields: { invariant: invariant.contractId, newFee: 100n }
+    })
+
+    const changedFee = (await invariant.methods.getProtocolFee()).returns
+    expect(changedFee).toEqual(100n)
   })
 })

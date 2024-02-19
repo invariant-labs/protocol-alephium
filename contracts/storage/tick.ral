@@ -9,7 +9,7 @@ Contract Tick(
     mut tickFeeGrowthOutsideY: U256,
     mut tickSecondsOutside: U256,
     mut isInitialized: Bool
-) extends CLAMM(), Decimal() {
+) extends Decimal() {
     enum TickError {
         InvalidTickLiquidity = 0
     }

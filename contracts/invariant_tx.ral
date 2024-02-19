@@ -1,5 +1,5 @@
 TxScript Init(invariant: Invariant) {
-    invariant.init{callerAddress!() -> ALPH: 5 alph}()
+    invariant.init{callerAddress!() -> ALPH: 6 alph}()
 }
 
 TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
@@ -22,6 +22,6 @@ TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
     invariant.changeProtocolFee(newFee)
 }
 
-TxScript ChangeFeeReceiver(invariant: Invariant, poolKey: ByteVec, newReceiver: Address) {
-    invariant.changeFeeReceiver(poolKey, newReceiver)
+TxScript ChangeFeeReceiver(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
+    invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
 }

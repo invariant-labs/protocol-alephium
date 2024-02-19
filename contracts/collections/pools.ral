@@ -1,4 +1,4 @@
-Contract Pools(admin: Address, poolTemplateContractId: ByteVec) {
+Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) {
     enum PoolsError {
         NotAdmin = 300
         PoolAlreadyExist = 301
@@ -12,7 +12,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec) {
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver)
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,

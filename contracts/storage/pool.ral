@@ -9,8 +9,9 @@ Contract Pool(
     mut feeProtocolTokenY: U256,
     startTimestamp: U256,
     mut lastTimestamp: U256,
-    mut feeReceiver: Address
-) extends CLAMM(), Decimal() {
+    mut feeReceiver: Address,
+    clammContractId: ByteVec
+) extends Decimal() {
     enum PoolError {
         NotAdmin = 300
         NotFeeReceiver = 301
@@ -96,7 +97,7 @@ Contract Pool(
     pub fn updateLiquidity(liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         assert!(callerAddress!() == admin, PoolError.NotAdmin)
         
-        let (x, y, updateLiq) = calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
+        let (x, y, updateLiq) = CLAMM(clammContractId).calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y
         }
