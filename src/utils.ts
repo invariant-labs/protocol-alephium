@@ -1,5 +1,18 @@
-import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { Chunk, FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools, Tickmap } from '../artifacts/ts'
+import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, toApiByteVec, web3 } from '@alephium/web3'
+import {
+  Chunk,
+  FeeTier,
+  FeeTiers,
+  Invariant,
+  Pool,
+  PoolKey,
+  PoolKeys,
+  Pools,
+  Position,
+  Tickmap,
+  Ticks
+} from '../artifacts/ts'
+import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -33,6 +46,9 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const pools = await deployPools(signer)
   const pool = await deployPool(signer)
   const tick = await deployTick(signer)
+  const ticks = await deployTicks(signer)
+  const position = await deployPosition(signer)
+  const positions = await deployPositions(signer)
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
 
@@ -51,7 +67,12 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolsContractId: ZERO_ADDRESS,
         poolsTemplateContractId: pools.contractInstance.contractId,
         poolTemplateContractId: pool.contractInstance.contractId,
+        ticksContractId: ZERO_ADDRESS,
+        ticksTemplateContractId: ticks.contractInstance.contractId,
         tickTemplateContractId: tick.contractInstance.contractId,
+        positionsContractId: ZERO_ADDRESS,
+        positionsTemplateContractId: positions.contractInstance.contractId,
+        positionTempalteContractId: position.contractInstance.contractId,
         tickmapContractId: ZERO_ADDRESS,
         tickmapTemplateContractId: tickmap.contractInstance.contractId,
         chunkTemplateContractId: chunk.contractInstance.contractId
@@ -80,6 +101,47 @@ export async function deployFeeTiers(signer: SignerProvider) {
         admin: ZERO_ADDRESS,
         feeTierTemplateContractId: ZERO_ADDRESS,
         feeTierCount: 0n
+      }
+    })
+  )
+}
+
+export async function deployPositions(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Positions.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        positionTemplateContractId: ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployPosition(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Position.deploy(signer, {
+      initialFields: {
+        relatedPoolKey: toApiByteVec(ZERO_ADDRESS),
+        posLiquidity: 0n,
+        posLowerTickIndex: 0n,
+        posUpperTickIndex: 0n,
+        posFeeGrowthInsideX: 0n,
+        posFeeGrowthInsideY: 0n,
+        lastBlockNumber: 0n,
+        posTokensOwedX: 0n,
+        posTokensOwedY: 0n,
+        isOpen: false
+      }
+    })
+  )
+}
+
+export async function deployTicks(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Ticks.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        tickTemplateContractId: ZERO_ADDRESS
       }
     })
   )
@@ -145,6 +207,7 @@ export async function deployTick(signer: SignerProvider) {
   return await waitTxConfirmed(
     Tick.deploy(signer, {
       initialFields: {
+        admin: ZERO_ADDRESS,
         idx: 0n,
         tickSign: false,
         liquidityChange: 0n,
@@ -152,7 +215,8 @@ export async function deployTick(signer: SignerProvider) {
         tickSqrtPrice: 0n,
         tickFeeGrowthOutsideX: 0n,
         tickFeeGrowthOutsideY: 0n,
-        tickSecondsOutside: 0n
+        tickSecondsOutside: 0n,
+        isInitialized: false
       }
     })
   )
