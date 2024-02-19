@@ -216,6 +216,33 @@ Contract Invariant(
         return positionId
     }
 
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn removePosition(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        index: U256
+    ) -> () {
+        let caller = callerAddress!()
+        let timestamp = blockTimeStamp!()
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+        let positionId = Positions(positionsContractId).getId(selfAddress!(), index, poolKey)
+        let position = Position(positionId)
+        let withdrawedLiquidity = position.getPosLiquidity()
+
+        let lowerTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, lowerTickIndex)
+        let upperTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, upperTickIndex)
+        let (amountX, amountY, deinitializeLowerTick, deinitializeUpperTick) = position.remove(poolKey, lowerTickId, upperTickId, timestamp, tickSpacing)
+        // Update Pool
+        // Deinitialize ticks
+        // Close position
+        // Transfer tokens
+        // Emit event
+
+    }
+
     fn generatePoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> ByteVec {
         return b`1` ++ toByteVec!(tokenX) ++ toByteVec!(tokenY) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
     }

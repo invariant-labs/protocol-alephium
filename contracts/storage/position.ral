@@ -154,4 +154,21 @@ Contract Position(
 
         return owedX, owedY
     }
+
+    pub fn remove(
+        poolKey: ByteVec,
+        currentTimestamp: U256,
+        lowerTickId: ByteVec,
+        upperTickId: ByteVec,
+        tickSpacing: U256
+    ) -> (U256,U256,Bool, Bool) {
+        let liquidityDelta = getPosLiquidity()
+        let (mut amountX, mut amountY) = modify(poolKey, lowerTickId, upperTickId, liquidityDelta, false, currentTimestamp, tickSpacing)
+
+        amountX = amountX + getPosTokensOwedX()
+        amountY = amountY + getPosTokensOwedY()
+        let deinitializeLowerTick = Tick(lowerTickId).getLiquidityGross() == 0
+        let deinitializeUpperTick = Tick(upperTickId).getLiquidityGross() == 0
+        return amountX, amountY, deinitializeLowerTick, deinitializeUpperTick
+    }
 }
