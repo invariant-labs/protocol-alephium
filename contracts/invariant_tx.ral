@@ -17,3 +17,11 @@ TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee:
 TxScript CreatePosition(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, lowerTickIndex: I256, upperTickIndex: I256, liquidityDelta: U256, slippageLimitLower: U256, slippageLimitUpper: U256) {
     invariant.createPosition{callerAddress!() -> ALPH: 4 alph}(token0, token1, fee, tickSpacing, lowerTickIndex, upperTickIndex, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
+
+TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
+    invariant.changeProtocolFee(newFee)
+}
+
+TxScript ChangeFeeReceiver(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
+    invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
+}

@@ -39,7 +39,7 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
         return false, false
     }
 
-    pub fn get(poolKey: ByteVec, index: I256) -> ByteVec {
+    pub fn getId(poolKey: ByteVec, index: I256) -> ByteVec {
         return poolKey ++ toByteVec!(index)
     }
 
@@ -75,4 +75,25 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
         return
     }
 
+    pub fn get(poolKey: ByteVec, index: I256) -> (Bool, ByteVec) {
+        let mut tickBytes = b``
+
+        let subContractId = subContractId!(poolKey ++ toByteVec!(index))
+
+        if (!contractExists!(subContractId)) {
+            return false, b``
+        }
+
+        let contract = Tick(subContractId)
+        tickBytes = tickBytes
+        ++ toByteVec!(contract.getTickSign()) ++ b`break` 
+        ++ toByteVec!(contract.getLiquidityChange()) ++ b`break` 
+        ++ toByteVec!(contract.getLiquidityGross()) ++ b`break` 
+        ++ toByteVec!(contract.getTickSqrtPrice()) ++ b`break`
+        ++ toByteVec!(contract.getTickFeeGrowthOutsideX()) ++ b`break`
+        ++ toByteVec!(contract.getTickFeeGrowthOutsideY()) ++ b`break`
+        ++ toByteVec!(contract.getTickSecondsOutside())
+
+        return true, tickBytes
+    }
 }
