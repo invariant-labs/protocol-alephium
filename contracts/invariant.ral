@@ -151,4 +151,8 @@ Contract Invariant(
 
     // TODO: implement
     pub fn getFeeTiers() -> () {}
+
+    pub fn getPools() -> ByteVec {
+        return PoolKeys(poolKeysContractId).getAll()
+    }
 }

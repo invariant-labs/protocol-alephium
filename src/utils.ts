@@ -15,6 +15,8 @@ import {
 } from '../artifacts/ts'
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
+import { compactUnsignedIntCodec } from './compact-int-codec'
+import { PoolType } from './schema'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -281,4 +283,26 @@ export async function balanceOf(tokenId: string, address: string): Promise<bigin
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
   const balance = balances.tokenBalances?.find((t) => t.id === tokenId)
   return balance === undefined ? 0n : BigInt(balance.amount)
+}
+
+export function decodePools(string: string): PoolType[] {
+  const parts = string.split('627265616b')
+  const pools: PoolType[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 4) {
+    const pool = {
+      token0: parts[i],
+      token1: parts[i + 1],
+      fee: BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(parts[i + 2])))),
+      tickSpacing: BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(parts[i + 3]))))
+    }
+
+    pools.push(pool)
+  }
+
+  return pools
+}
+
+export const hexToBytes = (hex: string): Uint8Array => {
+  return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 }
