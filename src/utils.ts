@@ -1,6 +1,7 @@
-import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools, Ticks } from '../artifacts/ts'
+import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, toApiByteVec, web3 } from '@alephium/web3'
+import { FeeTier, FeeTiers, Invariant, Pool, PoolKey, PoolKeys, Pools, Position, Ticks } from '../artifacts/ts'
 import { Tick } from '../artifacts/ts/Tick'
+import { Positions } from '../artifacts/ts/Positions'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -32,6 +33,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const pool = await deployPool(signer)
   const tick = await deployTick(signer)
   const ticks = await deployTicks(signer)
+  const position = await deployPosition(signer)
+  const positions = await deployPositions(signer)
   const account = await signer.getSelectedAccount()
 
   return await waitTxConfirmed(
@@ -51,7 +54,10 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolTemplateContractId: pool.contractInstance.contractId,
         ticksContractId: ZERO_ADDRESS,
         ticksTemplateContractId: ticks.contractInstance.contractId,
-        tickTemplateContractId: tick.contractInstance.contractId
+        tickTemplateContractId: tick.contractInstance.contractId,
+        positionsContractId: ZERO_ADDRESS,
+        positionsTemplateContractId: positions.contractInstance.contractId,
+        positionTempalteContractId: position.contractInstance.contractId
       }
     })
   )
@@ -77,6 +83,36 @@ export async function deployFeeTiers(signer: SignerProvider) {
         admin: ZERO_ADDRESS,
         feeTierTemplateContractId: ZERO_ADDRESS,
         feeTierCount: 0n
+      }
+    })
+  )
+}
+
+export async function deployPositions(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Positions.deploy(signer, {
+      initialFields: {
+        admin: ZERO_ADDRESS,
+        positionTemplateContractId: ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployPosition(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    Position.deploy(signer, {
+      initialFields: {
+        relatedPoolKey: toApiByteVec(ZERO_ADDRESS),
+        posLiquidity: 0n,
+        posLowerTickIndex: 0n,
+        posUpperTickIndex: 0n,
+        posFeeGrowthInsideX: 0n,
+        posFeeGrowthInsideY: 0n,
+        lastBlockNumber: 0n,
+        posTokensOwedX: 0n,
+        posTokensOwedY: 0n,
+        isOpen: false
       }
     })
   )

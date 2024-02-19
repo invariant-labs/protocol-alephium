@@ -8,7 +8,7 @@ Contract Pool(
     mut feeProtocolTokenX: U256,
     mut feeProtocolTokenY: U256,
     startTimestamp: U256,
-    lastTimestamp: U256,
+    mut lastTimestamp: U256,
     mut feeReceiver: Address
 ) extends CLAMM(), Decimal() {
     enum PoolError {
@@ -32,7 +32,7 @@ Contract Pool(
         return feeGrowthGlobalX
     }
 
-    pub fn getFeeGrowthGrobalY() -> U256 {
+    pub fn getFeeGrowthGlobalY() -> U256 {
         return feeGrowthGlobalY
     }
 
@@ -61,6 +61,11 @@ Contract Pool(
         assert!(caller == feeReceiver, PoolError.NotFeeReceiver)
         feeReceiver = recipient
         return
+    }
+    
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setLastTimestamp(v: U256) -> () {
+        lastTimestamp = v
     }
 
     @using(updateFields = true, checkExternalCaller = false)
@@ -91,8 +96,8 @@ Contract Pool(
     pub fn updateLiquidity(liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         assert!(callerAddress!() == admin, PoolError.NotAdmin)
         
-        let (x, y, updateLiquidity) = calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
-        if (!updateLiquidity) {
+        let (x, y, updateLiq) = calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
+        if (!updateLiq) {
             return x, y
         }
 
