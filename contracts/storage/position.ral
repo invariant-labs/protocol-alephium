@@ -60,7 +60,6 @@ Contract Position(
     @using(updateFields = true, checkExternalCaller = false)
     pub fn close() -> () {
         isOpen = false
-        return
     }
 
     @using(updateFields = false, checkExternalCaller = false)
