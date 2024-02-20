@@ -18,16 +18,18 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
         tokensY: U256
     ) -> ByteVec {
         assert!(callerAddress!() == admin, PositionsError.NotAdmin)
-        let length = getLength(caller, poolKey)
-        let positionId = poolKey ++ toByteVec!(caller) ++ toByteVec!(length)
+        // let length = getLength(caller, poolKey)
+        let length = 0
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(poolKey, liquidityDelta, lowerTickIdx, upperTickIdx, feeX, feeY, lastBlock, tokensX, tokensY, true, clammContractId)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            positionId,
+        let positionId = copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            poolKey ++ toByteVec!(caller) ++ toByteVec!(length),
             positionTemplateContractId,
             encodedImmFields,
             encodedMutFields
         )
-        PositionsCounter(positionsCounterContractId ++ toByteVec!(caller)).increment()
+        assert!(contractExists!(positionId), 420)
+        // PositionsCounter(positionsCounterContractId ++ toByteVec!(caller)).increment()
+        wrappedModify(positionId)
         return positionId
     }
 
@@ -54,9 +56,6 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
         return
     }
 
-    pub fn getId(caller: Address, poolKey: ByteVec, index: U256) -> ByteVec {
-        return poolKey ++ toByteVec!(caller) ++ toByteVec!(index)
-    }
 
     pub fn getIds(caller: Address, poolKey: ByteVec) -> [ByteVec; 100] {
         let length = getLength(caller, poolKey)
@@ -80,6 +79,44 @@ Contract Positions(admin: Address, positionTemplateContractId: ByteVec, clammCon
             )
             return 0   
         }
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedModify(
+        positionId: ByteVec
+        // lowerTickIndex: I256,
+        // lowerTickFeeGrowthOutsideX: U256,
+        // lowerTickFeeGrowthOutsideY: U256,
+        // upperTickIndex: I256,
+        // upperTickFeeGrowthOutsideX: U256,
+        // upperTickFeeGrowthOutsideY: U256,
+        // poolIndex: I256,
+        // poolFeeGrowthGlobalX: U256,
+        // poolFeeGrowthGlobalY: U256,
+        // add: Bool,
+        // liquidityDelta: U256
+    ) -> () {
+        assert!(contractExists!(positionId), 12387019283098109238018203)
+        let position = Position(subContractId!(positionId))
+        position.modify(
+        //     lowerTickIndex,
+        //     lowerTickFeeGrowthOutsideX,
+        //     lowerTickFeeGrowthOutsideY,
+        //     upperTickIndex,
+        //     upperTickFeeGrowthOutsideX,
+        //     upperTickFeeGrowthOutsideY,
+        //     poolIndex,
+        //     poolFeeGrowthGlobalX,
+        //     poolFeeGrowthGlobalY,
+        //     add,
+        //     liquidityDelta
+        )
+    }
+
+
+
+    pub fn getId(caller: Address, poolKey: ByteVec, index: U256) -> ByteVec {
+        return subContractId!(poolKey ++ toByteVec!(caller) ++ toByteVec!(index))
     }
 
     pub fn get(owner: Address, index: U256, poolKey: ByteVec) -> (Bool, ByteVec) {

@@ -167,12 +167,11 @@ Contract Invariant(
 
     // TODO: Should not be pub
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256) -> ByteVec {
+    pub fn createTick(caller: Address, poolKey: ByteVec, tickSpacing: U256, index: I256) -> ByteVec {
         let currentTimestamp = blockTimeStamp!()
-        let caller = callerAddress!()
         let ticks = Ticks(ticksContractId)
-        let pool = Pool(poolKey)
-        let belowCurrentTick = index <= pool.getPoolCurrentTickIndex()
+        let (poolIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, lastTimestamp) = Pools(poolsContractId).getCreateTickParams(poolKey)
+        let belowCurrentTick = index <= poolIndex
 
         CLAMM(clammContractId).checkTick(index, tickSpacing)
 
@@ -182,22 +181,22 @@ Contract Invariant(
         let mut feeGrowthOutisdeY = 0
         let mut secondsOutside = 0
         if (belowCurrentTick) {
-            feeGrowthOutsideX = pool.getFeeGrowthGlobalX()
-            feeGrowthOutisdeY = pool.getFeeGrowthGlobalY()
-            secondsOutside = currentTimestamp - pool.getLastTimestamp()
+            feeGrowthOutsideX = poolFeeGrowthGlobalX
+            feeGrowthOutisdeY = poolFeeGrowthGlobalY
+            secondsOutside = currentTimestamp - lastTimestamp
         }
 
         if (!doesTickExist && !isTickInitialiazed) {
             ticks.add{caller -> ALPH: 1 alph}(caller, poolKey, index, true)
         }
         if (doesTickExist && !isTickInitialiazed) {
-            ticks.reinitializeTick(poolKey, index, pool.getPoolCurrentTickIndex(), feeGrowthOutsideX, feeGrowthOutisdeY, pool.getLastTimestamp(), currentTimestamp)
+            ticks.reinitializeTick(poolKey, index, poolIndex, feeGrowthOutsideX, feeGrowthOutisdeY, lastTimestamp, currentTimestamp)
         }
 
         let tickContractId = subContractId!(poolKey ++ toByteVec!(index))
         
-        Ticks(ticksContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, index, true)
-        Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(index, tickSpacing, poolKey)
+        // MISSING APPROVED ASSETS
+        // Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(index, tickSpacing, poolKey)
 
         return tickContractId
     }
@@ -224,112 +223,146 @@ Contract Invariant(
         slippageLimitUpper: U256
     ) -> ByteVec {
         let caller = callerAddress!()
+        // Flow
+        // - create Tick || getTick || Reinitialize Tick => Ticks collection
+        // - createPosition => Positions collection
+        // - modify position => Position contract
+        //      - setLastTimestamp => Pool Contract => Pools Collection
+        //      - updateTick => Tick Contract => Ticks Collection
+        //      - pool update liquidity => Pool Contract => Pools Collection
+        // transfter tokens
+        // emit event
+        // return 
         let timestamp = blockTimeStamp!()
 
         assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
-        
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let pool = Pool(poolKey)
+        let currentSqrtPrice = Pools(poolsContractId).getSelectedPoolSqrtPrice(poolKey)
+
+        assert!(currentSqrtPrice >= slippageLimitLower && currentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
+        assert!(lowerTickIndex < upperTickIndex, InvariantError.PriceLimitReached)
         let positions = Positions(positionsContractId)
-        let currentPoolSqrtPrice = pool.getPoolCurrentSqrtPrice()
+        // let ticks = Ticks(ticksContractId)
+        // let pools = Pools(poolsContractId)
 
-        assert!(currentPoolSqrtPrice >= slippageLimitLower && currentPoolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
-
-        let lowerTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, lowerTickIndex)
-        let upperTickId = createTick{caller -> ALPH: 1 alph}(poolKey, tickSpacing, upperTickIndex)
+        let lowerTickId = createTick{caller -> ALPH: 1 alph}(caller, poolKey, tickSpacing, lowerTickIndex)
+        let upperTickId = createTick{caller -> ALPH: 1 alph}(caller, poolKey, tickSpacing, upperTickIndex)
 
         let positionId = positions.add{caller -> ALPH: 2 alph}(caller, poolKey, liquidityDelta, lowerTickIndex, upperTickIndex, timestamp, 0, 0, 0, 0)
-        let position = Position(positionId)
-        let (requiredX, requiredY) = position.modify(poolKey, lowerTickId, upperTickId, liquidityDelta, true, timestamp, tickSpacing)
-
-        transferTokenToSelf!(caller, toByteVec!(token0), requiredX)
-        transferTokenToSelf!(caller, toByteVec!(token1), requiredY)
-
-        emit CreatePositionEvent(caller, poolKey, liquidityDelta, lowerTickIndex, upperTickIndex, currentPoolSqrtPrice)
-        return positionId
-    }
-
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn removePosition(
-        token0: Address,
-        token1: Address,
-        fee: U256,
-        tickSpacing: U256,
-        index: U256
-    ) -> (U256, U256) {
-        let caller = callerAddress!()
-        let timestamp = blockTimeStamp!()
-        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let pool = Pool(poolKey)
-        let positionId = Positions(positionsContractId).getId(selfAddress!(), poolKey, index)
-        let position = Position(positionId)
-        let withdrawedLiquidity = position.getPosLiquidity()
-
-        let lowerTickIndex = position.getPosLowerTickIndex()
-        let upperTickIndex = position.getPosUpperTickIndex()
-        let lowerTickId = poolKey ++ toByteVec!(lowerTickIndex)
-        let upperTickId = poolKey ++ toByteVec!(upperTickIndex)
-        
-        let (amountX, amountY, deinitializeLowerTick, deinitializeUpperTick) = position.remove(poolKey, lowerTickId, upperTickId, timestamp, tickSpacing)
-        if (deinitializeLowerTick) {
-            Ticks(ticksContractId).deinitializeTick(poolKey, lowerTickIndex)
+        if(positionId == toByteVec!(1)) {
+            return toByteVec!(2)
         }
-        if (deinitializeUpperTick) {
-            Ticks(ticksContractId).deinitializeTick(poolKey, upperTickIndex)
+        // let (_, lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getModifyParams(lowerTickId)
+        // let (_, upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getModifyParams(upperTickId)
+        // let (poolIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getModifyParams(poolKey)
+        Positions(positionsContractId).wrappedModify(
+                    positionId
+                    // lowerTickIndex,
+                    // lowerTickFeeGrowthOutsideX,
+                    // lowerTickFeeGrowthOutsideY,
+                    // upperTickIndex,
+                    // upperTickFeeGrowthOutsideX,
+                    // upperTickFeeGrowthOutsideY,
+                    // poolIndex,
+                    // poolFeeGrowthGlobalX,
+                    // poolFeeGrowthGlobalY,
+                    // true,
+                    // liquidityDelta
+                )
+        // let (_, _) = position.modify(poolKey, lowerTickId, upperTickId, liquidityDelta, true, timestamp, tickSpacing)
+
+        // transferTokenToSelf!(caller, toByteVec!(token0), requiredX)
+        // transferTokenToSelf!(caller, toByteVec!(token1), requiredY)
+
+        // emit CreatePositionEvent(caller, poolKey, liquidityDelta, lowerTickIndex, upperTickIndex, currentPoolSqrtPrice)
+        // return positionId
+
+        if (lowerTickId == upperTickId) {
+            return toByteVec!(0)
         }
 
-        Positions(positionsContractId).remove(caller, poolKey, index)
-
-        transferTokenFromSelf!(caller, toByteVec!(token0), amountX)
-        transferTokenFromSelf!(caller, toByteVec!(token1), amountY)
-
-        emit RemovePositionEvent(caller, poolKey, withdrawedLiquidity, lowerTickIndex, upperTickIndex, pool.getPoolCurrentSqrtPrice())
-
-        return amountX, amountY
+        return toByteVec!(0)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn claimFee(
-        token0: Address,
-        token1: Address,
-        fee: U256,
-        tickSpacing: U256,
-        index: U256
-    ) -> (U256, U256) {
-        let caller = callerAddress!()
-        let currentTimestamp = blockTimeStamp!()
+    // @using(preapprovedAssets = true, checkExternalCaller = false)
+    // pub fn removePosition(
+    //     token0: Address,
+    //     token1: Address,
+    //     fee: U256,
+    //     tickSpacing: U256,
+    //     index: U256
+    // ) -> (U256, U256) {
+    //     let caller = callerAddress!()
+    //     let timestamp = blockTimeStamp!()
+    //     let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+    //     let pool = Pool(poolKey)
+    //     let positionId = Positions(positionsContractId).getId(selfAddress!(), poolKey, index)
+    //     let position = Position(positionId)
+    //     let withdrawedLiquidity = position.getPosLiquidity()
+    //     let lowerTickIndex = position.getPosLowerTickIndex()
+    //     let upperTickIndex = position.getPosUpperTickIndex()
+    //     let lowerTickId = poolKey ++ toByteVec!(lowerTickIndex)
+    //     let upperTickId = poolKey ++ toByteVec!(upperTickIndex)
         
-        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+    //     let (amountX, amountY, deinitializeLowerTick, deinitializeUpperTick) = position.remove(poolKey, lowerTickId, upperTickId, timestamp, tickSpacing)
+    //     if (deinitializeLowerTick) {
+    //         Ticks(ticksContractId).deinitializeTick(poolKey, lowerTickIndex)
+    //     }
+    //     if (deinitializeUpperTick) {
+    //         Ticks(ticksContractId).deinitializeTick(poolKey, upperTickIndex)
+    //     }
 
-        let positionId = Positions(positionsContractId).getId(selfAddress!(), poolKey, index)
-        let position = Position(positionId)
+    //     Positions(positionsContractId).remove(caller, poolKey, index)
+
+    //     transferTokenFromSelf!(caller, toByteVec!(token0), amountX)
+    //     transferTokenFromSelf!(caller, toByteVec!(token1), amountY)
+
+    //     emit RemovePositionEvent(caller, poolKey, withdrawedLiquidity, lowerTickIndex, upperTickIndex, pool.getPoolCurrentSqrtPrice())
+
+    //     return amountX, amountY
+    // }
+
+    // @using(preapprovedAssets = true, checkExternalCaller = false)
+    // pub fn claimFee(
+    //     token0: Address,
+    //     token1: Address,
+    //     fee: U256,
+    //     tickSpacing: U256,
+    //     index: U256
+    // ) -> (U256, U256) {
+    //     let caller = callerAddress!()
+    //     let currentTimestamp = blockTimeStamp!()
+    //     let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+    //     let positionId = Positions(positionsContractId).getId(selfAddress!(), poolKey, index)
+    //     let position = Position(positionId)
         
-        let lowerTickIndex = position.getPosLowerTickIndex()
-        let upperTickIndex = position.getPosUpperTickIndex()
-        let lowerTickId = poolKey ++ toByteVec!(lowerTickIndex)
-        let upperTickId = poolKey ++ toByteVec!(upperTickIndex)
+    //     let lowerTickIndex = position.getPosLowerTickIndex()
+    //     let upperTickIndex = position.getPosUpperTickIndex()
+    //     let lowerTickId = poolKey ++ toByteVec!(lowerTickIndex)
+    //     let upperTickId = poolKey ++ toByteVec!(upperTickIndex)
 
-        let (amountX, amountY) = position.claimFee(poolKey, lowerTickId, upperTickId, currentTimestamp, tickSpacing)
+    //     let (amountX, amountY) = position.claimFee(poolKey, lowerTickId, upperTickId, currentTimestamp, tickSpacing)
 
-        transferTokenFromSelf!(caller, toByteVec!(token0), amountX)
-        transferTokenFromSelf!(caller, toByteVec!(token1), amountY)
+    //     transferTokenFromSelf!(caller, toByteVec!(token0), amountX)
+    //     transferTokenFromSelf!(caller, toByteVec!(token1), amountY)
 
-        return amountX, amountY
-    }
+    //     return amountX, amountY
+    // }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn transferPosition(
-        token0: Address,
-        token1: Address,
-        fee: U256,
-        tickSpacing: U256,
-        index: U256,
-        receiver: Address
-    ) -> () {
-        let caller = callerAddress!()
-        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        Positions(positionsContractId).transfer{caller -> ALPH: 1 alph}(selfAddress!(), receiver, poolKey, index)
-    }
+    // @using(preapprovedAssets = true, checkExternalCaller = false)
+    // pub fn transferPosition(
+    //     token0: Address,
+    //     token1: Address,
+    //     fee: U256,
+    //     tickSpacing: U256,
+    //     index: U256,
+    //     receiver: Address
+    // ) -> () {
+    //     let caller = callerAddress!()
+    //     let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+    //     Positions(positionsContractId).transfer{caller -> ALPH: 1 alph}(selfAddress!(), receiver, poolKey, index)
+    // }
 
     pub fn getPools() -> ByteVec {
         return PoolKeys(poolKeysContractId).getAll()

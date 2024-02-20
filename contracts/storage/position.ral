@@ -64,42 +64,50 @@ Contract Position(
 
     @using(updateFields = false, checkExternalCaller = false)
     pub fn modify(
-        poolContractId: ByteVec,
-        lowerTickContractId: ByteVec,
-        upperTickContractId: ByteVec,
-        liquidityDelta: U256,
-        add: Bool,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256, U256) {
-        let poolContract = Pool(poolContractId)
-        poolContract.setLastTimestamp(currentTimestamp)
+        // lowerTickIndex: I256,
+        // lowerTickFeeGrowthOutsideX: U256,
+        // lowerTickFeeGrowthOutsideY: U256,
+        // upperTickIndex: I256,
+        // upperTickFeeGrowthOutsideX: U256,
+        // upperTickFeeGrowthOutsideY: U256,
+        // poolIndex: I256,
+        // poolFeeGrowthGlobalX: U256,
+        // poolFeeGrowthGlobalY: U256,
+        // add: Bool,
+        // liquidityDelta: U256
+    ) -> () {
+        // let pools = Pools(poolsContractId)
+        // let ticks = Ticks(ticksContractId)
+        // update pool last timestamp
+        // update ticks
+        // update pool liquidity
+        // pools.wrappedSetLastTimestamp(poolKey, currentTimestamp)
 
-        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
+        CLAMM(clammContractId).calculateMaxLiquidityPerTick(1)
 
-        let lowerTickContract = Tick(lowerTickContractId)
-        let upperTickContract = Tick(upperTickContractId)
+        // ticks.wrappedUpdateTick(lowerTickContractId, liquidityDelta, maxLiquidityPerTick, false, add)
+        // ticks.wrappedUpdateTick(upperTickContractId, liquidityDelta, maxLiquidityPerTick, true, add)
 
+        // let (lowerTickIndex, lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getModifyParams(lowerTickContractId)
+        // let (upperTickIndex, upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getModifyParams(upperTickContractId)
+        // let (poolIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getModifyParams(poolKey)
 
-        lowerTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, false, add)
-        upperTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, true, add)
+        // let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
+        //     lowerTickIndex,
+        //     lowerTickFeeGrowthOutsideX,
+        //     lowerTickFeeGrowthOutsideY,
+        //     upperTickIndex,
+        //     upperTickFeeGrowthOutsideX,
+        //     upperTickFeeGrowthOutsideY,
+        //     poolIndex,
+        //     poolFeeGrowthGlobalX,
+        //     poolFeeGrowthGlobalY
+        // )
 
-        let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
-            lowerTickContract.getIdx(),
-            lowerTickContract.getTickFeeGrowthOutsideX(),
-            lowerTickContract.getTickFeeGrowthOutsideY(),
-            upperTickContract.getIdx(),
-            upperTickContract.getTickFeeGrowthOutsideX(),
-            upperTickContract.getTickFeeGrowthOutsideY(),
-            poolContract.getPoolCurrentTickIndex(),
-            poolContract.getFeeGrowthGlobalX(),
-            poolContract.getFeeGrowthGlobalY()
-        )
-
-        updatePos(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
-
-        let (x, y) = poolContract.updateLiquidity(liquidityDelta, add, upperTickContract.getIdx(), lowerTickContract.getIdx())
-        return x, y
+        // updatePos(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+        // let (x, y) = pools.wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTickIndex, lowerTickIndex)
+        // return x, y
+        return
     }
 
     @using(updateFields = true, checkExternalCaller = false)
@@ -135,40 +143,40 @@ Contract Position(
         }
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn claimFee(
-        poolContractId: ByteVec,
-        lowerTickContractId: ByteVec,
-        upperTickContractId: ByteVec,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256, U256) {
-        modify(poolContractId, lowerTickContractId, upperTickContractId, 0, true, currentTimestamp, tickSpacing)
+    // @using(updateFields = true, checkExternalCaller = false)
+    // pub fn claimFee(
+    //     poolContractId: ByteVec,
+    //     lowerTickContractId: ByteVec,
+    //     upperTickContractId: ByteVec,
+    //     currentTimestamp: U256,
+    //     tickSpacing: U256
+    // ) -> (U256, U256) {
+    //     modify(poolContractId, lowerTickContractId, upperTickContractId, 0, true, currentTimestamp, tickSpacing)
 
-        let owedX = posTokensOwedX
-        let owedY = posTokensOwedY
+    //     let owedX = posTokensOwedX
+    //     let owedY = posTokensOwedY
 
-        posTokensOwedX = 0
-        posTokensOwedY = 0
+    //     posTokensOwedX = 0
+    //     posTokensOwedY = 0
 
-        return owedX, owedY
-    }
+    //     return owedX, owedY
+    // }
 
-    @using(checkExternalCaller = false)
-    pub fn remove(
-        poolKey: ByteVec,
-        lowerTickId: ByteVec,
-        upperTickId: ByteVec,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256,U256,Bool, Bool) {
-        let liquidityDelta = getPosLiquidity()
-        let (mut amountX, mut amountY) = modify(poolKey, lowerTickId, upperTickId, liquidityDelta, false, currentTimestamp, tickSpacing)
+    // @using(checkExternalCaller = false)
+    // pub fn remove(
+    //     poolKey: ByteVec,
+    //     lowerTickId: ByteVec,
+    //     upperTickId: ByteVec,
+    //     currentTimestamp: U256,
+    //     tickSpacing: U256
+    // ) -> (U256,U256,Bool, Bool) {
+    //     let liquidityDelta = getPosLiquidity()
+    //     let (mut amountX, mut amountY) = modify(poolKey, lowerTickId, upperTickId, liquidityDelta, false, currentTimestamp, tickSpacing)
 
-        amountX = amountX + getPosTokensOwedX()
-        amountY = amountY + getPosTokensOwedY()
-        let deinitializeLowerTick = Tick(lowerTickId).getLiquidityGross() == 0
-        let deinitializeUpperTick = Tick(upperTickId).getLiquidityGross() == 0
-        return amountX, amountY, deinitializeLowerTick, deinitializeUpperTick
-    }
+    //     amountX = amountX + getPosTokensOwedX()
+    //     amountY = amountY + getPosTokensOwedY()
+    //     let deinitializeLowerTick = Tick(lowerTickId).getLiquidityGross() == 0
+    //     let deinitializeUpperTick = Tick(upperTickId).getLiquidityGross() == 0
+    //     return amountX, amountY, deinitializeLowerTick, deinitializeUpperTick
+    // }
 }

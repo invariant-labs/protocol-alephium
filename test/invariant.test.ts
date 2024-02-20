@@ -225,11 +225,6 @@ describe('invariant tests', () => {
     })
 
     expect(isTickInitialized.returns).toBe(false)
-
-    {
-      const params = { args: { poolKey, index } }
-      const [doesExist, isInitialized] = (await invariant.methods.tickExist(params)).returns
-    }
   })
   test('protocol fee', async () => {
     const invariantResult = await deployInvariant(sender, 0n)

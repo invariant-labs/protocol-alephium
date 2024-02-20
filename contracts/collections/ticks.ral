@@ -75,6 +75,16 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
         return
     }
 
+    @using(checkExternalCaller = false)
+    pub fn wrappedUpdateTick(contractId: ByteVec, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, add: Bool) -> () {
+        Tick(subContractId!(contractId)).updateTick(liquidityDelta, maxLiquidityPerTick, isUpper, add)
+    }
+
+    pub fn getModifyParams(contractId: ByteVec) -> (I256, U256, U256) {
+        let contract = Tick(subContractId!(contractId))
+        return contract.getIdx(), contract.getTickFeeGrowthOutsideX(), contract.getTickFeeGrowthOutsideY()
+    }
+
     pub fn get(poolKey: ByteVec, index: I256) -> (Bool, ByteVec) {
         let mut tickBytes = b``
 

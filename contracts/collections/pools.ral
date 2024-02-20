@@ -2,6 +2,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
     enum PoolsError {
         NotAdmin = 300
         PoolAlreadyExist = 301
+        PoolNotFound = 302
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
@@ -11,7 +12,7 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
-
+        
         let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
@@ -19,6 +20,42 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
             encodedImmFields,
             encodedMutFields
         )
+    }
+
+    pub fn getSelectedPoolSqrtPrice(poolKey: ByteVec) -> U256 {
+        let subContractId = subContractId!(poolKey)
+        assert!(contractExists!(subContractId), PoolsError.PoolNotFound)
+        let contract = Pool(subContractId)
+        return contract.getPoolCurrentSqrtPrice()
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedSetLastTimestamp(poolKey: ByteVec, lastTimestamp: U256) -> () {
+        let subContractId = subContractId!(poolKey)
+        assert!(contractExists!(subContractId), PoolsError.PoolNotFound)
+        let contract = Pool(subContractId)
+        contract.setLastTimestamp(lastTimestamp)
+    }
+
+    pub fn getModifyParams(poolKey: ByteVec) -> (I256, U256, U256) {
+        let contract = Pool(subContractId!(poolKey))
+        return contract.getPoolCurrentTickIndex(), contract.getFeeGrowthGlobalX(), contract.getFeeGrowthGlobalY()
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, add: Bool, upperTickIndex: I256, lowerTickIndex: I256) -> (U256, U256) {
+        let subContractId = subContractId!(poolKey)
+        assert!(contractExists!(subContractId), PoolsError.PoolNotFound)
+        let contract = Pool(subContractId)
+        let (x, y) = contract.updateLiquidity(liquidityDelta, add, upperTickIndex, lowerTickIndex)
+        return x, y
+    }
+
+    pub fn getCreateTickParams(poolKey: ByteVec) -> (I256, U256, U256, U256) {
+        let subContractId = subContractId!(poolKey)
+        assert!(contractExists!(subContractId), PoolsError.PoolNotFound)
+        let contract = Pool(subContractId)
+        return contract.getPoolCurrentTickIndex(), contract.getFeeGrowthGlobalX(), contract.getFeeGrowthGlobalY(), contract.getLastTimestamp()
     }
 
     pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
