@@ -1,4 +1,4 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, toApiByteVec, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, Flip, Init, Invariant } from '../artifacts/ts'
@@ -48,8 +48,8 @@ describe('pools tests', () => {
     const parsedPools = decodePools(pools.returns)
 
     expect(parsedPools.length).toBe(1)
-    // expect(parsedPools[0].token0).toBe(ZERO_ADDRESS)
-    // expect(parsedPools[0].token1).toBe(testAddress)
+    expect(parsedPools[0].token0).toBe('030000000000000000000000000000000000000000000000000000000000000000')
+    expect(parsedPools[0].token1).toBe('00bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a')
     expect(parsedPools[0].fee).toBe(0n)
     expect(parsedPools[0].tickSpacing).toBe(1n)
 
