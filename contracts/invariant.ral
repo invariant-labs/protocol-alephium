@@ -113,18 +113,16 @@ Contract Invariant(
 
         assert!(token0 != token1, InvariantError.TokensAreSame)
 
-        let poolKeyExist = PoolKeys(poolKeysContractId).contains(token0, token1, fee, tickSpacing)
-
-        if (!poolKeyExist) {
-            let swappedPoolKeyExist = PoolKeys(poolKeysContractId).contains(token0, token1, fee, tickSpacing)
-
-            assert!(!swappedPoolKeyExist, InvariantError.PoolKeyAlreadyExist)
-        }
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let (tokenX, tokenY) = extractTokensFromPoolKey(poolKey)
+        
+        let poolKeyExist = PoolKeys(poolKeysContractId).contains(tokenX, tokenY, fee, tickSpacing)
+        assert!(!poolKeyExist, InvariantError.PoolKeyAlreadyExist)
 
         assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
-        PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing)
-        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
+        PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, initSqrtPrice, initTick, timestamp, contractAddress)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)

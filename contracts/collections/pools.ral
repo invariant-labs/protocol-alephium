@@ -4,8 +4,7 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
-        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+    pub fn add(originalCaller: Address, poolKey: ByteVec, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
