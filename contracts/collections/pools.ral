@@ -1,18 +1,15 @@
-Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId: ByteVec) extends Utils() {
+Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extends Utils() {
     enum PoolsError {
-        NotAdmin = 300
         PoolAlreadyExist = 301
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
-        assert!(callerAddress!() == admin, PoolsError.NotAdmin)
-        
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,
@@ -21,28 +18,40 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         )
     }
 
-    pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
-        let mut poolBytes = b``
+    pub fn getCurrentSqrtPrice(poolKey: ByteVec) -> U256 {
+        return Pool(subContractId!(poolKey)).getPoolCurrentSqrtPrice()
+    }
 
-        let subContractId = subContractId!(generatePoolKey(token0, token1, fee, tickSpacing))
+    pub fn getCurrentTickIndex(poolKey: ByteVec) -> I256 {
+        return Pool(subContractId!(poolKey)).getPoolCurrentTickIndex()
+    }
+
+    pub fn getFeeGrowthGlobal(poolKey: ByteVec) -> (U256, U256) {
+        let contract = Pool(subContractId!(poolKey))
+        return contract.getFeeGrowthGlobalX(), contract.getFeeGrowthGlobalY()
+    }
+
+    pub fn getStartTimestamp(poolKey: ByteVec) -> U256 {
+        return Pool(subContractId!(poolKey)).getStartTimestamp()
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
+        Pool(subContractId!(poolKey)).setLastTimestamp(timestamp)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn updateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+        return Pool(subContractId!(poolKey)).updateLiquidity(liquidityDelta, liquiditySign, upperTick, lowerTick)
+    }
+    
+    pub fn get(poolKey: ByteVec) -> (Bool, U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
+        let subContractId = subContractId!(poolKey)
 
         if (!contractExists!(subContractId)) {
-            return false, b``
+            return false, 0, 0, 0i, 0, 0, 0, 0, 0, 0, byteVecToAddress!(b``)
+        } else {
+            return true, Pool(subContractId).get()
         }
-
-        let contract = Pool(subContractId)
-        poolBytes = poolBytes
-        ++ toByteVec!(contract.getPoolLiquidity()) ++ b`break` 
-        ++ toByteVec!(contract.getPoolCurrentSqrtPrice()) ++ b`break` 
-        ++ toByteVec!(contract.getPoolCurrentTickIndex()) ++ b`break` 
-        ++ toByteVec!(contract.getFeeGrowthGlobalX()) ++ b`break`
-        ++ toByteVec!(contract.getFeeGrowthGlobalY()) ++ b`break`
-        ++ toByteVec!(contract.getFeeProtocolTokenX()) ++ b`break`
-        ++ toByteVec!(contract.getFeeProtocolTokenY()) ++ b`break`
-        ++ toByteVec!(contract.getStartTimestamp()) ++ b`break`
-        ++ toByteVec!(contract.getLastTimestamp()) ++ b`break`
-        ++ toByteVec!(contract.getFeeReceiver())
-
-        return true, poolBytes
     }
 }

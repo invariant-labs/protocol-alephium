@@ -188,7 +188,7 @@ Contract Tickmap(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn flip(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    pub fn flip(caller: Address, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
@@ -199,7 +199,7 @@ Contract Tickmap(
 
         if (!exists) {
             let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(flipBitAtPosition(0, bit))
-            copyCreateSubContract!{callerAddress!() -> ALPH: 1 alph}(
+            copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
                 encodedImmFields,
