@@ -1,21 +1,16 @@
 Contract Pool(
-    admin: Address,
     mut poolLiquidity: U256,
     poolCurrentSqrtPrice: U256,
     poolCurrentTickIndex: I256,
-    mut feeGrowthGlobalX: U256,
-    mut feeGrowthGlobalY: U256,
-    mut feeProtocolTokenX: U256,
-    mut feeProtocolTokenY: U256,
-    startTimestamp: U256,
-    mut lastTimestamp: U256,
-    mut feeReceiver: Address,
+    mut poolFeeGrowthGlobalX: U256,
+    mut poolFeeGrowthGlobalY: U256,
+    mut poolFeeProtocolTokenX: U256,
+    mut poolFeeProtocolTokenY: U256,
+    poolStartTimestamp: U256,
+    mut poolLastTimestamp: U256,
+    mut poolFeeReceiver: Address,
     clammContractId: ByteVec
 ) extends Decimal() {
-    enum PoolError {
-        NotAdmin = 300
-    }
-
     pub fn getPoolLiquidity() -> U256 {
         return poolLiquidity
     }
@@ -29,49 +24,49 @@ Contract Pool(
     }
 
     pub fn getFeeGrowthGlobalX() -> U256 {
-        return feeGrowthGlobalX
+        return poolFeeGrowthGlobalX
     }
 
     pub fn getFeeGrowthGlobalY() -> U256 {
-        return feeGrowthGlobalY
+        return poolFeeGrowthGlobalY
     }
 
     pub fn getFeeProtocolTokenX() -> U256 {
-        return feeProtocolTokenX
+        return poolFeeProtocolTokenX
     }
 
     pub fn getFeeProtocolTokenY() -> U256 {
-        return feeProtocolTokenY
+        return poolFeeProtocolTokenY
     }
 
     pub fn getStartTimestamp() -> U256 {
-        return startTimestamp
+        return poolStartTimestamp
     }
 
     pub fn getLastTimestamp() -> U256 {
-        return lastTimestamp
+        return poolLastTimestamp
     }
     
     pub fn getFeeReceiver() -> Address {
-        return feeReceiver
+        return poolFeeReceiver
+    }
+
+    pub fn get() -> (U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
+        return poolLiquidity, poolCurrentSqrtPrice, poolCurrentTickIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, poolFeeProtocolTokenX, poolFeeProtocolTokenY, poolStartTimestamp, poolLastTimestamp, poolFeeReceiver
     }
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn setFeeReceiver(recipient: Address) -> () {
-        assert!(callerAddress!() == admin, PoolError.NotAdmin)
-        feeReceiver = recipient
-        return
+        poolFeeReceiver = recipient
     }
     
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setLastTimestamp(v: U256) -> () {
-        lastTimestamp = v
+    pub fn setLastTimestamp(timestamp: U256) -> () {
+        poolLastTimestamp = timestamp
     }
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn addFee(amount: U256, inX: Bool, protocolFee: U256) -> () {
-        assert!(callerAddress!() == admin, PoolError.NotAdmin)
-
         let invariantProtocolFee = mulUp(amount, protocolFee, getPercentageScale())
 
         let poolFee = amount - invariantProtocolFee
@@ -83,19 +78,16 @@ Contract Pool(
         let feeGrowth = feeGrowthFromFee(getPoolLiquidity(), poolFee)
 
         if (inX) {
-            feeGrowthGlobalX = wrappingAdd(feeGrowthGlobalX, feeGrowth)
-            feeProtocolTokenX = feeProtocolTokenX + invariantProtocolFee
+            poolFeeGrowthGlobalX = wrappingAdd(poolFeeGrowthGlobalX, feeGrowth)
+            poolFeeProtocolTokenX = poolFeeProtocolTokenX + invariantProtocolFee
         } else {
-            feeGrowthGlobalY = wrappingAdd(feeGrowthGlobalY, feeGrowth)
-            feeProtocolTokenY = feeProtocolTokenY + invariantProtocolFee
+            poolFeeGrowthGlobalY = wrappingAdd(poolFeeGrowthGlobalY, feeGrowth)
+            poolFeeProtocolTokenY = poolFeeProtocolTokenY + invariantProtocolFee
         }
-        return
     }
     
     @using(updateFields = true, checkExternalCaller = false)
     pub fn updateLiquidity(liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
-        assert!(callerAddress!() == admin, PoolError.NotAdmin)
-        
         let (x, y, updateLiq) = CLAMM(clammContractId).calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y
@@ -137,12 +129,10 @@ Contract Pool(
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn withdrawProtocolFee() -> (U256, U256) {
-        assert!(callerAddress!() == admin, PoolError.NotAdmin)
-        
-        let x = feeProtocolTokenX
-        let y = feeProtocolTokenY
-        feeProtocolTokenX = 0
-        feeProtocolTokenY = 0
+        let x = poolFeeProtocolTokenX
+        let y = poolFeeProtocolTokenY
+        poolFeeProtocolTokenX = 0
+        poolFeeProtocolTokenY = 0
         return x, y
     }
 }
