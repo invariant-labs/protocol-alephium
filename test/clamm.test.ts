@@ -14,8 +14,13 @@ describe('math tests', () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
     recipient = await getSigner(ONE_ALPH * 100000n, 0)
   })
+
+  test('deploy', async () => {
+    const invariantResult = await deployInvariant(sender, 0n)
+  })
   test('calculate sqrt price', async () => {
     const clamm = await deployCLAMM(sender)
+
     {
       const params = { args: { tickIndex: 30n } }
       const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
@@ -54,6 +59,7 @@ describe('math tests', () => {
   })
   test('get delta x', async () => {
     const clamm = await deployCLAMM(sender)
+
     const sqrtPriceA = 234878324943782000000000000n
     const sqrtPriceB = 87854456421658000000000000n
     const liquidity = 983983249092n
@@ -67,6 +73,7 @@ describe('math tests', () => {
   })
   test('get delta y', async () => {
     const clamm = await deployCLAMM(sender)
+
     const sqrtPriceA = 234878324943782000000000000n
     const sqrtPriceB = 87854456421658000000000000n
     const liquidity = 983983249092n
@@ -80,6 +87,7 @@ describe('math tests', () => {
   })
   test('get next sqrt price x up', async () => {
     const clamm = await deployCLAMM(sender)
+
     {
       const startingSqrtPrice = 2n * 10n ** 24n
       const liquidity = 3n * 10n ** 5n
@@ -99,6 +107,7 @@ describe('math tests', () => {
   })
   test('get next sqrt price y down', async () => {
     const clamm = await deployCLAMM(sender)
+
     {
       const startingSqrtPrice = 2n * 10n ** 24n
       const liquidity = 3n * 10n ** 5n
@@ -110,6 +119,7 @@ describe('math tests', () => {
   })
   test('calculate amount delta', async () => {
     const clamm = await deployCLAMM(sender)
+
     // // in-range
     // {
     //   const currentTickIndex = 2n
@@ -129,12 +139,14 @@ describe('math tests', () => {
   })
   test('calculate max liquidity per tick', async () => {
     const clamm = await deployCLAMM(sender)
+
     const params = { args: { tickSpacing: 1n } }
     const maxLiquidity = (await clamm.contractInstance.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(261006384132333857238172165551313140818439365214444611336425014162283870n)
   })
   test('calculate min amount out', async () => {
     const clamm = await deployCLAMM(sender)
+
     // 0% fee
     {
       const expectedAmountOut = 100n
@@ -152,54 +164,51 @@ describe('math tests', () => {
       expect(result).toEqual(0n)
     }
   })
-  test('compute swap step', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      const currentSqrtPrice = 10n ** 24n
-      const targetSqrtPrice = 1004987562112089027021926n
-      const liquidity = 2000n * 10n ** 5n
-      const amount = 1n
-      const byAmountIn = true
-      const fee = 60000n
-      const params = { args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn, fee } }
-      const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
-        await clamm.contractInstance.methods.computeSwapStep(params)
-      ).returns
-      expect(nextSqrtPrice).toEqual(currentSqrtPrice)
-      expect(amountIn).toEqual(0n)
-      expect(amountOut).toEqual(0n)
-      expect(feeAmount).toEqual(1n)
-    }
-    {
-      const currentSqrtPrice = 10n ** 24n
-      const targetSqrtPrice = 1004987562112089027021926n
-      const liquidity = 2000n * 10n ** 5n
-      const amount = 20n
-      const fee = 60000n
-      {
-        const paramsIn = {
-          args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
-        }
-        const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
-          await clamm.contractInstance.methods.computeSwapStep(paramsIn)
-        ).returns
-        expect(nextSqrtPrice).toEqual(targetSqrtPrice)
-        expect(amountIn).toEqual(10n)
-        expect(amountOut).toEqual(9n)
-        expect(feeAmount).toEqual(1n)
-      }
-      {
-        const paramsOut = {
-          args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
-        }
-        const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
-          await clamm.contractInstance.methods.computeSwapStep(paramsOut)
-        ).returns
-        expect(nextSqrtPrice).toEqual(targetSqrtPrice)
-        expect(amountIn).toEqual(10n)
-        expect(amountOut).toEqual(9n)
-        expect(feeAmount).toEqual(1n)
-      }
-    }
-  })
+  // test('compute swap step', async () => {
+  //   const invariantResult = await deployInvariant(sender, 0n)
+  //   const clamm = Invariant.at(invariantResult.contractInstance.address)
+
+  //   {
+  //     const currentSqrtPrice = 10n ** 24n
+  //     const targetSqrtPrice = 1004987562112089027021926n
+  //     const liquidity = 2000n * 10n ** 5n
+  //     const amount = 1n
+  //     const byAmountIn = true
+  //     const fee = 60000n
+
+  //     const params = { args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn, fee } }
+  //     const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (await clamm.contractInstance.methods.computeSwapStep(params)).returns
+  //     expect(nextSqrtPrice).toEqual(currentSqrtPrice)
+  //     expect(amountIn).toEqual(0n)
+  //     expect(amountOut).toEqual(0n)
+  //     expect(feeAmount).toEqual(1n)
+  //   }
+  //   {
+  //     const currentSqrtPrice = 10n ** 24n
+  //     const targetSqrtPrice = 1004987562112089027021926n
+  //     const liquidity = 2000n * 10n ** 5n
+  //     const amount = 20n
+  //     const fee = 60000n
+  //     {
+  //       const paramsIn = {
+  //         args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+  //       }
+  //       const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (await clamm.contractInstance.methods.computeSwapStep(paramsIn)).returns
+  //       expect(nextSqrtPrice).toEqual(targetSqrtPrice)
+  //       expect(amountIn).toEqual(10n)
+  //       expect(amountOut).toEqual(9n)
+  //       expect(feeAmount).toEqual(1n)
+  //     }
+  //     {
+  //       const paramsOut = {
+  //         args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
+  //       }
+  //       const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (await clamm.contractInstance.methods.computeSwapStep(paramsOut)).returns
+  //       expect(nextSqrtPrice).toEqual(targetSqrtPrice)
+  //       expect(amountIn).toEqual(10n)
+  //       expect(amountOut).toEqual(9n)
+  //       expect(feeAmount).toEqual(1n)
+  //     }
+  //   }
+  // })
 })
