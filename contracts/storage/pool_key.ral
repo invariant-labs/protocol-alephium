@@ -1,10 +1,10 @@
-Contract PoolKey(token0: Address, token1: Address, fee: U256, tickSpacing: U256) {
-    pub fn getToken0() -> Address {
-        return token0
+Contract PoolKey(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) {
+    pub fn getTokenX() -> Address {
+        return tokenX
     }
 
-    pub fn getToken1() -> Address {
-        return token1
+    pub fn getTokenY() -> Address {
+        return tokenY
     }
 
     pub fn getFee() -> U256 {

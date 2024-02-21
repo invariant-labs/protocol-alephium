@@ -5,17 +5,17 @@ Contract PoolKeys(admin: Address, poolKeyTemplateContractId: ByteVec, mut poolKe
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-    pub fn add(originalCaller: Address, token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+    pub fn add(originalCaller: Address, tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> () {
         assert!(callerAddress!() == admin, PoolKeysError.NotAdmin)
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
     
-            assert!(token0 != contract.getToken0() || token1 != contract.getToken1() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), PoolKeysError.PoolKeyAlreadyExist)
+            assert!(tokenX != contract.getTokenX() || tokenY != contract.getTokenY() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), PoolKeysError.PoolKeyAlreadyExist)
         }
     
         poolKeyCount = poolKeyCount + 1
-        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(token0, token1, fee, tickSpacing)
+        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(tokenX, tokenY, fee, tickSpacing)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(i),
             poolKeyTemplateContractId,
@@ -24,11 +24,11 @@ Contract PoolKeys(admin: Address, poolKeyTemplateContractId: ByteVec, mut poolKe
         )
     }
 
-    pub fn contains(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> Bool {
+    pub fn contains(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
 
-            if (token0 == contract.getToken0() && token1 == contract.getToken1() && fee == contract.getFee() && tickSpacing == contract.getTickSpacing()) {
+            if (tokenX == contract.getTokenX() && tokenY == contract.getTokenY() && fee == contract.getFee() && tickSpacing == contract.getTickSpacing()) {
                 return true
             }
         }
@@ -41,7 +41,7 @@ Contract PoolKeys(admin: Address, poolKeyTemplateContractId: ByteVec, mut poolKe
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
-            poolsBytes = poolsBytes ++ toByteVec!(contract.getToken0()) ++ b`break` ++ toByteVec!(contract.getToken1()) ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+            poolsBytes = poolsBytes ++ toByteVec!(contract.getTokenX()) ++ b`break` ++ toByteVec!(contract.getTokenY()) ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
         }
 
         return poolsBytes
