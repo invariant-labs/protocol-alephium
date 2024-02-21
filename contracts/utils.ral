@@ -1,5 +1,26 @@
 Abstract Contract Utils() {
+    const TokenAddressBytes = 33
+    
     pub fn generatePoolKey(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> ByteVec {
-        return toByteVec!(token0) ++ toByteVec!(token1) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+        assert!(token0 != token1, 5000)
+        assert!(fee <= (10 ** 12), 5001)
+
+        let token0Bytes = toByteVec!(token0)
+        let token1Bytes = toByteVec!(token1)
+        let mut poolKey = toByteVec!(token0) ++ toByteVec!(token1) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing) 
+
+        for (let mut i = 0; i < size!(token0Bytes) - 1; i = i + 1) {
+            if (u256From1Byte!(byteVecSlice!(token0Bytes, i , i + 1)) > u256From1Byte!(byteVecSlice!(token1Bytes, i , i + 1))) {
+                poolKey = toByteVec!(token1) ++ toByteVec!(token0) ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)     
+                return poolKey
+            }
+        }
+        return poolKey
+    }
+
+    pub fn extractTokensFromPoolKey(poolKey: ByteVec) -> (Address, Address) {
+        let tokenX = byteVecToAddress!(byteVecSlice!(poolKey, 0, TokenAddressBytes))
+        let tokenY = byteVecToAddress!(byteVecSlice!(poolKey, TokenAddressBytes, TokenAddressBytes * 2))        
+        return tokenX, tokenY
     }
 }

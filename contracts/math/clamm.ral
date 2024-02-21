@@ -4,86 +4,86 @@ Contract CLAMM() extends Log(){
         InvalidTickSpacing = 101
     }
 
-    // pub fn computeSwapStep(
-    //     currentSqrtPrice: U256,
-    //     targetSqrtPrice: U256,
-    //     liquidity: U256,
-    //     amount: U256,
-    //     byAmountIn: Bool,
-    //     fee: U256
-    // ) -> (U256, U256, U256, U256) {
-    //     if (liquidity == 0) {
-    //         return targetSqrtPrice, 0, 0, 0
-    //     }
+    pub fn computeSwapStep(
+        currentSqrtPrice: U256,
+        targetSqrtPrice: U256,
+        liquidity: U256,
+        amount: U256,
+        byAmountIn: Bool,
+        fee: U256
+    ) -> (U256, U256, U256, U256) {
+        if (liquidity == 0) {
+            return targetSqrtPrice, 0, 0, 0
+        }
 
-    //     let percentageScale = getPercentageScale()
+        let percentageScale = getPercentageScale()
 
-    //     let xToY = currentSqrtPrice >= targetSqrtPrice
+        let xToY = currentSqrtPrice >= targetSqrtPrice
 
-    //     let mut nextSqrtPrice = 0
-    //     let mut amountIn = 0
-    //     let mut amountOut = 0
+        let mut nextSqrtPrice = 0
+        let mut amountIn = 0
+        let mut amountOut = 0
 
-    //     if (byAmountIn) {
-    //         let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+        if (byAmountIn) {
+            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
 
-    //         if (xToY) {
-    //             amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
-    //         } else {
-    //             amountIn = getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
-    //         }
+            if (xToY) {
+                amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
+            } else {
+                amountIn = getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
+            }
 
-    //         if (amountAfterFee >= amountIn) {
-    //             nextSqrtPrice = targetSqrtPrice
-    //         } else {
-    //             nextSqrtPrice = getNextSqrtPriceFromInput(currentSqrtPrice, liquidity, amountAfterFee, xToY)
-    //         }
-    //     } else {
-    //         if (xToY) {
-    //             amountOut = getDeltaY(targetSqrtPrice, currentSqrtPrice, liquidity, false)
-    //         } else {
-    //             amountOut = getDeltaX(currentSqrtPrice, targetSqrtPrice, liquidity, false)
-    //         }
+            if (amountAfterFee >= amountIn) {
+                nextSqrtPrice = targetSqrtPrice
+            } else {
+                nextSqrtPrice = getNextSqrtPriceFromInput(currentSqrtPrice, liquidity, amountAfterFee, xToY)
+            }
+        } else {
+            if (xToY) {
+                amountOut = getDeltaY(targetSqrtPrice, currentSqrtPrice, liquidity, false)
+            } else {
+                amountOut = getDeltaX(currentSqrtPrice, targetSqrtPrice, liquidity, false)
+            }
 
-    //         if (amount >= amountOut) {
-    //             nextSqrtPrice = targetSqrtPrice
-    //         } else {
-    //             nextSqrtPrice = getNextSqrtPriceFromOutput(currentSqrtPrice, liquidity, amount, xToY)
-    //         }
-    //     }
+            if (amount >= amountOut) {
+                nextSqrtPrice = targetSqrtPrice
+            } else {
+                nextSqrtPrice = getNextSqrtPriceFromOutput(currentSqrtPrice, liquidity, amount, xToY)
+            }
+        }
 
-    //     let notMax = targetSqrtPrice != nextSqrtPrice
+        let notMax = targetSqrtPrice != nextSqrtPrice
 
-    //     if (xToY) {
-    //         if (notMax || !byAmountIn) {
-    //             amountIn = getDeltaX(nextSqrtPrice, currentSqrtPrice, liquidity, true)
-    //         }
-    //         if (notMax || byAmountIn) {
-    //             amountOut = getDeltaY(nextSqrtPrice, currentSqrtPrice, liquidity, false)
-    //         }
-    //     } else {
-    //         if (notMax|| !byAmountIn) {
-    //             amountIn = getDeltaY(currentSqrtPrice, nextSqrtPrice, liquidity, true)
-    //         }
-    //         if (notMax || byAmountIn) {
-    //             amountOut = getDeltaX(currentSqrtPrice, nextSqrtPrice, liquidity, false)
-    //         }
-    //     }
+        if (xToY) {
+            if (notMax || !byAmountIn) {
+                amountIn = getDeltaX(nextSqrtPrice, currentSqrtPrice, liquidity, true)
+            }
+            if (notMax || byAmountIn) {
+                amountOut = getDeltaY(nextSqrtPrice, currentSqrtPrice, liquidity, false)
+            }
+        } else {
+            if (notMax|| !byAmountIn) {
+                amountIn = getDeltaY(currentSqrtPrice, nextSqrtPrice, liquidity, true)
+            }
+            if (notMax || byAmountIn) {
+                amountOut = getDeltaX(currentSqrtPrice, nextSqrtPrice, liquidity, false)
+            }
+        }
 
-    //     // Amout out can not exceed amount
-    //     if (byAmountIn && amountOut > amount) {
-    //         amountOut = amount
-    //     }
+        // Amout out can not exceed amount
+        if (byAmountIn && amountOut > amount) {
+            amountOut = amount
+        }
 
-    //     let mut feeAmount = 0
-    //     if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
-    //         feeAmount = amount - amountIn
-    //     } else {
-    //         feeAmount = mulUp(amount, fee, percentageScale)
-    //     }
+        let mut feeAmount = 0
+        if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
+            feeAmount = amount - amountIn
+        } else {
+            feeAmount = mulUp(amount, fee, percentageScale)
+        }
 
-    //     return nextSqrtPrice, amountIn, amountOut, feeAmount
-    // }
+        return nextSqrtPrice, amountIn, amountOut, feeAmount
+    }
 
     pub fn getDeltaX(
         sqrtPriceA: U256,
