@@ -21,6 +21,13 @@ Contract Pools(admin: Address, poolTemplateContractId: ByteVec, clammContractId:
         )
     }
 
+    @using(preapprovedAssets = false, checkExternalCaller = false)
+    pub fn wrappedSetTimestamp(poolKey: ByteVec, lastTimestamp: U256) -> () {
+        let subContractId = subContractId!(poolKey)
+        let contract = Pool(subContractId)
+        contract.setLastTimestamp(lastTimestamp)
+    }
+
     pub fn get(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
         let mut poolBytes = b``
 

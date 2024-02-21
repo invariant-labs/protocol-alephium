@@ -124,6 +124,17 @@ Contract Invariant(
         Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, token0, token1, fee, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
     }
 
+
+    @using(preapprovedAssets = false, checkExternalCaller = false)
+    pub fn setPoolTimestamp(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> () {
+        assert!(init, InvariantError.NotInitialized)
+        let timestamp = blockTimeStamp!()
+
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+        Pools(poolsContractId).wrappedSetTimestamp(poolKey, timestamp)
+    }
+
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
