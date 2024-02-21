@@ -322,9 +322,7 @@ Contract Invariant(
         return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
 
-
-    @using(checkExternalCaller = false)
-    pub fn calculateSwap(
+    fn calculateSwap(
         poolKey: ByteVec,
         xToY: Bool,
         amount: U256,
@@ -421,26 +419,40 @@ Contract Invariant(
     }
 
 
-    // @using(updateFields = false, checkExternalCaller = false)
-    // pub fn quote(
-    //     token0: Address,
-    //     token1: Address,
-    //     fee: U256,
-    //     tickSpacing: U256,
-    //     xToY: Bool,
-    //     amount: U256,
-    //     byAmountIn: Bool,
-    //     sqrtPriceLimit: U256
-    // ) -> () {
-    //     let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-    //     let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
-    //     return
-    // }
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn quote(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        xToY: Bool,
+        amount: U256,
+        byAmountIn: Bool,
+        sqrtPriceLimit: U256
+    ) -> (U256, U256, U256) {
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let (amountIn, amountOut, _, targetSqrtPrice, _) = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
+        return amountIn, amountOut, targetSqrtPrice
+    }
 
-    // @using(updateFields = false, checkExternalCaller = false)
-    // pub fn swap() -> () {
-    //     return
-    // }
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn swap(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        xToY: Bool,
+        amount: U256,
+        byAmountIn: Bool,
+        sqrtPriceLimit: U256
+    ) -> (U256, U256, U256, U256, U256) {
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let (amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount) = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
+
+        // Emit crossed ticks event
+        // transfer tokens
+        return amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount
+    }
     
 
     // @using(updateFields = true, checkExternalCaller = false)
