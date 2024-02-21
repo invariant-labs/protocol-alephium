@@ -323,6 +323,7 @@ Contract Invariant(
     }
 
 
+    @using(checkExternalCaller = false)
     pub fn calculateSwap(
         poolKey: ByteVec,
         xToY: Bool,
@@ -401,14 +402,16 @@ Contract Invariant(
                     remainingAmount = updatedRemainingAmount
                     totalAmountIn = totalAmountIn + amountToAdd
 
-                    // if (hasCrossed) {
-                    //     // call tick.cross and all associated functions
-                    //     // push tick index to array for event
-                    // }
+                    if (hasCrossed) {
+                        let (feeGrowthGlobalX, feeGrowthGlobalY) = Pools(poolsContractId).getFeeGrowthGlobal(poolKey)
+                        let (add, liquidityDelta) = Ticks(ticksContractId).wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
+                        Pools(poolsContractId).wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
+                    }
                 }
             } else {
                 let newTickIndex = CLAMM(clammContractId).getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
                 Pools(poolsContractId).setTickIndex(poolKey, newTickIndex)
+                Pools(poolsContractId).setLastTimestamp(poolKey, currentTimestamp)
             }
         }
         

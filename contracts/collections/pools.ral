@@ -87,6 +87,15 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
     }
 
     @using(checkExternalCaller = false)
+    pub fn wrappedCrossLiquidityUpdate(
+        poolKey: ByteVec,
+        add: Bool,
+        liquidityDelta: U256
+    ) -> () {
+        return Pool(subContractId!(poolKey)).crossLiquidityUpdate(add, liquidityDelta)
+    }
+
+    @using(checkExternalCaller = false)
     pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
         Pool(subContractId!(poolKey)).setLastTimestamp(timestamp)
     }

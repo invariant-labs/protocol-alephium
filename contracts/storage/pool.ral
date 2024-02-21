@@ -156,6 +156,15 @@ Contract Pool(
     }
 
     @using(updateFields = true, checkExternalCaller = false)
+    pub fn crossLiquidityUpdate(add: Bool, liquidityDelta: U256) -> () {
+        if (add) {
+            poolLiquidity = poolLiquidity + liquidityDelta
+        } else {
+            poolLiquidity = poolLiquidity - liquidityDelta
+        }
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn withdrawProtocolFee() -> (U256, U256) {
         let x = poolFeeProtocolTokenX
         let y = poolFeeProtocolTokenY
