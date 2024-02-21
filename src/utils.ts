@@ -1,4 +1,4 @@
-import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, toApiByteVec, web3 } from '@alephium/web3'
+import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import {
   CLAMM,
   Chunk,
@@ -10,6 +10,7 @@ import {
   PoolKeys,
   Pools,
   Position,
+  PositionsCounter,
   Tickmap,
   Ticks
 } from '../artifacts/ts'
@@ -51,6 +52,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const ticks = await deployTicks(signer)
   const position = await deployPosition(signer)
   const positions = await deployPositions(signer)
+  const positionsCounter = await deployPositionsCounter(signer)
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
   const clamm = await deployCLAMM(signer)
@@ -75,7 +77,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         tickTemplateContractId: tick.contractInstance.contractId,
         positionsContractId: ZERO_ADDRESS,
         positionsTemplateContractId: positions.contractInstance.contractId,
-        positionTempalteContractId: position.contractInstance.contractId,
+        positionTemplateContractId: position.contractInstance.contractId,
+        positionsCounterTemplateContractId: positionsCounter.contractInstance.contractId,
         tickmapContractId: ZERO_ADDRESS,
         tickmapTemplateContractId: tickmap.contractInstance.contractId,
         chunkTemplateContractId: chunk.contractInstance.contractId,
@@ -114,9 +117,8 @@ export async function deployPositions(signer: SignerProvider) {
   return await waitTxConfirmed(
     Positions.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
         positionTemplateContractId: ZERO_ADDRESS,
-        clammContractId: ZERO_ADDRESS
+        positionsCounterTemplateId: ZERO_ADDRESS
       }
     })
   )
@@ -126,17 +128,14 @@ export async function deployPosition(signer: SignerProvider) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
-        relatedPoolKey: toApiByteVec(ZERO_ADDRESS),
         posLiquidity: 0n,
         posLowerTickIndex: 0n,
         posUpperTickIndex: 0n,
         posFeeGrowthInsideX: 0n,
         posFeeGrowthInsideY: 0n,
-        lastBlockNumber: 0n,
+        posLastBlockNumber: 0n,
         posTokensOwedX: 0n,
-        posTokensOwedY: 0n,
-        isOpen: false,
-        clammContractId: ZERO_ADDRESS
+        posTokensOwedY: 0n
       }
     })
   )
@@ -146,9 +145,7 @@ export async function deployTicks(signer: SignerProvider) {
   return await waitTxConfirmed(
     Ticks.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
-        tickTemplateContractId: ZERO_ADDRESS,
-        clammContractId: ZERO_ADDRESS
+        tickTemplateContractId: ZERO_ADDRESS
       }
     })
   )
@@ -183,17 +180,16 @@ export async function deployPool(signer: SignerProvider) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
         poolLiquidity: 0n,
         poolCurrentSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,
-        feeGrowthGlobalX: 0n,
-        feeGrowthGlobalY: 0n,
-        feeProtocolTokenX: 0n,
-        feeProtocolTokenY: 0n,
-        startTimestamp: 0n,
-        lastTimestamp: 0n,
-        feeReceiver: ZERO_ADDRESS,
+        poolFeeGrowthGlobalX: 0n,
+        poolFeeGrowthGlobalY: 0n,
+        poolFeeProtocolTokenX: 0n,
+        poolFeeProtocolTokenY: 0n,
+        poolStartTimestamp: 0n,
+        poolLastTimestamp: 0n,
+        poolFeeReceiver: ZERO_ADDRESS,
         clammContractId: ZERO_ADDRESS
       }
     })
@@ -204,7 +200,6 @@ export async function deployPools(signer: SignerProvider) {
   return await waitTxConfirmed(
     Pools.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
         poolTemplateContractId: ZERO_ADDRESS,
         clammContractId: ZERO_ADDRESS
       }
@@ -216,16 +211,13 @@ export async function deployTick(signer: SignerProvider) {
   return await waitTxConfirmed(
     Tick.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
-        idx: 0n,
         tickSign: false,
-        liquidityChange: 0n,
-        liquidityGross: 0n,
+        tickLiquidityChange: 0n,
+        tickLiquidityGross: 0n,
         tickSqrtPrice: 0n,
         tickFeeGrowthOutsideX: 0n,
         tickFeeGrowthOutsideY: 0n,
-        tickSecondsOutside: 0n,
-        isInitialized: false
+        tickSecondsOutside: 0n
       }
     })
   )
@@ -253,6 +245,16 @@ export async function deployTickmap(
         admin: admin ?? ZERO_ADDRESS,
         chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS,
         clammContractId: clammContractId ?? ZERO_ADDRESS
+      }
+    })
+  )
+}
+
+export async function deployPositionsCounter(signer: SignerProvider) {
+  return await waitTxConfirmed(
+    PositionsCounter.deploy(signer, {
+      initialFields: {
+        value: 0n
       }
     })
   )
@@ -318,56 +320,49 @@ export function decodePools(string: string) {
   return pools
 }
 
-export function decodePool(string: string) {
-  const parts = string.split('627265616b')
-  const pool = {
-    poolLiquidity: 0n,
-    poolCurrentSqrtPrice: 0n,
-    poolCurrentTickIndex: 0n,
-    feeGrowthGlobalX: 0n,
-    feeGrowthGlobalY: 0n,
-    feeProtocolTokenX: 0n,
-    feeProtocolTokenY: 0n,
-    startTimestamp: 0n,
-    lastTimestamp: 0n,
-    feeReceiver: ''
+export function decodePool(
+  array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
+) {
+  return {
+    exist: array[0],
+    liquidity: array[1],
+    currentSqrtPrice: array[2],
+    currentTickIndex: array[3],
+    feeGrowthGlobalX: array[4],
+    feeGrowthGlobalY: array[5],
+    feeProtocolTokenX: array[6],
+    feeProtocolTokenY: array[7],
+    startTimestamp: array[8],
+    lastTimestamp: array[9],
+    feeReceiver: array[10]
   }
-
-  pool.poolLiquidity = decodeU256(parts[0])
-  pool.poolCurrentSqrtPrice = decodeU256(parts[1])
-  pool.poolCurrentTickIndex = decodeU256(parts[2])
-  pool.feeGrowthGlobalX = decodeU256(parts[3])
-  pool.feeGrowthGlobalY = decodeU256(parts[4])
-  pool.feeProtocolTokenX = decodeU256(parts[5])
-  pool.feeProtocolTokenY = decodeU256(parts[6])
-  pool.startTimestamp = decodeU256(parts[7])
-  pool.lastTimestamp = decodeU256(parts[8])
-  pool.feeReceiver = parts[9]
-
-  return pool
 }
 
-export const decodeTick = (string: string) => {
-  const parts = string.split('627265616b')
-  const tick = {
-    tickSign: false,
-    liquidityChange: 0n,
-    liquidityGross: 0n,
-    tickSqrtPrice: 0n,
-    tickFeeGrowthOutsideX: 0n,
-    tickFeeGrowthOutsideY: 0n,
-    tickSecondsOutside: 0n
+export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) => {
+  return {
+    exist: array[0],
+    sign: array[1],
+    liquidityChange: array[2],
+    liquidityGross: array[3],
+    sqrtPrice: array[4],
+    feeGrowthOutsideX: array[5],
+    feeGrowthOutsideY: array[6],
+    secondsOutside: array[7]
   }
+}
 
-  tick.tickSign = parts[0] === '01'
-  tick.liquidityChange = decodeU256(parts[1])
-  tick.liquidityGross = decodeU256(parts[2])
-  tick.tickSqrtPrice = decodeU256(parts[3])
-  tick.tickFeeGrowthOutsideX = decodeU256(parts[4])
-  tick.tickFeeGrowthOutsideY = decodeU256(parts[5])
-  tick.tickSecondsOutside = decodeU256(parts[6])
-
-  return tick
+export const decodePosition = (array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]) => {
+  return {
+    exist: array[0],
+    liquidity: array[1],
+    lowerTickIndex: array[2],
+    upperTickIndex: array[3],
+    feeGrowthInsideX: array[4],
+    feeGrowthInsideY: array[5],
+    lastBlockNumber: array[6],
+    tokensOwedX: array[7],
+    tokensOwedY: array[8]
+  }
 }
 
 export const hexToBytes = (hex: string): Uint8Array => {

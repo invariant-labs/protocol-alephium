@@ -1,7 +1,5 @@
-Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId: ByteVec) {
+Contract Ticks(tickTemplateContractId: ByteVec) {
     enum TicksError {
-        NotAdmin = 1000
-        TickNotFound = 1001
         TickAlreadyExist = 1002
     }
 
@@ -9,74 +7,67 @@ Contract Ticks(admin: Address, tickTemplateContractId: ByteVec, clammContractId:
     pub fn add(
         caller: Address,
         poolKey: ByteVec,
-        initTick: I256,
-        sign: Bool
+        index: I256,
+        sign: Bool,
+        liquidityChange: U256,
+        liquidityGross: U256,
+        sqrtPrice: U256,
+        feeGrowthOutsideX: U256,
+        feeGrowthOutsideY: U256,
+        secondsOutside: U256
     ) -> () {
-        assert!(callerAddress!() == admin, TicksError.NotAdmin)
+        let path = poolKey ++ toByteVec!(index)
+        assert!(!contractExists!(subContractId!(path)), TicksError.TickAlreadyExist)
 
-        let (doesExist, isTickInitialized) = exist(poolKey, initTick) 
-
-        assert!(!doesExist && !isTickInitialized, TicksError.TickAlreadyExist)
-        
-        if(doesExist && !isTickInitialized) {
-            let _ = Tick(poolKey ++ toByteVec!(initTick))
-            // contract.reinitializeTick()
-            return
-        } else {
-            let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(selfAddress!(), initTick, sign, 0, 0, CLAMM(clammContractId).sqrtPriceFromTick(initTick), 0, 0, 0, true)
-            copyCreateSubContract!{caller -> ALPH: 1 alph}(
-                poolKey ++ toByteVec!(initTick),
-                tickTemplateContractId,
-                encodedImmFields,
-                encodedMutFields
-            )   
-            return
-        }
+        let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(
+            sign,
+            liquidityChange,
+            liquidityGross,
+            sqrtPrice,
+            feeGrowthOutsideX,
+            feeGrowthOutsideY,
+            secondsOutside
+        )
+        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+            path,
+            tickTemplateContractId,
+            encodedImmFields,
+            encodedMutFields
+        )
     }
 
     pub fn exist(
         poolKey: ByteVec,
         index: I256
-    ) -> (Bool, Bool) {
-        if(contractExists!(subContractId!(poolKey ++ toByteVec!(index)))) {
-            let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
-            return true, contract.getIsInitialized()
-        }
-        return false, false
+    ) -> Bool {
+        return contractExists!(subContractId!(poolKey ++ toByteVec!(index)))
     }
 
     @using(checkExternalCaller = false)
-    pub fn deinitializeTick(
-        poolKey: ByteVec,
-        index: I256
-    ) -> () {
-        assert!(callerAddress!() == admin, TicksError.NotAdmin)
-        let (doesExist, isTickInitialized) = exist(poolKey, index)
-        assert!(doesExist && isTickInitialized, TicksError.TickNotFound)
-        let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
-        contract.deinitializeTick()
-        return
+    pub fn updateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
+        Tick(subContractId!(poolKey ++ toByteVec!(index))).updateTick(liquidityDelta, maxLiquidityPerTick, isUpper, isDeposit)
     }
 
-    pub fn get(poolKey: ByteVec, index: I256) -> (Bool, ByteVec) {
-        let mut tickBytes = b``
+    pub fn getFeeGrowthOutside(poolKey: ByteVec, index: I256) -> (U256, U256) {
+        let contract = Tick(subContractId!(poolKey ++ toByteVec!(index)))
+        return contract.getFeeGrowthOutsideX(), contract.getFeeGrowthOutsideY()
+    }
 
+    pub fn getLiquidityChange(poolKey: ByteVec, index: I256) -> U256 {
+        return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityChange()
+    }
+
+    pub fn getLiquidityGross(poolKey: ByteVec, index: I256) -> U256 {
+        return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityGross()
+    }
+
+    pub fn get(poolKey: ByteVec, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
         if (!contractExists!(subContractId)) {
-            return false, b``
+            return false, false, 0, 0, 0, 0, 0, 0
+        } else {
+            return true, Tick(subContractId).get()
         }
-
-        let contract = Tick(subContractId)
-        tickBytes = tickBytes
-        ++ toByteVec!(contract.getTickSign()) ++ b`break` 
-        ++ toByteVec!(contract.getLiquidityChange()) ++ b`break` 
-        ++ toByteVec!(contract.getLiquidityGross()) ++ b`break` 
-        ++ toByteVec!(contract.getTickSqrtPrice()) ++ b`break`
-        ++ toByteVec!(contract.getTickFeeGrowthOutsideX()) ++ b`break`
-        ++ toByteVec!(contract.getTickFeeGrowthOutsideY()) ++ b`break`
-        ++ toByteVec!(contract.getTickSecondsOutside())
-
-        return true, tickBytes
     }
 }

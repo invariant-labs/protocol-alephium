@@ -216,7 +216,7 @@ Contract CLAMM() extends Log(){
         upperTick: I256,
         lowerTick: I256
     ) -> (U256, U256, Bool) {
-        assert!(upperTick < lowerTick, CLAMMError.InvalidTickIndex)
+        assert!(upperTick > lowerTick, CLAMMError.InvalidTickIndex)
 
         let mut amountX = 0u
         let mut amountY = 0u
@@ -289,7 +289,7 @@ Contract CLAMM() extends Log(){
     }
 
     pub fn checkTicks(tickLower: I256, tickUpper: I256, tickSpacing: U256) -> () {
-        assert!(tickLower > tickUpper, CLAMMError.InvalidTickIndex)
+        assert!(tickLower < tickUpper, CLAMMError.InvalidTickIndex)
         checkTick(tickLower, tickSpacing)
         checkTick(tickUpper, tickSpacing)
     }

@@ -1,110 +1,56 @@
 Contract Position(
-    relatedPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
     posUpperTickIndex: I256,
     mut posFeeGrowthInsideX: U256,
     mut posFeeGrowthInsideY: U256,
-    lastBlockNumber: U256,
+    posLastBlockNumber: U256,
     mut posTokensOwedX: U256,
-    mut posTokensOwedY: U256,
-    mut isOpen: Bool,
-    clammContractId: ByteVec
+    mut posTokensOwedY: U256
 ) extends Decimal() {
     enum PositionError {
-        InsufficientLiquidity = 0
-        EmptyPositionPokes = 1
+        InsufficientLiquidity = 700
+        EmptyPositionPokes = 701
     }
 
-    pub fn getRelatedPoolKey() -> ByteVec {
-        return relatedPoolKey
-    }
-
-    pub fn getPosLiquidity() -> U256 {
+    pub fn getLiquidity() -> U256 {
         return posLiquidity
     }
 
-    pub fn getPosLowerTickIndex() -> I256 {
+    pub fn getLowerTickIndex() -> I256 {
         return posLowerTickIndex
     }
 
-    pub fn getPosUpperTickIndex() -> I256 {
+    pub fn getUpperTickIndex() -> I256 {
         return posUpperTickIndex
     }
 
-    pub fn getPosFeeGrowthInsideX() -> U256 {
+    pub fn getFeeGrowthInsideX() -> U256 {
         return posFeeGrowthInsideX
     }
 
-    pub fn getPosFeeGrowthInsideY() -> U256 {
+    pub fn getFeeGrowthInsideY() -> U256 {
         return posFeeGrowthInsideY
     }
 
     pub fn getLastBlockNumber() -> U256 {
-        return lastBlockNumber
+        return posLastBlockNumber
     }
 
-    pub fn getPosTokensOwedX() -> U256 {
+    pub fn getTokensOwedX() -> U256 {
         return posTokensOwedX
     }
 
-    pub fn getPosTokensOwedY() -> U256 {
+    pub fn getTokensOwedY() -> U256 {
         return posTokensOwedY
     }
 
-    pub fn getIsOpen() -> Bool {
-        return isOpen
-    }
-
-
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn close() -> () {
-        isOpen = false
-        return
-    }
-
-    @using(updateFields = false, checkExternalCaller = false)
-    pub fn modify(
-        poolContractId: ByteVec,
-        lowerTickContractId: ByteVec,
-        upperTickContractId: ByteVec,
-        liquidityDelta: U256,
-        add: Bool,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256, U256) {
-        let poolContract = Pool(poolContractId)
-        poolContract.setLastTimestamp(currentTimestamp)
-
-        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
-
-        let lowerTickContract = Tick(lowerTickContractId)
-        let upperTickContract = Tick(upperTickContractId)
-
-
-        lowerTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, false, add)
-        upperTickContract.updateTick(liquidityDelta, maxLiquidityPerTick, true, add)
-
-        let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
-            lowerTickContract.getIdx(),
-            lowerTickContract.getTickFeeGrowthOutsideX(),
-            lowerTickContract.getTickFeeGrowthOutsideY(),
-            upperTickContract.getIdx(),
-            upperTickContract.getTickFeeGrowthOutsideX(),
-            upperTickContract.getTickFeeGrowthOutsideY(),
-            poolContract.getPoolCurrentTickIndex(),
-            poolContract.getFeeGrowthGlobalX(),
-            poolContract.getFeeGrowthGlobalY()
-        )
-
-        updatePos(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
-
-        let (x, y) = poolContract.updateLiquidity(liquidityDelta, add, upperTickContract.getIdx(), lowerTickContract.getIdx())
-        return x, y
+    pub fn get() -> (U256, I256, I256, U256, U256, U256, U256, U256) {
+        return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn updatePos(
+    pub fn update(
         sign: Bool,
         liquidityDelta: U256,
         feeGrowthInsideX: U256,
@@ -112,8 +58,8 @@ Contract Position(
     ) -> () {
         assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
 
-        let tokensOwedX = toFee(wrappingSub(posFeeGrowthInsideX, posFeeGrowthInsideX), posLiquidity)
-        let tokensOwedY = toFee(wrappingSub(posFeeGrowthInsideY, posFeeGrowthInsideY), posLiquidity)
+        let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, posFeeGrowthInsideX), posLiquidity)
+        let tokensOwedY = toFee(wrappingSub(feeGrowthInsideY, posFeeGrowthInsideY), posLiquidity)
 
         posLiquidity = calculateNewLiquidity(sign, liquidityDelta)
         posFeeGrowthInsideX = feeGrowthInsideX
@@ -121,7 +67,6 @@ Contract Position(
 
         posTokensOwedX = tokensOwedX
         posTokensOwedY = tokensOwedY
-        return
     }
 
     pub fn calculateNewLiquidity(
@@ -129,29 +74,11 @@ Contract Position(
         liquidityDelta: U256
     ) -> U256 {
         assert!(sign || posLiquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
+
         if (sign) {
             return posLiquidity + liquidityDelta
         } else {
             return posLiquidity - liquidityDelta
         }
-    }
-
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn claimFee(
-        poolContractId: ByteVec,
-        lowerTickContractId: ByteVec,
-        upperTickContractId: ByteVec,
-        currentTimestamp: U256,
-        tickSpacing: U256
-    ) -> (U256, U256) {
-        modify(poolContractId, lowerTickContractId, upperTickContractId, 0, true, currentTimestamp, tickSpacing)
-
-        let owedX = posTokensOwedX
-        let owedY = posTokensOwedY
-
-        posTokensOwedX = 0
-        posTokensOwedY = 0
-
-        return owedX, owedY
     }
 }

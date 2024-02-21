@@ -16,12 +16,13 @@ Contract Invariant(
     tickTemplateContractId: ByteVec,
     mut positionsContractId: ByteVec,
     positionsTemplateContractId: ByteVec,
-    positionTempalteContractId: ByteVec,
+    positionTemplateContractId: ByteVec,
+    positionsCounterTemplateContractId: ByteVec,
     mut tickmapContractId: ByteVec,
     tickmapTemplateContractId: ByteVec,
     chunkTemplateContractId: ByteVec,
     clammContractId: ByteVec
-) extends Utils() {
+) extends Utils(), Decimal() {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -33,6 +34,8 @@ Contract Invariant(
         PoolKeyAlreadyExist = 7
         TickAndSqrtPriceMismatch = 8
         NotFeeReceiver = 9
+        ZeroLiquidity = 10
+        PriceLimitReached = 11
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
@@ -46,13 +49,13 @@ Contract Invariant(
         let (poolKeysEncodedImmFields, poolKeysEncodedMutFields) = PoolKeys.encodeFields!(selfAddress!(), poolKeyTemplateContractId, 0)
         poolKeysContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolKeysTemplateContractId, poolKeysEncodedImmFields, poolKeysEncodedMutFields)
         
-        let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(selfAddress!(), poolTemplateContractId, clammContractId)
+        let (poolsEncodedImmFields, poolsEncodedMutFields) = Pools.encodeFields!(poolTemplateContractId, clammContractId)
         poolsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(poolsTemplateContractId, poolsEncodedImmFields, poolsEncodedMutFields)
 
-        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(selfAddress!(), tickTemplateContractId, clammContractId)
+        let (ticksEncodedImmFields, ticksEncodedMutFields) = Ticks.encodeFields!(tickTemplateContractId)
         ticksContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(ticksTemplateContractId, ticksEncodedImmFields, ticksEncodedMutFields)
 
-        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(selfAddress!(), positionTempalteContractId, clammContractId)
+        let (positionsEncodedImmFields, positionsEncodedMutFields) = Positions.encodeFields!(positionTemplateContractId, positionsCounterTemplateContractId)
         positionsContractId = copyCreateContract!{callerAddress!() -> ALPH: 1 alph}(positionsTemplateContractId, positionsEncodedImmFields, positionsEncodedMutFields)
 
         let (tickmapEncodedImmFields, tickmapEncodedMutFields) = Tickmap.encodeFields!(selfAddress!(), chunkTemplateContractId, clammContractId)
@@ -149,38 +152,6 @@ Contract Invariant(
         return FeeTiers(feeTiersContractId).contains(fee, tickSpacing)
     }
 
-    // TODO: remove if possible after implementing get fee tiers
-    pub fn getFeeTierCount() -> U256 {
-        return FeeTiers(feeTiersContractId).count()
-    }
-
-    // TODO: Should not be pub
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createTick(poolKey: ByteVec, tickSpacing: U256, index: I256, poolCurrentIndex: I256, poolFeeGrowthGlobalX: U256, poolFeeGrowthGlobalY: U256, poolStartTimestamp: U256) -> () {
-        let currentTimestamp = blockTimeStamp!()
-        let caller = callerAddress!()
-        let belowCurrentTick = index <= poolCurrentIndex
-
-        CLAMM(clammContractId).checkTick(index, tickSpacing)
-
-        let mut feeGrowthOutsideX = 0
-        let mut feeGrowthOutisdeY = 0
-        let mut secondsOutside = 0
-        if (belowCurrentTick) {
-            feeGrowthOutsideX = poolFeeGrowthGlobalX
-            feeGrowthOutisdeY = poolFeeGrowthGlobalY
-            secondsOutside = currentTimestamp - poolStartTimestamp
-        }
-        Ticks(ticksContractId).add{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, index, true)
-        // Flip bit in tickmap
-    }
-
-
-    // TODO: remove at the end
-    pub fn tickExist(poolKey: ByteVec, index: I256) -> (Bool, Bool) {
-        return Ticks(ticksContractId).exist(poolKey, index)
-    }
-
     pub fn getFeeTiers() -> ByteVec {
         return FeeTiers(feeTiersContractId).getAll()
     }
@@ -189,12 +160,16 @@ Contract Invariant(
         return PoolKeys(poolKeysContractId).getAll()
     }
 
-    pub fn getPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, ByteVec) {
-        return Pools(poolsContractId).get(token0, token1, fee, tickSpacing)
+    pub fn getTick(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {
+        return Ticks(ticksContractId).get(generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
 
-    pub fn getTick(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> (Bool, ByteVec) {
-        return Ticks(ticksContractId).get(generatePoolKey(token0, token1, fee, tickSpacing), index)
+    pub fn getPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256) -> (Bool, U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
+        return Pools(poolsContractId).get(generatePoolKey(token0, token1, fee, tickSpacing))
+    }
+
+    pub fn getPosition(owner: Address, index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
+        return Positions(positionsContractId).get(owner, index)
     }
 
     pub fn isTickInitialized(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> Bool {
@@ -202,4 +177,166 @@ Contract Invariant(
 
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn createTick(
+        caller: Address,
+        poolKey: ByteVec,
+        tickSpacing: U256,
+        index: I256,
+        currentTickIndex: I256,
+        feeGrowthGlobalX: U256,
+        feeGrowthGlobalY: U256,
+        startTimestamp: U256
+    ) -> () {
+        CLAMM(clammContractId).checkTick(index, tickSpacing)
+
+        let mut feeGrowthOutsideX = 0
+        let mut feeGrowthOutsideY = 0
+        let mut secondsOutside = 0
+
+        if (index <= currentTickIndex) {
+            feeGrowthOutsideX = feeGrowthGlobalX
+            feeGrowthOutsideY = feeGrowthGlobalY
+            secondsOutside = blockTimeStamp!() - startTimestamp
+        }
+
+        Ticks(ticksContractId).add{caller -> ALPH: 1 alph}(
+            caller,
+            poolKey,
+            index,
+            true,
+            0,
+            0,
+            CLAMM(clammContractId).calculateSqrtPrice(index),
+            feeGrowthOutsideX,
+            feeGrowthOutsideY, 
+            0
+        )
+
+        Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(caller, index, tickSpacing, poolKey)
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn initPosition(
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        lowerTick: I256,
+        upperTick: I256
+    ) -> () {
+        let pools = Pools(poolsContractId) 
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+
+        let currentTickindex = pools.getCurrentTickIndex(poolKey)
+        let (feeGrowthGlobalX, feeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+        let startTimestamp = pools.getStartTimestamp(poolKey)
+
+        let ticks = Ticks(ticksContractId)
+        let caller = callerAddress!()
+ 
+        if(!ticks.exist(poolKey, lowerTick)) {
+            createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
+        }
+
+        if(!ticks.exist(poolKey, upperTick)) {
+            createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
+        }
+
+        Positions(positionsContractId).add{caller -> ALPH: 2 alph}(caller, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn createPosition(
+        index: U256,
+        token0: Address,
+        token1: Address,
+        fee: U256,
+        tickSpacing: U256,
+        lowerTick: I256,
+        upperTick: I256,
+        liquidityDelta: U256,
+        slippageLimitLower: U256,
+        slippageLimitUpper: U256
+    ) -> () {
+        let pools = Pools(poolsContractId)
+        let caller = callerAddress!()
+        let currentTimestamp = blockTimeStamp!()
+
+        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
+
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let poolCurrentSqrtPrice = pools.getCurrentSqrtPrice(poolKey)
+
+        assert!(poolCurrentSqrtPrice >= slippageLimitLower && poolCurrentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
+
+        modify(caller, index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+    }
+
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn modify(
+        caller: Address,
+        index: U256,
+        poolKey: ByteVec,
+        upperTick: I256,
+        lowerTick: I256,
+        liquidityDelta: U256,
+        add: Bool,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        let pools = Pools(poolsContractId)
+
+        pools.setLastTimestamp(poolKey, currentTimestamp)
+
+        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
+
+        let ticks = Ticks(ticksContractId)
+
+        ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+
+        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, lowerTick)
+        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, upperTick)
+        let poolCurrentTickIndex = pools.getCurrentTickIndex(poolKey)
+        let (poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+
+        let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
+            lowerTick,
+            lowerTickFeeGrowthOutsideX,
+            lowerTickFeeGrowthOutsideY,
+            upperTick,
+            upperTickFeeGrowthOutsideX,
+            upperTickFeeGrowthOutsideY,
+            poolCurrentTickIndex,
+            poolFeeGrowthGlobalX,
+            poolFeeGrowthGlobalY
+        )
+
+        Positions(positionsContractId).update(caller, index, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+
+        return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
+    }
+
+    // @using(updateFields = true, checkExternalCaller = false)
+    // pub fn claimFee(
+    //     poolsContractId: ByteVec,
+    //     ticksContractId: ByteVec,
+    //     poolKey: ByteVec,
+    //     upperTick: I256,
+    //     lowerTick: I256,
+    //     currentTimestamp: U256,
+    //     tickSpacing: U256
+    // ) -> (U256, U256) {
+    //     modify(poolsContractId, ticksContractId, poolKey, upperTick, lowerTick, 0, true, currentTimestamp, tickSpacing)
+
+    //     let tokensOwedX = posTokensOwedX
+    //     let tokensOwedY = posTokensOwedY
+
+    //     posTokensOwedX = 0
+    //     posTokensOwedY = 0
+
+    //     return tokensOwedX, tokensOwedY
+    // }
 }
