@@ -1,7 +1,7 @@
 Contract Pool(
     mut poolLiquidity: U256,
-    poolCurrentSqrtPrice: U256,
-    poolCurrentTickIndex: I256,
+    mut poolCurrentSqrtPrice: U256,
+    mut poolCurrentTickIndex: I256,
     mut poolFeeGrowthGlobalX: U256,
     mut poolFeeGrowthGlobalY: U256,
     mut poolFeeProtocolTokenX: U256,
@@ -66,6 +66,16 @@ Contract Pool(
     }
 
     @using(updateFields = true, checkExternalCaller = false)
+    pub fn setSqrtPrice(v: U256) -> () {
+        poolCurrentSqrtPrice = v
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setPoolCurrentTickIndex(v: I256) -> () {
+        poolCurrentTickIndex = v
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn addFee(amount: U256, inX: Bool, protocolFee: U256) -> () {
         let invariantProtocolFee = mulUp(amount, protocolFee, getPercentageScale())
 
@@ -101,31 +111,49 @@ Contract Pool(
         return x, y
     }
 
-    // TODO
-    // pub fn crossTick(
-    //     nextSqrtPrice: U256,
-    //     amountIn: U256,
-    //     amountOut: U256,
-    //     feeAmount: U256,
-    //     swapLimit: U256,
-    //     tick: U256,
-    //     remainingAmount: U256,
-    //     byAmountIn: Bool,
-    //     xToY: Bool,
-    //     currentTimestamp: U256,
-    //     protocolFee: U256,
-    //     feeTier: FeeTier
-    //     ) -> (U256,Bool) {
-    //     let mut hasCrossed = false
-    //     let mut totalAmount = 0
-    //     let fee = feeTier.getFee()
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn crossTick(
+        nextSqrtPrice: U256,
+        // amountIn: U256,
+        // amountOut: U256,
+        // feeAmount: U256,
+        swapLimit: U256,
+        tickIndex: I256,
+        mut remainingAmount: U256,
+        byAmountIn: Bool,
+        xToY: Bool,
+        protocolFee: U256,
+        fee: U256,
+        tickSpacing: U256
+    ) -> (U256, U256, Bool) {
+        let mut hasCrossed = false
+        let mut totalAmount = 0
 
-    //     if nextSqrtPrice == swapLimit {
-    //         let isEnoughToCross = isEnoughToChangePrice(remainingAmount, nextSqrtPrice, getPoolLiquidity(), fee, byAmountIn, xToY)
-    //         if( !xToY || isEnoughToCross) {     
-    //         }
-    //     }
-    // }
+        if (nextSqrtPrice == swapLimit) {
+            let isEnoughToCross = CLAMM(clammContractId).isEnoughToChangePrice(remainingAmount, nextSqrtPrice, getPoolLiquidity(), fee, byAmountIn, xToY)
+            if(!xToY || isEnoughToCross) {
+                hasCrossed = true
+            } else if (remainingAmount != 0) {
+                if (byAmountIn) {
+                    addFee(remainingAmount, xToY, protocolFee)
+                    totalAmount = remainingAmount
+                }
+                remainingAmount = 0
+            } else {
+
+            }
+
+            if(xToY && isEnoughToCross) {
+                poolCurrentTickIndex = tickIndex - toI256!(tickSpacing)
+            } else {
+                poolCurrentTickIndex = tickIndex
+            }
+        } else {
+            poolCurrentTickIndex = CLAMM(clammContractId).getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+        }
+
+        return totalAmount, remainingAmount, hasCrossed
+    }
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn withdrawProtocolFee() -> (U256, U256) {

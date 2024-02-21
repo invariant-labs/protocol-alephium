@@ -26,6 +26,10 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
         return Pool(subContractId!(poolKey)).getPoolCurrentTickIndex()
     }
 
+    pub fn getCurrentLiquidity(poolKey: ByteVec) -> U256 {
+        return Pool(subContractId!(poolKey)).getPoolLiquidity()
+    }
+
     pub fn getFeeGrowthGlobal(poolKey: ByteVec) -> (U256, U256) {
         let contract = Pool(subContractId!(poolKey))
         return contract.getFeeGrowthGlobalX(), contract.getFeeGrowthGlobalY()
@@ -33,6 +37,53 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
 
     pub fn getStartTimestamp(poolKey: ByteVec) -> U256 {
         return Pool(subContractId!(poolKey)).getStartTimestamp()
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
+        Pool(subContractId!(poolKey)).addFee(feeAmount, xToY, fee)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
+        Pool(subContractId!(poolKey)).setSqrtPrice(sqrtPrice)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setTickIndex(poolKey: ByteVec, v: I256) -> () {
+        Pool(subContractId!(poolKey)).setPoolCurrentTickIndex(v)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedCrossTick(
+        poolKey: ByteVec,
+        nextSqrtPrice: U256,
+        // amountIn: U256,
+        // amountOut: U256,
+        // feeAmount: U256,
+        swapLimit: U256,
+        tickIndex: I256,
+        remainingAmount: U256,
+        byAmountIn: Bool,
+        xToY: Bool,
+        protocolFee: U256,
+        fee: U256,
+        tickSpacing: U256
+    ) -> (U256, U256, Bool) {
+        return Pool(subContractId!(poolKey)).crossTick(
+            nextSqrtPrice,
+            // amountIn,
+            // amountOut,
+            // feeAmount,
+            swapLimit,
+            tickIndex,
+            remainingAmount,
+            byAmountIn,
+            xToY,
+            protocolFee,
+            fee,
+            tickSpacing
+        )
     }
 
     @using(checkExternalCaller = false)

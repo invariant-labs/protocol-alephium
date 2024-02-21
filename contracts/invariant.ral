@@ -36,6 +36,9 @@ Contract Invariant(
         NotFeeReceiver = 9
         ZeroLiquidity = 10
         PriceLimitReached = 11
+        ZeroAmount = 12
+        WrongLimit = 13
+        NoGainSwap = 14
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
@@ -318,6 +321,124 @@ Contract Invariant(
 
         return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
+
+
+    pub fn calculateSwap(
+        poolKey: ByteVec,
+        xToY: Bool,
+        amount: U256,
+        byAmountIn: Bool,
+        sqrtPriceLimit: U256,
+        fee: U256,
+        tickSpacing: U256
+    ) -> (U256, U256, U256, U256, U256) {
+        let currentTimestamp = blockTimeStamp!()
+
+        assert!(amount != 0, InvariantError.ZeroAmount)
+
+        // let mut ticks = 
+        
+        let currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
+        assert!(!xToY && currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= getMaxSqrtPrice() 
+        || xToY && currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= getMinSqrtPrice(), InvariantError.WrongLimit)
+
+        let mut remainingAmount = amount
+
+        let mut totalAmountIn = 0
+        let mut totalAmountOut = 0
+
+        let eventStartSqrtPrice = currentSqrtPrice
+        let mut eventFeeAmount = 0
+
+        while (remainingAmount != 0) {
+            let currentTickIndex = Pools(poolsContractId).getCurrentTickIndex(poolKey)
+            let currentLiquidity = Pools(poolsContractId).getCurrentLiquidity(poolKey)
+            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = Tickmap(tickmapContractId).getCloserLimit(sqrtPriceLimit, xToY, currentTickIndex, tickSpacing, poolKey)
+
+            let (nextSqrtPrice, amountIn, amountOut, feeAmount) = CLAMM(clammContractId).computeSwapStep(
+                currentSqrtPrice,
+                swapLimit,
+                currentLiquidity,
+                remainingAmount,
+                byAmountIn,
+                fee
+            )
+
+            if (byAmountIn) {
+                remainingAmount = remainingAmount - (amountIn + feeAmount)
+            } else {
+                remainingAmount = remainingAmount - amountOut
+            }
+
+            Pools(poolsContractId).wrappedAddFee(poolKey, feeAmount, xToY, fee)
+
+            eventFeeAmount = eventFeeAmount + feeAmount
+
+            Pools(poolsContractId).setSqrtPrice(poolKey, nextSqrtPrice)
+
+            totalAmountIn = totalAmountIn + amountIn + feeAmount
+            totalAmountOut = totalAmountOut + amountOut
+
+            assert!(nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, InvariantError.PriceLimitReached)
+
+            if (hasLimitingTick) {
+                if (isInitialized) {
+                    let (amountToAdd, updatedRemainingAmount, hasCrossed) = Pools(poolsContractId).wrappedCrossTick(
+                        poolKey,
+                        nextSqrtPrice,
+                        // amountIn,
+                        // amountOut,
+                        // feeAmount,
+                        swapLimit,
+                        limitingTickIndex,
+                        remainingAmount,
+                        byAmountIn,
+                        xToY,
+                        protocolFee,
+                        fee,
+                        tickSpacing
+                    )
+                    remainingAmount = updatedRemainingAmount
+                    totalAmountIn = totalAmountIn + amountToAdd
+
+                    // if (hasCrossed) {
+                    //     // call tick.cross and all associated functions
+                    //     // push tick index to array for event
+                    // }
+                }
+            } else {
+                let newTickIndex = CLAMM(clammContractId).getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+                Pools(poolsContractId).setTickIndex(poolKey, newTickIndex)
+            }
+        }
+        
+        assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
+
+        return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getCurrentSqrtPrice(poolKey), eventFeeAmount
+    }
+
+
+    // @using(updateFields = false, checkExternalCaller = false)
+    // pub fn quote(
+    //     token0: Address,
+    //     token1: Address,
+    //     fee: U256,
+    //     tickSpacing: U256,
+    //     xToY: Bool,
+    //     amount: U256,
+    //     byAmountIn: Bool,
+    //     sqrtPriceLimit: U256
+    // ) -> () {
+    //     let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+    //     let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
+    //     return
+    // }
+
+    // @using(updateFields = false, checkExternalCaller = false)
+    // pub fn swap() -> () {
+    //     return
+    // }
+    
 
     // @using(updateFields = true, checkExternalCaller = false)
     // pub fn claimFee(
