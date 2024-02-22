@@ -49,6 +49,66 @@ Contract Position(
         return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
     }
 
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn modify(
+        poolsContractId: ByteVec,
+        ticksContractId: ByteVec,
+        clammContractId: ByteVec,
+        poolKey: ByteVec,
+        upperTick: I256,
+        lowerTick: I256,
+        liquidityDelta: U256,
+        add: Bool,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        assert!(poolsContractId != toByteVec!(1), 1001)
+        assert!(ticksContractId != toByteVec!(2), 1002)
+        assert!(clammContractId != toByteVec!(3), 1003)
+        assert!(poolKey != toByteVec!(4), 1004)
+        assert!(lowerTick > -300000i, 1003)
+        assert!(upperTick < 300000i, 1004)
+        assert!(liquidityDelta > 0, 1005)
+        assert!(add, 1006)
+        assert!(currentTimestamp > tickSpacing, 1007)
+
+        let pools = Pools(poolsContractId)
+        pools.setLastTimestamp(poolKey, currentTimestamp)
+
+        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
+        assert!(maxLiquidityPerTick > liquidityDelta, 1008)
+
+        let ticks = Ticks(ticksContractId)
+
+        ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+
+        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, lowerTick)
+        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, upperTick)
+        let poolCurrentTickIndex = pools.getCurrentTickIndex(poolKey)
+        let (poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+
+        let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
+            lowerTick,
+            lowerTickFeeGrowthOutsideX,
+            lowerTickFeeGrowthOutsideY,
+            upperTick,
+            upperTickFeeGrowthOutsideX,
+            upperTickFeeGrowthOutsideY,
+            poolCurrentTickIndex,
+            poolFeeGrowthGlobalX,
+            poolFeeGrowthGlobalY
+        )
+
+        assert!(feeGrowthInsideX == 0, 1009)
+        assert!(feeGrowthInsideY == 0, 1010)
+
+        update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+
+        return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
+        // return 1, 1
+    }
+
     @using(updateFields = true, checkExternalCaller = false)
     pub fn update(
         sign: Bool,

@@ -75,4 +75,22 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
             return true, Position(subContractId).get()
         }
     }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedModify(
+        caller: Address,
+        index: U256,
+        poolsContractId: ByteVec,
+        ticksContractId: ByteVec,
+        clammContractId: ByteVec,
+        poolKey: ByteVec,
+        upperTick: I256,
+        lowerTick: I256,
+        liquidityDelta: U256,
+        add: Bool,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        return Position(subContractId!(toByteVec!(caller) ++ toByteVec!(index))).modify(poolsContractId, ticksContractId, clammContractId, poolKey, upperTick, lowerTick, liquidityDelta, add, currentTimestamp, tickSpacing)
+    }
 }
