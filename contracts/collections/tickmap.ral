@@ -210,4 +210,5 @@ Contract Tickmap(
             contract.set(flipBitAtPosition(contract.get(), bit))
         }
     }
+
 }
