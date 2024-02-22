@@ -189,22 +189,16 @@ Contract Tickmap(
     }
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
-    pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    pub fn flip(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
-        let isInitalized = getBitAtPosition(chunk, bit)
-
-        if(value && isInitalized || !value && !isInitalized) {
-            return
-        }
 
         let id = poolKey ++ toByteVec!(chunk)
         let subContractId = subContractId!(id)
         assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
         let contract = Chunk(subContractId)
         contract.set(flipBitAtPosition(contract.get(), bit))
-        
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
