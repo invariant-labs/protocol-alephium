@@ -9,12 +9,12 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
 describe('position tests', () => {
+  const protocolFee = 0n
   const fee = 10n ** 12n
   const tickSpacing = 10n
   const liquidityDelta = 1000n
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
-  const protocolFee = 0n
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)

@@ -189,13 +189,13 @@ Contract Tickmap(
     }
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
-    pub fn flip(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
         let isInitalized = getBitAtPosition(chunk, bit)
 
-        if(isInitalized) {
+        if(value && isInitalized || !value && !isInitalized) {
             return
         }
 

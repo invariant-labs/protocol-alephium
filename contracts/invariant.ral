@@ -233,7 +233,7 @@ Contract Invariant(
         let caller = callerAddress!()
 
         let (lowerChunk, upperChunk) = Tickmap(tickmapContractId).getChunks(lowerTick, upperTick, tickSpacing)
-        
+
         if (lowerChunk == upperChunk) {
             Tickmap(tickmapContractId).initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, lowerChunk)
         } else {
@@ -274,8 +274,8 @@ Contract Invariant(
 
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        Tickmap(tickmapContractId).flip(lowerTick, tickSpacing, poolKey)
-        Tickmap(tickmapContractId).flip(upperTick, tickSpacing, poolKey)
+        Tickmap(tickmapContractId).flip(true, lowerTick, tickSpacing, poolKey)
+        Tickmap(tickmapContractId).flip(true, upperTick, tickSpacing, poolKey)
 
         let poolCurrentSqrtPrice = pools.getCurrentSqrtPrice(poolKey)
 
