@@ -104,7 +104,6 @@ Contract Invariant(
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= 1000000000000, InvariantError.InvalidFee)
         assert!(caller == admin, InvariantError.NotAdmin)
-        assert!(contractExists!(feeTiersContractId), 1111)
 
         FeeTiers(feeTiersContractId).add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }

@@ -1,17 +1,17 @@
 import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { decodePosition, decodeTick, deployInvariant } from '../src/utils'
+import { decodePool, decodePosition, decodeTick, deployInvariant } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
-describe('position tests', () => {
-  const fee = 100n
-  const tickSpacing = 10n
-  const liquidityDelta = 1000000n
+describe('swap tests', () => {
+  const fee = 0n
+  const tickSpacing = 1n
+  const liquidityDelta = 1000000n * 10n ** 5n
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
   const protocolFee = 0n
@@ -20,7 +20,7 @@ describe('position tests', () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test('create position', async () => {
+  test('swap', async () => {
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
     await Init.execute(sender, {
@@ -111,5 +111,68 @@ describe('position tests', () => {
     expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
     expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
     expect(parsedUpperTick.secondsOutside).toBe(0n)
+
+    {
+      const swapAmount = 1000n
+
+      const poolBefore = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
+
+      const slippage = 15258932000000000000n
+
+      const [amountIn, amountOut, targetSqrtPrice] = (
+        await invariant.methods.quote({
+          args: {
+            token0: ZERO_ADDRESS,
+            token1: testAddress,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            xToY: true,
+            amount: swapAmount,
+            byAmountIn: true,
+            sqrtPriceLimit: slippage
+          }
+        })
+      ).returns
+
+      expect(amountIn).toBe(swapAmount)
+      expect(amountOut).toBe(999n)
+      expect(targetSqrtPrice).toBe(999000999000999000999001n)
+
+      await Swap.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: ZERO_ADDRESS,
+          token1: testAddress,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          xToY: true,
+          amount: swapAmount,
+          byAmountIn: true,
+          sqrtPriceLimit: slippage
+        }
+      })
+
+      const poolAfter = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
+
+      expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
+      expect(poolAfter.currentTickIndex).toBe(-21n)
+      expect(poolAfter.currentSqrtPrice).toBe(999000999000999000999001n)
+      expect(poolAfter.feeGrowthGlobalX).toBe(0n)
+      expect(poolAfter.feeGrowthGlobalY).toBe(0n)
+      expect(poolAfter.feeProtocolTokenX).toBe(0n)
+      expect(poolAfter.feeProtocolTokenY).toBe(0n)
+    }
   })
 })

@@ -6,10 +6,10 @@ Contract SwapUtils(
     clammContractId: ByteVec
 ) extends Decimal(), Utils() {
     enum SwapError {
-        ZeroAmount = 1
-        WrongLimit = 2
-        PriceLimitReached = 3
-        NoGainSwap = 4
+        ZeroAmount = 10001
+        WrongLimit = 10002
+        PriceLimitReached = 10003
+        NoGainSwap = 10004
     }
 
     @using(checkExternalCaller = false)
@@ -29,8 +29,12 @@ Contract SwapUtils(
         // let mut ticks = 
         
         let currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
-        assert!(!xToY && currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= getMaxSqrtPrice() 
-        || xToY && currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= getMinSqrtPrice(), SwapError.WrongLimit)
+
+        if(xToY) {
+            assert!(currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= getMaxSqrtPrice(), SwapError.WrongLimit)             
+        } else {
+            assert!(currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= getMinSqrtPrice(), SwapError.WrongLimit)
+        }
 
         let mut remainingAmount = amount
 
