@@ -11,6 +11,8 @@ import {
   Pools,
   Position,
   PositionsCounter,
+  Swap,
+  SwapUtils,
   Tickmap,
   Ticks
 } from '../artifacts/ts'
@@ -58,13 +60,21 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     position.contractInstance.contractId,
     positionsCounter.contractInstance.contractId
   )
-
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(
     signer,
     account.address,
     chunk.contractInstance.contractId,
     clamm.contractInstance.contractId
+  )
+
+  const swap = await deploySwap(
+    signer,
+    clamm.contractInstance.contractId,
+    pools.contractInstance.contractId,
+    ticks.contractInstance.contractId,
+    tickmap.contractInstance.contractId,
+    protocolFee
   )
 
   return await waitTxConfirmed(
@@ -74,25 +84,34 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         admin: account.address,
         protocolFee,
         feeTiersContractId: feeTiers.contractInstance.contractId,
-        // feeTiersTemplateContractId: feeTiers.contractInstance.contractId,
-        // feeTierTemplateContractId: feeTier.contractInstance.contractId,
         poolKeysContractId: poolKeys.contractInstance.contractId,
-        // poolKeysTemplateContractId: poolKeys.contractInstance.contractId,
-        // poolKeyTemplateContractId: poolKey.contractInstance.contractId,
         poolsContractId: pools.contractInstance.contractId,
-        // poolsTemplateContractId: pools.contractInstance.contractId,
-        // poolTemplateContractId: pool.contractInstance.contractId,
         ticksContractId: ticks.contractInstance.contractId,
-        // ticksTemplateContractId: ticks.contractInstance.contractId,
-        // tickTemplateContractId: tick.contractInstance.contractId,
         positionsContractId: positions.contractInstance.contractId,
-        // positionsTemplateContractId: positions.contractInstance.contractId,
-        // positionTemplateContractId: position.contractInstance.contractId,
-        // positionsCounterTemplateContractId: positionsCounter.contractInstance.contractId,
         tickmapContractId: tickmap.contractInstance.contractId,
-        // tickmapTemplateContractId: tickmap.contractInstance.contractId,
-        // chunkTemplateContractId: chunk.contractInstance.contractId,
-        clammContractId: clamm.contractInstance.contractId
+        clammContractId: clamm.contractInstance.contractId,
+        swapContractId: swap.contractInstance.contractId
+      }
+    })
+  )
+}
+
+export async function deploySwap(
+  signer: SignerProvider,
+  clammContractId: string,
+  poolsContractId: string,
+  ticksContractId: string,
+  tickmapContractId: string,
+  protocolFee: bigint
+) {
+  return await waitTxConfirmed(
+    SwapUtils.deploy(signer, {
+      initialFields: {
+        clammContractId,
+        poolsContractId,
+        ticksContractId,
+        tickmapContractId,
+        protocolFee
       }
     })
   )
@@ -177,7 +196,6 @@ export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) 
   return await waitTxConfirmed(
     PoolKeys.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
         poolKeyTemplateContractId: poolKeyId,
         poolKeyCount: 0n
       }

@@ -100,9 +100,6 @@ Contract Position(
             poolFeeGrowthGlobalY
         )
 
-        assert!(feeGrowthInsideX == 0, 1009)
-        assert!(feeGrowthInsideY == 0, 1010)
-
         update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
 
         return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)

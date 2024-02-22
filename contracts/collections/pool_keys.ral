@@ -1,12 +1,7 @@
-Contract PoolKeys(admin: Address, poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
+Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
     enum PoolKeysError {
         // NotAdmin = 200
         PoolKeyAlreadyExist = 201
-    }
-
-    @using(checkExternalCaller = false)
-    pub fn placeholder() -> () {
-        assert!(admin == callerAddress!(), 1002)
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
