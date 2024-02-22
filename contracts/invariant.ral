@@ -229,12 +229,7 @@ Contract Invariant(
         let (feeGrowthGlobalX, feeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
         let startTimestamp = pools.getStartTimestamp(poolKey)
 
-        assert!(lowerTick < upperTick, 1293891023)
-        assert!(startTimestamp > 0, 14124)
-        assert!(currentTickindex == 0i, 123123)
-        assert!(feeGrowthGlobalX == 0 && feeGrowthGlobalY == 0, 123123123)
         let ticks = Ticks(ticksContractId)
-        
         let caller = callerAddress!()
  
         if(!ticks.exist(poolKey, lowerTick)) {
