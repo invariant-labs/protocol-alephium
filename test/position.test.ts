@@ -65,63 +65,75 @@ describe('position tests', () => {
       attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
-    // await CreatePosition.execute(sender, {
-    //   initialFields: {
-    //     invariant: invariant.contractId,
-    //     index: 1n,
-    //     token0: ZERO_ADDRESS,
-    //     token1: testAddress,
-    //     fee,
-    //     tickSpacing,
-    //     lowerTick: lowerTickIndex,
-    //     upperTick: upperTickIndex,
-    //     liquidityDelta: liquidityDelta,
-    //     slippageLimitLower: 1000000000000000000000000n,
-    //     slippageLimitUpper: 1000000000000000000000000n
-    //   }
-    // })
+    await CreatePosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        index: 1n,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee,
+        tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex,
+        liquidityDelta: liquidityDelta,
+        slippageLimitLower: 1000000000000000000000000n,
+        slippageLimitUpper: 1000000000000000000000000n
+      }
+    })
 
-    // const position = await invariant.methods.getPosition({
-    //   args: { owner: sender.address, index: 1n }
-    // })
+    const position = await invariant.methods.getPosition({
+      args: { owner: sender.address, index: 1n }
+    })
 
-    // const parsedPosition = decodePosition(position.returns)
-    // expect(parsedPosition.exist).toBe(true)
-    // expect(parsedPosition.liquidity).toBe(liquidityDelta)
-    // expect(parsedPosition.lowerTickIndex).toBe(lowerTickIndex)
-    // expect(parsedPosition.upperTickIndex).toBe(upperTickIndex)
-    // expect(parsedPosition.feeGrowthInsideX).toBe(0n)
-    // expect(parsedPosition.feeGrowthInsideY).toBe(0n)
-    // expect(parsedPosition.lastBlockNumber).toBeGreaterThan(0n)
-    // expect(parsedPosition.tokensOwedX).toBe(0n)
-    // expect(parsedPosition.tokensOwedY).toBe(0n)
+    const parsedPosition = decodePosition(position.returns)
+    expect(parsedPosition.exist).toBe(true)
+    expect(parsedPosition.liquidity).toBe(liquidityDelta)
+    expect(parsedPosition.lowerTickIndex).toBe(lowerTickIndex)
+    expect(parsedPosition.upperTickIndex).toBe(upperTickIndex)
+    expect(parsedPosition.feeGrowthInsideX).toBe(0n)
+    expect(parsedPosition.feeGrowthInsideY).toBe(0n)
+    expect(parsedPosition.lastBlockNumber).toBeGreaterThan(0n)
+    expect(parsedPosition.tokensOwedX).toBe(0n)
+    expect(parsedPosition.tokensOwedY).toBe(0n)
 
-    // const lowerTick = await invariant.methods.getTick({
-    //   args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
-    // })
+    const lowerTick = await invariant.methods.getTick({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+    })
 
-    // const parsedLowerTick = decodeTick(lowerTick.returns)
-    // expect(parsedLowerTick.exist).toBe(true)
-    // expect(parsedLowerTick.sign).toBe(true)
-    // expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
-    // expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
-    // // expect(parsedLowerTick.sqrtPrice).toBe(999500149965000000000000n)
-    // expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
-    // expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
-    // expect(parsedLowerTick.secondsOutside).toBe(0n)
+    const parsedLowerTick = decodeTick(lowerTick.returns)
+    expect(parsedLowerTick.exist).toBe(true)
+    expect(parsedLowerTick.sign).toBe(true)
+    expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
+    expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
+    // expect(parsedLowerTick.sqrtPrice).toBe(999500149965000000000000n)
+    expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
+    expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
+    expect(parsedLowerTick.secondsOutside).toBe(0n)
 
-    // const upperTick = await invariant.methods.getTick({
-    //   args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
-    // })
+    const upperTick = await invariant.methods.getTick({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
+    })
 
-    // const parsedUpperTick = decodeTick(upperTick.returns)
-    // expect(parsedUpperTick.exist).toBe(true)
-    // expect(parsedUpperTick.sign).toBe(false)
-    // expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
-    // expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
-    // // expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
-    // expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
-    // expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
-    // expect(parsedUpperTick.secondsOutside).toBe(0n)
+    const parsedUpperTick = decodeTick(upperTick.returns)
+    expect(parsedUpperTick.exist).toBe(true)
+    expect(parsedUpperTick.sign).toBe(false)
+    expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
+    expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
+    // expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
+    expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
+    expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
+    expect(parsedUpperTick.secondsOutside).toBe(0n)
+
+    const isLowerTickInitialized = await invariant.methods.isTickInitialized({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+    })
+
+    expect(isLowerTickInitialized.returns).toBe(true)
+
+    const isUpperTickInitialized = await invariant.methods.isTickInitialized({
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
+    })
+
+    expect(isUpperTickInitialized.returns).toBe(true)
   })
 })

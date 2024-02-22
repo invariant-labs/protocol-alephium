@@ -231,6 +231,15 @@ Contract Invariant(
 
         let ticks = Ticks(ticksContractId)
         let caller = callerAddress!()
+
+        let (lowerChunk, upperChunk) = Tickmap(tickmapContractId).getChunks(lowerTick, upperTick, tickSpacing)
+        
+        if (lowerChunk == upperChunk) {
+            Tickmap(tickmapContractId).initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, lowerChunk)
+        } else {
+            Tickmap(tickmapContractId).initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, lowerChunk)
+            Tickmap(tickmapContractId).initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, upperChunk)
+        }
  
         if(!ticks.exist(poolKey, lowerTick)) {
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
@@ -265,8 +274,8 @@ Contract Invariant(
 
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(caller, lowerTick, tickSpacing, poolKey)
-        Tickmap(tickmapContractId).flip{caller -> ALPH: 1 alph}(caller, upperTick, tickSpacing, poolKey)
+        Tickmap(tickmapContractId).flip(lowerTick, tickSpacing, poolKey)
+        Tickmap(tickmapContractId).flip(upperTick, tickSpacing, poolKey)
 
         let poolCurrentSqrtPrice = pools.getCurrentSqrtPrice(poolKey)
 
