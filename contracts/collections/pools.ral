@@ -55,12 +55,8 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
 
     @using(checkExternalCaller = false)
     pub fn wrappedCrossTick(
-        ticksContractId: ByteVec,
         poolKey: ByteVec,
         nextSqrtPrice: U256,
-        // amountIn: U256,
-        // amountOut: U256,
-        // feeAmount: U256,
         swapLimit: U256,
         tickIndex: I256,
         remainingAmount: U256,
@@ -71,11 +67,7 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
         tickSpacing: U256
     ) -> (U256, U256, Bool) {
         return Pool(subContractId!(poolKey)).crossTick(
-            ticksContractId,
             nextSqrtPrice,
-            // amountIn,
-            // amountOut,
-            // feeAmount,
             swapLimit,
             tickIndex,
             remainingAmount,

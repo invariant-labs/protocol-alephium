@@ -113,11 +113,7 @@ Contract Pool(
 
     @using(updateFields = true, checkExternalCaller = false)
     pub fn crossTick(
-        ticksContactId: ByteVec,
         nextSqrtPrice: U256,
-        // amountIn: U256,
-        // amountOut: U256,
-        // feeAmount: U256,
         swapLimit: U256,
         tickIndex: I256,
         mut remainingAmount: U256,
@@ -129,11 +125,6 @@ Contract Pool(
     ) -> (U256, U256, Bool) {
         let mut hasCrossed = false
         let mut totalAmount = 0
-
-        if(ticksContactId != toByteVec!(0)) {
-            hasCrossed = false
-        }
-        
 
         if (nextSqrtPrice == swapLimit) {
             let isEnoughToCross = CLAMM(clammContractId).isEnoughToChangePrice(remainingAmount, nextSqrtPrice, getPoolLiquidity(), fee, byAmountIn, xToY)

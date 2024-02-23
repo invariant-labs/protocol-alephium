@@ -96,18 +96,21 @@ describe('math tests', () => {
         expect(tick).toEqual(expectedTick)
       }
     }
-    // {
-    //   for (let i = -100n; i < 0; i++) {
-    //     const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
-    //       .returns
-    //     let tick = (
-    //       await clamm.contractInstance.methods.getTickAtSqrtPrice({
-    //         args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
-    //       })
-    //     ).returns
-    //     expect(tick).toEqual(i)
-    //   }
-    // }
+    {
+      for (let i = -100n; i < 0; i++) {
+        const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
+          .returns
+        let tick = (
+          await clamm.contractInstance.methods.getTickAtSqrtPrice({
+            args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
+          })
+        ).returns
+        let expectedTick = (
+          await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
+        ).returns
+        expect(tick).toEqual(expectedTick)
+      }
+    }
   })
   test('log', async () => {
     const clamm = await deployCLAMM(sender)

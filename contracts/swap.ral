@@ -78,7 +78,6 @@ Contract SwapUtils(
             if (hasLimitingTick) {
                 if (isInitialized) {
                     let (amountToAdd, updatedRemainingAmount, hasCrossed) = Pools(poolsContractId).wrappedCrossTick(
-                        ticksContractId,
                         poolKey,
                         nextSqrtPrice,
                         swapLimit,

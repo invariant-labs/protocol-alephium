@@ -62,21 +62,10 @@ Contract Position(
         currentTimestamp: U256,
         tickSpacing: U256
     ) -> (U256, U256) {
-        assert!(poolsContractId != toByteVec!(1), 1001)
-        assert!(ticksContractId != toByteVec!(2), 1002)
-        assert!(clammContractId != toByteVec!(3), 1003)
-        assert!(poolKey != toByteVec!(4), 1004)
-        assert!(lowerTick > -300000i, 1003)
-        assert!(upperTick < 300000i, 1004)
-        assert!(liquidityDelta > 0, 1005)
-        assert!(add, 1006)
-        assert!(currentTimestamp > tickSpacing, 1007)
-
         let pools = Pools(poolsContractId)
         pools.setLastTimestamp(poolKey, currentTimestamp)
 
         let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
-        assert!(maxLiquidityPerTick > liquidityDelta, 1008)
 
         let ticks = Ticks(ticksContractId)
 
@@ -103,7 +92,6 @@ Contract Position(
         update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
 
         return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
-        // return 1, 1
     }
 
     @using(updateFields = true, checkExternalCaller = false)
