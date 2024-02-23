@@ -1,7 +1,7 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, stringToHex, toApiByteVec, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Flip, Init, Invariant } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, Init, Invariant } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
 import {
   decodePool,
