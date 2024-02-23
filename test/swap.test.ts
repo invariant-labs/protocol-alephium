@@ -9,12 +9,12 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
 describe('swap tests', () => {
-  const fee = 0n
-  const tickSpacing = 1n
+  const protocolFee = 10n ** 10n
+  const fee = 6n * 10n ** 9n
+  const tickSpacing = 10n
   const liquidityDelta = 1000000n * 10n ** 5n
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
-  const protocolFee = 0n
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
@@ -141,8 +141,8 @@ describe('swap tests', () => {
       ).returns
 
       expect(amountIn).toBe(swapAmount)
-      expect(amountOut).toBe(999n)
-      expect(targetSqrtPrice).toBe(999000999000999000999001n)
+      expect(amountOut).toBe(993n)
+      expect(targetSqrtPrice).toBe(999006987054867461743028n)
 
       await Swap.execute(sender, {
         initialFields: {
@@ -167,11 +167,11 @@ describe('swap tests', () => {
       )
 
       expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
-      expect(poolAfter.currentTickIndex).toBe(-21n)
-      expect(poolAfter.currentSqrtPrice).toBe(999000999000999000999001n)
-      expect(poolAfter.feeGrowthGlobalX).toBe(0n)
+      expect(poolAfter.currentTickIndex).toBe(-20n)
+      expect(poolAfter.currentSqrtPrice).toBe(999006987054867461743028n)
+      expect(poolAfter.feeGrowthGlobalX).toBe(50000000000000000000000n)
       expect(poolAfter.feeGrowthGlobalY).toBe(0n)
-      expect(poolAfter.feeProtocolTokenX).toBe(0n)
+      expect(poolAfter.feeProtocolTokenX).toBe(1n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
   })

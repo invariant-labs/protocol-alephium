@@ -64,7 +64,7 @@ Contract SwapUtils(
                 remainingAmount = remainingAmount - amountOut
             }
 
-            Pools(poolsContractId).wrappedAddFee(poolKey, feeAmount, xToY, fee)
+            Pools(poolsContractId).wrappedAddFee(poolKey, feeAmount, xToY, protocolFee)
 
             eventFeeAmount = eventFeeAmount + feeAmount
 
@@ -78,11 +78,9 @@ Contract SwapUtils(
             if (hasLimitingTick) {
                 if (isInitialized) {
                     let (amountToAdd, updatedRemainingAmount, hasCrossed) = Pools(poolsContractId).wrappedCrossTick(
+                        ticksContractId,
                         poolKey,
                         nextSqrtPrice,
-                        // amountIn,
-                        // amountOut,
-                        // feeAmount,
                         swapLimit,
                         limitingTickIndex,
                         remainingAmount,

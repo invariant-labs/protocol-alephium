@@ -8,6 +8,8 @@ Contract Tickmap(
         InvalidTickIndex = 401
         TickAndTickSpacingMismatch = 402
         LimitReached = 403
+        ChunkNotFound = 404
+        TickInitialized = 405
     }
 
     pub fn placeholder() -> () {
@@ -191,27 +193,42 @@ Contract Tickmap(
         return getBitAtPosition(getChunk(chunk, poolKey), bit)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn flip(caller: Address, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    @using(preapprovedAssets = false, checkExternalCaller = false)
+    pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         // assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
-
+        let isInitialized = getBitAtPosition(chunk, bit)
         let id = poolKey ++ toByteVec!(chunk)
         let subContractId = subContractId!(id)
-        let exists = contractExists!(subContractId)
+        assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
+        let contract = Chunk(subContractId)
 
-        if (!exists) {
-            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(flipBitAtPosition(0, bit))
+        assert!(value == true && isInitialized == false || value == false && isInitialized == true, TickmapErrors.TickInitialized)
+
+        contract.set(flipBitAtPosition(contract.get(), bit))
+    }
+
+    @using(preapprovedAssets = true, checkExternalCaller = false)
+    pub fn initializeChunk(caller: Address, poolKey: ByteVec, chunk: U256) -> () {
+        let id = poolKey ++ toByteVec!(chunk)        
+        let exists = contractExists!(subContractId!(id))
+
+        if(!exists) {
+            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0)
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
                 encodedImmFields,
                 encodedMutFields
             )
-        } else {
-            let contract = Chunk(subContractId)
-            contract.set(flipBitAtPosition(contract.get(), bit))
         }
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn getChunks(lowerTick: I256, upperTick: I256, tickSpacing: U256) -> (U256, U256) {
+        let (lowerChunk, _) = tickToPosition(lowerTick, tickSpacing)
+        let (upperChunk, _) = tickToPosition(upperTick, tickSpacing)
+        return lowerChunk, upperChunk
     }
 }

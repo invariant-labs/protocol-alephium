@@ -66,7 +66,7 @@ Abstract Contract Log() extends Decimal() {
         return msb
     }
 
-    fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+    pub fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
         if (accurateTick > 0i) {
             return accurateTick - (accurateTick % tickSpacing)
         } else {
@@ -122,7 +122,7 @@ Abstract Contract Log() extends Decimal() {
         } else {
             absFloorTick = (log2SqrtPrice + getLog2NegativeMaxLose()) / getLog2Sqrt10001()
             nearerTick = (-1) * toI256!(absFloorTick)
-            fartherTick = (-1) * toI256!(absFloorTick) - 1i
+            fartherTick = ((-1) * toI256!(absFloorTick)) - 1i
         }
 
         let nearerTickWithSpacing = allignTickToSpacing(nearerTick, toI256!(tickSpacing))
@@ -130,7 +130,6 @@ Abstract Contract Log() extends Decimal() {
         if (fartherTickWithSpacing == nearerTickWithSpacing) {
             return nearerTickWithSpacing
         }
-
 
         let mut accurateTick = 0i
         if (log2Sign) {
@@ -142,12 +141,13 @@ Abstract Contract Log() extends Decimal() {
             }
         } else {
             let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick)
-            if (sqrtPrice <= nearerTickSqrtPriceDecimal) {
+            if (nearerTickSqrtPriceDecimal <= sqrtPrice) {
                 accurateTick = nearerTickWithSpacing
             } else {
                 accurateTick = fartherTickWithSpacing
             }
         }
+
         if (tickSpacing > 1)  {
             return allignTickToSpacing(accurateTick, toI256!(tickSpacing))
         } else {
