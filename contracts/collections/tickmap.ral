@@ -9,6 +9,7 @@ Contract Tickmap(
         TickAndTickSpacingMismatch = 402
         LimitReached = 403
         ChunkNotFound = 404
+        TickInitialized = 405
     }
 
     fn getChunkSize() -> U256 {
@@ -189,28 +190,35 @@ Contract Tickmap(
     }
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
-    pub fn flip(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
-
+        let isInitialized = getBitAtPosition(chunk, bit)
         let id = poolKey ++ toByteVec!(chunk)
         let subContractId = subContractId!(id)
         assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
         let contract = Chunk(subContractId)
+
+        assert!(value == true && isInitialized == false || value == false && isInitialized == true, TickmapErrors.TickInitialized)
+
         contract.set(flipBitAtPosition(contract.get(), bit))
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(caller: Address, poolKey: ByteVec, chunk: U256) -> () {
         let id = poolKey ++ toByteVec!(chunk)        
-        let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0)
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            id,
-            chunkTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
+        let exists = contractExists!(subContractId!(id))
+
+        if(!exists) {
+            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0)
+            copyCreateSubContract!{caller -> ALPH: 1 alph}(
+                id,
+                chunkTemplateContractId,
+                encodedImmFields,
+                encodedMutFields
+            )
+        }
     }
 
     @using(checkExternalCaller = false)

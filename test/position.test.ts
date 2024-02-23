@@ -11,10 +11,10 @@ let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 describe('position tests', () => {
   const protocolFee = 0n
   const fee = 10n ** 12n
-  const tickSpacing = 10n
+  const tickSpacing = 2n
   const liquidityDelta = 1000n
-  const lowerTickIndex = -20n
-  const upperTickIndex = 10n
+  const lowerTickIndex = -2n * tickSpacing
+  const upperTickIndex = 1n * tickSpacing
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
@@ -124,16 +124,61 @@ describe('position tests', () => {
     expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
     expect(parsedUpperTick.secondsOutside).toBe(0n)
 
-    const isLowerTickInitialized = await invariant.methods.isTickInitialized({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+    {
+      const isLowerTickInitialized = await invariant.methods.isTickInitialized({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+      })
+
+      expect(isLowerTickInitialized.returns).toBe(true)
+
+      const isUpperTickInitialized = await invariant.methods.isTickInitialized({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
+      })
+
+      expect(isUpperTickInitialized.returns).toBe(true)
+    }
+
+    await InitPosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee,
+        tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex
+      },
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
 
-    expect(isLowerTickInitialized.returns).toBe(true)
-
-    const isUpperTickInitialized = await invariant.methods.isTickInitialized({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
+    await CreatePosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        index: 2n,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee,
+        tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex,
+        liquidityDelta: liquidityDelta,
+        slippageLimitLower: 1000000000000000000000000n,
+        slippageLimitUpper: 1000000000000000000000000n
+      }
     })
 
-    expect(isUpperTickInitialized.returns).toBe(true)
+    {
+      const isLowerTickInitialized = await invariant.methods.isTickInitialized({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+      })
+
+      expect(isLowerTickInitialized.returns).toBe(true)
+
+      const isUpperTickInitialized = await invariant.methods.isTickInitialized({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
+      })
+
+      expect(isUpperTickInitialized.returns).toBe(true)
+    }
   })
 })
