@@ -124,7 +124,6 @@ describe('pools tests', () => {
         args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n }
       })
     )
-
     const pools = await invariant.methods.getPools()
     const parsedPools = decodePools(pools.returns)
     expect(parsedPools.length).toBe(0)

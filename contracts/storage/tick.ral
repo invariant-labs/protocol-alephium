@@ -3,8 +3,9 @@ Contract Tick(
     mut tickLiquidityChange: U256,
     mut tickLiquidityGross: U256,
     tickSqrtPrice: U256,
-    tickFeeGrowthOutsideX: U256,
-    tickFeeGrowthOutsideY: U256,
+    mut tickFeeGrowthOutsideX: U256,
+    mut tickFeeGrowthOutsideY: U256,
+    // Remove
     tickSecondsOutside: U256
 ) extends Decimal() {
     enum TickError {
@@ -48,6 +49,16 @@ Contract Tick(
         tickLiquidityGross = calculateNewLiquidityGross(isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
         updateLiquidityChange(liquidityDelta, updateLiquiditySign)
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn cross(feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256, index: I256) -> (Bool, U256) {
+        tickFeeGrowthOutsideX = wrappingSub(feeGrowthGlobalX, tickFeeGrowthOutsideX)
+        tickFeeGrowthOutsideY = wrappingSub(feeGrowthGlobalY, tickFeeGrowthOutsideY)
+
+        let isBelowCurrent = currentTick >= index
+
+        return (isBelowCurrent && !tickSign || !isBelowCurrent && tickSign), getLiquidityChange()
     }
 
     @using(updateFields = true, checkExternalCaller = false)

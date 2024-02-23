@@ -49,6 +49,51 @@ Contract Position(
         return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
     }
 
+    @using(updateFields = false, checkExternalCaller = false)
+    pub fn modify(
+        poolsContractId: ByteVec,
+        ticksContractId: ByteVec,
+        clammContractId: ByteVec,
+        poolKey: ByteVec,
+        upperTick: I256,
+        lowerTick: I256,
+        liquidityDelta: U256,
+        add: Bool,
+        currentTimestamp: U256,
+        tickSpacing: U256
+    ) -> (U256, U256) {
+        let pools = Pools(poolsContractId)
+        pools.setLastTimestamp(poolKey, currentTimestamp)
+
+        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
+
+        let ticks = Ticks(ticksContractId)
+
+        ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+
+        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, lowerTick)
+        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, upperTick)
+        let poolCurrentTickIndex = pools.getCurrentTickIndex(poolKey)
+        let (poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+
+        let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
+            lowerTick,
+            lowerTickFeeGrowthOutsideX,
+            lowerTickFeeGrowthOutsideY,
+            upperTick,
+            upperTickFeeGrowthOutsideX,
+            upperTickFeeGrowthOutsideY,
+            poolCurrentTickIndex,
+            poolFeeGrowthGlobalX,
+            poolFeeGrowthGlobalY
+        )
+
+        update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+
+        return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
+    }
+
     @using(updateFields = true, checkExternalCaller = false)
     pub fn update(
         sign: Bool,

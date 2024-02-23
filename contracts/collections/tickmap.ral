@@ -4,12 +4,16 @@ Contract Tickmap(
     clammContractId: ByteVec
 ) {
     enum TickmapErrors {
-        NotAdmin = 400
+        // NotAdmin = 400
         InvalidTickIndex = 401
         TickAndTickSpacingMismatch = 402
         LimitReached = 403
         ChunkNotFound = 404
         TickInitialized = 405
+    }
+
+    pub fn placeholder() -> () {
+        assert!(callerAddress!() == admin, 10003)
     }
 
     fn getChunkSize() -> U256 {
@@ -191,7 +195,7 @@ Contract Tickmap(
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
     pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
-        assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
+        // assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
         let isInitialized = getBitAtPosition(chunk, bit)

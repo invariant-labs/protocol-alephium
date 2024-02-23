@@ -1,26 +1,26 @@
 import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { decodePosition, decodeTick, deployInvariant } from '../src/utils'
+import { decodePool, decodePosition, decodeTick, deployInvariant } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
-describe('position tests', () => {
-  const protocolFee = 0n
-  const fee = 10n ** 12n
-  const tickSpacing = 2n
-  const liquidityDelta = 1000n
-  const lowerTickIndex = -2n * tickSpacing
-  const upperTickIndex = 1n * tickSpacing
+describe('swap tests', () => {
+  const protocolFee = 10n ** 10n
+  const fee = 6n * 10n ** 9n
+  const tickSpacing = 10n
+  const liquidityDelta = 1000000n * 10n ** 5n
+  const lowerTickIndex = -20n
+  const upperTickIndex = 10n
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test('create position', async () => {
+  test('swap', async () => {
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
     await Init.execute(sender, {
@@ -30,8 +30,8 @@ describe('position tests', () => {
     await AddFeeTier.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        fee,
-        tickSpacing
+        fee: fee,
+        tickSpacing: tickSpacing
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
@@ -40,8 +40,8 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         token0: ZERO_ADDRESS,
         token1: testAddress,
-        fee,
-        tickSpacing,
+        fee: fee,
+        tickSpacing: tickSpacing,
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
@@ -52,8 +52,8 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         token0: ZERO_ADDRESS,
         token1: testAddress,
-        fee,
-        tickSpacing,
+        fee: fee,
+        tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex
       },
@@ -65,8 +65,8 @@ describe('position tests', () => {
         index: 1n,
         token0: ZERO_ADDRESS,
         token1: testAddress,
-        fee,
-        tickSpacing,
+        fee: fee,
+        tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex,
         liquidityDelta: liquidityDelta,
@@ -88,14 +88,14 @@ describe('position tests', () => {
     expect(parsedPosition.tokensOwedX).toBe(0n)
     expect(parsedPosition.tokensOwedY).toBe(0n)
     const lowerTick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
     })
     const parsedLowerTick = decodeTick(lowerTick.returns)
     expect(parsedLowerTick.exist).toBe(true)
     expect(parsedLowerTick.sign).toBe(true)
     expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
     expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
-    // expect(parsedLowerTick.sqrtPrice).toBe(999500149965000000000000n)
+    expect(parsedLowerTick.sqrtPrice).toBe(999000549780000000000000n)
     expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
     expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
     expect(parsedLowerTick.secondsOutside).toBe(0n)
@@ -107,66 +107,72 @@ describe('position tests', () => {
     expect(parsedUpperTick.sign).toBe(false)
     expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
     expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
-    // expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
+    expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
     expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
     expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
     expect(parsedUpperTick.secondsOutside).toBe(0n)
 
     {
-      const isLowerTickInitialized = await invariant.methods.isTickInitialized({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
+      const swapAmount = 1000n
+
+      const poolBefore = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
+
+      const slippage = 15258932000000000000n
+
+      const [amountIn, amountOut, targetSqrtPrice] = (
+        await invariant.methods.quote({
+          args: {
+            token0: ZERO_ADDRESS,
+            token1: testAddress,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            xToY: true,
+            amount: swapAmount,
+            byAmountIn: true,
+            sqrtPriceLimit: slippage
+          }
+        })
+      ).returns
+
+      expect(amountIn).toBe(swapAmount)
+      expect(amountOut).toBe(993n)
+      expect(targetSqrtPrice).toBe(999006987054867461743028n)
+
+      await Swap.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: ZERO_ADDRESS,
+          token1: testAddress,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          xToY: true,
+          amount: swapAmount,
+          byAmountIn: true,
+          sqrtPriceLimit: slippage
+        }
       })
 
-      expect(isLowerTickInitialized.returns).toBe(true)
+      const poolAfter = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
 
-      const isUpperTickInitialized = await invariant.methods.isTickInitialized({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
-      })
-
-      expect(isUpperTickInitialized.returns).toBe(true)
-    }
-
-    await InitPosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
-        fee,
-        tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex
-      },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
-    })
-
-    await CreatePosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        index: 2n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
-        fee,
-        tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex,
-        liquidityDelta: liquidityDelta,
-        slippageLimitLower: 1000000000000000000000000n,
-        slippageLimitUpper: 1000000000000000000000000n
-      }
-    })
-
-    {
-      const isLowerTickInitialized = await invariant.methods.isTickInitialized({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: lowerTickIndex }
-      })
-
-      expect(isLowerTickInitialized.returns).toBe(true)
-
-      const isUpperTickInitialized = await invariant.methods.isTickInitialized({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee, tickSpacing, index: upperTickIndex }
-      })
-
-      expect(isUpperTickInitialized.returns).toBe(true)
+      expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
+      expect(poolAfter.currentTickIndex).toBe(-20n)
+      expect(poolAfter.currentSqrtPrice).toBe(999006987054867461743028n)
+      expect(poolAfter.feeGrowthGlobalX).toBe(50000000000000000000000n)
+      expect(poolAfter.feeGrowthGlobalY).toBe(0n)
+      expect(poolAfter.feeProtocolTokenX).toBe(1n)
+      expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
   })
 })

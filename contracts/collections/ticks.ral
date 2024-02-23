@@ -61,6 +61,11 @@ Contract Ticks(tickTemplateContractId: ByteVec) {
         return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityGross()
     }
 
+    @using(checkExternalCaller = false)
+    pub fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
+        return Tick(subContractId!(poolKey ++ toByteVec!(index))).cross(feeGrowthGlobalX, feeGrowthGlobalY, currentTick, index)
+    }
+
     pub fn get(poolKey: ByteVec, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
