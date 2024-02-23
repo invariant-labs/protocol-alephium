@@ -2,6 +2,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn add(
         caller: Address,
+        poolKey: ByteVec,
         liquidity: U256,
         lowerTickIndex: I256,
         upperTickIndex: I256,
@@ -27,6 +28,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
         }
 
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(
+            poolKey,
             liquidity,
             lowerTickIndex,
             upperTickIndex,
@@ -52,6 +54,36 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
         } else {
             return 0
         }
+    }
+
+    pub fn getPoolKey(owner: Address, index: U256) -> ByteVec {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getPoolKey()
+    }
+
+    pub fn getLowerTickIndex(owner: Address, index: U256) -> I256 {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getLowerTickIndex()
+    }
+
+    pub fn getUpperTickIndex(owner: Address, index: U256) -> I256 {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getUpperTickIndex()
+    }
+
+    pub fn getLiquidity(owner: Address, index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getLiquidity()
+    }
+
+    pub fn getTokensOwedX(owner: Address, index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getTokensOwedX()
+    }
+
+    pub fn getTokensOwedY(owner: Address, index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        return Position(subContractId).getTokensOwedY()
     }
 
     @using(checkExternalCaller = false)

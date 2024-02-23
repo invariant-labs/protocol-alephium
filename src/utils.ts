@@ -16,6 +16,7 @@ import {
 } from '../artifacts/ts'
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
+import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -128,6 +129,7 @@ export async function deployPosition(signer: SignerProvider) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
+        posPoolKey: '',
         posLiquidity: 0n,
         posLowerTickIndex: 0n,
         posUpperTickIndex: 0n,
@@ -180,6 +182,9 @@ export async function deployPool(signer: SignerProvider) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
+        poolTickSpacing: 0n,
+        poolToken0Id: '',
+        poolToken1Id: '',
         poolLiquidity: 0n,
         poolCurrentSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,
@@ -264,6 +269,27 @@ export async function deployCLAMM(signer: SignerProvider) {
   return await waitTxConfirmed(
     CLAMM.deploy(signer, {
       initialFields: {}
+    })
+  )
+}
+
+export async function deployTokenFaucet(
+  signer: SignerProvider,
+  name: string,
+  symbol: string,
+  decimals: bigint,
+  supply: bigint
+) {
+  return await waitTxConfirmed(
+    TokenFaucet.deploy(signer, {
+      initialFields: {
+        name: Buffer.from(name, 'utf8').toString('hex'),
+        symbol: Buffer.from(symbol, 'utf8').toString('hex'),
+        decimals,
+        supply,
+        balance: supply
+      },
+      issueTokenAmount: supply
     })
   )
 }

@@ -1,0 +1,42 @@
+import "std/fungible_token_interface"
+
+Contract TokenFaucet(
+    symbol: ByteVec,
+    name: ByteVec,
+    decimals: U256,
+    supply: U256,
+    mut balance: U256
+) implements IFungibleToken {
+    enum ErrorCodes {
+        InvalidWithdrawAmount = 0
+    }
+
+    pub fn getTotalSupply() -> U256 {
+        return supply
+    }
+
+    pub fn getSymbol() -> ByteVec {
+        return symbol
+    }
+
+    pub fn getName() -> ByteVec {
+        return name
+    }
+
+    pub fn getDecimals() -> U256 {
+        return decimals
+    }
+
+    pub fn balance() -> U256 {
+        return balance
+    }
+
+    @using(assetsInContract = true, updateFields = true, checkExternalCaller = false)
+    pub fn withdraw(amount: U256) -> () {
+        assert!(amount <= balance, ErrorCodes.InvalidWithdrawAmount)
+        
+        transferTokenFromSelf!(callerAddress!(), selfTokenId!(), amount)
+
+        balance = balance - amount
+    }
+}

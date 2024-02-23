@@ -1,4 +1,7 @@
 Contract Pool(
+    poolToken0Id: ByteVec,
+    poolToken1Id: ByteVec,
+    poolTickSpacing: U256,
     mut poolLiquidity: U256,
     poolCurrentSqrtPrice: U256,
     poolCurrentTickIndex: I256,
@@ -11,6 +14,18 @@ Contract Pool(
     mut poolFeeReceiver: Address,
     clammContractId: ByteVec
 ) extends Decimal() {
+    pub fn getToken0Id() -> ByteVec {
+        return poolToken0Id
+    }
+
+    pub fn getToken1Id() -> ByteVec {
+        return poolToken1Id
+    }
+
+    pub fn getTickSpacing() -> U256 {
+        return poolTickSpacing
+    }
+
     pub fn getPoolLiquidity() -> U256 {
         return poolLiquidity
     }

@@ -100,7 +100,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createPool(token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
+    pub fn createPool(token0Id: ByteVec, token1Id: ByteVec, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
         assert!(init, InvariantError.NotInitialized)
 
         let caller = callerAddress!()
@@ -122,7 +122,7 @@ Contract Invariant(
         assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, initSqrtPrice, initTick, timestamp, contractAddress)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, token0Id, token1Id, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
@@ -242,10 +242,10 @@ Contract Invariant(
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        Positions(positionsContractId).add{caller -> ALPH: 2 alph}(caller, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
+        Positions(positionsContractId).add{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
     }
 
-    @using(checkExternalCaller = false)
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn createPosition(
         index: U256,
         token0: Address,
@@ -269,7 +269,41 @@ Contract Invariant(
 
         assert!(poolCurrentSqrtPrice >= slippageLimitLower && poolCurrentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        modify(caller, index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = modify(caller, index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+
+        let token0Id = pools.getToken0Id(poolKey)
+        let token1Id = pools.getToken1Id(poolKey)
+
+        transferTokenToSelf!(callerAddress!(), token0Id, x)
+        transferTokenToSelf!(callerAddress!(), token1Id, y)
+    }
+
+    @using(assetsInContract = true, checkExternalCaller = false)
+    pub fn removePosition(index: U256) -> () {
+        let caller = callerAddress!()
+        let positions = Positions(positionsContractId)
+
+        let poolKey = positions.getPoolKey(caller, index)
+        let upperTick = positions.getUpperTickIndex(caller, index)
+        let lowerTick = positions.getLowerTickIndex(caller, index)
+        let liquidity = positions.getLiquidity(caller, index)
+
+        let tickSpacing = Pools(poolsContractId).getTickSpacing(poolKey)
+
+        let (mut x, mut y) = modify(caller, index, poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+
+        let pools = Pools(poolsContractId)
+
+        let token0Id = pools.getToken0Id(poolKey)
+        let token1Id = pools.getToken1Id(poolKey)
+        let tokensOwedX = positions.getTokensOwedX(caller, index)
+        let tokensOwedY = positions.getTokensOwedY(caller, index)
+
+        x = x + tokensOwedX
+        y = y + tokensOwedY
+
+        transferTokenFromSelf!(caller, token0Id, x)
+        transferTokenFromSelf!(caller, token1Id, y)
     }
 
     @using(updateFields = false, checkExternalCaller = false)

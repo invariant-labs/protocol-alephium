@@ -3,7 +3,7 @@ import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, ChangeProtocolFee, CreatePool, Init, Invariant } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { decodeFeeTiers, decodePool, decodePools, deployInvariant } from '../src/utils'
+import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -32,9 +32,14 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
+        token0Id: token0.contractInstance.contractId,
+        token1Id: token1.contractInstance.contractId,
         token0: ZERO_ADDRESS,
         token1: testAddress,
         fee: 0n,
@@ -71,9 +76,14 @@ describe('invariant tests', () => {
     expect(parsedFeeTiers[0].fee).toBe(100n)
     expect(parsedFeeTiers[0].tickSpacing).toBe(1n)
 
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
+        token0Id: token0.contractInstance.contractId,
+        token1Id: token1.contractInstance.contractId,
         token0: ZERO_ADDRESS,
         token1: testAddress,
         fee: 100n,

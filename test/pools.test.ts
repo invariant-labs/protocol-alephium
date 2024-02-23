@@ -1,17 +1,9 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, stringToHex, toApiByteVec, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
 import { getSigner, testAddress } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Flip, Init, Invariant } from '../artifacts/ts'
+import { AddFeeTier, CreatePool, Init, Invariant } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import {
-  decodePool,
-  decodePools,
-  deployCLAMM,
-  deployChunk,
-  deployInvariant,
-  deployTickmap,
-  expectError
-} from '../src/utils'
+import { decodePool, decodePools, deployInvariant, deployTokenFaucet, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -72,9 +64,14 @@ describe('pools tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
+        token0Id: token0.contractInstance.contractId,
+        token1Id: token1.contractInstance.contractId,
         token0: ZERO_ADDRESS,
         token1: testAddress,
         fee: 0n,

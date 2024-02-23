@@ -1,4 +1,5 @@
 Contract Position(
+    posPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
     posUpperTickIndex: I256,
@@ -11,6 +12,10 @@ Contract Position(
     enum PositionError {
         InsufficientLiquidity = 700
         EmptyPositionPokes = 701
+    }
+
+    pub fn getPoolKey() -> ByteVec {
+        return posPoolKey
     }
 
     pub fn getLiquidity() -> U256 {
