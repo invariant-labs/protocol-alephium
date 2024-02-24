@@ -147,8 +147,8 @@ Contract Invariant(
         return Pools(poolsContractId).get(generatePoolKey(token0, token1, fee, tickSpacing))
     }
 
-    pub fn getPosition(owner: Address, index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
-        return Positions(positionsContractId).get(owner, index)
+    pub fn getPosition(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
+        return Positions(positionsContractId).get(index)
     }
 
     pub fn isTickInitialized(token0: Address, token1: Address, fee: U256, tickSpacing: U256, index: I256) -> Bool {
@@ -248,7 +248,6 @@ Contract Invariant(
         slippageLimitUpper: U256
     ) -> () {
         let pools = Pools(poolsContractId)
-        let caller = callerAddress!()
         let currentTimestamp = blockTimeStamp!()
 
         assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
@@ -267,7 +266,7 @@ Contract Invariant(
 
         assert!(poolCurrentSqrtPrice >= slippageLimitLower && poolCurrentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = Positions(positionsContractId).wrappedModify(caller, index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         let tokenXId = pools.getTokenXId(poolKey)
         let tokenYId = pools.getTokenYId(poolKey)
@@ -281,27 +280,32 @@ Contract Invariant(
         let caller = callerAddress!()
         let positions = Positions(positionsContractId)
 
-        let poolKey = positions.getPoolKey(caller, index)
-        let upperTick = positions.getUpperTickIndex(caller, index)
-        let lowerTick = positions.getLowerTickIndex(caller, index)
-        let liquidity = positions.getLiquidity(caller, index)
+        let poolKey = positions.getPoolKey(index)
+        let upperTick = positions.getUpperTickIndex(index)
+        let lowerTick = positions.getLowerTickIndex(index)
+        let liquidity = positions.getLiquidity(index)
 
         let tickSpacing = Pools(poolsContractId).getTickSpacing(poolKey)
 
-        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(caller, index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let pools = Pools(poolsContractId)
 
         let tokenXId = pools.getTokenXId(poolKey)
         let tokenYId = pools.getTokenYId(poolKey)
-        let tokensOwedX = positions.getTokensOwedX(caller, index)
-        let tokensOwedY = positions.getTokensOwedY(caller, index)
+        let tokensOwedX = positions.getTokensOwedX(index)
+        let tokensOwedY = positions.getTokensOwedY(index)
 
         x = x + tokensOwedX
         y = y + tokensOwedY
 
         transferTokenFromSelf!(caller, tokenXId, x)
         transferTokenFromSelf!(caller, tokenYId, y)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+    pub fn transferPosition(index: U256, newOwner: Address) -> () {
+        Positions(positionsContractId).transfer(callerAddress!(), index, newOwner)
     }
 
     @using(updateFields = false, checkExternalCaller = false)
@@ -341,18 +345,18 @@ Contract Invariant(
         let positions = Positions(positionsContractId)
         let pools = Pools(poolsContractId)
 
-        let poolKey = positions.getPoolKey(caller, index)
-        let upperTick = positions.getUpperTickIndex(caller, index)
-        let lowerTick = positions.getLowerTickIndex(caller, index)
+        let poolKey = positions.getPoolKey(index)
+        let upperTick = positions.getUpperTickIndex(index)
+        let lowerTick = positions.getLowerTickIndex(index)
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        positions.wrappedModify(caller, index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
+        positions.wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
         
-        let tokensOwedX = positions.getTokensOwedX(caller, index)
-        let tokensOwedY = positions.getTokensOwedY(caller, index)
+        let tokensOwedX = positions.getTokensOwedX(index)
+        let tokensOwedY = positions.getTokensOwedY(index)
 
-        positions.setTokensOwedX(caller, index, 0)
-        positions.setTokensOwedY(caller, index, 0)
+        positions.setTokensOwedX(index, 0)
+        positions.setTokensOwedY(index, 0)
 
         let tokenXId = pools.getTokenXId(poolKey)
         let tokenYId = pools.getTokenYId(poolKey)

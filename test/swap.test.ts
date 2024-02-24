@@ -105,7 +105,7 @@ describe('swap tests', () => {
       ]
     })
     const position = await invariant.methods.getPosition({
-      args: { owner: sender.address, index: 1n }
+      args: { index: 1n }
     })
     const parsedPosition = decodePosition(position.returns)
     expect(parsedPosition.exist).toBe(true)
@@ -538,7 +538,7 @@ describe('swap tests', () => {
         ]
       })
       const position = await invariant.methods.getPosition({
-        args: { owner: sender.address, index: 1n }
+        args: { index: 1n }
       })
       const parsedPosition = decodePosition(position.returns)
       expect(parsedPosition.exist).toBe(true)
@@ -618,7 +618,7 @@ describe('swap tests', () => {
         ]
       })
       const position = await invariant.methods.getPosition({
-        args: { owner: sender.address, index }
+        args: { index }
       })
       const parsedPosition = decodePosition(position.returns)
       expect(parsedPosition.exist).toBe(true)
