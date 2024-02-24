@@ -247,7 +247,6 @@ Contract Invariant(
         slippageLimitLower: U256,
         slippageLimitUpper: U256
     ) -> () {
-        
         let pools = Pools(poolsContractId)
         let caller = callerAddress!()
         let currentTimestamp = blockTimeStamp!()

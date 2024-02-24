@@ -71,7 +71,7 @@ Contract CLAMM() extends Log(){
         }
 
         // Amout out can not exceed amount
-        if (byAmountIn && amountOut > amount) {
+        if (!byAmountIn && amountOut > amount) {
             amountOut = amount
         }
 
@@ -79,7 +79,7 @@ Contract CLAMM() extends Log(){
         if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
             feeAmount = amount - amountIn
         } else {
-            feeAmount = mulUp(amount, fee, percentageScale)
+            feeAmount = mulUp(amountIn, fee, percentageScale)
         }
 
         return nextSqrtPrice, amountIn, amountOut, feeAmount

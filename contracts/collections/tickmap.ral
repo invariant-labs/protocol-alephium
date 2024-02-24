@@ -94,8 +94,8 @@ Contract Tickmap(
 
                 if (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
                     let index = chunk * getChunkSize() + bit
-
-                    return true, toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                    
+                    return true, (toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
@@ -125,8 +125,7 @@ Contract Tickmap(
 
                 if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
                     let index = chunk * getChunkSize() + bit
-
-                    return true, toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing)) * toI256!(tickSpacing)
+                    return true, (toI256!(index) - (CLAMM(clammContractId).getGlobalMaxTick() / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }

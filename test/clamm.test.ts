@@ -23,6 +23,27 @@ describe('math tests', () => {
         .returns
       expect(result).toBe(10000000000000000000000000000n)
     }
+    {
+      const liquidity = 2n * 10n ** 5n
+      const amount = 1n
+      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+        .returns
+      expect(result).toBe(5n * 10n ** 27n)
+    }
+    {
+      const liquidity = ((1n << 64n) - 1n) * 10n ** 5n
+      const amount = 1n
+      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+        .returns
+      expect(result).toBe(542101086n)
+    }
+    {
+      const liquidity = 100n * 10n ** 5n
+      const amount = 1000000n
+      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+        .returns
+      expect(result).toBe(10000n * 10n ** 28n)
+    }
   })
   test('tick from sqrt price', async () => {
     const clamm = await deployCLAMM(sender)

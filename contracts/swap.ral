@@ -28,7 +28,7 @@ Contract SwapUtils(
 
         // let mut ticks = 
         
-        let currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
+        let mut currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
 
         if(xToY) {
             assert!(currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= getMaxSqrtPrice(), SwapError.WrongLimit)             
@@ -47,7 +47,15 @@ Contract SwapUtils(
         while (remainingAmount != 0) {
             let currentTickIndex = Pools(poolsContractId).getCurrentTickIndex(poolKey)
             let currentLiquidity = Pools(poolsContractId).getCurrentLiquidity(poolKey)
-            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = Tickmap(tickmapContractId).getCloserLimit(sqrtPriceLimit, xToY, currentTickIndex, tickSpacing, poolKey)
+            currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
+
+            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = Tickmap(tickmapContractId).getCloserLimit(
+                sqrtPriceLimit,
+                xToY,
+                currentTickIndex,
+                tickSpacing,
+                poolKey
+            )
 
             let (nextSqrtPrice, amountIn, amountOut, feeAmount) = CLAMM(clammContractId).computeSwapStep(
                 currentSqrtPrice,
@@ -91,7 +99,6 @@ Contract SwapUtils(
                     )
                     remainingAmount = updatedRemainingAmount
                     totalAmountIn = totalAmountIn + amountToAdd
-
                     if (hasCrossed) {
                         let (feeGrowthGlobalX, feeGrowthGlobalY) = Pools(poolsContractId).getFeeGrowthGlobal(poolKey)
                         let (add, liquidityDelta) = Ticks(ticksContractId).wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
