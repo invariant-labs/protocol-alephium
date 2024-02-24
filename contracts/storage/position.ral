@@ -54,6 +54,16 @@ Contract Position(
         return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
     }
 
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setTokensOwedX(tokensOwedX: U256) -> () {
+        posTokensOwedX = tokensOwedX
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setTokensOwedY(tokensOwedY: U256) -> () {
+        posTokensOwedY = tokensOwedY
+    }
+
     @using(updateFields = false, checkExternalCaller = false)
     pub fn modify(
         poolsContractId: ByteVec,

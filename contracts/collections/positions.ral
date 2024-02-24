@@ -87,6 +87,18 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
     }
 
     @using(checkExternalCaller = false)
+    pub fn setTokensOwedX(owner: Address, index: U256, value: U256) -> () {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        Position(subContractId).setTokensOwedX(value)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setTokensOwedY(owner: Address, index: U256, value: U256) -> () {
+        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+        Position(subContractId).setTokensOwedY(value)
+    }
+
+    @using(checkExternalCaller = false)
     pub fn update(
         owner: Address,
         index: U256,

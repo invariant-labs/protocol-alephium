@@ -11,7 +11,6 @@ import {
   Pools,
   Position,
   PositionsCounter,
-  Swap,
   SwapUtils,
   Tickmap,
   Ticks
@@ -210,8 +209,8 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
     Pool.deploy(signer, {
       initialFields: {
         poolTickSpacing: 0n,
-        poolToken0Id: '',
-        poolToken1Id: '',
+        poolTokenXId: '',
+        poolTokenYId: '',
         poolLiquidity: 0n,
         poolCurrentSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,
