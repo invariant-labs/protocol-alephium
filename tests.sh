@@ -10,7 +10,6 @@ ALEPHIUM_CLI_PACKAGE="@alephium/cli@latest"
   cd $ALEPHIUM_STACK_DIR
   make start-devnet
 )
-sleep 10s
 
 # Compile and test using Alephium CLI
 npx $ALEPHIUM_CLI_PACKAGE compile 
