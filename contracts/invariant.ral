@@ -236,7 +236,6 @@ Contract Invariant(
         slippageLimitLower: U256,
         slippageLimitUpper: U256
     ) -> () {
-        
         let pools = Pools(poolsContractId)
         let caller = callerAddress!()
         let currentTimestamp = blockTimeStamp!()
@@ -252,8 +251,6 @@ Contract Invariant(
         if(isTickInitialized(token0, token1, fee, tickSpacing, upperTick) == false) {
             Tickmap(tickmapContractId).flip(true, upperTick, tickSpacing, poolKey)
         }
-
-        
 
         let poolCurrentSqrtPrice = pools.getCurrentSqrtPrice(poolKey)
 
