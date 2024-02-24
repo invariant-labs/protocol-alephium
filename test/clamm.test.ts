@@ -101,7 +101,6 @@ describe('math tests', () => {
     }
   })
   test('log spacing over 1', async () => {
-    jest.setTimeout(150000)
     const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
@@ -133,9 +132,8 @@ describe('math tests', () => {
         expect(tick).toEqual(expectedTick)
       }
     }
-  })
+  }, 15000)
   test('log', async () => {
-    jest.setTimeout(150000)
     const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
@@ -161,7 +159,7 @@ describe('math tests', () => {
         expect(tick).toEqual(i)
       }
     }
-  })
+  }, 15000)
 
   // test('calculate sqrt price', async () => {
   //   const clamm = await deployCLAMM(sender)
