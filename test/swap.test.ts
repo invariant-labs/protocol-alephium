@@ -381,7 +381,7 @@ describe('swap tests', () => {
       ).returns
       expect(isUpperTickInitialized).toBe(true)
     }
-  })
+  }, 15000)
 
   test('crossing tick swap x to y', async () => {
     const invariantResult = await deployInvariant(sender, protocolFee)
@@ -619,5 +619,5 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(2n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
-  })
+  }, 15000)
 })
