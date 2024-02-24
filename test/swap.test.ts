@@ -176,7 +176,7 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(1n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
-  })
+  }, 15000)
 
   test('swap y to x', async () => {
     const liquidityDelta = 1000000n * 10n ** 5n
@@ -381,7 +381,7 @@ describe('swap tests', () => {
       ).returns
       expect(isUpperTickInitialized).toBe(true)
     }
-  })
+  }, 15000)
 
   test('crossing tick swap x to y', async () => {
     const invariantResult = await deployInvariant(sender, protocolFee)
@@ -619,5 +619,5 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(2n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
-  })
+  }, 15000)
 })

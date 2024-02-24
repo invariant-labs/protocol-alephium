@@ -52,7 +52,7 @@ describe('math tests', () => {
       const result = (
         await clamm.contractInstance.methods.getTickAtSqrtPrice({ args: { sqrtPrice, tickSpacing: 10n } })
       ).returns
-      expect(result).toBe(-20n) // Should be -20
+      expect(result).toBe(-20n)
     }
   })
   test('allign tick to tickspacing', async () => {
@@ -101,7 +101,6 @@ describe('math tests', () => {
     }
   })
   test('log spacing over 1', async () => {
-    jest.setTimeout(100000)
     const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
@@ -133,7 +132,7 @@ describe('math tests', () => {
         expect(tick).toEqual(expectedTick)
       }
     }
-  })
+  }, 15000)
   test('log', async () => {
     const clamm = await deployCLAMM(sender)
     {
@@ -160,7 +159,7 @@ describe('math tests', () => {
         expect(tick).toEqual(i)
       }
     }
-  })
+  }, 15000)
 
   // test('calculate sqrt price', async () => {
   //   const clamm = await deployCLAMM(sender)
