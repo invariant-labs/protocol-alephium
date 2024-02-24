@@ -1,29 +1,19 @@
-Contract FeeTiers(admin: Address, feeTierTemplateContractId: ByteVec, mut feeTierCount: U256) {
+Contract FeeTiers(feeTierTemplateContractId: ByteVec, mut feeTierCount: U256) {
     enum FeeTiersError {
-        NotAdmin = 100
         FeeTierAlreadyExist = 101
         FeeTierNotFound = 102
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
     pub fn add(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
-        assert!(callerAddress!() == admin, FeeTiersError.NotAdmin)
+        let exists = contains(fee, tickSpacing)
 
-        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
-            let contract = FeeTier(subContractId!(toByteVec!(i)))
-    
-            if (!contract.isActive()) {
-                contract.setActive(true)
-                return
-            }
-    
-            assert!((fee != contract.getFee() || tickSpacing != contract.getTickSpacing()), FeeTiersError.FeeTierAlreadyExist)
-        }
+        assert!(!exists, FeeTiersError.FeeTierAlreadyExist)
     
         feeTierCount = feeTierCount + 1
         let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
-            toByteVec!(i),
+            toByteVec!(feeTierCount),
             feeTierTemplateContractId,
             encodedImmFields,
             encodedMutFields
@@ -32,7 +22,7 @@ Contract FeeTiers(admin: Address, feeTierTemplateContractId: ByteVec, mut feeTie
 
     @using(checkExternalCaller = false)
     pub fn remove(fee: U256, tickSpacing: U256) -> () {
-        assert!(callerAddress!() == admin, FeeTiersError.NotAdmin)
+        // assert!(callerAddress!() == admin, FeeTiersError.NotAdmin)
 
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let contract = FeeTier(subContractId!(toByteVec!(i)))
@@ -71,6 +61,8 @@ Contract FeeTiers(admin: Address, feeTierTemplateContractId: ByteVec, mut feeTie
 
         return count
     }
+    
+    
 
     pub fn getAll() -> ByteVec {
         let mut feeTiersBytes = b``

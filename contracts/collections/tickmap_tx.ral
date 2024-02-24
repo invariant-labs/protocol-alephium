@@ -1,3 +1,0 @@
-TxScript Flip(tickmap: Tickmap, tick: I256, tickSpacing: U256, poolKey: ByteVec) {
-    tickmap.flip{callerAddress!() -> ALPH: 1 alph}(callerAddress!(), tick, tickSpacing, poolKey)
-}

@@ -50,3 +50,7 @@ TxScript CreatePosition(
 TxScript RemovePosition(invariant: Invariant, index: U256) {
     invariant.removePosition(index)
 }
+
+TxScript Swap(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
+    invariant.swap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+}

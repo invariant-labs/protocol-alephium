@@ -11,6 +11,8 @@ import {
   Pools,
   Position,
   PositionsCounter,
+  Swap,
+  SwapUtils,
   Tickmap,
   Ticks
 } from '../artifacts/ts'
@@ -43,20 +45,38 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
 export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
   const account = await signer.getSelectedAccount()
 
-  const feeTier = await deployFeeTier(signer)
-  const feeTiers = await deployFeeTiers(signer)
-  const poolKey = await deployPoolKey(signer)
-  const poolKeys = await deployPoolKeys(signer)
-  const pools = await deployPools(signer)
-  const pool = await deployPool(signer)
-  const tick = await deployTick(signer)
-  const ticks = await deployTicks(signer)
-  const position = await deployPosition(signer)
-  const positions = await deployPositions(signer)
-  const positionsCounter = await deployPositionsCounter(signer)
-  const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(signer, account.address, chunk.contractInstance.contractId)
   const clamm = await deployCLAMM(signer)
+  const feeTier = await deployFeeTier(signer)
+  const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
+  const poolKey = await deployPoolKey(signer)
+  const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
+  const pool = await deployPool(signer, clamm.contractInstance.contractId)
+  const pools = await deployPools(signer, pool.contractInstance.contractId, clamm.contractInstance.contractId)
+  const tick = await deployTick(signer)
+  const ticks = await deployTicks(signer, tick.contractInstance.contractId)
+  const position = await deployPosition(signer)
+  const positionsCounter = await deployPositionsCounter(signer)
+  const positions = await deployPositions(
+    signer,
+    position.contractInstance.contractId,
+    positionsCounter.contractInstance.contractId
+  )
+  const chunk = await deployChunk(signer)
+  const tickmap = await deployTickmap(
+    signer,
+    account.address,
+    chunk.contractInstance.contractId,
+    clamm.contractInstance.contractId
+  )
+
+  const swap = await deploySwap(
+    signer,
+    clamm.contractInstance.contractId,
+    pools.contractInstance.contractId,
+    ticks.contractInstance.contractId,
+    tickmap.contractInstance.contractId,
+    protocolFee
+  )
 
   return await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -64,26 +84,35 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         init: false,
         admin: account.address,
         protocolFee,
-        feeTiersContractId: ZERO_ADDRESS,
-        feeTiersTemplateContractId: feeTiers.contractInstance.contractId,
-        feeTierTemplateContractId: feeTier.contractInstance.contractId,
-        poolKeysContractId: ZERO_ADDRESS,
-        poolKeysTemplateContractId: poolKeys.contractInstance.contractId,
-        poolKeyTemplateContractId: poolKey.contractInstance.contractId,
-        poolsContractId: ZERO_ADDRESS,
-        poolsTemplateContractId: pools.contractInstance.contractId,
-        poolTemplateContractId: pool.contractInstance.contractId,
-        ticksContractId: ZERO_ADDRESS,
-        ticksTemplateContractId: ticks.contractInstance.contractId,
-        tickTemplateContractId: tick.contractInstance.contractId,
-        positionsContractId: ZERO_ADDRESS,
-        positionsTemplateContractId: positions.contractInstance.contractId,
-        positionTemplateContractId: position.contractInstance.contractId,
-        positionsCounterTemplateContractId: positionsCounter.contractInstance.contractId,
-        tickmapContractId: ZERO_ADDRESS,
-        tickmapTemplateContractId: tickmap.contractInstance.contractId,
-        chunkTemplateContractId: chunk.contractInstance.contractId,
-        clammContractId: clamm.contractInstance.contractId
+        feeTiersContractId: feeTiers.contractInstance.contractId,
+        poolKeysContractId: poolKeys.contractInstance.contractId,
+        poolsContractId: pools.contractInstance.contractId,
+        ticksContractId: ticks.contractInstance.contractId,
+        positionsContractId: positions.contractInstance.contractId,
+        tickmapContractId: tickmap.contractInstance.contractId,
+        clammContractId: clamm.contractInstance.contractId,
+        swapContractId: swap.contractInstance.contractId
+      }
+    })
+  )
+}
+
+export async function deploySwap(
+  signer: SignerProvider,
+  clammContractId: string,
+  poolsContractId: string,
+  ticksContractId: string,
+  tickmapContractId: string,
+  protocolFee: bigint
+) {
+  return await waitTxConfirmed(
+    SwapUtils.deploy(signer, {
+      initialFields: {
+        clammContractId,
+        poolsContractId,
+        ticksContractId,
+        tickmapContractId,
+        protocolFee
       }
     })
   )
@@ -102,24 +131,23 @@ export async function deployFeeTier(signer: SignerProvider) {
   )
 }
 
-export async function deployFeeTiers(signer: SignerProvider) {
+export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
   return await waitTxConfirmed(
     FeeTiers.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
-        feeTierTemplateContractId: ZERO_ADDRESS,
+        feeTierTemplateContractId: feeTier,
         feeTierCount: 0n
       }
     })
   )
 }
 
-export async function deployPositions(signer: SignerProvider) {
+export async function deployPositions(signer: SignerProvider, positionId: string, positionCounterId: string) {
   return await waitTxConfirmed(
     Positions.deploy(signer, {
       initialFields: {
-        positionTemplateContractId: ZERO_ADDRESS,
-        positionsCounterTemplateId: ZERO_ADDRESS
+        positionTemplateContractId: positionId,
+        positionsCounterTemplateId: positionCounterId
       }
     })
   )
@@ -143,11 +171,11 @@ export async function deployPosition(signer: SignerProvider) {
   )
 }
 
-export async function deployTicks(signer: SignerProvider) {
+export async function deployTicks(signer: SignerProvider, tickId: string) {
   return await waitTxConfirmed(
     Ticks.deploy(signer, {
       initialFields: {
-        tickTemplateContractId: ZERO_ADDRESS
+        tickTemplateContractId: tickId
       }
     })
   )
@@ -166,19 +194,18 @@ export async function deployPoolKey(signer: SignerProvider) {
   )
 }
 
-export async function deployPoolKeys(signer: SignerProvider) {
+export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) {
   return await waitTxConfirmed(
     PoolKeys.deploy(signer, {
       initialFields: {
-        admin: ZERO_ADDRESS,
-        poolKeyTemplateContractId: ZERO_ADDRESS,
+        poolKeyTemplateContractId: poolKeyId,
         poolKeyCount: 0n
       }
     })
   )
 }
 
-export async function deployPool(signer: SignerProvider) {
+export async function deployPool(signer: SignerProvider, clammId: string) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
@@ -195,18 +222,18 @@ export async function deployPool(signer: SignerProvider) {
         poolStartTimestamp: 0n,
         poolLastTimestamp: 0n,
         poolFeeReceiver: ZERO_ADDRESS,
-        clammContractId: ZERO_ADDRESS
+        clammContractId: clammId
       }
     })
   )
 }
 
-export async function deployPools(signer: SignerProvider) {
+export async function deployPools(signer: SignerProvider, poolId: string, clammId: string) {
   return await waitTxConfirmed(
     Pools.deploy(signer, {
       initialFields: {
-        poolTemplateContractId: ZERO_ADDRESS,
-        clammContractId: ZERO_ADDRESS
+        poolTemplateContractId: poolId,
+        clammContractId: clammId
       }
     })
   )
@@ -240,16 +267,16 @@ export async function deployChunk(signer: SignerProvider) {
 
 export async function deployTickmap(
   signer: SignerProvider,
-  admin?: string,
-  chunkTemplateContractId?: string,
-  clammContractId?: string
+  admin: string,
+  chunkTemplateContractId: string,
+  clammContractId: string
 ) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
-        admin: admin ?? ZERO_ADDRESS,
-        chunkTemplateContractId: chunkTemplateContractId ?? ZERO_ADDRESS,
-        clammContractId: clammContractId ?? ZERO_ADDRESS
+        admin: admin,
+        chunkTemplateContractId: chunkTemplateContractId,
+        clammContractId: clammContractId
       }
     })
   )
