@@ -4,6 +4,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
 import { decodePool, decodePosition, decodeTick, deployChunk, deployInvariant, deployTickmap } from '../src/utils'
+import { parse } from 'path'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -17,7 +18,7 @@ describe('swap tests', () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test('swap', async () => {
+  test('swap x to y', async () => {
     const liquidityDelta = 1000000n * 10n ** 5n
     const lowerTickIndex = -20n
     const upperTickIndex = 10n
@@ -177,7 +178,212 @@ describe('swap tests', () => {
     }
   })
 
-  test('crossing tick swap', async () => {
+  test('swap y to x', async () => {
+    const liquidityDelta = 1000000n * 10n ** 5n
+    const lowerTickIndex = -10n
+    const middleTickIndex = 10n
+    const upperTickIndex = 20n
+
+    const invariantResult = await deployInvariant(sender, protocolFee)
+    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    await Init.execute(sender, {
+      initialFields: { invariant: invariant.contractId },
+      attoAlphAmount: invariantDeployFee
+    })
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: fee,
+        tickSpacing: tickSpacing
+      },
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+    })
+    await CreatePool.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        initSqrtPrice: 1000000000000000000000000n,
+        initTick: 0n
+      },
+      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+    })
+    await InitPosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex
+      },
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+    })
+    await CreatePosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        index: 1n,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex,
+        liquidityDelta: liquidityDelta,
+        slippageLimitLower: 1000000000000000000000000n,
+        slippageLimitUpper: 1000000000000000000000000n
+      }
+    })
+    await InitPosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        lowerTick: middleTickIndex,
+        upperTick: upperTickIndex + 20n
+      },
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+    })
+    await CreatePosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        index: 2n,
+        token0: ZERO_ADDRESS,
+        token1: testAddress,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        lowerTick: middleTickIndex,
+        upperTick: upperTickIndex + 20n,
+        liquidityDelta: liquidityDelta,
+        slippageLimitLower: 1000000000000000000000000n,
+        slippageLimitUpper: 1000000000000000000000000n
+      }
+    })
+    {
+      const swapAmount = 1000n
+
+      const poolBefore = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
+
+      const slippage = 65535383934512647000000000000n
+
+      const [amountIn, amountOut, targetSqrtPrice] = (
+        await invariant.methods.quote({
+          args: {
+            token0: ZERO_ADDRESS,
+            token1: testAddress,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            xToY: false,
+            amount: swapAmount,
+            byAmountIn: true,
+            sqrtPriceLimit: slippage
+          }
+        })
+      ).returns
+
+      expect(amountIn).toBe(swapAmount)
+      expect(amountOut).toBe(990n)
+      expect(targetSqrtPrice).toBe(1000746100010000000000000n)
+
+      await Swap.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: ZERO_ADDRESS,
+          token1: testAddress,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          xToY: false,
+          amount: swapAmount,
+          byAmountIn: true,
+          sqrtPriceLimit: slippage
+        }
+      })
+
+      const poolAfter = decodePool(
+        (
+          await invariant.methods.getPool({
+            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+          })
+        ).returns
+      )
+      expect(poolAfter.liquidity - liquidityDelta).toBe(poolBefore.liquidity)
+      expect(poolAfter.currentTickIndex).toBe(10n)
+      expect(poolAfter.currentSqrtPrice).toBe(1000746100010000000000000n)
+      expect(poolAfter.feeGrowthGlobalX).toBe(0n)
+      expect(poolAfter.feeGrowthGlobalY).toBe(40000000000000000000000n)
+      expect(poolAfter.feeProtocolTokenX).toBe(0n)
+      expect(poolAfter.feeProtocolTokenY).toBe(2n)
+
+      const lowerTick = await invariant.methods.getTick({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+      })
+      const parsedLowerTick = decodeTick(lowerTick.returns)
+      expect(parsedLowerTick.exist).toBe(true)
+      expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
+      expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
+      const middleTick = await invariant.methods.getTick({
+        args: {
+          token0: ZERO_ADDRESS,
+          token1: testAddress,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: middleTickIndex
+        }
+      })
+      const parsedMiddleTick = decodeTick(middleTick.returns)
+      expect(parsedMiddleTick.exist).toBe(true)
+      expect(parsedMiddleTick.liquidityChange).toBe(liquidityDelta)
+      expect(parsedMiddleTick.feeGrowthOutsideY).toBe(30000000000000000000000n)
+
+      const upperTick = await invariant.methods.getTick({
+        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+      })
+      const parsedUpperTick = decodeTick(upperTick.returns)
+      expect(parsedUpperTick.exist).toBe(true)
+      expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
+      expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
+
+      const isLowerTickInitialized = (
+        await invariant.methods.isTickInitialized({
+          args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+        })
+      ).returns
+      expect(isLowerTickInitialized).toBe(true)
+
+      const isMiddleTickInitialized = (
+        await invariant.methods.isTickInitialized({
+          args: {
+            token0: ZERO_ADDRESS,
+            token1: testAddress,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            index: middleTickIndex
+          }
+        })
+      ).returns
+      expect(isMiddleTickInitialized).toBe(true)
+
+      const isUpperTickInitialized = (
+        await invariant.methods.isTickInitialized({
+          args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+        })
+      ).returns
+      expect(isUpperTickInitialized).toBe(true)
+    }
+  })
+
+  test('crossing tick swap x to y', async () => {
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
     await Init.execute(sender, {

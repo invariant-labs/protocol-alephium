@@ -71,7 +71,7 @@ Contract CLAMM() extends Log(){
         }
 
         // Amout out can not exceed amount
-        if (byAmountIn && amountOut > amount) {
+        if (!byAmountIn && amountOut > amount) {
             amountOut = amount
         }
 
