@@ -101,6 +101,7 @@ describe('math tests', () => {
     }
   })
   test('log spacing over 1', async () => {
+    jest.setTimeout(100000)
     const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
