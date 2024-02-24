@@ -303,7 +303,7 @@ Contract Invariant(
         transferTokenFromSelf!(caller, tokenYId, y)
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn transferPosition(index: U256, newOwner: Address) -> () {
         Positions(positionsContractId).transfer(callerAddress!(), index, newOwner)
     }
