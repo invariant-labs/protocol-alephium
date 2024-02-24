@@ -1,0 +1,28 @@
+name: Build and Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build contract and run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install packages
+        run: npm install
+
+      - name: Build contract and run tests
+        run: |
+          chmod +x tests.sh
+          ./tests.sh
+        shell: bash
+   
