@@ -22,23 +22,7 @@ describe('swap tests', () => {
     const lowerTickIndex = -20n
     const upperTickIndex = 10n
 
-    const invariantResult = await deployInvariant(sender, protocolFee)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
-    })
-
     const amount = 1000000n
-
     const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
     await Withdraw.execute(sender, {
       initialFields: {
@@ -54,6 +38,21 @@ describe('swap tests', () => {
         amount
       },
       attoAlphAmount: DUST_AMOUNT * 2n
+    })
+
+    const invariantResult = await deployInvariant(sender, protocolFee)
+    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    await Init.execute(sender, {
+      initialFields: { invariant: invariant.contractId },
+      attoAlphAmount: invariantDeployFee
+    })
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee: fee,
+        tickSpacing: tickSpacing
+      },
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
     await CreatePool.execute(sender, {
@@ -213,6 +212,24 @@ describe('swap tests', () => {
     const middleTickIndex = 10n
     const upperTickIndex = 20n
 
+    const amount = 1000000n
+    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token0.contractInstance.contractId,
+        amount
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
+    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token1.contractInstance.contractId,
+        amount
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
+
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
     await Init.execute(sender, {
@@ -227,10 +244,6 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
-
-    const amount = 1000000n
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
 
     await CreatePool.execute(sender, {
       initialFields: {
@@ -298,8 +311,8 @@ describe('swap tests', () => {
         invariant: invariant.contractId,
         token0Id: token0.contractInstance.contractId,
         token1Id: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
+        token0Amount: amount / 2n,
+        token1Amount: amount / 2n,
         index: 2n,
         token0: ZERO_ADDRESS,
         token1: testAddress,
@@ -312,8 +325,8 @@ describe('swap tests', () => {
         slippageLimitUpper: 1000000000000000000000000n
       },
       tokens: [
-        { id: token0.contractInstance.contractId, amount },
-        { id: token1.contractInstance.contractId, amount }
+        { id: token0.contractInstance.contractId, amount: amount / 2n },
+        { id: token1.contractInstance.contractId, amount: amount / 2n }
       ]
     })
     {
@@ -436,6 +449,24 @@ describe('swap tests', () => {
   })
 
   test('crossing tick swap x to y', async () => {
+    const amount = 1000000n
+    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token0.contractInstance.contractId,
+        amount
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
+    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token1.contractInstance.contractId,
+        amount
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
+
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
     await Init.execute(sender, {
@@ -450,10 +481,6 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
-
-    const amount = 1000000n
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
 
     await CreatePool.execute(sender, {
       initialFields: {
@@ -572,8 +599,8 @@ describe('swap tests', () => {
           invariant: invariant.contractId,
           token0Id: token0.contractInstance.contractId,
           token1Id: token1.contractInstance.contractId,
-          token0Amount: amount,
-          token1Amount: amount,
+          token0Amount: amount / 2n,
+          token1Amount: amount / 2n,
           index,
           token0: ZERO_ADDRESS,
           token1: testAddress,
@@ -586,8 +613,8 @@ describe('swap tests', () => {
           slippageLimitUpper: 1000000000000000000000000n
         },
         tokens: [
-          { id: token0.contractInstance.contractId, amount },
-          { id: token1.contractInstance.contractId, amount }
+          { id: token0.contractInstance.contractId, amount: amount / 2n },
+          { id: token1.contractInstance.contractId, amount: amount / 2n }
         ]
       })
       const position = await invariant.methods.getPosition({
