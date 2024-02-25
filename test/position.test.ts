@@ -1,5 +1,5 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
-import { getSigner, testAddress } from '@alephium/web3-test'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import {
   AddFeeTier,
@@ -14,7 +14,7 @@ import {
   Withdraw
 } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { balanceOf, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -67,10 +67,8 @@ describe('position tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 100n,
         tickSpacing: 1n,
         initSqrtPrice: 1000000000000000000000000n,
@@ -82,8 +80,8 @@ describe('position tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 100n,
         tickSpacing: 1n,
         lowerTick: -10n,
@@ -109,13 +107,11 @@ describe('position tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount,
         token1Amount: amount,
         index: 1n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee: 100n,
         tickSpacing: 1n,
         lowerTick: lowerTickIndex,
@@ -156,7 +152,13 @@ describe('position tests', () => {
     expect(parsedPosition.tokensOwedY).toBe(0n)
 
     const lowerTick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n, index: -10n }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n,
+        index: -10n
+      }
     })
 
     const parsedLowerTick = decodeTick(lowerTick.returns)
@@ -170,7 +172,13 @@ describe('position tests', () => {
     expect(parsedLowerTick.secondsOutside).toBe(0n)
 
     const upperTick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n, index: 10n }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n,
+        index: 10n
+      }
     })
 
     const parsedUpperTick = decodeTick(upperTick.returns)
@@ -227,10 +235,8 @@ describe('position tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 100n,
         tickSpacing: 1n,
         initSqrtPrice: 1000000000000000000000000n,
@@ -242,8 +248,8 @@ describe('position tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 100n,
         tickSpacing: 1n,
         lowerTick: -10n,
@@ -259,13 +265,11 @@ describe('position tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount,
         token1Amount: amount,
         index: 1n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee: 100n,
         tickSpacing: 1n,
         lowerTick: lowerTickIndex,
@@ -279,6 +283,17 @@ describe('position tests', () => {
         { id: token1.contractInstance.contractId, amount }
       ]
     })
+
+    const poolBefore = await invariant.methods.getPool({
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n
+      }
+    })
+    const parsedPoolBefore = decodePool(poolBefore.returns)
+    expect(parsedPoolBefore.liquidity).toBe(liquidityDelta)
 
     const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
     const senderToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, sender.address)
@@ -297,6 +312,17 @@ describe('position tests', () => {
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
+
+    const poolAfter = await invariant.methods.getPool({
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n
+      }
+    })
+    const parsedPoolAfter = decodePool(poolAfter.returns)
+    expect(parsedPoolAfter.liquidity).toBe(0n)
 
     const senderToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, sender.address)
     const senderToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, sender.address)
@@ -354,10 +380,8 @@ describe('position tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee,
         tickSpacing,
         initSqrtPrice: 1000000000000000000000000n,
@@ -372,8 +396,8 @@ describe('position tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee,
         tickSpacing,
         lowerTick: lowerTickIndex,
@@ -387,13 +411,11 @@ describe('position tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount,
         token1Amount: amount,
         index: 1n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee,
         tickSpacing,
         lowerTick: lowerTickIndex,
@@ -411,8 +433,8 @@ describe('position tests', () => {
     await Swap.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee,
         tickSpacing,
         xToY: true,

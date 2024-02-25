@@ -1,5 +1,5 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
-import { getSigner, testAddress } from '@alephium/web3-test'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, Init, Invariant } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
@@ -23,9 +23,9 @@ describe('pools tests', () => {
       attoAlphAmount: invariantDeployFee
     })
 
-    const token0 = ZERO_ADDRESS
-    const token1 = testAddress
-    const [tokenX, tokenY] = token0 < token1 ? [token0, token1] : [token1, token0]
+    const token0 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
+    const token1 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
+    const [tokenX, tokenY] = token0 > token1 ? [token0, token1] : [token1, token0]
     {
       const fee = 0n
       const tickSpacing = 1n
@@ -70,10 +70,8 @@ describe('pools tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 0n,
         tickSpacing: 1n,
         initSqrtPrice: 1000000000000000000000000n,
@@ -91,7 +89,12 @@ describe('pools tests', () => {
     expect(parsedPools[0].tickSpacing).toBe(1n)
 
     const pool = await invariant.methods.getPool({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 0n, tickSpacing: 1n }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 0n,
+        tickSpacing: 1n
+      }
     })
 
     expect(pool.returns[0]).toBe(true)
@@ -118,7 +121,12 @@ describe('pools tests', () => {
     })
     expectError(
       invariant.methods.getPool({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n }
+        args: {
+          token0: '',
+          token1: '',
+          fee: 100n,
+          tickSpacing: 1n
+        }
       })
     )
     const pools = await invariant.methods.getPools()

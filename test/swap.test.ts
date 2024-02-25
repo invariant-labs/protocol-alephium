@@ -1,5 +1,5 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, web3 } from '@alephium/web3'
-import { getSigner, testAddress } from '@alephium/web3-test'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap, Withdraw } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
@@ -58,10 +58,8 @@ describe('swap tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         initSqrtPrice: 1000000000000000000000000n,
@@ -72,8 +70,8 @@ describe('swap tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
@@ -84,13 +82,11 @@ describe('swap tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount,
         token1Amount: amount,
         index: 1n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
@@ -118,7 +114,13 @@ describe('swap tests', () => {
     expect(parsedPosition.tokensOwedX).toBe(0n)
     expect(parsedPosition.tokensOwedY).toBe(0n)
     const lowerTick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        index: lowerTickIndex
+      }
     })
     const parsedLowerTick = decodeTick(lowerTick.returns)
     expect(parsedLowerTick.exist).toBe(true)
@@ -130,7 +132,13 @@ describe('swap tests', () => {
     expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
     expect(parsedLowerTick.secondsOutside).toBe(0n)
     const upperTick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: fee,
+        tickSpacing: tickSpacing,
+        index: upperTickIndex
+      }
     })
     const parsedUpperTick = decodeTick(upperTick.returns)
     expect(parsedUpperTick.exist).toBe(true)
@@ -148,7 +156,12 @@ describe('swap tests', () => {
       const poolBefore = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )
@@ -158,8 +171,8 @@ describe('swap tests', () => {
       const [amountIn, amountOut, targetSqrtPrice] = (
         await invariant.methods.quote({
           args: {
-            token0: ZERO_ADDRESS,
-            token1: testAddress,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
             fee: fee,
             tickSpacing: tickSpacing,
             xToY: true,
@@ -177,8 +190,8 @@ describe('swap tests', () => {
       await Swap.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           xToY: true,
@@ -191,7 +204,12 @@ describe('swap tests', () => {
       const poolAfter = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )
@@ -248,10 +266,8 @@ describe('swap tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         initSqrtPrice: 1000000000000000000000000n,
@@ -262,8 +278,8 @@ describe('swap tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
@@ -274,13 +290,11 @@ describe('swap tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount,
         token1Amount: amount,
         index: 1n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: lowerTickIndex,
@@ -297,8 +311,8 @@ describe('swap tests', () => {
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: middleTickIndex,
@@ -309,13 +323,11 @@ describe('swap tests', () => {
     await CreatePosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         token0Amount: amount / 2n,
         token1Amount: amount / 2n,
         index: 2n,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
         fee: fee,
         tickSpacing: tickSpacing,
         lowerTick: middleTickIndex,
@@ -335,7 +347,12 @@ describe('swap tests', () => {
       const poolBefore = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )
@@ -345,8 +362,8 @@ describe('swap tests', () => {
       const [amountIn, amountOut, targetSqrtPrice] = (
         await invariant.methods.quote({
           args: {
-            token0: ZERO_ADDRESS,
-            token1: testAddress,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
             fee: fee,
             tickSpacing: tickSpacing,
             xToY: false,
@@ -364,8 +381,8 @@ describe('swap tests', () => {
       await Swap.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           xToY: false,
@@ -378,7 +395,12 @@ describe('swap tests', () => {
       const poolAfter = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )
@@ -391,7 +413,13 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenY).toBe(2n)
 
       const lowerTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: lowerTickIndex
+        }
       })
       const parsedLowerTick = decodeTick(lowerTick.returns)
       expect(parsedLowerTick.exist).toBe(true)
@@ -399,8 +427,8 @@ describe('swap tests', () => {
       expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
       const middleTick = await invariant.methods.getTick({
         args: {
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           index: middleTickIndex
@@ -412,7 +440,13 @@ describe('swap tests', () => {
       expect(parsedMiddleTick.feeGrowthOutsideY).toBe(30000000000000000000000n)
 
       const upperTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: upperTickIndex
+        }
       })
       const parsedUpperTick = decodeTick(upperTick.returns)
       expect(parsedUpperTick.exist).toBe(true)
@@ -421,7 +455,13 @@ describe('swap tests', () => {
 
       const isLowerTickInitialized = (
         await invariant.methods.isTickInitialized({
-          args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+          args: {
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            index: lowerTickIndex
+          }
         })
       ).returns
       expect(isLowerTickInitialized).toBe(true)
@@ -429,8 +469,8 @@ describe('swap tests', () => {
       const isMiddleTickInitialized = (
         await invariant.methods.isTickInitialized({
           args: {
-            token0: ZERO_ADDRESS,
-            token1: testAddress,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
             fee: fee,
             tickSpacing: tickSpacing,
             index: middleTickIndex
@@ -441,7 +481,13 @@ describe('swap tests', () => {
 
       const isUpperTickInitialized = (
         await invariant.methods.isTickInitialized({
-          args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+          args: {
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            index: upperTickIndex
+          }
         })
       ).returns
       expect(isUpperTickInitialized).toBe(true)
@@ -485,10 +531,8 @@ describe('swap tests', () => {
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0Id: token0.contractInstance.contractId,
-        token1Id: token1.contractInstance.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: fee,
         tickSpacing: tickSpacing,
         initSqrtPrice: 1000000000000000000000000n,
@@ -505,8 +549,8 @@ describe('swap tests', () => {
       await InitPosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           lowerTick: lowerTickIndex,
@@ -517,13 +561,11 @@ describe('swap tests', () => {
       await CreatePosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0Id: token0.contractInstance.contractId,
-          token1Id: token1.contractInstance.contractId,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           token0Amount: amount,
           token1Amount: amount,
           index: 1n,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
           fee: fee,
           tickSpacing: tickSpacing,
           lowerTick: lowerTickIndex,
@@ -551,7 +593,13 @@ describe('swap tests', () => {
       expect(parsedPosition.tokensOwedX).toBe(0n)
       expect(parsedPosition.tokensOwedY).toBe(0n)
       const lowerTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: lowerTickIndex
+        }
       })
       const parsedLowerTick = decodeTick(lowerTick.returns)
       expect(parsedLowerTick.exist).toBe(true)
@@ -563,7 +611,13 @@ describe('swap tests', () => {
       expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
       expect(parsedLowerTick.secondsOutside).toBe(0n)
       const upperTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: upperTickIndex
+        }
       })
       const parsedUpperTick = decodeTick(upperTick.returns)
       expect(parsedUpperTick.exist).toBe(true)
@@ -585,8 +639,8 @@ describe('swap tests', () => {
       await InitPosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           lowerTick: lowerTickIndex,
@@ -597,13 +651,11 @@ describe('swap tests', () => {
       await CreatePosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0Id: token0.contractInstance.contractId,
-          token1Id: token1.contractInstance.contractId,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           token0Amount: amount / 2n,
           token1Amount: amount / 2n,
           index,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
           fee: fee,
           tickSpacing: tickSpacing,
           lowerTick: lowerTickIndex,
@@ -632,7 +684,13 @@ describe('swap tests', () => {
       expect(parsedPosition.tokensOwedY).toBe(0n)
 
       const lowerTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: lowerTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: lowerTickIndex
+        }
       })
 
       const parsedLowerTick = decodeTick(lowerTick.returns)
@@ -645,7 +703,13 @@ describe('swap tests', () => {
       expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
       expect(parsedLowerTick.secondsOutside).toBe(0n)
       const upperTick = await invariant.methods.getTick({
-        args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing, index: upperTickIndex }
+        args: {
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          index: upperTickIndex
+        }
       })
       const parsedUpperTick = decodeTick(upperTick.returns)
       expect(parsedUpperTick.exist).toBe(true)
@@ -664,7 +728,12 @@ describe('swap tests', () => {
       const poolBefore = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )
@@ -674,8 +743,8 @@ describe('swap tests', () => {
       const [amountIn, amountOut, targetSqrtPrice] = (
         await invariant.methods.quote({
           args: {
-            token0: ZERO_ADDRESS,
-            token1: testAddress,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
             fee: fee,
             tickSpacing: tickSpacing,
             xToY: true,
@@ -693,8 +762,8 @@ describe('swap tests', () => {
       await Swap.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: ZERO_ADDRESS,
-          token1: testAddress,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           xToY: true,
@@ -707,7 +776,12 @@ describe('swap tests', () => {
       const poolAfter = decodePool(
         (
           await invariant.methods.getPool({
-            args: { token0: ZERO_ADDRESS, token1: testAddress, fee: fee, tickSpacing: tickSpacing }
+            args: {
+              token0: token0.contractInstance.contractId,
+              token1: token1.contractInstance.contractId,
+              fee: fee,
+              tickSpacing: tickSpacing
+            }
           })
         ).returns
       )

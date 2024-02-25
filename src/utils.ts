@@ -211,8 +211,8 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
     Pool.deploy(signer, {
       initialFields: {
         poolTickSpacing: 0n,
-        poolTokenXId: '',
-        poolTokenYId: '',
+        poolTokenX: '',
+        poolTokenY: '',
         poolLiquidity: 0n,
         poolCurrentSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,

@@ -4,11 +4,11 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn add(originalCaller: Address, poolKey: ByteVec, tokenXId: ByteVec, tokenYId: ByteVec, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+    pub fn add(originalCaller: Address, poolKey: ByteVec, tokenX: ByteVec, tokenY: ByteVec, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(tokenXId, tokenYId, tickSpacing, 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(tokenX, tokenY, tickSpacing, 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,
@@ -38,12 +38,12 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
         return Pool(subContractId!(poolKey)).getStartTimestamp()
     }
 
-    pub fn getTokenXId(poolKey: ByteVec) -> ByteVec {
-        return Pool(subContractId!(poolKey)).getTokenXId()
+    pub fn getTokenX(poolKey: ByteVec) -> ByteVec {
+        return Pool(subContractId!(poolKey)).getTokenX()
     }
 
-    pub fn getTokenYId(poolKey: ByteVec) -> ByteVec {
-        return Pool(subContractId!(poolKey)).getTokenYId()
+    pub fn getTokenY(poolKey: ByteVec) -> ByteVec {
+        return Pool(subContractId!(poolKey)).getTokenY()
     }
 
     pub fn getTickSpacing(poolKey: ByteVec) -> U256 {
