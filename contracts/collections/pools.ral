@@ -1,10 +1,32 @@
-Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extends Utils() {
+Contract Pools(
+    poolTemplateContractId: ByteVec,
+    clammContractId: ByteVec,
+    mut invariantId: ByteVec,
+    mut positionsId: ByteVec,
+    mut swapUtilsId: ByteVec,
+    mut areAdminsSet: Bool
+) extends Utils() {
     enum PoolsError {
         PoolAlreadyExist = 301
+        NotAdmin = 302
+        AdminsAreSet = 303
+
     }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setAdmins(invariant: ByteVec, positions: ByteVec, swapUtils: ByteVec) -> () {
+        assert!(!areAdminsSet, PoolsError.AdminsAreSet)
+        invariantId = invariant
+        positionsId = positions
+        swapUtilsId = swapUtils
+        areAdminsSet = true
+    }
+
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn add(originalCaller: Address, poolKey: ByteVec, tokenX: ByteVec, tokenY: ByteVec, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
@@ -52,6 +74,9 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
 
     @using(checkExternalCaller = false)
     pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+
         Pool(subContractId!(poolKey)).addFee(feeAmount, xToY, fee)
     }
 
@@ -78,6 +103,9 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
         fee: U256,
         tickSpacing: U256
     ) -> (U256, U256, Bool) {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+
         return Pool(subContractId!(poolKey)).crossTick(
             nextSqrtPrice,
             swapLimit,
@@ -97,16 +125,26 @@ Contract Pools(poolTemplateContractId: ByteVec, clammContractId: ByteVec) extend
         add: Bool,
         liquidityDelta: U256
     ) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+
         return Pool(subContractId!(poolKey)).crossLiquidityUpdate(add, liquidityDelta)
     }
 
     @using(checkExternalCaller = false)
     pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+
         Pool(subContractId!(poolKey)).setLastTimestamp(timestamp)
     }
 
     @using(checkExternalCaller = false)
     pub fn updateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+        
+
         return Pool(subContractId!(poolKey)).updateLiquidity(liquidityDelta, liquiditySign, upperTick, lowerTick)
     }
     

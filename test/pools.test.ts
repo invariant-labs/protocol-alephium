@@ -14,14 +14,14 @@ describe('pools tests', () => {
   })
 
   test('create and decode poolKey', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     const token0 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
     const token1 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
@@ -46,14 +46,14 @@ describe('pools tests', () => {
   })
 
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -111,14 +111,15 @@ describe('pools tests', () => {
     expect(parsedPool.lastTimestamp).toBeGreaterThan(0n)
   })
   test('not existing pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
+
     expectError(
       invariant.methods.getPool({
         args: {

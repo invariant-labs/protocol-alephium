@@ -13,7 +13,6 @@ describe('math tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
   })
-  test('placeholder', () => {})
   test('fee growth from fee', async () => {
     const clamm = await deployCLAMM(sender)
     {

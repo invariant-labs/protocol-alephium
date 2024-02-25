@@ -46,14 +46,14 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -214,14 +214,14 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -359,14 +359,14 @@ describe('position tests', () => {
     const [tokenX, tokenY] =
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     const fee = 10000000000n
     const tickSpacing = 1n

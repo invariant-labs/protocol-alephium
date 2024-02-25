@@ -14,14 +14,14 @@ describe('invariant tests', () => {
   })
 
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -49,14 +49,14 @@ describe('invariant tests', () => {
     })
   })
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -135,13 +135,14 @@ describe('invariant tests', () => {
     expect(tick.returns[0]).toBe(false)
   })
   test('protocol fee', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
+    const invariant = await deployInvariant(sender, 0n)
 
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    // const invariant = Invariant.at(invariantResult.contractInstance.address)
+
+    // await Init.execute(sender, {
+    //   initialFields: { invariant: invariant.contractId },
+    //   attoAlphAmount: invariantDeployFee
+    // })
 
     const currentFee = (await invariant.methods.getProtocolFee()).returns
     expect(currentFee).toEqual(0n)
