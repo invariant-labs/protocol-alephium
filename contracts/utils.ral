@@ -1,9 +1,13 @@
 Abstract Contract Utils() {
     const TokenAddressBytes = 32
+    enum UtilsError {
+        TokensAreSame = 5000
+        InvalidFee = 5001
+    }
     
     pub fn generatePoolKey(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> ByteVec {
-        assert!(token0 != token1, 5000)
-        assert!(fee <= (10 ** 12), 5001)
+        assert!(token0 != token1, UtilsError.TokensAreSame)
+        assert!(fee <= 10 ** 12, UtilsError.InvalidFee)
 
         for (let mut i = 0; i <= size!(token0); i = i + 1) {
             if (u256From1Byte!(byteVecSlice!(token0, i, i + 1)) < u256From1Byte!(byteVecSlice!(token1, i, i + 1))) {
