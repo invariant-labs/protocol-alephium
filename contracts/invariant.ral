@@ -24,6 +24,7 @@ Contract Invariant(
         NotFeeReceiver = 9
         ZeroLiquidity = 10
         PriceLimitReached = 11
+        InvalidProtocolFee = 12
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
@@ -41,6 +42,7 @@ Contract Invariant(
     @using(updateFields = true, checkExternalCaller = false)
     pub fn changeProtocolFee(newProtocolFee: U256) -> () {
         assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        assert!(newProtocolFee < 1000000000000, InvariantError.InvalidProtocolFee)
         protocolFee = newProtocolFee
     }
 
