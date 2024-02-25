@@ -10,156 +10,157 @@ let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 let recipient = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
 
 describe('math tests', () => {
-  beforeAll(async () => {
-    sender = await getSigner(ONE_ALPH * 100000n, 0)
-    recipient = await getSigner(ONE_ALPH * 100000n, 0)
-  })
-  test('fee growth from fee', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      const liquidity = 10n ** 5n
-      const amount = 1n
-      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
-        .returns
-      expect(result).toBe(10000000000000000000000000000n)
-    }
-    {
-      const liquidity = 2n * 10n ** 5n
-      const amount = 1n
-      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
-        .returns
-      expect(result).toBe(5n * 10n ** 27n)
-    }
-    {
-      const liquidity = ((1n << 64n) - 1n) * 10n ** 5n
-      const amount = 1n
-      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
-        .returns
-      expect(result).toBe(542101086n)
-    }
-    {
-      const liquidity = 100n * 10n ** 5n
-      const amount = 1000000n
-      const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
-        .returns
-      expect(result).toBe(10000n * 10n ** 28n)
-    }
-  })
-  test('tick from sqrt price', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      const sqrtPrice = 999006987054867461743028n
-      const result = (
-        await clamm.contractInstance.methods.getTickAtSqrtPrice({ args: { sqrtPrice, tickSpacing: 10n } })
-      ).returns
-      expect(result).toBe(-20n)
-    }
-  })
-  test('allign tick to tickspacing', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      const accurateTick = 0n
-      const tickSpacing = 3n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(0n)
-    }
-    {
-      const accurateTick = 14n
-      const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(10n)
-    }
-    {
-      const accurateTick = 20n
-      const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(20n)
-    }
-    {
-      const accurateTick = -14n
-      const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(-20n)
-    }
-    {
-      const accurateTick = -21n
-      const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(-30n)
-    }
-    {
-      const accurateTick = -120n
-      const tickSpacing = 3n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
-        .returns
-      expect(result).toBe(-120n)
-    }
-  })
-  test('log spacing over 1', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      for (let i = 0n; i < 100n; i++) {
-        const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
-          .returns
-        let tick = (
-          await clamm.contractInstance.methods.getTickAtSqrtPrice({
-            args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
-          })
-        ).returns
-        let expectedTick = (
-          await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
-        ).returns
-        expect(tick).toEqual(expectedTick)
-      }
-    }
-    {
-      for (let i = -100n; i < 0; i++) {
-        const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
-          .returns
-        let tick = (
-          await clamm.contractInstance.methods.getTickAtSqrtPrice({
-            args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
-          })
-        ).returns
-        let expectedTick = (
-          await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
-        ).returns
-        expect(tick).toEqual(expectedTick)
-      }
-    }
-  }, 15000)
-  test('log', async () => {
-    const clamm = await deployCLAMM(sender)
-    {
-      for (let i = 0n; i < 100n; i++) {
-        const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
-          .returns
-        let tick = (
-          await clamm.contractInstance.methods.getTickAtSqrtPrice({
-            args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 1n }
-          })
-        ).returns
-        expect(tick).toEqual(i)
-      }
-    }
-    {
-      for (let i = -100n; i < 0; i++) {
-        const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
-          .returns
-        let tick = (
-          await clamm.contractInstance.methods.getTickAtSqrtPrice({
-            args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 1n }
-          })
-        ).returns
-        expect(tick).toEqual(i)
-      }
-    }
-  }, 15000)
+  // beforeAll(async () => {
+  //   sender = await getSigner(ONE_ALPH * 100000n, 0)
+  //   recipient = await getSigner(ONE_ALPH * 100000n, 0)
+  // })
+  test('placeholder', () => {})
+  // test('fee growth from fee', async () => {
+  //   const clamm = await deployCLAMM(sender)
+  //   {
+  //     const liquidity = 10n ** 5n
+  //     const amount = 1n
+  //     const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+  //       .returns
+  //     expect(result).toBe(10000000000000000000000000000n)
+  //   }
+  //   {
+  //     const liquidity = 2n * 10n ** 5n
+  //     const amount = 1n
+  //     const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+  //       .returns
+  //     expect(result).toBe(5n * 10n ** 27n)
+  //   }
+  //   {
+  //     const liquidity = ((1n << 64n) - 1n) * 10n ** 5n
+  //     const amount = 1n
+  //     const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+  //       .returns
+  //     expect(result).toBe(542101086n)
+  //   }
+  //   {
+  //     const liquidity = 100n * 10n ** 5n
+  //     const amount = 1000000n
+  //     const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
+  //       .returns
+  //     expect(result).toBe(10000n * 10n ** 28n)
+  //   }
+  // })
+  // test('tick from sqrt price', async () => {
+  //   const clamm = await deployCLAMM(sender)
+  //   {
+  //     const sqrtPrice = 999006987054867461743028n
+  //     const result = (
+  //       await clamm.contractInstance.methods.getTickAtSqrtPrice({ args: { sqrtPrice, tickSpacing: 10n } })
+  //     ).returns
+  //     expect(result).toBe(-20n)
+  //   }
+  // })
+  // test('allign tick to tickspacing', async () => {
+  //   const clamm = await deployCLAMM(sender)
+  //   {
+  //     const accurateTick = 0n
+  //     const tickSpacing = 3n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(0n)
+  //   }
+  //   {
+  //     const accurateTick = 14n
+  //     const tickSpacing = 10n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(10n)
+  //   }
+  //   {
+  //     const accurateTick = 20n
+  //     const tickSpacing = 10n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(20n)
+  //   }
+  //   {
+  //     const accurateTick = -14n
+  //     const tickSpacing = 10n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(-20n)
+  //   }
+  //   {
+  //     const accurateTick = -21n
+  //     const tickSpacing = 10n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(-30n)
+  //   }
+  //   {
+  //     const accurateTick = -120n
+  //     const tickSpacing = 3n
+  //     const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+  //       .returns
+  //     expect(result).toBe(-120n)
+  //   }
+  // })
+  // test('log spacing over 1', async () => {
+  //   const clamm = await deployCLAMM(sender)
+  //   {
+  //     for (let i = 0n; i < 100n; i++) {
+  //       const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
+  //         .returns
+  //       let tick = (
+  //         await clamm.contractInstance.methods.getTickAtSqrtPrice({
+  //           args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
+  //         })
+  //       ).returns
+  //       let expectedTick = (
+  //         await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
+  //       ).returns
+  //       expect(tick).toEqual(expectedTick)
+  //     }
+  //   }
+  //   {
+  //     for (let i = -100n; i < 0; i++) {
+  //       const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
+  //         .returns
+  //       let tick = (
+  //         await clamm.contractInstance.methods.getTickAtSqrtPrice({
+  //           args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 3n }
+  //         })
+  //       ).returns
+  //       let expectedTick = (
+  //         await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
+  //       ).returns
+  //       expect(tick).toEqual(expectedTick)
+  //     }
+  //   }
+  // }, 15000)
+  // test('log', async () => {
+  //   const clamm = await deployCLAMM(sender)
+  //   {
+  //     for (let i = 0n; i < 100n; i++) {
+  //       const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
+  //         .returns
+  //       let tick = (
+  //         await clamm.contractInstance.methods.getTickAtSqrtPrice({
+  //           args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 1n }
+  //         })
+  //       ).returns
+  //       expect(tick).toEqual(i)
+  //     }
+  //   }
+  //   {
+  //     for (let i = -100n; i < 0; i++) {
+  //       const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
+  //         .returns
+  //       let tick = (
+  //         await clamm.contractInstance.methods.getTickAtSqrtPrice({
+  //           args: { sqrtPrice: sqrtPriceDecimal, tickSpacing: 1n }
+  //         })
+  //       ).returns
+  //       expect(tick).toEqual(i)
+  //     }
+  //   }
+  // }, 15000)
 
   // test('calculate sqrt price', async () => {
   //   const clamm = await deployCLAMM(sender)

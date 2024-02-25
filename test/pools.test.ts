@@ -25,7 +25,7 @@ describe('pools tests', () => {
 
     const token0 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
     const token1 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
-    const [tokenX, tokenY] = token0 > token1 ? [token0, token1] : [token1, token0]
+    const [tokenX, tokenY] = token0 < token1 ? [token0, token1] : [token1, token0]
     {
       const fee = 0n
       const tickSpacing = 1n

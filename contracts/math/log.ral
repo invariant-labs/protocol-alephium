@@ -110,8 +110,7 @@ Abstract Contract Log() extends Decimal() {
     }
 
     pub fn getTickAtSqrtPrice(sqrtPrice: U256, tickSpacing: U256) -> I256 {
-        // TODO add error enum
-        // assert!(sqrtPrice <= getMaxSqrtPrice() && sqrtPrice >= getMinSqrtPrice(), "sqrt price out of range")
+        assert!(sqrtPrice <= getMaxSqrtPrice() && sqrtPrice >= getMinSqrtPrice(), LogError.SqrtPriceOutOfRange)
         let sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
 
         let (log2Sign, log2SqrtPrice) = log2IterativeApproximationX32(sqrtPriceX32)
