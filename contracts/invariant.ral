@@ -42,7 +42,7 @@ Contract Invariant(
     @using(updateFields = true, checkExternalCaller = false)
     pub fn changeProtocolFee(newProtocolFee: U256) -> () {
         assert!(callerAddress!() == admin, InvariantError.NotAdmin)
-        assert!(newProtocolFee < 1000000000000, InvariantError.InvalidProtocolFee)
+        assert!(newProtocolFee < one(getPercentageScale()), InvariantError.InvalidProtocolFee)
         protocolFee = newProtocolFee
     }
 
@@ -104,7 +104,7 @@ Contract Invariant(
         let caller = callerAddress!()
 
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(fee <= 1000000000000, InvariantError.InvalidFee)
+        assert!(fee <= one(getPercentageScale()), InvariantError.InvalidFee)
         assert!(caller == admin, InvariantError.NotAdmin)
 
         FeeTiers(feeTiersContractId).add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
