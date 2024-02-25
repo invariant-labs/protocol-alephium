@@ -119,8 +119,8 @@ Contract SwapUtils(
 
     @using(updateFields = false, checkExternalCaller = false)
     pub fn wrappedQuote(
-        token0: Address,
-        token1: Address,
+        token0: ByteVec,
+        token1: ByteVec,
         fee: U256,
         tickSpacing: U256,
         xToY: Bool,
@@ -135,8 +135,8 @@ Contract SwapUtils(
 
     @using(updateFields = false, checkExternalCaller = false)
     pub fn wrappedSwap(
-        token0: Address,
-        token1: Address,
+        token0: ByteVec,
+        token1: ByteVec,
         fee: U256,
         tickSpacing: U256,
         xToY: Bool,

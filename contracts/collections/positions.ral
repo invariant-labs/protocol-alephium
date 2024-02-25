@@ -1,7 +1,13 @@
-Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplateId: ByteVec) {
+Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContractId: ByteVec) {
+    enum PositionsError {
+        NotOwner = 500
+        PositionNotExist = 501
+    }
+
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn add(
         caller: Address,
+        poolKey: ByteVec,
         liquidity: U256,
         lowerTickIndex: I256,
         upperTickIndex: I256,
@@ -11,22 +17,12 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
         tokensOwedX: U256,
         tokensOwedY: U256
     ) -> () {
-        let length = getLength(caller)
-
-        if (length == 0) {
-            let (positionsCounterEncodedImmFields, positionsCounterEncodedMutFields) = PositionsCounter.encodeFields!(1)
-            copyCreateSubContract!{caller -> ALPH: 1 alph}(
-                toByteVec!(caller),
-                positionsCounterTemplateId,
-                positionsCounterEncodedImmFields,
-                positionsCounterEncodedMutFields
-            )
-        } else {
-            let contract = PositionsCounter(subContractId!(toByteVec!(caller)))
-            contract.set(contract.get() + 1)
-        }
+        let positionsCounter = PositionsCounter(positionsCounterContractId)
+        let length = positionsCounter.get()
+        positionsCounter.set(length + 1)
 
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(
+            poolKey,
             liquidity,
             lowerTickIndex,
             upperTickIndex,
@@ -34,40 +30,91 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
             feeGrowthInsideY,
             lastBlockNumber,
             tokensOwedX,
-            tokensOwedY
+            tokensOwedY,
+            caller,
+            true
         )
         copyCreateSubContract!{caller -> ALPH: 1 alph}(
-            toByteVec!(caller) ++ toByteVec!(length + 1),
+            toByteVec!(length + 1),
             positionTemplateContractId,
             encodedImmFields,
             encodedMutFields
         )
     }
 
-    fn getLength(owner: Address) -> U256 {
-        let subContractId = subContractId!(toByteVec!(owner))
+    @using(checkExternalCaller = false)
+    pub fn remove(caller: Address, index: U256) -> () {
+        let subContractId = subContractId!(toByteVec!(index))
+        assert!(contractExists!(subContractId), PositionsError.PositionNotExist)
+        let position = Position(subContractId)
+        assert!(position.getOwner() == caller, PositionsError.NotOwner)
+        position.setIsActive(false)
+    }
 
-        if(contractExists!(subContractId)) {
-            return PositionsCounter(subContractId).get()
-        } else {
-            return 0
-        }
+    @using(checkExternalCaller = false)
+    pub fn transfer(caller: Address, index: U256, newOwner: Address) -> () {
+        let subContractId = subContractId!(toByteVec!(index))
+        assert!(contractExists!(subContractId), PositionsError.PositionNotExist)
+        let position = Position(subContractId)
+        assert!(position.getOwner() == caller, PositionsError.NotOwner)
+        position.setOwner(newOwner)
+    }
+
+    pub fn getPoolKey(index: U256) -> ByteVec {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getPoolKey()
+    }
+
+    pub fn getLowerTickIndex(index: U256) -> I256 {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getLowerTickIndex()
+    }
+
+    pub fn getUpperTickIndex(index: U256) -> I256 {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getUpperTickIndex()
+    }
+
+    pub fn getLiquidity(index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getLiquidity()
+    }
+
+    pub fn getTokensOwedX(index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getTokensOwedX()
+    }
+
+    pub fn getTokensOwedY(index: U256) -> U256 {
+        let subContractId = subContractId!(toByteVec!(index))
+        return Position(subContractId).getTokensOwedY()
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setTokensOwedX(index: U256, value: U256) -> () {
+        let subContractId = subContractId!(toByteVec!(index))
+        Position(subContractId).setTokensOwedX(value)
+    }
+
+    @using(checkExternalCaller = false)
+    pub fn setTokensOwedY(index: U256, value: U256) -> () {
+        let subContractId = subContractId!(toByteVec!(index))
+        Position(subContractId).setTokensOwedY(value)
     }
 
     @using(checkExternalCaller = false)
     pub fn update(
-        owner: Address,
         index: U256,
         sign: Bool,
         liquidityDelta: U256,
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> () {
-        Position(subContractId!(toByteVec!(owner) ++ toByteVec!(index))).update(sign, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+        Position(subContractId!(toByteVec!(index))).update(sign, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
-    pub fn get(owner: Address, index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
-        let subContractId = subContractId!(toByteVec!(owner) ++ toByteVec!(index))
+    pub fn get(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
+        let subContractId = subContractId!(toByteVec!(index))
         
         if (!contractExists!(subContractId)) {
             return false, 0, 0i, 0i, 0, 0, 0, 0, 0
@@ -78,7 +125,6 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
 
     @using(checkExternalCaller = false)
     pub fn wrappedModify(
-        caller: Address,
         index: U256,
         poolsContractId: ByteVec,
         ticksContractId: ByteVec,
@@ -91,6 +137,6 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterTemplate
         currentTimestamp: U256,
         tickSpacing: U256
     ) -> (U256, U256) {
-        return Position(subContractId!(toByteVec!(caller) ++ toByteVec!(index))).modify(poolsContractId, ticksContractId, clammContractId, poolKey, upperTick, lowerTick, liquidityDelta, add, currentTimestamp, tickSpacing)
+        return Position(subContractId!(toByteVec!(index))).modify(poolsContractId, ticksContractId, clammContractId, poolKey, upperTick, lowerTick, liquidityDelta, add, currentTimestamp, tickSpacing)
     }
 }

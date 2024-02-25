@@ -10,7 +10,7 @@ TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
     invariant.removeFeeTier(fee, tickSpacing)
 }
 
-TxScript CreatePool(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
+TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
     invariant.createPool{callerAddress!() -> ALPH: 2 alph}(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
 }
 
@@ -18,18 +18,41 @@ TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
     invariant.changeProtocolFee(newFee)
 }
 
-TxScript ChangeFeeReceiver(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
+TxScript ChangeFeeReceiver(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
     invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
 }
 
-TxScript InitPosition(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
+TxScript InitPosition(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
     invariant.initPosition{callerAddress!() -> ALPH: 6 alph}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
 }
 
-TxScript CreatePosition(invariant: Invariant, index: U256, token0: Address, token1: Address, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256, liquidityDelta: U256, slippageLimitLower: U256, slippageLimitUpper: U256) {
-    invariant.createPosition(index, token0, token1, fee, tickSpacing, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
+TxScript CreatePosition(
+    invariant: Invariant,
+    token0: ByteVec,
+    token1: ByteVec,
+    token0Amount: U256,
+    token1Amount: U256,
+    index: U256,
+    fee: U256,
+    tickSpacing: U256, 
+    lowerTick: I256,
+    upperTick: I256,
+    liquidityDelta: U256,
+    slippageLimitLower: U256,
+    slippageLimitUpper: U256
+) {
+    invariant.createPosition{callerAddress!() -> token0: token0Amount, token1: token1Amount}
+        (index, token0, token1, fee, tickSpacing, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 
-TxScript Swap(invariant: Invariant, token0: Address, token1: Address, fee: U256, tickSpacing: U256, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
+TxScript RemovePosition(invariant: Invariant, index: U256) {
+    invariant.removePosition(index)
+}
+
+TxScript ClaimFee(invariant: Invariant, index: U256) {
+    invariant.claimFee(index)
+}
+
+TxScript Swap(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
     invariant.swap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
 }

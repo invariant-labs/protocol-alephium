@@ -1,9 +1,9 @@
-import { DUST_AMOUNT, ONE_ALPH, ZERO_ADDRESS, toApiByteVec, web3 } from '@alephium/web3'
-import { getSigner, testAddress } from '@alephium/web3-test'
+import { DUST_AMOUNT, ONE_ALPH, toApiByteVec, web3 } from '@alephium/web3'
+import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, ChangeProtocolFee, CreatePool, Init, Invariant } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { decodeFeeTiers, decodePool, decodePools, deployInvariant } from '../src/utils'
+import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -32,11 +32,14 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 0n,
         tickSpacing: 1n,
         initSqrtPrice: 1000000000000000000000000n,
@@ -71,11 +74,14 @@ describe('invariant tests', () => {
     expect(parsedFeeTiers[0].fee).toBe(100n)
     expect(parsedFeeTiers[0].tickSpacing).toBe(1n)
 
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, 0n)
+
     await CreatePool.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: ZERO_ADDRESS,
-        token1: testAddress,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
         fee: 100n,
         tickSpacing: 1n,
         initSqrtPrice: 1000000000000000000000000n,
@@ -84,7 +90,7 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
 
-    const poolKey = toApiByteVec(ZERO_ADDRESS)
+    const poolKey = toApiByteVec(token0.contractInstance.contractId)
     const index = 1n
 
     const pools = await invariant.methods.getPools()
@@ -97,7 +103,12 @@ describe('invariant tests', () => {
     expect(parsedPools[0].tickSpacing).toBe(1n)
 
     const pool = await invariant.methods.getPool({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n
+      }
     })
 
     const parsedPool = decodePool(pool.returns)
@@ -112,7 +123,13 @@ describe('invariant tests', () => {
     expect(parsedPool.lastTimestamp).toBeGreaterThan(0n)
 
     const tick = await invariant.methods.getTick({
-      args: { token0: ZERO_ADDRESS, token1: testAddress, fee: 100n, tickSpacing: 1n, index: 0n }
+      args: {
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee: 100n,
+        tickSpacing: 1n,
+        index: 0n
+      }
     })
 
     expect(tick.returns[0]).toBe(false)

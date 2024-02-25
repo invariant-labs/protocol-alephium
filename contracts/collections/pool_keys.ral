@@ -5,7 +5,7 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-    pub fn add(originalCaller: Address, tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> () {
+    pub fn add(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
         // assert!(callerAddress!() == admin, PoolKeysError.NotAdmin)
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
@@ -24,7 +24,7 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
         )
     }
 
-    pub fn contains(tokenX: Address, tokenY: Address, fee: U256, tickSpacing: U256) -> Bool {
+    pub fn contains(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
 
@@ -41,7 +41,7 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
-            poolsBytes = poolsBytes ++ toByteVec!(contract.getTokenX()) ++ b`break` ++ toByteVec!(contract.getTokenY()) ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+            poolsBytes = poolsBytes ++ contract.getTokenX() ++ b`break` ++ contract.getTokenY() ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
         }
 
         return poolsBytes

@@ -1,4 +1,5 @@
 Contract Position(
+    posPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
     posUpperTickIndex: I256,
@@ -6,11 +7,17 @@ Contract Position(
     mut posFeeGrowthInsideY: U256,
     posLastBlockNumber: U256,
     mut posTokensOwedX: U256,
-    mut posTokensOwedY: U256
+    mut posTokensOwedY: U256,
+    mut posOwner: Address,
+    mut posIsActive: Bool
 ) extends Decimal() {
     enum PositionError {
         InsufficientLiquidity = 700
         EmptyPositionPokes = 701
+    }
+
+    pub fn getPoolKey() -> ByteVec {
+        return posPoolKey
     }
 
     pub fn getLiquidity() -> U256 {
@@ -45,8 +52,32 @@ Contract Position(
         return posTokensOwedY
     }
 
+    pub fn getOwner() -> Address {
+        return posOwner
+    }
+
     pub fn get() -> (U256, I256, I256, U256, U256, U256, U256, U256) {
         return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setTokensOwedX(tokensOwedX: U256) -> () {
+        posTokensOwedX = tokensOwedX
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setTokensOwedY(tokensOwedY: U256) -> () {
+        posTokensOwedY = tokensOwedY
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setOwner(owner: Address) -> () {
+        posOwner = owner
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setIsActive(isActive: Bool) -> () {
+        posIsActive = isActive
     }
 
     @using(updateFields = false, checkExternalCaller = false)

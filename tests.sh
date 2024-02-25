@@ -12,8 +12,8 @@ ALEPHIUM_CLI_PACKAGE="@alephium/cli@latest"
 )
 
 # Compile and test using Alephium CLI
-npx $ALEPHIUM_CLI_PACKAGE compile 
-npx $ALEPHIUM_CLI_PACKAGE test
+npm run compile
+npm run test
 
 # Stop the Alephium devnet
 (
