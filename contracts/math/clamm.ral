@@ -1,7 +1,7 @@
 Contract CLAMM() extends Log(){ 
     enum CLAMMError {
-        InvalidTickIndex = 100
-        InvalidTickSpacing = 101
+        InvalidTickIndex = 600
+        InvalidTickSpacing = 601
     }
 
     pub fn computeSwapStep(

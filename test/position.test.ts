@@ -109,8 +109,8 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
         token1: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
+        approvedTokens0: amount,
+        approvedTokens1: amount,
         index: 1n,
         fee: 100n,
         tickSpacing: 1n,
@@ -267,8 +267,8 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
         token1: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
+        approvedTokens0: amount,
+        approvedTokens1: amount,
         index: 1n,
         fee: 100n,
         tickSpacing: 1n,
@@ -336,13 +336,13 @@ describe('position tests', () => {
   })
 
   test('claim fee', async () => {
-    let amount = 1000000n
+    let amount = 1000000n + 100000n
 
     const token0 = await deployTokenFaucet(sender, '', '', 0n, amount)
     await Withdraw.execute(sender, {
       initialFields: {
         token: token0.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
@@ -351,10 +351,13 @@ describe('position tests', () => {
     await Withdraw.execute(sender, {
       initialFields: {
         token: token1.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
+
+    const [tokenX, tokenY] =
+      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
     const invariantResult = await deployInvariant(sender, 0n)
 
@@ -413,8 +416,8 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
         token1: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
+        approvedTokens0: 1000000n,
+        approvedTokens1: 1000000n,
         index: 1n,
         fee,
         tickSpacing,
@@ -425,8 +428,8 @@ describe('position tests', () => {
         slippageLimitUpper: 1000000000000000000000000n
       },
       tokens: [
-        { id: token0.contractInstance.contractId, amount },
-        { id: token1.contractInstance.contractId, amount }
+        { id: token0.contractInstance.contractId, amount: 1000000n },
+        { id: token1.contractInstance.contractId, amount: 1000000n }
       ]
     })
 
@@ -441,18 +444,22 @@ describe('position tests', () => {
         amount: 100000n,
         byAmountIn: true,
         sqrtPriceLimit: 0n
-      }
+      },
+      tokens: [
+        { id: token0.contractInstance.contractId, amount: 100000n },
+        { id: token1.contractInstance.contractId, amount: 100000n }
+      ]
     })
 
-    const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, sender.address)
+    const senderTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-    expect(senderToken0BalanceBefore).toBe(500149n)
-    expect(senderToken1BalanceBefore).toBe(500149n)
-    expect(invariantToken0BalanceBefore).toBe(499851n)
-    expect(invariantToken1BalanceBefore).toBe(499851n)
+    expect(senderTokenXBalanceBefore).toBe(400149n)
+    expect(senderTokenYBalanceBefore).toBe(599139n)
+    expect(invariantTokenXBalanceBefore).toBe(599851n)
+    expect(invariantTokenYBalanceBefore).toBe(400861n)
 
     await ClaimFee.execute(sender, {
       initialFields: {
@@ -462,14 +469,14 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const senderToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, sender.address)
+    const senderTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+    const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+    const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-    expect(senderToken0BalanceAfter).toBe(500149n)
-    expect(senderToken1BalanceAfter).toBe(501149n)
-    expect(invariantToken0BalanceAfter).toBe(499851n)
-    expect(invariantToken1BalanceAfter).toBe(498851n)
+    expect(senderTokenXBalanceAfter).toBe(401149n)
+    expect(senderTokenYBalanceAfter).toBe(599139n)
+    expect(invariantTokenXBalanceAfter).toBe(598851n)
+    expect(invariantTokenYBalanceAfter).toBe(400861n)
   })
 })

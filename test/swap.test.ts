@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap, Withdraw } from '../artifacts/ts'
 import { invariantDeployFee, testPrivateKeys } from '../src/consts'
-import { decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
@@ -22,20 +22,25 @@ describe('swap tests', () => {
     const lowerTickIndex = -20n
     const upperTickIndex = 10n
 
-    const amount = 1000000n
+    const amount = 1000000n + 1000n
+
     const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
+    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
+
+    const [tokenX, tokenY] =
+      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
+
     await Withdraw.execute(sender, {
       initialFields: {
         token: token0.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
     await Withdraw.execute(sender, {
       initialFields: {
         token: token1.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
@@ -84,8 +89,8 @@ describe('swap tests', () => {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
         token1: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
+        approvedTokens0: 1000000n,
+        approvedTokens1: 1000000n,
         index: 1n,
         fee: fee,
         tickSpacing: tickSpacing,
@@ -96,8 +101,8 @@ describe('swap tests', () => {
         slippageLimitUpper: 1000000000000000000000000n
       },
       tokens: [
-        { id: token0.contractInstance.contractId, amount },
-        { id: token1.contractInstance.contractId, amount }
+        { id: token0.contractInstance.contractId, amount: 1000000n },
+        { id: token1.contractInstance.contractId, amount: 1000000n }
       ]
     })
     const position = await invariant.methods.getPosition({
@@ -151,7 +156,32 @@ describe('swap tests', () => {
     expect(parsedUpperTick.secondsOutside).toBe(0n)
 
     {
+      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       const swapAmount = 1000n
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenX.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenY.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
+
+      const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
+      const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+      const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+
+      expect(swapperTokenXBalanceBefore).toBe(swapAmount)
+      expect(invariantTokenXBalanceBefore).toBe(500n)
+      expect(invariantTokenYBalanceBefore).toBe(1000n)
 
       const poolBefore = decodePool(
         (
@@ -171,8 +201,8 @@ describe('swap tests', () => {
       const [amountIn, amountOut, targetSqrtPrice] = (
         await invariant.methods.quote({
           args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
+            token0: tokenX.contractInstance.contractId,
+            token1: tokenY.contractInstance.contractId,
             fee: fee,
             tickSpacing: tickSpacing,
             xToY: true,
@@ -187,19 +217,33 @@ describe('swap tests', () => {
       expect(amountOut).toBe(993n)
       expect(targetSqrtPrice).toBe(999006987054867461743028n)
 
-      await Swap.execute(sender, {
+      await Swap.execute(swapper, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
+          token0: tokenX.contractInstance.contractId,
+          token1: tokenY.contractInstance.contractId,
           fee: fee,
           tickSpacing: tickSpacing,
           xToY: true,
           amount: swapAmount,
           byAmountIn: true,
           sqrtPriceLimit: slippage
-        }
+        },
+        tokens: [
+          { id: tokenX.contractInstance.contractId, amount: swapAmount },
+          { id: tokenY.contractInstance.contractId, amount: swapAmount }
+        ]
       })
+
+      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
+      const swapperTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, swapper.address)
+      const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+      const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+
+      expect(swapperTokenXBalanceAfter).toBe(0n)
+      expect(swapperTokenYBalanceAfter).toBe(1993n)
+      expect(invariantTokenXBalanceAfter).toBe(1500n)
+      expect(invariantTokenYBalanceAfter).toBe(7n)
 
       const poolAfter = decodePool(
         (
@@ -230,12 +274,12 @@ describe('swap tests', () => {
     const middleTickIndex = 10n
     const upperTickIndex = 20n
 
-    const amount = 1000000n
+    const amount = 20000000000000n
     const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
     await Withdraw.execute(sender, {
       initialFields: {
         token: token0.contractInstance.contractId,
-        amount
+        amount: 10000000000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
@@ -243,10 +287,13 @@ describe('swap tests', () => {
     await Withdraw.execute(sender, {
       initialFields: {
         token: token1.contractInstance.contractId,
-        amount
+        amount: 10000000000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
+
+    const [tokenX, tokenY] =
+      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
@@ -287,27 +334,32 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
-    await CreatePosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        token0Amount: amount,
-        token1Amount: amount,
-        index: 1n,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex,
-        liquidityDelta: liquidityDelta,
-        slippageLimitLower: 1000000000000000000000000n,
-        slippageLimitUpper: 1000000000000000000000000n
-      },
-      tokens: [
-        { id: token0.contractInstance.contractId, amount },
-        { id: token1.contractInstance.contractId, amount }
-      ]
-    })
+    {
+      const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
+      const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+
+      await CreatePosition.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          approvedTokens0: senderBalance0,
+          approvedTokens1: senderBalance1,
+          index: 1n,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          lowerTick: lowerTickIndex,
+          upperTick: upperTickIndex,
+          liquidityDelta: liquidityDelta,
+          slippageLimitLower: 1000000000000000000000000n,
+          slippageLimitUpper: 1000000000000000000000000n
+        },
+        tokens: [
+          { id: token0.contractInstance.contractId, amount: senderBalance0 },
+          { id: token1.contractInstance.contractId, amount: senderBalance1 }
+        ]
+      })
+    }
     await InitPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
@@ -320,29 +372,51 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
-    await CreatePosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        token0Amount: amount / 2n,
-        token1Amount: amount / 2n,
-        index: 2n,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: middleTickIndex,
-        upperTick: upperTickIndex + 20n,
-        liquidityDelta: liquidityDelta,
-        slippageLimitLower: 1000000000000000000000000n,
-        slippageLimitUpper: 1000000000000000000000000n
-      },
-      tokens: [
-        { id: token0.contractInstance.contractId, amount: amount / 2n },
-        { id: token1.contractInstance.contractId, amount: amount / 2n }
-      ]
-    })
     {
+      const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
+      const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+
+      await CreatePosition.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          approvedTokens0: senderBalance0,
+          approvedTokens1: senderBalance1,
+          index: 2n,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          lowerTick: middleTickIndex,
+          upperTick: upperTickIndex + 20n,
+          liquidityDelta: liquidityDelta,
+          slippageLimitLower: 1000000000000000000000000n,
+          slippageLimitUpper: 1000000000000000000000000n
+        },
+        tokens: [
+          { id: token0.contractInstance.contractId, amount: senderBalance0 },
+          { id: token1.contractInstance.contractId, amount: senderBalance1 }
+        ]
+      })
+    }
+    {
+      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       const swapAmount = 1000n
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenX.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenY.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
 
       const poolBefore = decodePool(
         (
@@ -378,7 +452,7 @@ describe('swap tests', () => {
       expect(amountOut).toBe(990n)
       expect(targetSqrtPrice).toBe(1000746100010000000000000n)
 
-      await Swap.execute(sender, {
+      await Swap.execute(swapper, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -389,8 +463,22 @@ describe('swap tests', () => {
           amount: swapAmount,
           byAmountIn: true,
           sqrtPriceLimit: slippage
-        }
+        },
+        tokens: [
+          { id: tokenX.contractInstance.contractId, amount: swapAmount },
+          { id: tokenY.contractInstance.contractId, amount: swapAmount }
+        ]
       })
+
+      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
+      const swapperTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, swapper.address)
+      const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+      const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+
+      expect(swapperTokenXBalanceAfter).toBe(1990n)
+      expect(swapperTokenYBalanceAfter).toBe(0n)
+      expect(invariantTokenXBalanceAfter).toBe(1509n)
+      expect(invariantTokenYBalanceAfter).toBe(1500n)
 
       const poolAfter = decodePool(
         (
@@ -495,12 +583,12 @@ describe('swap tests', () => {
   }, 15000)
 
   test('crossing tick swap x to y', async () => {
-    const amount = 1000000n
+    const amount = 1000000n + 1000n
     const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
     await Withdraw.execute(sender, {
       initialFields: {
         token: token0.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
@@ -508,10 +596,13 @@ describe('swap tests', () => {
     await Withdraw.execute(sender, {
       initialFields: {
         token: token1.contractInstance.contractId,
-        amount
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
+
+    const [tokenX, tokenY] =
+      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
     const invariantResult = await deployInvariant(sender, protocolFee)
     const invariant = Invariant.at(invariantResult.contractInstance.address)
@@ -558,27 +649,32 @@ describe('swap tests', () => {
         },
         attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
       })
-      await CreatePosition.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          token0Amount: amount,
-          token1Amount: amount,
-          index: 1n,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: lowerTickIndex,
-          upperTick: upperTickIndex,
-          liquidityDelta: liquidityDelta,
-          slippageLimitLower: 1000000000000000000000000n,
-          slippageLimitUpper: 1000000000000000000000000n
-        },
-        tokens: [
-          { id: token0.contractInstance.contractId, amount },
-          { id: token1.contractInstance.contractId, amount }
-        ]
-      })
+      {
+        const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
+        const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+
+        await CreatePosition.execute(sender, {
+          initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
+            approvedTokens0: senderBalance0,
+            approvedTokens1: senderBalance1,
+            index: 1n,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            lowerTick: lowerTickIndex,
+            upperTick: upperTickIndex,
+            liquidityDelta: liquidityDelta,
+            slippageLimitLower: 1000000000000000000000000n,
+            slippageLimitUpper: 1000000000000000000000000n
+          },
+          tokens: [
+            { id: token0.contractInstance.contractId, amount: senderBalance0 },
+            { id: token1.contractInstance.contractId, amount: senderBalance1 }
+          ]
+        })
+      }
       const position = await invariant.methods.getPosition({
         args: { index: 1n }
       })
@@ -648,27 +744,32 @@ describe('swap tests', () => {
         },
         attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
       })
-      await CreatePosition.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          token0Amount: amount / 2n,
-          token1Amount: amount / 2n,
-          index,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: lowerTickIndex,
-          upperTick: upperTickIndex,
-          liquidityDelta: liquidityDelta,
-          slippageLimitLower: 1000000000000000000000000n,
-          slippageLimitUpper: 1000000000000000000000000n
-        },
-        tokens: [
-          { id: token0.contractInstance.contractId, amount: amount / 2n },
-          { id: token1.contractInstance.contractId, amount: amount / 2n }
-        ]
-      })
+      {
+        const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
+        const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+
+        await CreatePosition.execute(sender, {
+          initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractInstance.contractId,
+            token1: token1.contractInstance.contractId,
+            approvedTokens0: senderBalance0,
+            approvedTokens1: senderBalance1,
+            index,
+            fee: fee,
+            tickSpacing: tickSpacing,
+            lowerTick: lowerTickIndex,
+            upperTick: upperTickIndex,
+            liquidityDelta: liquidityDelta,
+            slippageLimitLower: 1000000000000000000000000n,
+            slippageLimitUpper: 1000000000000000000000000n
+          },
+          tokens: [
+            { id: token0.contractInstance.contractId, amount: senderBalance0 },
+            { id: token1.contractInstance.contractId, amount: senderBalance1 }
+          ]
+        })
+      }
       const position = await invariant.methods.getPosition({
         args: { index }
       })
@@ -723,7 +824,24 @@ describe('swap tests', () => {
     }
 
     {
+      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       const swapAmount = 1000n
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenX.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
+
+      await Withdraw.execute(swapper, {
+        initialFields: {
+          token: tokenY.contractInstance.contractId,
+          amount: swapAmount
+        },
+        attoAlphAmount: DUST_AMOUNT * 2n
+      })
 
       const poolBefore = decodePool(
         (
@@ -759,7 +877,7 @@ describe('swap tests', () => {
       expect(amountOut).toBe(989n)
       expect(targetSqrtPrice).toBe(999254832903522185303508n)
 
-      await Swap.execute(sender, {
+      await Swap.execute(swapper, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -770,8 +888,22 @@ describe('swap tests', () => {
           amount: swapAmount,
           byAmountIn: true,
           sqrtPriceLimit: slippage
-        }
+        },
+        tokens: [
+          { id: tokenX.contractInstance.contractId, amount: swapAmount },
+          { id: tokenY.contractInstance.contractId, amount: swapAmount }
+        ]
       })
+
+      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
+      const swapperTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, swapper.address)
+      const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+      const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+
+      expect(swapperTokenXBalanceAfter).toBe(0n)
+      expect(swapperTokenYBalanceAfter).toBe(1989n)
+      expect(invariantTokenXBalanceAfter).toBe(1500n)
+      expect(invariantTokenYBalanceAfter).toBe(1510n)
 
       const poolAfter = decodePool(
         (

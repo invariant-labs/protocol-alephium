@@ -1,6 +1,6 @@
 Contract Ticks(tickTemplateContractId: ByteVec) {
     enum TicksError {
-        TickAlreadyExist = 1002
+        TickAlreadyExist = 500
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
