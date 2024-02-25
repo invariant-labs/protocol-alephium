@@ -313,7 +313,7 @@ Contract Invariant(
         return SwapUtils(swapContractId).wrappedQuote(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(assetsInContract = true, checkExternalCaller = false)
     pub fn swap(
         token0: ByteVec,
         token1: ByteVec,
@@ -324,9 +324,20 @@ Contract Invariant(
         byAmountIn: Bool,
         sqrtPriceLimit: U256
     ) -> (U256, U256, U256, U256, U256) {
+        let caller = callerAddress!()
+
         let (amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount) = SwapUtils(swapContractId).wrappedSwap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
-        // Emit crossed ticks event
-        // transfer tokens
+
+        // let tokenXId = Pools(poolsContractId).getTokenXId(poolKey)cd .
+
+        // if (xToY) {
+        //     transferTokenToSelf!(caller, tokenXId, amountIn)
+        //     transferTokenFromSelf!(caller, tokenYId, amountOut)
+        // } else {
+        //     transferTokenFromSelf!(caller, tokenXId, amountOut)
+        //     transferTokenToSelf!(caller, tokenYId, amountIn)
+        // }
+
         return amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount
     }
     

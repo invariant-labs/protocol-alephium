@@ -1,4 +1,8 @@
 Abstract Contract Log() extends Decimal() {
+    enum LogError {
+        SqrtPriceOutOfRange = 7001
+    }
+
     fn getLog2Scale() -> U256 {
         return 32
     }

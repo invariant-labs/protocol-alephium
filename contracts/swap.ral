@@ -25,8 +25,6 @@ Contract SwapUtils(
         let currentTimestamp = blockTimeStamp!()
 
         assert!(amount != 0, SwapError.ZeroAmount)
-
-        // let mut ticks = 
         
         let mut currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
 

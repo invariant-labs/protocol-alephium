@@ -12,8 +12,8 @@ Contract Position(
     mut posIsActive: Bool
 ) extends Decimal() {
     enum PositionError {
-        InsufficientLiquidity = 700
-        EmptyPositionPokes = 701
+        InsufficientLiquidity = 900
+        EmptyPositionPokes = 901
     }
 
     pub fn getPoolKey() -> ByteVec {

@@ -9,7 +9,7 @@ Contract Tick(
     tickSecondsOutside: U256
 ) extends Decimal() {
     enum TickError {
-        InvalidTickLiquidity = 800
+        InvalidTickLiquidity = 1000
     }
 
     pub fn getSign() -> Bool {
