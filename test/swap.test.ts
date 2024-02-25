@@ -1,12 +1,11 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap, Withdraw } from '../artifacts/ts'
-import { invariantDeployFee, testPrivateKeys } from '../src/consts'
+import { AddFeeTier, CreatePool, CreatePosition, InitPosition, Swap, Withdraw } from '../artifacts/ts'
 import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
+let sender: PrivateKeyWallet
 
 describe('swap tests', () => {
   const protocolFee = 10n ** 10n
@@ -46,13 +45,6 @@ describe('swap tests', () => {
     })
 
     const invariant = await deployInvariant(sender, protocolFee)
-
-    // const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    // await Init.execute(sender, {
-    //   initialFields: { invariant: invariant.contractId },
-    //   attoAlphAmount: invariantDeployFee
-    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -299,13 +291,6 @@ describe('swap tests', () => {
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
     const invariant = await deployInvariant(sender, protocolFee)
-
-    // const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    // await Init.execute(sender, {
-    //   initialFields: { invariant: invariant.contractId },
-    //   attoAlphAmount: invariantDeployFee
-    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -611,13 +596,6 @@ describe('swap tests', () => {
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
     const invariant = await deployInvariant(sender, protocolFee)
-
-    // const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    // await Init.execute(sender, {
-    //   initialFields: { invariant: invariant.contractId },
-    //   attoAlphAmount: invariantDeployFee
-    // })
 
     await AddFeeTier.execute(sender, {
       initialFields: {

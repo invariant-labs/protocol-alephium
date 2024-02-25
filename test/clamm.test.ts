@@ -2,7 +2,6 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
-import { testPrivateKeys } from '../src/consts'
 import { deployCLAMM } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')

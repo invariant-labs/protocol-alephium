@@ -20,7 +20,6 @@ import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { compactUnsignedIntCodec } from './compact-int-codec'
-import { invariantDeployFee } from './consts'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -103,7 +102,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     initialFields: {
       invariant: invariant.contractId
     }
-    // attoAlphAmount: invariantDeployFee
   })
 
   return invariant

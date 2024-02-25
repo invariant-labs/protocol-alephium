@@ -33,7 +33,7 @@ Contract Invariant(
         let invtId = toByteVec!(selfAddress!())
         let positionsId = Positions(positionsContractId).getSelfId()
         let swapId = SwapUtils(swapContractId).getSelfId()
-        
+
         FeeTiers(feeTiersContractId).setAdmins(invtId)
         PoolKeys(poolKeysContractId).setAdmins(invtId)
         Pools(poolsContractId).setAdmins(invtId, positionsId, swapId)
@@ -155,7 +155,6 @@ Contract Invariant(
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
 
-    // Can be moved to collection layer
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createTick(
         caller: Address,
@@ -233,7 +232,6 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
-    // @using(preapprovedAssets = true, assetsInContract = false, checkExternalCaller = false)
     pub fn createPosition(
         index: U256,
         token0: ByteVec,
@@ -270,9 +268,6 @@ Contract Invariant(
         let tokenX = pools.getTokenX(poolKey)
         let tokenY = pools.getTokenY(poolKey)
 
-        // if(index == 123123123) {
-        //     return
-        // }
         transferTokenToSelf!(callerAddress!(), tokenX, x)
         transferTokenToSelf!(callerAddress!(), tokenY, y)
     }
