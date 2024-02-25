@@ -22,7 +22,7 @@ describe('swap tests', () => {
     const lowerTickIndex = -20n
     const upperTickIndex = 10n
 
-    const amount = 20000000000000n
+    const amount = 1000000n + 1000n
 
     const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
     const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
@@ -33,14 +33,14 @@ describe('swap tests', () => {
     await Withdraw.execute(sender, {
       initialFields: {
         token: token0.contractInstance.contractId,
-        amount: 10000000000000n
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
     await Withdraw.execute(sender, {
       initialFields: {
         token: token1.contractInstance.contractId,
-        amount: 10000000000000n
+        amount: 1000000n
       },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
@@ -89,8 +89,8 @@ describe('swap tests', () => {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
         token1: token1.contractInstance.contractId,
-        token0Amount: 10000000000000n,
-        token1Amount: 10000000000000n,
+        approvedTokens0: 1000000n,
+        approvedTokens1: 1000000n,
         index: 1n,
         fee: fee,
         tickSpacing: tickSpacing,
@@ -101,8 +101,8 @@ describe('swap tests', () => {
         slippageLimitUpper: 1000000000000000000000000n
       },
       tokens: [
-        { id: token0.contractInstance.contractId, amount: 10000000000000n },
-        { id: token1.contractInstance.contractId, amount: 10000000000000n }
+        { id: token0.contractInstance.contractId, amount: 1000000n },
+        { id: token1.contractInstance.contractId, amount: 1000000n }
       ]
     })
     const position = await invariant.methods.getPosition({
@@ -343,8 +343,8 @@ describe('swap tests', () => {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
           token1: token1.contractInstance.contractId,
-          token0Amount: senderBalance0,
-          token1Amount: senderBalance1,
+          approvedTokens0: senderBalance0,
+          approvedTokens1: senderBalance1,
           index: 1n,
           fee: fee,
           tickSpacing: tickSpacing,
@@ -381,8 +381,8 @@ describe('swap tests', () => {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
           token1: token1.contractInstance.contractId,
-          token0Amount: senderBalance0,
-          token1Amount: senderBalance1,
+          approvedTokens0: senderBalance0,
+          approvedTokens1: senderBalance1,
           index: 2n,
           fee: fee,
           tickSpacing: tickSpacing,
@@ -658,8 +658,8 @@ describe('swap tests', () => {
             invariant: invariant.contractId,
             token0: token0.contractInstance.contractId,
             token1: token1.contractInstance.contractId,
-            token0Amount: senderBalance0,
-            token1Amount: senderBalance1,
+            approvedTokens0: senderBalance0,
+            approvedTokens1: senderBalance1,
             index: 1n,
             fee: fee,
             tickSpacing: tickSpacing,
@@ -753,8 +753,8 @@ describe('swap tests', () => {
             invariant: invariant.contractId,
             token0: token0.contractInstance.contractId,
             token1: token1.contractInstance.contractId,
-            token0Amount: senderBalance0,
-            token1Amount: senderBalance1,
+            approvedTokens0: senderBalance0,
+            approvedTokens1: senderBalance1,
             index,
             fee: fee,
             tickSpacing: tickSpacing,

@@ -30,8 +30,8 @@ TxScript CreatePosition(
     invariant: Invariant,
     token0: ByteVec,
     token1: ByteVec,
-    token0Amount: U256,
-    token1Amount: U256,
+    approvedTokens0: U256,
+    approvedTokens1: U256,
     index: U256,
     fee: U256,
     tickSpacing: U256, 
@@ -41,7 +41,7 @@ TxScript CreatePosition(
     slippageLimitLower: U256,
     slippageLimitUpper: U256
 ) {
-    invariant.createPosition{callerAddress!() -> token0: token0Amount, token1: token1Amount}
+    invariant.createPosition{callerAddress!() -> token0: approvedTokens0, token1: approvedTokens1}
         (index, token0, token1, fee, tickSpacing, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 
