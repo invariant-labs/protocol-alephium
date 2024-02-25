@@ -40,6 +40,7 @@ Contract Invariant(
         Positions(positionsContractId).setAdmins(invtId)
         Tickmap(tickmapContractId).setAdmins(invtId, swapId)
         Ticks(ticksContractId).setAdmins(invtId, positionsId, swapId)
+        
         init = true
     }
     

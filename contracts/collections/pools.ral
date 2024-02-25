@@ -10,7 +10,6 @@ Contract Pools(
         PoolAlreadyExist = 301
         NotAdmin = 302
         AdminsAreSet = 303
-
     }
 
     @using(updateFields = true, checkExternalCaller = false)
@@ -143,7 +142,7 @@ Contract Pools(
     pub fn updateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         let callerId = toByteVec!(callerAddress!())
         assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
-        
+
 
         return Pool(subContractId!(poolKey)).updateLiquidity(liquidityDelta, liquiditySign, upperTick, lowerTick)
     }
