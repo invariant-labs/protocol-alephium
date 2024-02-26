@@ -1,5 +1,5 @@
 Contract Position(
-    admin: ByteVec,
+    admin: Address,
     posPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
@@ -64,28 +64,28 @@ Contract Position(
 
     @using(updateFields = true)
     pub fn setTokensOwedX(tokensOwedX: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == admin, PositionError.NotAdmin)
         posTokensOwedX = tokensOwedX
     }
 
     @using(updateFields = true)
     pub fn setTokensOwedY(tokensOwedY: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == admin, PositionError.NotAdmin)
         posTokensOwedY = tokensOwedY
     }
 
     @using(updateFields = true)
     pub fn setOwner(owner: Address) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == admin, PositionError.NotAdmin)
         posOwner = owner
     }
 
     @using(updateFields = true)
     pub fn setIsActive(isActive: Bool) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == admin, PositionError.NotAdmin)
         posIsActive = isActive
     }
@@ -105,7 +105,7 @@ Contract Position(
         liquidityDelta: U256,
         add: Bool
     ) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == admin, PositionError.NotAdmin)
 
         let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
@@ -130,8 +130,8 @@ Contract Position(
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> () {
-        let callerId = toByteVec!(callerAddress!())
-        checkCaller!(callerId == admin || callerId == toByteVec!(selfAddress!()), PositionError.NotAdmin)
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin || callerId == selfAddress!(), PositionError.NotAdmin)
 
         assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
 
@@ -150,8 +150,8 @@ Contract Position(
         sign: Bool,
         liquidityDelta: U256
     ) -> U256 {
-        let callerId = toByteVec!(callerAddress!())
-        checkCaller!(callerId == admin || callerId == toByteVec!(selfAddress!()), PositionError.NotAdmin)
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin || callerId == selfAddress!(), PositionError.NotAdmin)
         
         assert!(sign || posLiquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
 

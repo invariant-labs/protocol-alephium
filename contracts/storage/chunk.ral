@@ -1,4 +1,4 @@
-Contract Chunk(mut value: U256, admin: ByteVec) {
+Contract Chunk(mut value: U256, admin: Address) {
     enum ChunkError {
         NotAdmin = 1100
     }
@@ -8,7 +8,7 @@ Contract Chunk(mut value: U256, admin: ByteVec) {
 
     @using(updateFields = true)
     pub fn set(updatedValue: U256) -> () {
-        checkCaller!(toByteVec!(callerAddress!()) == admin, ChunkError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, ChunkError.NotAdmin)
         value = updatedValue
     }
 }

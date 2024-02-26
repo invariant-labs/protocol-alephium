@@ -1,4 +1,4 @@
-Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContractId: ByteVec, mut invariantId: ByteVec, mut areAdminsSet: Bool) {
+Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContractId: ByteVec, mut invariantId: Address, mut areAdminsSet: Bool) {
     enum PositionsError {
         NotOwner = 500
         PositionNotExist = 501
@@ -7,16 +7,16 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invariant: ByteVec) -> () {
+    pub fn setAdmins(invariant: Address) -> () {
         assert!(!areAdminsSet, PositionsError.AdminsAreSet)
         invariantId = invariant
-        PositionsCounter(positionsCounterContractId).setAdmins(toByteVec!(selfAddress!()))
+        PositionsCounter(positionsCounterContractId).setAdmins(selfAddress!())
         areAdminsSet = true
     }
 
     @using(checkExternalCaller = false)
-    pub fn getSelfId() -> ByteVec {
-        return toByteVec!(selfAddress!())
+    pub fn getSelfId() -> Address {
+        return selfAddress!()
     }
 
     @using(preapprovedAssets = true)
@@ -32,7 +32,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         tokensOwedX: U256,
         tokensOwedY: U256
     ) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
     
 
@@ -63,7 +63,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     pub fn remove(caller: Address, index: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
 
         let subContractId = subContractId!(toByteVec!(index))
@@ -74,7 +74,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     pub fn transfer(caller: Address, index: U256, newOwner: Address) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
 
         let subContractId = subContractId!(toByteVec!(index))
@@ -115,7 +115,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     pub fn setTokensOwedX(index: U256, value: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
 
         let subContractId = subContractId!(toByteVec!(index))
@@ -123,7 +123,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     pub fn setTokensOwedY(index: U256, value: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
 
         let subContractId = subContractId!(toByteVec!(index))
@@ -137,7 +137,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
 
         Position(subContractId!(toByteVec!(index))).update(sign, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
@@ -167,7 +167,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         currentTimestamp: U256,
         tickSpacing: U256
     ) -> (U256, U256) {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
         let position = Position(subContractId!(toByteVec!(index)))
         assert!(originalCaller == position.getOwner(), PositionsError.NotOwner)

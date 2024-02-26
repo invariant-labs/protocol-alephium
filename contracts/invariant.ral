@@ -30,7 +30,7 @@ Contract Invariant(
     pub fn init() -> () {
         checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
-        let invtId = toByteVec!(selfAddress!())
+        let invtId = selfAddress!()
         let positionsId = Positions(positionsContractId).getSelfId()
         let swapId = SwapUtils(swapContractId).getSelfId()
 

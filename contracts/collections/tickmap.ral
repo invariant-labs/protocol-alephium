@@ -1,8 +1,8 @@
 Contract Tickmap(
     chunkTemplateContractId: ByteVec,
     clammContractId: ByteVec,
-    mut invariantId: ByteVec,
-    mut swapUtilsId: ByteVec,
+    mut invariantId: Address,
+    mut swapUtilsId: Address,
     mut areAdminsSet: Bool
 ) {
     enum TickmapErrors {
@@ -16,7 +16,7 @@ Contract Tickmap(
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invariant: ByteVec, swapUtils: ByteVec) -> () {
+    pub fn setAdmins(invariant: Address, swapUtils: Address) -> () {
         assert!(!areAdminsSet, TickmapErrors.AdminsAreSet)
         invariantId = invariant
         swapUtilsId = swapUtils
@@ -146,7 +146,7 @@ Contract Tickmap(
     }
 
     pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let mut closesTickBool = false
@@ -204,7 +204,7 @@ Contract Tickmap(
 
     @using(preapprovedAssets = false)
     pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
@@ -221,14 +221,14 @@ Contract Tickmap(
 
     @using(preapprovedAssets = true)
     pub fn initializeChunk(caller: Address, poolKey: ByteVec, chunk: U256) -> () {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let id = poolKey ++ toByteVec!(chunk)        
         let exists = contractExists!(subContractId!(id))
 
         if(!exists) {
-            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0, toByteVec!(selfAddress!()))
+            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0, selfAddress!())
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
@@ -239,7 +239,7 @@ Contract Tickmap(
     }
 
     pub fn getChunks(lowerTick: I256, upperTick: I256, tickSpacing: U256) -> (U256, U256) {
-        let callerId = toByteVec!(callerAddress!())
+        let callerId = callerAddress!()
         checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
         let (lowerChunk, _) = tickToPosition(lowerTick, tickSpacing)
         let (upperChunk, _) = tickToPosition(upperTick, tickSpacing)

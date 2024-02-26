@@ -13,8 +13,8 @@ Contract SwapUtils(
     }
 
     @using(checkExternalCaller = false)
-    pub fn getSelfId() -> ByteVec {
-        return toByteVec!(selfAddress!())
+    pub fn getSelfId() -> Address {
+        return selfAddress!()
     }
     
     @using(checkExternalCaller = false)
