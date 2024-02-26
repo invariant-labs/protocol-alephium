@@ -58,8 +58,8 @@ Contract Position(
         return posOwner
     }
 
-    pub fn get() -> (U256, I256, I256, U256, U256, U256, U256, U256) {
-        return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
+    pub fn get() -> (U256, I256, I256, U256, U256, U256, U256, U256, Address) {
+        return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY, posOwner
     }
 
     @using(updateFields = true)

@@ -142,11 +142,11 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         Position(subContractId!(toByteVec!(index))).update(sign, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
-    pub fn get(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
+    pub fn get(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256, Address) {
         let subContractId = subContractId!(toByteVec!(index))
         
         if (!contractExists!(subContractId)) {
-            return false, 0, 0i, 0i, 0, 0, 0, 0, 0
+            return false, 0, 0i, 0i, 0, 0, 0, 0, 0, byteVecToAddress!(b``)
         } else {
             return true, Position(subContractId).get()
         }

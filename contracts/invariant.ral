@@ -147,7 +147,7 @@ Contract Invariant(
         return Pools(poolsContractId).get(generatePoolKey(token0, token1, fee, tickSpacing))
     }
 
-    pub fn getPosition(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256) {
+    pub fn getPosition(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256, Address) {
         return Positions(positionsContractId).get(index)
     }
 
