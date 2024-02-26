@@ -14,7 +14,6 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         areAdminsSet = true
     }
 
-    @using(checkExternalCaller = false)
     pub fn getSelfId() -> Address {
         return selfAddress!()
     }

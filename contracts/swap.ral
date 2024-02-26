@@ -12,7 +12,6 @@ Contract SwapUtils(
         NoGainSwap = 10004
     }
 
-    @using(checkExternalCaller = false)
     pub fn getSelfId() -> Address {
         return selfAddress!()
     }
