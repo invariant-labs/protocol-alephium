@@ -73,7 +73,6 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         position.setIsActive(false)
     }
 
-    @using(checkExternalCaller = false)
     pub fn transfer(caller: Address, index: U256, newOwner: Address) -> () {
         let callerId = toByteVec!(callerAddress!())
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)

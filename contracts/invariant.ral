@@ -10,7 +10,7 @@ Contract Invariant(
     tickmapContractId: ByteVec,
     swapContractId: ByteVec,
     clammContractId: ByteVec
-) extends Utils(), Decimal() {
+) extends PoolKeyHelper(), Decimal() {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -305,7 +305,7 @@ Contract Invariant(
         Positions(positionsContractId).transfer(callerAddress!(), index, newOwner)
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn quote(
         token0: ByteVec,
         token1: ByteVec,
