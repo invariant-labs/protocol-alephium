@@ -1,12 +1,11 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, Init, Invariant } from '../artifacts/ts'
-import { invariantDeployFee, testPrivateKeys } from '../src/consts'
+import { AddFeeTier, CreatePool } from '../artifacts/ts'
 import { decodePool, decodePools, deployInvariant, deployTokenFaucet, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
+let sender: PrivateKeyWallet
 
 describe('pools tests', () => {
   beforeAll(async () => {
@@ -14,14 +13,7 @@ describe('pools tests', () => {
   })
 
   test('create and decode poolKey', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     const token0 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
     const token1 = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.contractId
@@ -46,14 +38,7 @@ describe('pools tests', () => {
   })
 
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -83,8 +68,6 @@ describe('pools tests', () => {
     const parsedPools = decodePools(pools.returns)
 
     expect(parsedPools.length).toBe(1)
-    // expect(parsedPools[0].token0).toBe('030000000000000000000000000000000000000000000000000000000000000000')
-    // expect(parsedPools[0].token1).toBe('00bee85f379545a2ed9f6cceb331288842f378cf0f04012ad4ac8824aae7d6f80a')
     expect(parsedPools[0].fee).toBe(0n)
     expect(parsedPools[0].tickSpacing).toBe(1n)
 
@@ -111,14 +94,8 @@ describe('pools tests', () => {
     expect(parsedPool.lastTimestamp).toBeGreaterThan(0n)
   })
   test('not existing pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
     expectError(
       invariant.methods.getPool({
         args: {

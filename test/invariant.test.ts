@@ -1,12 +1,11 @@
-import { DUST_AMOUNT, ONE_ALPH, toApiByteVec, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, ChangeProtocolFee, CreatePool, Init, Invariant } from '../artifacts/ts'
-import { invariantDeployFee, testPrivateKeys } from '../src/consts'
+import { AddFeeTier, ChangeProtocolFee, CreatePool } from '../artifacts/ts'
 import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
+let sender: PrivateKeyWallet
 
 describe('invariant tests', () => {
   beforeAll(async () => {
@@ -14,14 +13,7 @@ describe('invariant tests', () => {
   })
 
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -49,14 +41,7 @@ describe('invariant tests', () => {
     })
   })
   test('create pool', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -90,15 +75,10 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
 
-    const poolKey = toApiByteVec(token0.contractInstance.contractId)
-    const index = 1n
-
     const pools = await invariant.methods.getPools()
     const parsedPools = decodePools(pools.returns)
 
     expect(parsedPools.length).toBe(1)
-    // expect(parsedPools[0].token0).toBe(ZERO_ADDRESS)
-    // expect(parsedPools[0].token1).toBe(testAddress)
     expect(parsedPools[0].fee).toBe(100n)
     expect(parsedPools[0].tickSpacing).toBe(1n)
 
@@ -135,13 +115,7 @@ describe('invariant tests', () => {
     expect(tick.returns[0]).toBe(false)
   })
   test('protocol fee', async () => {
-    const invariantResult = await deployInvariant(sender, 0n)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     const currentFee = (await invariant.methods.getProtocolFee()).returns
     expect(currentFee).toEqual(0n)

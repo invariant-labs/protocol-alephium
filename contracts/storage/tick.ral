@@ -5,7 +5,6 @@ Contract Tick(
     tickSqrtPrice: U256,
     mut tickFeeGrowthOutsideX: U256,
     mut tickFeeGrowthOutsideY: U256,
-    // Remove
     tickSecondsOutside: U256
 ) extends Decimal() {
     enum TickError {

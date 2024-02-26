@@ -4,6 +4,7 @@ import {
   Chunk,
   FeeTier,
   FeeTiers,
+  Init,
   Invariant,
   Pool,
   PoolKey,
@@ -77,7 +78,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     protocolFee
   )
 
-  return await waitTxConfirmed(
+  const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
         init: false,
@@ -94,6 +95,16 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
       }
     })
   )
+
+  const invariant = Invariant.at(deployResult.contractInstance.address)
+
+  await Init.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId
+    }
+  })
+
+  return invariant
 }
 
 export async function deploySwap(
@@ -135,7 +146,9 @@ export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
     FeeTiers.deploy(signer, {
       initialFields: {
         feeTierTemplateContractId: feeTier,
-        feeTierCount: 0n
+        feeTierCount: 0n,
+        invariantId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )
@@ -146,7 +159,9 @@ export async function deployPositions(signer: SignerProvider, positionId: string
     Positions.deploy(signer, {
       initialFields: {
         positionTemplateContractId: positionId,
-        positionsCounterContractId
+        positionsCounterContractId,
+        invariantId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )
@@ -176,7 +191,11 @@ export async function deployTicks(signer: SignerProvider, tickId: string) {
   return await waitTxConfirmed(
     Ticks.deploy(signer, {
       initialFields: {
-        tickTemplateContractId: tickId
+        tickTemplateContractId: tickId,
+        invariantId: ZERO_ADDRESS,
+        swapUtilsId: ZERO_ADDRESS,
+        positionsId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )
@@ -200,7 +219,9 @@ export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) 
     PoolKeys.deploy(signer, {
       initialFields: {
         poolKeyTemplateContractId: poolKeyId,
-        poolKeyCount: 0n
+        poolKeyCount: 0n,
+        invariantId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )
@@ -234,7 +255,11 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
     Pools.deploy(signer, {
       initialFields: {
         poolTemplateContractId: poolId,
-        clammContractId: clammId
+        clammContractId: clammId,
+        areAdminsSet: false,
+        invariantId: ZERO_ADDRESS,
+        positionsId: ZERO_ADDRESS,
+        swapUtilsId: ZERO_ADDRESS
       }
     })
   )
@@ -275,9 +300,11 @@ export async function deployTickmap(
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
-        admin: admin,
         chunkTemplateContractId: chunkTemplateContractId,
-        clammContractId: clammContractId
+        clammContractId: clammContractId,
+        invariantId: ZERO_ADDRESS,
+        swapUtilsId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )
@@ -287,7 +314,9 @@ export async function deployPositionsCounter(signer: SignerProvider) {
   return await waitTxConfirmed(
     PositionsCounter.deploy(signer, {
       initialFields: {
-        value: 0n
+        value: 0n,
+        positionsId: ZERO_ADDRESS,
+        areAdminsSet: false
       }
     })
   )

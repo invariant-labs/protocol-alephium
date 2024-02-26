@@ -1,12 +1,22 @@
-Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
+Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256, mut invariantId: ByteVec, mut areAdminsSet: Bool) {
     enum PoolKeysError {
-        // NotAdmin = 200
+        NotAdmin = 200
         PoolKeyAlreadyExist = 201
+        AdminsAreSet = 202
+    }
+
+
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setAdmins(invtId: ByteVec) -> () {
+        assert!(!areAdminsSet, PoolKeysError.AdminsAreSet)
+        invariantId = invtId
+        areAdminsSet = true
     }
 
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
     pub fn add(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
-        // assert!(callerAddress!() == admin, PoolKeysError.NotAdmin)
+        let callerId = toByteVec!(callerAddress!())
+        assert!(callerId == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
@@ -25,6 +35,9 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256) {
     }
 
     pub fn contains(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
+        let callerId = toByteVec!(callerAddress!())
+        assert!(callerId == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
+
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
 

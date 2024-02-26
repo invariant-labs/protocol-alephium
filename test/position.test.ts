@@ -6,18 +6,15 @@ import {
   ClaimFee,
   CreatePool,
   CreatePosition,
-  Init,
   InitPosition,
-  Invariant,
   RemovePosition,
   Swap,
   Withdraw
 } from '../artifacts/ts'
-import { invariantDeployFee, testPrivateKeys } from '../src/consts'
 import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
+let sender: PrivateKeyWallet
 
 describe('position tests', () => {
   beforeAll(async () => {
@@ -46,14 +43,7 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -214,14 +204,7 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     await AddFeeTier.execute(sender, {
       initialFields: {
@@ -359,14 +342,7 @@ describe('position tests', () => {
     const [tokenX, tokenY] =
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
-    const invariantResult = await deployInvariant(sender, 0n)
-
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, 0n)
 
     const fee = 10000000000n
     const tickSpacing = 1n
