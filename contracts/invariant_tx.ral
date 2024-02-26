@@ -22,6 +22,10 @@ TxScript ChangeFeeReceiver(invariant: Invariant, token0: ByteVec, token1: ByteVe
     invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
 }
 
+TxScript WithdrawProtocolFee(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) {
+    invariant.withdrawProtocolFee(token0, token1, fee, tickSpacing)
+}
+
 TxScript InitPosition(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
     invariant.initPosition{callerAddress!() -> ALPH: 6 alph}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
 }

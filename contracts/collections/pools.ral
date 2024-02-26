@@ -71,6 +71,10 @@ Contract Pools(
         return Pool(subContractId!(poolKey)).getTickSpacing()
     }
 
+    pub fn getFeeReceiver(poolKey: ByteVec) -> Address {
+        return Pool(subContractId!(poolKey)).getFeeReceiver()
+    }
+
     @using(checkExternalCaller = false)
     pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
         let callerId = toByteVec!(callerAddress!())
@@ -146,6 +150,15 @@ Contract Pools(
 
         return Pool(subContractId!(poolKey)).updateLiquidity(liquidityDelta, liquiditySign, upperTick, lowerTick)
     }
+
+    @using(checkExternalCaller = false)
+    pub fn wrappedWithdrawProtocolFee(poolKey: ByteVec) -> (U256, U256) {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+
+        let (feeProtocolTokenX, feeProtocolTokenY) = Pool(subContractId!(poolKey)).withdrawProtocolFee()
+        return feeProtocolTokenX, feeProtocolTokenY
+    }
     
     pub fn get(poolKey: ByteVec) -> (Bool, U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
         let subContractId = subContractId!(poolKey)
@@ -156,4 +169,6 @@ Contract Pools(
             return true, Pool(subContractId).get()
         }
     }
+
+
 }

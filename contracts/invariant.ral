@@ -54,18 +54,21 @@ Contract Invariant(
         protocolFee = newProtocolFee
     }
 
-    @using(checkExternalCaller = false)
+    @using(checkExternalCaller = false, assetsInContract = true)
     pub fn withdrawProtocolFee(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let pool = Pool(poolKey)
+        let feeReceiver = Pools(poolsContractId).getFeeReceiver(poolKey)
 
-        assert!(pool.getFeeReceiver() == caller, InvariantError.NotFeeReceiver)
+        assert!(feeReceiver == caller, InvariantError.NotFeeReceiver)
 
-        let (feeProtocolTokenX, feeProtocolTokenY) = pool.withdrawProtocolFee()
+        let (feeProtocolTokenX, feeProtocolTokenY) = Pools(poolsContractId).wrappedWithdrawProtocolFee(poolKey)
 
-        transferTokenFromSelf!(caller, token0, feeProtocolTokenX)
-        transferTokenFromSelf!(caller, token1, feeProtocolTokenY)
+        let tokenX = Pools(poolsContractId).getTokenX(poolKey)
+        let tokenY = Pools(poolsContractId).getTokenY(poolKey)
+
+        transferTokenFromSelf!(caller, tokenX, feeProtocolTokenX)
+        transferTokenFromSelf!(caller, tokenY, feeProtocolTokenY)
     }
 
     @using(checkExternalCaller = false)
@@ -84,7 +87,6 @@ Contract Invariant(
         assert!(init, InvariantError.NotInitialized)
 
         let caller = callerAddress!()
-        let contractAddress = selfAddress!()
         let timestamp = blockTimeStamp!()
 
         assert!(FeeTiers(feeTiersContractId).contains(fee, tickSpacing), InvariantError.FeeTierNotFound)
@@ -102,7 +104,7 @@ Contract Invariant(
         assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, caller)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
