@@ -75,7 +75,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        checkCaller!(admin == caller, InvariantError.NotFeeReceiver)
+        checkCaller!(admin == caller, InvariantError.NotAdmin)
 
         Pools(poolsContractId).setFeeReceiver(poolKey, newFeeReceiver)
     }

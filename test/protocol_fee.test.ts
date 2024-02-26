@@ -3,6 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import {
   AddFeeTier,
+  ChangeFeeReceiver,
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
@@ -269,13 +270,33 @@ describe('protocol fee tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(1n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
+
     {
-      const deployerTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-      const deployerTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+      const newFeeReceiver = await getSigner(ONE_ALPH * 10n, 0)
+
+      await ChangeFeeReceiver.execute(sender, {
+        initialFields: {
+          invariant: invariant.contractId,
+          token0: token0.contractInstance.contractId,
+          token1: token1.contractInstance.contractId,
+          fee: fee,
+          tickSpacing: tickSpacing,
+          newFeeReceiver: newFeeReceiver.address
+        }
+      })
+
+      const newFeeReceiverTokenXBalanceBefore = await balanceOf(
+        tokenX.contractInstance.contractId,
+        newFeeReceiver.address
+      )
+      const newFeeReceiverTokenYBalanceBefore = await balanceOf(
+        tokenY.contractInstance.contractId,
+        newFeeReceiver.address
+      )
       const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
       const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-      await WithdrawProtocolFee.execute(sender, {
+      await WithdrawProtocolFee.execute(newFeeReceiver, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -286,13 +307,19 @@ describe('protocol fee tests', () => {
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
       })
 
-      const deployerTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-      const deployerTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+      const newFeeReceiverTokenXBalanceAfter = await balanceOf(
+        tokenX.contractInstance.contractId,
+        newFeeReceiver.address
+      )
+      const newFeeReceiverTokenYBalanceAfter = await balanceOf(
+        tokenY.contractInstance.contractId,
+        newFeeReceiver.address
+      )
       const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
       const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-      expect(deployerTokenXBalanceAfter).toBe(deployerTokenXBalanceBefore + 1n)
-      expect(deployerTokenYBalanceAfter).toBe(deployerTokenYBalanceBefore)
+      expect(newFeeReceiverTokenXBalanceAfter).toBe(newFeeReceiverTokenXBalanceBefore + 1n)
+      expect(newFeeReceiverTokenYBalanceAfter).toBe(newFeeReceiverTokenYBalanceBefore)
       expect(invariantTokenXBalanceAfter).toBe(invariantTokenXBalanceBefore - 1n)
       expect(invariantTokenYBalanceAfter).toBe(invariantTokenYBalanceBefore)
     }
