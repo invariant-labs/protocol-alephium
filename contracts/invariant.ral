@@ -75,11 +75,10 @@ Contract Invariant(
     pub fn changeFeeReceiver(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, newFeeReceiver: Address) -> () {
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let pool = Pool(poolKey)
 
         assert!(admin == caller, InvariantError.NotFeeReceiver)
 
-        pool.setFeeReceiver(newFeeReceiver)
+        Pools(poolsContractId).setFeeReceiver(poolKey, newFeeReceiver)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
@@ -104,7 +103,7 @@ Contract Invariant(
         assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, caller)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, admin)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)

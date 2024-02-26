@@ -143,6 +143,11 @@ Contract Pools(
     }
 
     @using(checkExternalCaller = false)
+    pub fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
+        Pool(subContractId!(poolKey)).setFeeReceiver(newReceiver)
+    }
+
+    @using(checkExternalCaller = false)
     pub fn updateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         let callerId = toByteVec!(callerAddress!())
         assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
@@ -169,6 +174,4 @@ Contract Pools(
             return true, Pool(subContractId).get()
         }
     }
-
-
 }
