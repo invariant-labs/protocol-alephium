@@ -1,5 +1,6 @@
 Abstract Contract PoolKeyHelper() {
     const TokenAddressBytes = 32
+    
     enum PoolKeyHelperError {
         TokensAreSame = 5000
         InvalidFee = 5001

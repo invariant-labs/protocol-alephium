@@ -107,7 +107,7 @@ Contract Pool(
         let callerId = callerAddress!()
         checkCaller!(callerId == admin, PoolError.NotAdmin)
 
-        let invariantProtocolFee = mulUp(amount, protocolFee, getPercentageScale())
+        let invariantProtocolFee = mulUp(amount, protocolFee, PercentageScale)
 
         let poolFee = amount - invariantProtocolFee
 

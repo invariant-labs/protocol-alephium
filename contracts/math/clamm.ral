@@ -17,14 +17,13 @@ Contract CLAMM() extends Log(){
         }
 
         let xToY = currentSqrtPrice >= targetSqrtPrice
-        let percentageScale = getPercentageScale()
 
         let mut nextSqrtPrice = 0
         let mut amountIn = 0
         let mut amountOut = 0
 
         if (byAmountIn) {
-            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+            let amountAfterFee = mul(amount, (one(PercentageScale) - fee), PercentageScale)
 
             if (xToY) {
                 amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
@@ -78,7 +77,7 @@ Contract CLAMM() extends Log(){
         if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
             feeAmount = amount - amountIn
         } else {
-            feeAmount = mulUp(amountIn, fee, percentageScale)
+            feeAmount = mulUp(amountIn, fee, PercentageScale)
         }
 
         return nextSqrtPrice, amountIn, amountOut, feeAmount
@@ -90,9 +89,6 @@ Contract CLAMM() extends Log(){
         liquidity: U256,
         roundingUp: Bool
     ) -> U256 {
-        let sqrtPriceScale = getSqrtPriceScale()
-        let liquidityScale = getLiquidityScale()
-
         let mut deltaSqrtPrice = 0u
         if (sqrtPriceA > sqrtPriceB) {
             deltaSqrtPrice = sqrtPriceA - sqrtPriceB
@@ -100,16 +96,16 @@ Contract CLAMM() extends Log(){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = mul(deltaSqrtPrice, liquidity, liquidityScale)
+        let nominator = mul(deltaSqrtPrice, liquidity, LiquidityScale)
         if (roundingUp == true) {
             return divToTokenUp(
                     nominator,
-                    mul(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                    mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
                 )
         } else {
             return divToToken(
                 nominator,
-                mulUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
             )
         }
     }
@@ -119,9 +115,6 @@ Contract CLAMM() extends Log(){
         liquidity: U256,
         roundingUp: Bool
     ) -> U256 {
-        let sqrtPriceScale = getSqrtPriceScale()
-        let liquidityScale = getLiquidityScale()
-        
         let mut deltaSqrtPrice = 0u
         if (sqrtPriceA > sqrtPriceB) {
             deltaSqrtPrice = sqrtPriceA - sqrtPriceB
@@ -130,9 +123,9 @@ Contract CLAMM() extends Log(){
         }
 
         if (roundingUp) {
-            return (mulUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
+            return (mulUp(deltaSqrtPrice, liquidity, LiquidityScale) + almostOne(SqrtPriceScale)) / one(SqrtPriceScale)
         } else {
-            return mul(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+            return mul(deltaSqrtPrice, liquidity, LiquidityScale) / one(SqrtPriceScale)
         }
     }
     pub fn getNextSqrtPriceFromInput(
@@ -169,22 +162,18 @@ Contract CLAMM() extends Log(){
             return startingSqrtPrice
         }
 
-        let liquidityScale = getLiquidityScale()
-        let sqrtPriceScale = getSqrtPriceScale()
-        let tokenAmountScale = getTokenAmountScale()
-
-        let deltaSqrtPrice = rescale(liquidity, liquidityScale, sqrtPriceScale)
+        let deltaSqrtPrice = rescale(liquidity, LiquidityScale, SqrtPriceScale)
 
         let mut denominator = 0
         if (addX) {
-            denominator = deltaSqrtPrice + mul(startingSqrtPrice, x, tokenAmountScale) 
+            denominator = deltaSqrtPrice + mul(startingSqrtPrice, x, TokenAmountScale) 
         } else {
-            denominator = deltaSqrtPrice - mul(startingSqrtPrice, x, tokenAmountScale)
+            denominator = deltaSqrtPrice - mul(startingSqrtPrice, x, TokenAmountScale)
         }
 
         return divToTokenUp(
-            mulUp(startingSqrtPrice, liquidity, liquidityScale),
-            rescale(denominator, sqrtPriceScale, tokenAmountScale)
+            mulUp(startingSqrtPrice, liquidity, LiquidityScale),
+            rescale(denominator, SqrtPriceScale, TokenAmountScale)
         )
     }
     pub fn getNextSqrtPriceYDown(
@@ -193,12 +182,8 @@ Contract CLAMM() extends Log(){
         y: U256,
         addY: Bool
     ) -> U256 {
-        let liquidityScale = getLiquidityScale()
-        let sqrtPriceScale = getSqrtPriceScale()
-        let tokenAmountScale = getTokenAmountScale()
-
-        let numerator = rescale(y, tokenAmountScale, sqrtPriceScale)
-        let denominator = rescale(liquidity, liquidityScale, sqrtPriceScale)
+        let numerator = rescale(y, TokenAmountScale, SqrtPriceScale)
+        let denominator = rescale(liquidity, LiquidityScale, SqrtPriceScale)
 
         if (addY) {
             return startingSqrtPrice + div(numerator, denominator)
@@ -266,10 +251,9 @@ Contract CLAMM() extends Log(){
             return true
         }
 
-        let percentageScale = getPercentageScale()
         let mut nextSqrtPrice = 0
         if (byAmountIn == true) {
-            let amountAfterFee = mul(amount, (one(percentageScale) - fee), percentageScale)
+            let amountAfterFee = mul(amount, (one(PercentageScale) - fee), PercentageScale)
             nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
         } else {
             nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
@@ -304,8 +288,7 @@ Contract CLAMM() extends Log(){
         expectedAmountOut: U256,
         slippage: U256
     ) -> U256 {
-        let percentageScale = getPercentageScale()
-        return mulUp(expectedAmountOut, (one(percentageScale) - slippage), percentageScale)
+        return mulUp(expectedAmountOut, (one(PercentageScale) - slippage), PercentageScale)
     }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {
