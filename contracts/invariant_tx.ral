@@ -55,7 +55,6 @@ TxScript RemovePosition(invariant: Invariant, index: U256) {
 
 TxScript TransferPosition(invariant: Invariant, index: U256, recipient: Address) {
     invariant.transferPosition(index, recipient)
-
 }
 
 TxScript ClaimFee(invariant: Invariant, index: U256) {
