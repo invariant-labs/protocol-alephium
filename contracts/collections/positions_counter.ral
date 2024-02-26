@@ -15,10 +15,10 @@ Contract PositionsCounter(mut value: U256, mut positionsId: ByteVec, mut areAdmi
         areAdminsSet = true
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn set(updatedValue: U256) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!(callerId == positionsId && areAdminsSet, PositionCounterError.NotAdmin)
+        checkCaller!(callerId == positionsId && areAdminsSet, PositionCounterError.NotAdmin)
         value = updatedValue
     }
 }

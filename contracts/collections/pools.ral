@@ -22,10 +22,10 @@ Contract Pools(
     }
 
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     pub fn add(originalCaller: Address, poolKey: ByteVec, tokenX: ByteVec, tokenY: ByteVec, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == positionsId || callerId == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 

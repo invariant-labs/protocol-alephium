@@ -285,7 +285,8 @@ export async function deployChunk(signer: SignerProvider) {
   return await waitTxConfirmed(
     Chunk.deploy(signer, {
       initialFields: {
-        value: 0n
+        value: 0n,
+        admin: ZERO_ADDRESS
       }
     })
   )

@@ -20,7 +20,7 @@ Contract Ticks(
         areAdminsSet = true
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     pub fn add(
         caller: Address,
         poolKey: ByteVec,
@@ -34,7 +34,7 @@ Contract Ticks(
         secondsOutside: U256
     ) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
 
         let path = poolKey ++ toByteVec!(index)
         assert!(!contractExists!(subContractId!(path)), TicksError.TickAlreadyExist)
@@ -63,10 +63,9 @@ Contract Ticks(
         return contractExists!(subContractId!(poolKey ++ toByteVec!(index)))
     }
 
-    @using(checkExternalCaller = false)
     pub fn updateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
 
         Tick(subContractId!(poolKey ++ toByteVec!(index))).updateTick(liquidityDelta, maxLiquidityPerTick, isUpper, isDeposit)
     }
@@ -84,10 +83,9 @@ Contract Ticks(
         return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityGross()
     }
 
-    @using(checkExternalCaller = false)
     pub fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
 
         return Tick(subContractId!(poolKey ++ toByteVec!(index))).cross(feeGrowthGlobalX, feeGrowthGlobalY, currentTick, index)
     }

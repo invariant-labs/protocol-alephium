@@ -202,10 +202,10 @@ Contract Tickmap(
         return getBitAtPosition(getChunk(chunk, poolKey), bit)
     }
 
-    @using(preapprovedAssets = false, checkExternalCaller = false)
+    @using(preapprovedAssets = false)
     pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
         let isInitialized = getBitAtPosition(chunk, bit)
@@ -219,16 +219,16 @@ Contract Tickmap(
         contract.set(flipBitAtPosition(contract.get(), bit))
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     pub fn initializeChunk(caller: Address, poolKey: ByteVec, chunk: U256) -> () {
         let callerId = toByteVec!(callerAddress!())
-        assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let id = poolKey ++ toByteVec!(chunk)        
         let exists = contractExists!(subContractId!(id))
 
         if(!exists) {
-            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0)
+            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0, toByteVec!(selfAddress!()))
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
@@ -238,8 +238,9 @@ Contract Tickmap(
         }
     }
 
-    @using(checkExternalCaller = false)
     pub fn getChunks(lowerTick: I256, upperTick: I256, tickSpacing: U256) -> (U256, U256) {
+        let callerId = toByteVec!(callerAddress!())
+        checkCaller!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
         let (lowerChunk, _) = tickToPosition(lowerTick, tickSpacing)
         let (upperChunk, _) = tickToPosition(upperTick, tickSpacing)
         return lowerChunk, upperChunk
