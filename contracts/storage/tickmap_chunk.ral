@@ -1,5 +1,5 @@
-Contract Chunk(mut value: U256, admin: Address) {
-    enum ChunkError {
+Contract TickmapChunk(mut value: U256, admin: Address) {
+    enum TickmapChunkError {
         NotAdmin = 1100
     }
     pub fn get() -> U256 {
@@ -8,7 +8,7 @@ Contract Chunk(mut value: U256, admin: Address) {
 
     @using(updateFields = true)
     pub fn set(updatedValue: U256) -> () {
-        checkCaller!(callerAddress!() == admin, ChunkError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, TickmapChunkError.NotAdmin)
         value = updatedValue
     }
 }
