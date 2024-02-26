@@ -38,13 +38,11 @@ Contract SwapUtils(
             assert!(currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= getMinSqrtPrice(), SwapError.WrongLimit)
         }
 
-        let mut remainingAmount = amount
-
         let mut totalAmountIn = 0
         let mut totalAmountOut = 0
-
-        let eventStartSqrtPrice = currentSqrtPrice
         let mut eventFeeAmount = 0
+        let mut remainingAmount = amount
+        let eventStartSqrtPrice = currentSqrtPrice
 
         while (remainingAmount != 0) {
             let currentTickIndex = Pools(poolsContractId).getCurrentTickIndex(poolKey)
@@ -75,13 +73,11 @@ Contract SwapUtils(
             }
 
             Pools(poolsContractId).wrappedAddFee(poolKey, feeAmount, xToY, protocolFee)
-
-            eventFeeAmount = eventFeeAmount + feeAmount
-
             Pools(poolsContractId).setSqrtPrice(poolKey, nextSqrtPrice)
 
             totalAmountIn = totalAmountIn + amountIn + feeAmount
             totalAmountOut = totalAmountOut + amountOut
+            eventFeeAmount = eventFeeAmount + feeAmount
 
             assert!(nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, SwapError.PriceLimitReached)
 
@@ -113,7 +109,6 @@ Contract SwapUtils(
                 Pools(poolsContractId).setLastTimestamp(poolKey, currentTimestamp)
             }
         }
-        
         assert!(totalAmountOut != 0, SwapError.NoGainSwap)
 
         return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getCurrentSqrtPrice(poolKey), eventFeeAmount

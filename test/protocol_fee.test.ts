@@ -323,5 +323,5 @@ describe('protocol fee tests', () => {
       expect(invariantTokenXBalanceAfter).toBe(invariantTokenXBalanceBefore - 1n)
       expect(invariantTokenYBalanceAfter).toBe(invariantTokenYBalanceBefore)
     }
-  }, 25000)
+  })
 })
