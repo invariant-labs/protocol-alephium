@@ -4,7 +4,7 @@ Contract SwapUtils(
     ticksContractId: ByteVec, 
     tickmapContractId: ByteVec,
     clammContractId: ByteVec
-) extends Decimal(), Utils() {
+) extends Decimal(), PoolKeyHelper() {
     enum SwapError {
         ZeroAmount = 10001
         WrongLimit = 10002
@@ -12,9 +12,8 @@ Contract SwapUtils(
         NoGainSwap = 10004
     }
 
-    @using(checkExternalCaller = false)
-    pub fn getSelfId() -> ByteVec {
-        return toByteVec!(selfAddress!())
+    pub fn getSelfId() -> Address {
+        return selfAddress!()
     }
     
     @using(checkExternalCaller = false)
@@ -120,7 +119,7 @@ Contract SwapUtils(
         return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getCurrentSqrtPrice(poolKey), eventFeeAmount
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn wrappedQuote(
         token0: ByteVec,
         token1: ByteVec,
@@ -136,7 +135,7 @@ Contract SwapUtils(
         return amountIn, amountOut, targetSqrtPrice
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn wrappedSwap(
         token0: ByteVec,
         token1: ByteVec,

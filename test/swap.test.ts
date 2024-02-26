@@ -1,7 +1,14 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, CreatePosition, InitPosition, Swap, Withdraw } from '../artifacts/ts'
+import {
+  AddFeeTier,
+  CreatePool,
+  IncreasePositionLiquidity,
+  InitializeEmptyPosition,
+  Swap,
+  Withdraw
+} from '../artifacts/ts'
 import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -67,7 +74,7 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -79,7 +86,7 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
-    await CreatePosition.execute(sender, {
+    await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -313,7 +320,7 @@ describe('swap tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -329,7 +336,7 @@ describe('swap tests', () => {
       const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
       const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
 
-      await CreatePosition.execute(sender, {
+      await IncreasePositionLiquidity.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -351,7 +358,7 @@ describe('swap tests', () => {
         ]
       })
     }
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -367,7 +374,7 @@ describe('swap tests', () => {
       const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
       const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
 
-      await CreatePosition.execute(sender, {
+      await IncreasePositionLiquidity.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -624,7 +631,7 @@ describe('swap tests', () => {
       const lowerTickIndex = -20n
       const upperTickIndex = 10n
 
-      await InitPosition.execute(sender, {
+      await InitializeEmptyPosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -640,7 +647,7 @@ describe('swap tests', () => {
         const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
         const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
 
-        await CreatePosition.execute(sender, {
+        await IncreasePositionLiquidity.execute(sender, {
           initialFields: {
             invariant: invariant.contractId,
             token0: token0.contractInstance.contractId,
@@ -719,7 +726,7 @@ describe('swap tests', () => {
       const upperTickIndex = -10n
       const index = 2n
 
-      await InitPosition.execute(sender, {
+      await InitializeEmptyPosition.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
           token0: token0.contractInstance.contractId,
@@ -735,7 +742,7 @@ describe('swap tests', () => {
         const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
         const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
 
-        await CreatePosition.execute(sender, {
+        await IncreasePositionLiquidity.execute(sender, {
           initialFields: {
             invariant: invariant.contractId,
             token0: token0.contractInstance.contractId,

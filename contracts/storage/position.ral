@@ -1,4 +1,5 @@
 Contract Position(
+    admin: Address,
     posPoolKey: ByteVec,
     mut posLiquidity: U256,
     posLowerTickIndex: I256,
@@ -14,6 +15,7 @@ Contract Position(
     enum PositionError {
         InsufficientLiquidity = 900
         EmptyPositionPokes = 901
+        NotAdmin = 902
     }
 
     pub fn getPoolKey() -> ByteVec {
@@ -60,27 +62,35 @@ Contract Position(
         return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setTokensOwedX(tokensOwedX: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PositionError.NotAdmin)
         posTokensOwedX = tokensOwedX
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setTokensOwedY(tokensOwedY: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PositionError.NotAdmin)
         posTokensOwedY = tokensOwedY
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setOwner(owner: Address) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PositionError.NotAdmin)
         posOwner = owner
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setIsActive(isActive: Bool) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PositionError.NotAdmin)
         posIsActive = isActive
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(updateFields = false)
     pub fn modify(
         clammContractId: ByteVec,
         upperTick: I256,
@@ -95,6 +105,9 @@ Contract Position(
         liquidityDelta: U256,
         add: Bool
     ) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PositionError.NotAdmin)
+
         let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
             lowerTick,
             lowerTickFeeGrowthOutsideX,
@@ -110,13 +123,16 @@ Contract Position(
         update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn update(
         sign: Bool,
         liquidityDelta: U256,
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin || callerId == selfAddress!(), PositionError.NotAdmin)
+
         assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
 
         let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, posFeeGrowthInsideX), posLiquidity)
@@ -134,6 +150,9 @@ Contract Position(
         sign: Bool,
         liquidityDelta: U256
     ) -> U256 {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin || callerId == selfAddress!(), PositionError.NotAdmin)
+        
         assert!(sign || posLiquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
 
         if (sign) {

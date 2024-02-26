@@ -1,10 +1,14 @@
-Contract Chunk(mut value: U256) {
+Contract Chunk(mut value: U256, admin: Address) {
+    enum ChunkError {
+        NotAdmin = 1100
+    }
     pub fn get() -> U256 {
         return value
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn set(updatedValue: U256) -> () {
+        checkCaller!(callerAddress!() == admin, ChunkError.NotAdmin)
         value = updatedValue
     }
 }

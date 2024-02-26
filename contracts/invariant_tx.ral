@@ -26,11 +26,11 @@ TxScript WithdrawProtocolFee(invariant: Invariant, token0: ByteVec, token1: Byte
     invariant.withdrawProtocolFee(token0, token1, fee, tickSpacing)
 }
 
-TxScript InitPosition(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
-    invariant.initPosition{callerAddress!() -> ALPH: 6 alph}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
+TxScript InitializeEmptyPosition(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
+    invariant.initializeEmptyPosition{callerAddress!() -> ALPH: 6 alph}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
 }
 
-TxScript CreatePosition(
+TxScript IncreasePositionLiquidity(
     invariant: Invariant,
     token0: ByteVec,
     token1: ByteVec,
@@ -45,7 +45,7 @@ TxScript CreatePosition(
     slippageLimitLower: U256,
     slippageLimitUpper: U256
 ) {
-    invariant.createPosition{callerAddress!() -> token0: approvedTokens0, token1: approvedTokens1}
+    invariant.increasePositionLiquidity{callerAddress!() -> token0: approvedTokens0, token1: approvedTokens1}
         (index, token0, token1, fee, tickSpacing, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 

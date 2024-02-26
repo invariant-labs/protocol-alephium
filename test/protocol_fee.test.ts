@@ -4,8 +4,8 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import {
   AddFeeTier,
   CreatePool,
-  CreatePosition,
-  InitPosition,
+  IncreasePositionLiquidity,
+  InitializeEmptyPosition,
   Swap,
   Withdraw,
   WithdrawProtocolFee
@@ -75,7 +75,7 @@ describe('protocol fee tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -87,7 +87,7 @@ describe('protocol fee tests', () => {
       },
       attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
     })
-    await CreatePosition.execute(sender, {
+    await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
