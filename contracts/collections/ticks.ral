@@ -6,9 +6,9 @@ Contract Ticks(
     mut areAdminsSet: Bool
 ) {
     enum TicksError {
-        TickAlreadyExist = 700
-        NotAdmin = 701
-        AdminsAreSet = 702
+        NotAdmin = 700
+        AdminsAreSet = 701
+        TickAlreadyExist = 702
     }
 
     @using(updateFields = true, checkExternalCaller = false)
@@ -22,7 +22,7 @@ Contract Ticks(
 
     @using(preapprovedAssets = true)
     pub fn add(
-        caller: Address,
+        originalCaller: Address,
         poolKey: ByteVec,
         index: I256,
         sign: Bool,
@@ -33,8 +33,8 @@ Contract Ticks(
         feeGrowthOutsideY: U256,
         secondsOutside: U256
     ) -> () {
-        let callerId = callerAddress!()
-        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
+        let caller = callerAddress!()
+        checkCaller!((caller == invariantId || caller == swapUtilsId || caller == positionsId) && areAdminsSet, TicksError.NotAdmin)
 
         let path = poolKey ++ toByteVec!(index)
         assert!(!contractExists!(subContractId!(path)), TicksError.TickAlreadyExist)
@@ -49,7 +49,7 @@ Contract Ticks(
             feeGrowthOutsideY,
             secondsOutside
         )
-        copyCreateSubContract!{caller -> ALPH: 1 alph}(
+        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             path,
             tickTemplateContractId,
             encodedImmFields,
@@ -57,7 +57,7 @@ Contract Ticks(
         )
     }
 
-    pub fn exist(
+    pub fn contains(
         poolKey: ByteVec,
         index: I256
     ) -> Bool {
@@ -65,8 +65,8 @@ Contract Ticks(
     }
 
     pub fn updateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
-        let callerId = callerAddress!()
-        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
+        let caller = callerAddress!()
+        checkCaller!((caller == invariantId || caller == swapUtilsId || caller == positionsId) && areAdminsSet, TicksError.NotAdmin)
 
         Tick(subContractId!(poolKey ++ toByteVec!(index))).updateTick(liquidityDelta, maxLiquidityPerTick, isUpper, isDeposit)
     }
@@ -84,13 +84,6 @@ Contract Ticks(
         return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityGross()
     }
 
-    pub fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
-        let callerId = callerAddress!()
-        checkCaller!((callerId == invariantId || callerId == swapUtilsId || callerId == positionsId) && areAdminsSet, TicksError.NotAdmin)
-
-        return Tick(subContractId!(poolKey ++ toByteVec!(index))).cross(feeGrowthGlobalX, feeGrowthGlobalY, currentTick, index)
-    }
-
     pub fn get(poolKey: ByteVec, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
@@ -99,5 +92,12 @@ Contract Ticks(
         } else {
             return true, Tick(subContractId).get()
         }
+    }
+
+    pub fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
+        let caller = callerAddress!()
+        checkCaller!((caller == invariantId || caller == swapUtilsId || caller == positionsId) && areAdminsSet, TicksError.NotAdmin)
+
+        return Tick(subContractId!(poolKey ++ toByteVec!(index))).cross(feeGrowthGlobalX, feeGrowthGlobalY, currentTick, index)
     }
 }

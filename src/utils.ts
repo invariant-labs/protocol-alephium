@@ -305,7 +305,6 @@ export async function deployTickmap(
     Tickmap.deploy(signer, {
       initialFields: {
         chunkTemplateContractId: chunkTemplateContractId,
-        clammContractId: clammContractId,
         invariantId: ZERO_ADDRESS,
         swapUtilsId: ZERO_ADDRESS,
         areAdminsSet: false

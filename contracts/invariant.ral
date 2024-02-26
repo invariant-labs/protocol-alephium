@@ -25,6 +25,7 @@ Contract Invariant(
         ZeroLiquidity = 10
         PriceLimitReached = 11
         InvalidProtocolFee = 12
+        NotOwner = 13
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -32,7 +33,7 @@ Contract Invariant(
         checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
-        let positionsId = Positions(positionsContractId).getSelfId()
+        let positionsId = Positions(positionsContractId).getAddress()
         let swapId = SwapUtils(swapContractId).getSelfId()
 
         FeeTiers(feeTiersContractId).setAdmins(invtId)
@@ -220,11 +221,11 @@ Contract Invariant(
             Tickmap(tickmapContractId).initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, upperChunk)
         }
  
-        if(!ticks.exist(poolKey, lowerTick)) {
+        if(!ticks.contains(poolKey, lowerTick)) {
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        if(!ticks.exist(poolKey, upperTick)) {
+        if(!ticks.contains(poolKey, upperTick)) {
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
@@ -276,6 +277,9 @@ Contract Invariant(
         let caller = callerAddress!()
         let positions = Positions(positionsContractId)
 
+        let owner = positions.getOwner(index)
+        assert!(caller == owner, InvariantError.NotOwner)
+
         let poolKey = positions.getPoolKey(index)
         let upperTick = positions.getUpperTickIndex(index)
         let lowerTick = positions.getLowerTickIndex(index)
@@ -291,7 +295,7 @@ Contract Invariant(
         let tokensOwedX = positions.getTokensOwedX(index)
         let tokensOwedY = positions.getTokensOwedY(index)
 
-        positions.remove(caller, index)
+        positions.remove(index)
 
         x = x + tokensOwedX
         y = y + tokensOwedY
@@ -302,7 +306,13 @@ Contract Invariant(
 
     @using(checkExternalCaller = false)
     pub fn transferPosition(index: U256, newOwner: Address) -> () {
-        Positions(positionsContractId).transfer(callerAddress!(), index, newOwner)
+        let caller = callerAddress!()
+        let positions = Positions(positionsContractId)
+
+        let owner = positions.getOwner(index)
+        assert!(caller == owner, InvariantError.NotOwner)
+
+        Positions(positionsContractId).transfer(index, newOwner)
     }
 
     @using(checkExternalCaller = false)
