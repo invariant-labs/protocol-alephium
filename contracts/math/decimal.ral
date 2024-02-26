@@ -56,15 +56,7 @@ Abstract Contract Decimal() {
     pub fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
         return (l * r + almostOne(rScale)) / one(rScale)
     }
-
-    pub fn mulToValueUp(l: U256, r: U256, rScale: U256) -> U256 {
-        return ((l * r) + almostOne(rScale)) / one(rScale)
-    }   
-
-    pub fn mulToValue(l: U256, r: U256, rScale: U256) -> U256 {
-        return (l * r) / one(rScale)
-    }   
-
+    
     // SqrtPrice related
     pub fn divValuesToTokenUp(l: U256, r: U256) -> U256 {
         return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())

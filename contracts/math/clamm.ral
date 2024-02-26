@@ -16,9 +16,8 @@ Contract CLAMM() extends Log(){
             return targetSqrtPrice, 0, 0, 0
         }
 
-        let percentageScale = getPercentageScale()
-
         let xToY = currentSqrtPrice >= targetSqrtPrice
+        let percentageScale = getPercentageScale()
 
         let mut nextSqrtPrice = 0
         let mut amountIn = 0
@@ -70,7 +69,7 @@ Contract CLAMM() extends Log(){
             }
         }
 
-        // Amout out can not exceed amount
+        // trim dust in case of specifying exact amount out
         if (!byAmountIn && amountOut > amount) {
             amountOut = amount
         }
@@ -101,16 +100,16 @@ Contract CLAMM() extends Log(){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = mulToValue(deltaSqrtPrice, liquidity, liquidityScale)
+        let nominator = mul(deltaSqrtPrice, liquidity, liquidityScale)
         if (roundingUp == true) {
             return divValuesToTokenUp(
                     nominator,
-                    mulToValue(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                    mul(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
                 )
         } else {
             return divValuesToToken(
                 nominator,
-                mulToValueUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
+                mulUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
             )
         }
     }
@@ -131,9 +130,9 @@ Contract CLAMM() extends Log(){
         }
 
         if (roundingUp) {
-            return (mulToValueUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
+            return (mulUp(deltaSqrtPrice, liquidity, liquidityScale) + almostOne(sqrtPriceScale)) / one(sqrtPriceScale)
         } else {
-            return mulToValue(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
+            return mul(deltaSqrtPrice, liquidity, liquidityScale) / one(sqrtPriceScale)
         }
     }
     pub fn getNextSqrtPriceFromInput(
@@ -178,13 +177,13 @@ Contract CLAMM() extends Log(){
 
         let mut denominator = 0
         if (addX) {
-            denominator = deltaSqrtPrice + mulToValue(startingSqrtPrice, x, tokenAmountScale) 
+            denominator = deltaSqrtPrice + mul(startingSqrtPrice, x, tokenAmountScale) 
         } else {
-            denominator = deltaSqrtPrice - mulToValue(startingSqrtPrice, x, tokenAmountScale)
+            denominator = deltaSqrtPrice - mul(startingSqrtPrice, x, tokenAmountScale)
         }
 
         return divValuesToTokenUp(
-            mulToValueUp(startingSqrtPrice, liquidity, liquidityScale),
+            mulUp(startingSqrtPrice, liquidity, liquidityScale),
             fromDecimalToValue(denominator, sqrtPriceScale, tokenAmountScale)
         )
     }
