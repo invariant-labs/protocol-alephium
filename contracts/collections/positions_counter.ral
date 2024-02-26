@@ -1,10 +1,24 @@
-Contract PositionsCounter(mut value: U256) {
+Contract PositionsCounter(mut value: U256, mut positionsId: ByteVec, mut areAdminsSet: Bool) {
+    enum PositionCounterError {
+        NotAdmin = 400
+        AdminsAreSet = 401
+    }
+
     pub fn get() -> U256 {
         return value
     }
 
     @using(updateFields = true, checkExternalCaller = false)
+    pub fn setAdmins(positions: ByteVec) -> () {
+        assert!(!areAdminsSet, PositionCounterError.AdminsAreSet)
+        positionsId = positions
+        areAdminsSet = true
+    }
+
+    @using(updateFields = true, checkExternalCaller = false)
     pub fn set(updatedValue: U256) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!(callerId == positionsId && areAdminsSet, PositionCounterError.NotAdmin)
         value = updatedValue
     }
 }

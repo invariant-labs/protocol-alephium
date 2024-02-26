@@ -26,11 +26,21 @@ Contract Invariant(
         PriceLimitReached = 11
     }
 
-    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    @using(preapprovedAssets = false, updateFields = true, checkExternalCaller = false)
     pub fn init() -> () {
         assert!(callerAddress!() == admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
+        let invtId = toByteVec!(selfAddress!())
+        let positionsId = Positions(positionsContractId).getSelfId()
+        let swapId = SwapUtils(swapContractId).getSelfId()
 
+        FeeTiers(feeTiersContractId).setAdmins(invtId)
+        PoolKeys(poolKeysContractId).setAdmins(invtId)
+        Pools(poolsContractId).setAdmins(invtId, positionsId, swapId)
+        Positions(positionsContractId).setAdmins(invtId)
+        Tickmap(tickmapContractId).setAdmins(invtId, swapId)
+        Ticks(ticksContractId).setAdmins(invtId, positionsId, swapId)
+        
         init = true
     }
     
@@ -146,7 +156,6 @@ Contract Invariant(
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
 
-    // Can be moved to collection layer
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createTick(
         caller: Address,

@@ -1,19 +1,26 @@
 Contract Tickmap(
-    admin: Address,
     chunkTemplateContractId: ByteVec,
-    clammContractId: ByteVec
+    clammContractId: ByteVec,
+    mut invariantId: ByteVec,
+    mut swapUtilsId: ByteVec,
+    mut areAdminsSet: Bool
 ) {
     enum TickmapErrors {
-        // NotAdmin = 400
-        InvalidTickIndex = 401
-        TickAndTickSpacingMismatch = 402
-        LimitReached = 403
-        ChunkNotFound = 404
-        TickInitialized = 405
+        NotAdmin = 600
+        InvalidTickIndex = 601
+        TickAndTickSpacingMismatch = 602
+        LimitReached = 603
+        ChunkNotFound = 604
+        TickInitialized = 605
+        AdminsAreSet = 606
     }
 
-    pub fn placeholder() -> () {
-        assert!(callerAddress!() == admin, 10003)
+    @using(updateFields = true, checkExternalCaller = false)
+    pub fn setAdmins(invariant: ByteVec, swapUtils: ByteVec) -> () {
+        assert!(!areAdminsSet, TickmapErrors.AdminsAreSet)
+        invariantId = invariant
+        swapUtilsId = swapUtils
+        areAdminsSet = true
     }
 
     fn getChunkSize() -> U256 {
@@ -73,7 +80,7 @@ Contract Tickmap(
         return limit * toI256!(tickSpacing)
     }
 
-    pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, true)
 
         if (tick + toI256!(tickSpacing) > CLAMM(clammContractId).getGlobalMaxTick()) {
@@ -108,7 +115,7 @@ Contract Tickmap(
         return false, 0i
     }
 
-    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, false)
         let (mut chunk, mut bit) = tickToPosition(tick, tickSpacing)
         let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
@@ -139,6 +146,9 @@ Contract Tickmap(
     }
 
     pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
+
         let mut closesTickBool = false
         let mut closesTickIndex = 0i
         
@@ -194,7 +204,8 @@ Contract Tickmap(
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
     pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
-        // assert!(callerAddress!() == admin, TickmapErrors.NotAdmin)
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let (chunk, bit) = tickToPosition(tick, tickSpacing)
         let isInitialized = getBitAtPosition(chunk, bit)
@@ -210,6 +221,9 @@ Contract Tickmap(
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(caller: Address, poolKey: ByteVec, chunk: U256) -> () {
+        let callerId = toByteVec!(callerAddress!())
+        assert!((callerId == invariantId || callerId == swapUtilsId) && areAdminsSet, TickmapErrors.NotAdmin)
+
         let id = poolKey ++ toByteVec!(chunk)        
         let exists = contractExists!(subContractId!(id))
 

@@ -13,6 +13,11 @@ Contract SwapUtils(
     }
 
     @using(checkExternalCaller = false)
+    pub fn getSelfId() -> ByteVec {
+        return toByteVec!(selfAddress!())
+    }
+    
+    @using(checkExternalCaller = false)
     pub fn calculateSwap(
         poolKey: ByteVec,
         xToY: Bool,

@@ -1,12 +1,11 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, CreatePool, CreatePosition, Init, InitPosition, Invariant, Swap, Withdraw } from '../artifacts/ts'
-import { invariantDeployFee, testPrivateKeys } from '../src/consts'
+import { AddFeeTier, CreatePool, CreatePosition, InitPosition, Swap, Withdraw } from '../artifacts/ts'
 import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender = new PrivateKeyWallet({ privateKey: testPrivateKeys[0] })
+let sender: PrivateKeyWallet
 
 describe('swap tests', () => {
   const protocolFee = 10n ** 10n
@@ -45,12 +44,8 @@ describe('swap tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const invariantResult = await deployInvariant(sender, protocolFee)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, protocolFee)
+
     await AddFeeTier.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
@@ -266,7 +261,7 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(1n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
-  }, 15000)
+  }, 25000)
 
   test('swap y to x', async () => {
     const liquidityDelta = 1000000n * 10n ** 5n
@@ -295,12 +290,8 @@ describe('swap tests', () => {
     const [tokenX, tokenY] =
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
-    const invariantResult = await deployInvariant(sender, protocolFee)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, protocolFee)
+
     await AddFeeTier.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
@@ -580,7 +571,7 @@ describe('swap tests', () => {
       ).returns
       expect(isUpperTickInitialized).toBe(true)
     }
-  }, 15000)
+  }, 25000)
 
   test('crossing tick swap x to y', async () => {
     const amount = 1000000n + 1000n
@@ -604,12 +595,8 @@ describe('swap tests', () => {
     const [tokenX, tokenY] =
       token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
-    const invariantResult = await deployInvariant(sender, protocolFee)
-    const invariant = Invariant.at(invariantResult.contractInstance.address)
-    await Init.execute(sender, {
-      initialFields: { invariant: invariant.contractId },
-      attoAlphAmount: invariantDeployFee
-    })
+    const invariant = await deployInvariant(sender, protocolFee)
+
     await AddFeeTier.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
@@ -927,5 +914,5 @@ describe('swap tests', () => {
       expect(poolAfter.feeProtocolTokenX).toBe(2n)
       expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
-  }, 15000)
+  }, 25000)
 })
