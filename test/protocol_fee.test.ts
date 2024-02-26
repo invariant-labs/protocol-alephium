@@ -264,7 +264,7 @@ describe('protocol fee tests', () => {
 
       expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
       expect(poolAfter.currentTickIndex).toBe(-20n)
-      expect(poolAfter.currentSqrtPrice).toBe(999006987054867461743028n)
+      expect(poolAfter.sqrtPrice).toBe(999006987054867461743028n)
       expect(poolAfter.feeGrowthGlobalX).toBe(50000000000000000000000n)
       expect(poolAfter.feeGrowthGlobalY).toBe(0n)
       expect(poolAfter.feeProtocolTokenX).toBe(1n)

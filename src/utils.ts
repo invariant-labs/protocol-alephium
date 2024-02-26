@@ -62,12 +62,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     positionsCounter.contractInstance.contractId
   )
   const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(
-    signer,
-    account.address,
-    chunk.contractInstance.contractId,
-    clamm.contractInstance.contractId
-  )
+  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
 
   const swap = await deploySwap(
     signer,
@@ -295,12 +290,7 @@ export async function deployChunk(signer: SignerProvider) {
   )
 }
 
-export async function deployTickmap(
-  signer: SignerProvider,
-  admin: string,
-  chunkTemplateContractId: string,
-  clammContractId: string
-) {
+export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
@@ -412,7 +402,7 @@ export function decodePool(
   return {
     exist: array[0],
     liquidity: array[1],
-    currentSqrtPrice: array[2],
+    sqrtPrice: array[2],
     currentTickIndex: array[3],
     feeGrowthGlobalX: array[4],
     feeGrowthGlobalY: array[5],
@@ -424,7 +414,7 @@ export function decodePool(
   }
 }
 
-export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) => {
+export function decodeTick(array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) {
   return {
     exist: array[0],
     sign: array[1],
@@ -437,9 +427,9 @@ export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, big
   }
 }
 
-export const decodePosition = (
+export function decodePosition(
   array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
-) => {
+) {
   return {
     exist: array[0],
     liquidity: array[1],
@@ -454,10 +444,10 @@ export const decodePosition = (
   }
 }
 
-export const hexToBytes = (hex: string): Uint8Array => {
+export function hexToBytes(hex: string): Uint8Array {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 }
 
-export const decodeU256 = (string: string) => {
+export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }

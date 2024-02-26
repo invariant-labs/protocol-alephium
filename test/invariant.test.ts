@@ -93,7 +93,7 @@ describe('invariant tests', () => {
 
     const parsedPool = decodePool(pool.returns)
     expect(parsedPool.liquidity).toBe(0n)
-    expect(parsedPool.currentSqrtPrice).toBe(1000000000000000000000000n)
+    expect(parsedPool.sqrtPrice).toBe(1000000000000000000000000n)
     expect(parsedPool.currentTickIndex).toBe(0n)
     expect(parsedPool.feeGrowthGlobalX).toBe(0n)
     expect(parsedPool.feeGrowthGlobalY).toBe(0n)
