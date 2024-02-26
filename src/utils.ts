@@ -1,7 +1,6 @@
 import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import {
   CLAMM,
-  Chunk,
   FeeTier,
   FeeTiers,
   Init,
@@ -14,6 +13,7 @@ import {
   PositionsCounter,
   SwapUtils,
   Tickmap,
+  TickmapChunk,
   Ticks
 } from '../artifacts/ts'
 import { Positions } from '../artifacts/ts/Positions'
@@ -286,7 +286,7 @@ export async function deployTick(signer: SignerProvider) {
 
 export async function deployChunk(signer: SignerProvider) {
   return await waitTxConfirmed(
-    Chunk.deploy(signer, {
+    TickmapChunk.deploy(signer, {
       initialFields: {
         value: 0n,
         admin: ZERO_ADDRESS

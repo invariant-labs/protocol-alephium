@@ -186,7 +186,7 @@ Contract Tickmap(
         if (!exists) {
             return 0
         } else {
-            let contract = Chunk(subContractId)
+            let contract = TickmapChunk(subContractId)
             return contract.get()
         }
     }
@@ -207,7 +207,7 @@ Contract Tickmap(
         let id = poolKey ++ toByteVec!(chunk)
         let subContractId = subContractId!(id)
         assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
-        let contract = Chunk(subContractId)
+        let contract = TickmapChunk(subContractId)
 
         assert!(value == true && isInitialized == false || value == false && isInitialized == true, TickmapErrors.TickInitialized)
 
@@ -223,7 +223,7 @@ Contract Tickmap(
         let exists = contractExists!(subContractId!(id))
 
         if(!exists) {
-            let (encodedImmFields, encodedMutFields) = Chunk.encodeFields!(0, selfAddress!())
+            let (encodedImmFields, encodedMutFields) = TickmapChunk.encodeFields!(0, selfAddress!())
             copyCreateSubContract!{caller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
