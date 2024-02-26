@@ -237,7 +237,7 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
         poolTokenX: '',
         poolTokenY: '',
         poolLiquidity: 0n,
-        poolCurrentSqrtPrice: 0n,
+        poolSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,
         poolFeeGrowthGlobalX: 0n,
         poolFeeGrowthGlobalY: 0n,
@@ -377,7 +377,7 @@ export function decodeFeeTiers(string: string) {
   const parts = string.split('627265616b')
   const feeTiers: any[] = []
 
-  for (let i = 0; i < parts.length - 1; i += 3) {
+  for (let i = 0; i < parts.length - 1; i += 2) {
     const feeTier = {
       fee: decodeU256(parts[i]),
       tickSpacing: decodeU256(parts[i + 1])
@@ -395,8 +395,8 @@ export function decodePools(string: string) {
 
   for (let i = 0; i < parts.length - 1; i += 4) {
     const pool = {
-      token0: parts[i],
-      token1: parts[i + 1],
+      tokenX: parts[i],
+      tokenY: parts[i + 1],
       fee: decodeU256(parts[i + 2]),
       tickSpacing: decodeU256(parts[i + 3])
     }

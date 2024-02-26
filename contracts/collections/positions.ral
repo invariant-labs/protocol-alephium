@@ -201,6 +201,6 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
             add
         )
 
-        return pools.updateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
+        return pools.wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
 }

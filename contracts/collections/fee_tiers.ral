@@ -1,26 +1,38 @@
-Contract FeeTiers(feeTierTemplateContractId: ByteVec, mut feeTierCount: U256, mut invariantId: Address, mut areAdminsSet: Bool) {
+Contract FeeTiers(
+    feeTierTemplateContractId: ByteVec,
+    mut feeTierCount: U256,
+    mut invariantId: Address,
+    mut areAdminsSet: Bool
+) {
     enum FeeTiersError {
-        FeeTierAlreadyExist = 101
-        FeeTierNotFound = 102
-        NotAdmin = 103
-        AdminsAreSet = 104
+        NotAdmin = 100
+        AdminsAreSet = 101
+        FeeTierAlreadyExist = 102
+        FeeTierNotFound = 103
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invtId: Address) -> () {
+    pub fn setAdmins(invariant: Address) -> () {
         assert!(!areAdminsSet, FeeTiersError.AdminsAreSet)
-        invariantId = invtId
+        invariantId = invariant
         areAdminsSet = true
     }
 
     @using(preapprovedAssets = true, updateFields = true)
     pub fn add(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == invariantId && areAdminsSet, FeeTiersError.NotAdmin)
+        checkCaller!(callerAddress!() == invariantId && areAdminsSet, FeeTiersError.NotAdmin)
 
         let exists = contains(fee, tickSpacing)
-
         assert!(!exists, FeeTiersError.FeeTierAlreadyExist)
+
+        for (let mut i = 1; i <= feeTierCount; i = i + 1) {
+            let contract = FeeTier(subContractId!(toByteVec!(i)))
+
+            if (fee == contract.getFee() && tickSpacing == contract.getTickSpacing() && !contract.isActive()) {
+                contract.setActive(true)
+                return
+            }
+        }
     
         feeTierCount = feeTierCount + 1
         let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
@@ -33,8 +45,7 @@ Contract FeeTiers(feeTierTemplateContractId: ByteVec, mut feeTierCount: U256, mu
     }
 
     pub fn remove(fee: U256, tickSpacing: U256) -> () {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == invariantId && areAdminsSet, FeeTiersError.NotAdmin)
+        checkCaller!(callerAddress!() == invariantId && areAdminsSet, FeeTiersError.NotAdmin)
 
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let contract = FeeTier(subContractId!(toByteVec!(i)))
@@ -74,14 +85,15 @@ Contract FeeTiers(feeTierTemplateContractId: ByteVec, mut feeTierCount: U256, mu
         return count
     }
     
-    
-
     pub fn getAll() -> ByteVec {
         let mut feeTiersBytes = b``
 
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let contract = FeeTier(subContractId!(toByteVec!(i)))
-            feeTiersBytes = feeTiersBytes ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+
+            if(contract.isActive()) {
+                feeTiersBytes = feeTiersBytes ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+            }
         }
 
         return feeTiersBytes
