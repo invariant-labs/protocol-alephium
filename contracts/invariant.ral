@@ -154,7 +154,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createTick(
+    fn createTick(
         caller: Address,
         poolKey: ByteVec,
         tickSpacing: U256,
@@ -261,7 +261,7 @@ Contract Invariant(
 
         assert!(poolCurrentSqrtPrice >= slippageLimitLower && poolCurrentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         let tokenX = pools.getTokenX(poolKey)
         let tokenY = pools.getTokenY(poolKey)
@@ -282,7 +282,7 @@ Contract Invariant(
 
         let tickSpacing = Pools(poolsContractId).getTickSpacing(poolKey)
 
-        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let pools = Pools(poolsContractId)
 
@@ -360,7 +360,7 @@ Contract Invariant(
         let lowerTick = positions.getLowerTickIndex(index)
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        positions.wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
+        positions.wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
         
         let tokensOwedX = positions.getTokensOwedX(index)
         let tokensOwedY = positions.getTokensOwedY(index)

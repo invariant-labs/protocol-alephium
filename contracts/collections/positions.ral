@@ -154,6 +154,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     }
 
     pub fn wrappedModify(
+        originalCaller: Address,
         index: U256,
         poolsContractId: ByteVec,
         ticksContractId: ByteVec,
@@ -168,6 +169,8 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
     ) -> (U256, U256) {
         let callerId = toByteVec!(callerAddress!())
         checkCaller!(callerId == invariantId && areAdminsSet, PositionsError.NotAdmin)
+        let position = Position(subContractId!(toByteVec!(index)))
+        assert!(originalCaller == position.getOwner(), PositionsError.NotOwner)
 
         let pools = Pools(poolsContractId)
         pools.setLastTimestamp(poolKey, currentTimestamp)
@@ -184,7 +187,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         let poolCurrentTickIndex = pools.getCurrentTickIndex(poolKey)
         let (poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
 
-        Position(subContractId!(toByteVec!(index))).modify(
+        position.modify(
             clammContractId,
             upperTick,
             upperTickFeeGrowthOutsideX,
