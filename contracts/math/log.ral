@@ -99,7 +99,7 @@ Abstract Contract Log() extends Decimal() {
     }
 
     pub fn getTickAtSqrtPrice(sqrtPrice: U256, tickSpacing: U256) -> I256 {
-        assert!(sqrtPrice <= getMaxSqrtPrice() && sqrtPrice >= getMinSqrtPrice(), LogError.SqrtPriceOutOfRange)
+        assert!(sqrtPrice <= MaxSqrtPrice && sqrtPrice >= MinSqrtPrice, LogError.SqrtPriceOutOfRange)
         let sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
 
         let (log2Sign, log2SqrtPrice) = log2IterativeApproximationX32(sqrtPriceX32)
