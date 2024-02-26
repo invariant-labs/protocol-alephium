@@ -438,7 +438,9 @@ export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, big
   }
 }
 
-export const decodePosition = (array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]) => {
+export const decodePosition = (
+  array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
+) => {
   return {
     exist: array[0],
     liquidity: array[1],
@@ -448,7 +450,8 @@ export const decodePosition = (array: [boolean, bigint, bigint, bigint, bigint, 
     feeGrowthInsideY: array[5],
     lastBlockNumber: array[6],
     tokensOwedX: array[7],
-    tokensOwedY: array[8]
+    tokensOwedY: array[8],
+    owner: array[9]
   }
 }
 
@@ -457,5 +460,5 @@ export const hexToBytes = (hex: string): Uint8Array => {
 }
 
 export const decodeU256 = (string: string) => {
-  return BigInt(compactUnsignedIntCodec.decodeU256(new Buffer(hexToBytes(string))))
+  return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }
