@@ -33,9 +33,9 @@ Contract SwapUtils(
         let mut currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
 
         if(xToY) {
-            assert!(currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= getMaxSqrtPrice(), SwapError.WrongLimit)             
+            assert!(currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, SwapError.WrongLimit)             
         } else {
-            assert!(currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= getMinSqrtPrice(), SwapError.WrongLimit)
+            assert!(currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, SwapError.WrongLimit)
         }
 
         let mut totalAmountIn = 0

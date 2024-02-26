@@ -1,52 +1,64 @@
 Abstract Contract Decimal() {
+
+    const SqrtPriceScale = 24
+    const LiquidityScale = 5
+    const FeeGrowthScale = 28
+    const FixedPointScale = 12
+    const PercentageScale = 12
+    const TokenAmountScale = 0
+    const GlobalMaxTick = 221818i
+    const GlobalMinTick = -221818i
+    const MaxSqrtPrice = 65535383934512647000000000000
+    const MinSqrtPrice = 15258932000000000000
+
     pub fn getSqrtPriceScale() -> U256 {
-        return 24
+        return SqrtPriceScale
     }
 
     pub fn getLiquidityScale() -> U256 {
-        return 5
+        return LiquidityScale
     }
 
     pub fn getFeeGrowthScale() -> U256 {
-        return 28
+        return FeeGrowthScale
     }
 
     pub fn getFixedPointScale() -> U256 {
-        return 12
+        return FixedPointScale
     }
 
     pub fn getPercentageScale() -> U256 {
-        return 12
+        return PercentageScale
     }
 
     pub fn getTokenAmountScale() -> U256 {
-        return 0
+        return TokenAmountScale
     }
 
     pub fn getGlobalMaxTick() -> I256 {
-        return 221818i
+        return GlobalMaxTick
+    }
+
+    pub fn getGlobalMinTick() -> I256 {
+        return GlobalMinTick
+    }
+
+    pub fn getMaxSqrtPrice() -> U256 {
+        return MaxSqrtPrice
+    }
+
+    pub fn getMinSqrtPrice() -> U256 {
+        return MinSqrtPrice
     }
 
     pub fn getMaxTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
-        return getGlobalMaxTick() / convertedTickSpacing * convertedTickSpacing
-    }
-
-    pub fn getGlobalMinTick() -> I256 {
-        return -221818
+        return GlobalMaxTick / convertedTickSpacing * convertedTickSpacing
     }
 
     pub fn getMinTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
-        return getGlobalMinTick() / convertedTickSpacing * convertedTickSpacing
-    }
-
-    pub fn getMaxSqrtPrice() -> U256 {
-        return 65535383934512647000000000000
-    }
-
-    pub fn getMinSqrtPrice() -> U256 {
-        return 15258932000000000000
+        return GlobalMinTick / convertedTickSpacing * convertedTickSpacing
     }
 
     pub fn mul(l: U256, r:U256, rScale: U256) -> U256 {
@@ -58,19 +70,19 @@ Abstract Contract Decimal() {
     }
     
     pub fn divToTokenUp(l: U256, r: U256) -> U256 {
-        return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())
+        return (((l * one(SqrtPriceScale) + (r - 1)) / r) + almostOne(SqrtPriceScale)) / one(SqrtPriceScale)
     }   
 
     pub fn divToToken(l: U256, r: U256) -> U256 {
-        return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
+        return ((l * one(SqrtPriceScale)) / r) / one(SqrtPriceScale)
     }   
 
     pub fn divUp(l: U256, r: U256) -> U256 {
-        return l * one(getSqrtPriceScale()) + (r - 1) / r
+        return l * one(SqrtPriceScale) + (r - 1) / r
     }   
 
     pub fn div(l: U256, r: U256) -> U256 {
-        return l * one(getSqrtPriceScale()) / r
+        return l * one(SqrtPriceScale) / r
     }   
 
     pub fn almostOne(scale: U256) -> U256 {
@@ -98,71 +110,68 @@ Abstract Contract Decimal() {
             tick = toU256!(tickIndex)
         }
 
-        let fixedPointScale = getFixedPointScale()
-        let sqrtPriceScale = getSqrtPriceScale()
-        
-        let mut sqrtPrice = one(fixedPointScale)  
+        let mut sqrtPrice = one(FixedPointScale)  
 
         if (tick & 0x1 != 0) {
-            sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** FixedPointScale)
         }
         if (tick & 0x2 != 0) {
-            sqrtPrice = (sqrtPrice * 1000100000000) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000100000000) / (10 ** FixedPointScale)
         }
         if (tick & 0x4 != 0) {
-            sqrtPrice = (sqrtPrice * 1000200010000) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000200010000) / (10 ** FixedPointScale)
         }
         if (tick & 0x8 != 0) {
-            sqrtPrice = (sqrtPrice * 1000400060004) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000400060004) / (10 ** FixedPointScale)
         }
         if (tick & 0x10 != 0) {
-            sqrtPrice = (sqrtPrice * 1000800280056)  / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000800280056)  / (10 ** FixedPointScale)
         }
         if (tick & 0x20 != 0) {
-            sqrtPrice = (sqrtPrice * 1001601200560) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1001601200560) / (10 ** FixedPointScale)
         }
         if (tick & 0x40 != 0) {
-            sqrtPrice = (sqrtPrice * 1003204964963) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1003204964963) / (10 ** FixedPointScale)
         }
         if (tick & 0x80 != 0) {
-            sqrtPrice = (sqrtPrice * 1006420201726) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1006420201726) / (10 ** FixedPointScale)
         }
         if (tick & 0x100 != 0) {
-            sqrtPrice = (sqrtPrice * 1012881622442) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1012881622442) / (10 ** FixedPointScale)
         }
         if (tick & 0x200 != 0) {
-            sqrtPrice = (sqrtPrice * 1025929181080) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1025929181080) / (10 ** FixedPointScale)
         }
         if (tick & 0x400 != 0) {
-            sqrtPrice = (sqrtPrice * 1052530684591) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1052530684591) / (10 ** FixedPointScale)
         }
         if (tick & 0x800 != 0) {
-            sqrtPrice = (sqrtPrice * 1107820842005) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1107820842005) / (10 ** FixedPointScale)
         }
         if (tick & 0x1000 != 0) {
-            sqrtPrice = (sqrtPrice * 1227267017980) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1227267017980) / (10 ** FixedPointScale)
         }
         if (tick & 0x2000 != 0) {
-            sqrtPrice = (sqrtPrice * 1506184333421) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 1506184333421) / (10 ** FixedPointScale)
         }
         if (tick & 0x4000 != 0) {
-            sqrtPrice = (sqrtPrice * 2268591246242) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 2268591246242) / (10 ** FixedPointScale)
         }
         if (tick & 0x8000 != 0) {
-            sqrtPrice = (sqrtPrice * 5146506242525) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 5146506242525) / (10 ** FixedPointScale)
         }
         if (tick & 0x00010000 != 0) {
-            sqrtPrice = (sqrtPrice * 26486526504348) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 26486526504348) / (10 ** FixedPointScale)
         }
         if (tick & 0x00020000 != 0) {
-            sqrtPrice = (sqrtPrice * 701536086265529) / (10 ** fixedPointScale)
+            sqrtPrice = (sqrtPrice * 701536086265529) / (10 ** FixedPointScale)
         }
 
         if (tickIndex >= 0i) {
-            return rescale(sqrtPrice, fixedPointScale, sqrtPriceScale)
+            return rescale(sqrtPrice, FixedPointScale, SqrtPriceScale)
         } else {
-            let intermediate = one(sqrtPriceScale) / sqrtPrice 
-            return rescale(intermediate, fixedPointScale, sqrtPriceScale)
+            let intermediate = one(SqrtPriceScale) / sqrtPrice 
+            return rescale(intermediate, FixedPointScale, SqrtPriceScale)
         }
     }
 
@@ -177,7 +186,7 @@ Abstract Contract Decimal() {
     }
 
     pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
-        return fee * one(getFeeGrowthScale()) * one(getLiquidityScale()) / liquidity
+        return fee * one(FeeGrowthScale) * one(LiquidityScale) / liquidity
     }
 
     pub fn wrappingAdd(a: U256, b: U256) -> U256 {
@@ -239,6 +248,6 @@ Abstract Contract Decimal() {
     }
 
     pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
-        return feeGrowth * liquidity / (10 ** (getFeeGrowthScale() + getLiquidityScale()))
+        return feeGrowth * liquidity / (10 ** (FeeGrowthScale + LiquidityScale))
     }
 }
