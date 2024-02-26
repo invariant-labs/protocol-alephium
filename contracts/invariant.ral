@@ -10,7 +10,7 @@ Contract Invariant(
     tickmapContractId: ByteVec,
     swapContractId: ByteVec,
     clammContractId: ByteVec
-) extends Utils(), Decimal() {
+) extends PoolKeyHelper(), Decimal() {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1

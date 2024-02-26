@@ -5,7 +5,7 @@ Contract Pools(
     mut positionsId: ByteVec,
     mut swapUtilsId: ByteVec,
     mut areAdminsSet: Bool
-) extends Utils() {
+) extends PoolKeyHelper() {
     enum PoolsError {
         PoolAlreadyExist = 301
         NotAdmin = 302

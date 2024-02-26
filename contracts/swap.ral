@@ -4,7 +4,7 @@ Contract SwapUtils(
     ticksContractId: ByteVec, 
     tickmapContractId: ByteVec,
     clammContractId: ByteVec
-) extends Decimal(), Utils() {
+) extends Decimal(), PoolKeyHelper() {
     enum SwapError {
         ZeroAmount = 10001
         WrongLimit = 10002
