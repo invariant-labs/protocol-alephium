@@ -109,6 +109,7 @@ Contract CLAMM() extends Log(){
             )
         }
     }
+
     pub fn getDeltaY(
         sqrtPriceA: U256,
         sqrtPriceB: U256,
@@ -128,6 +129,7 @@ Contract CLAMM() extends Log(){
             return mul(deltaSqrtPrice, liquidity, LiquidityScale) / one(SqrtPriceScale)
         }
     }
+
     pub fn getNextSqrtPriceFromInput(
         startingSqrtPrice: U256,
         liquidity: U256,
@@ -140,6 +142,7 @@ Contract CLAMM() extends Log(){
             return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, true)
         } 
     }
+
     pub fn getNextSqrtPriceFromOutput(
         startingSqrtPrice: U256,
         liquidity: U256,
@@ -152,6 +155,7 @@ Contract CLAMM() extends Log(){
             return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, false)
         }
     }
+
     pub fn getNextSqrtPriceXUp(
         startingSqrtPrice: U256,
         liquidity: U256,
@@ -176,6 +180,7 @@ Contract CLAMM() extends Log(){
             rescale(denominator, SqrtPriceScale, TokenAmountScale)
         )
     }
+
     pub fn getNextSqrtPriceYDown(
         startingSqrtPrice: U256,
         liquidity: U256,
@@ -192,6 +197,7 @@ Contract CLAMM() extends Log(){
         }
 
     }
+
     pub fn calculateAmountDelta(
         currentTickIndex: I256,
         currentSqrtPrice: U256,
@@ -284,6 +290,7 @@ Contract CLAMM() extends Log(){
         assert!(tickIndex < maxTick, CLAMMError.InvalidTickIndex)
         assert!(tickIndex > minTick, CLAMMError.InvalidTickIndex)
     }
+    
     pub fn calculateMinAmountOut(
         expectedAmountOut: U256,
         slippage: U256

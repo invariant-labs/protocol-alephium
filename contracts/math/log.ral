@@ -12,15 +12,19 @@ Abstract Contract Log() extends Decimal() {
     fn getLog2One() -> U256 {
         return 1 << Log2Scale
     }
+
     fn getLog2Half() -> U256 {
         return getLog2One() >> 1
     }
+
     fn getLog2Two() -> U256 {
         return getLog2One() << 1
     }
+
     fn getLog2DoubleOne() -> U256 {
         return 1 << Log2DoubleScale
     }
+    
     fn getLog2Accuracy() -> U256 {
         return 1 << (31 - Log2MinBinaryPosition)
     }
