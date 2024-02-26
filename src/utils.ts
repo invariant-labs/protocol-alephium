@@ -171,6 +171,7 @@ export async function deployPosition(signer: SignerProvider) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
+        admin: ZERO_ADDRESS,
         posPoolKey: '',
         posLiquidity: 0n,
         posLowerTickIndex: 0n,
@@ -231,6 +232,7 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
+        admin: ZERO_ADDRESS,
         poolTickSpacing: 0n,
         poolTokenX: '',
         poolTokenY: '',
@@ -269,6 +271,7 @@ export async function deployTick(signer: SignerProvider) {
   return await waitTxConfirmed(
     Tick.deploy(signer, {
       initialFields: {
+        admin: ZERO_ADDRESS,
         tickSign: false,
         tickLiquidityChange: 0n,
         tickLiquidityGross: 0n,

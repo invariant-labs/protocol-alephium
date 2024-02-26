@@ -41,6 +41,7 @@ Contract Positions(positionTemplateContractId: ByteVec, positionsCounterContract
         positionsCounter.set(length + 1)
 
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(
+            getSelfId(),
             poolKey,
             liquidity,
             lowerTickIndex,
