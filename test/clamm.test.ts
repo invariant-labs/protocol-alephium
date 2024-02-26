@@ -130,7 +130,7 @@ describe('math tests', () => {
         expect(tick).toEqual(expectedTick)
       }
     }
-  }, 15000)
+  })
   test('log', async () => {
     const clamm = await deployCLAMM(sender)
     {
@@ -157,7 +157,7 @@ describe('math tests', () => {
         expect(tick).toEqual(i)
       }
     }
-  }, 15000)
+  })
 
   test('calculate sqrt price', async () => {
     const clamm = await deployCLAMM(sender)

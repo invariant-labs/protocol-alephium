@@ -34,7 +34,7 @@ Abstract Contract Log() extends Decimal() {
         return 1 << (31 - getLog2MinBinaryPosition())
     }
     fn getSqrtPriceDenominator() -> U256 {
-        return 1000000000000000000000000
+        return one(getSqrtPriceScale())
     }
     fn sqrtPriceToX32(val: U256) -> U256 {
         return val * getLog2One() / getSqrtPriceDenominator()
