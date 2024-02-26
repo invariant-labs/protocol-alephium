@@ -27,11 +27,11 @@ Contract Invariant(
         InvalidProtocolFee = 12
     }
 
-    @using(preapprovedAssets = false, updateFields = true, checkExternalCaller = false)
+    @using(preapprovedAssets = false, updateFields = true)
     pub fn init() -> () {
-        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
-        let invtId = toByteVec!(selfAddress!())
+        let invtId = selfAddress!()
         let positionsId = Positions(positionsContractId).getSelfId()
         let swapId = SwapUtils(swapContractId).getSelfId()
 
@@ -49,20 +49,19 @@ Contract Invariant(
         return protocolFee
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn changeProtocolFee(newProtocolFee: U256) -> () {
-        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
         assert!(newProtocolFee < one(getPercentageScale()), InvariantError.InvalidProtocolFee)
         protocolFee = newProtocolFee
     }
 
-    @using(checkExternalCaller = false)
     pub fn withdrawProtocolFee(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> () {
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let pool = Pool(poolKey)
 
-        assert!(pool.getFeeReceiver() == caller, InvariantError.NotFeeReceiver)
+        checkCaller!(pool.getFeeReceiver() == caller, InvariantError.NotFeeReceiver)
 
         let (feeProtocolTokenX, feeProtocolTokenY) = pool.withdrawProtocolFee()
 
@@ -70,13 +69,12 @@ Contract Invariant(
         transferTokenFromSelf!(caller, token1, feeProtocolTokenY)
     }
 
-    @using(checkExternalCaller = false)
     pub fn changeFeeReceiver(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, newFeeReceiver: Address) -> () {
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let pool = Pool(poolKey)
 
-        assert!(admin == caller, InvariantError.NotFeeReceiver)
+        checkCaller!(admin == caller, InvariantError.NotFeeReceiver)
 
         pool.setFeeReceiver(newFeeReceiver)
     }
@@ -107,7 +105,7 @@ Contract Invariant(
         Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, contractAddress)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
 
@@ -115,15 +113,14 @@ Contract Invariant(
 
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= one(getPercentageScale()), InvariantError.InvalidFee)
-        assert!(caller == admin, InvariantError.NotAdmin)
+        checkCaller!(caller == admin, InvariantError.NotAdmin)
 
         FeeTiers(feeTiersContractId).add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }
 
-    @using(checkExternalCaller = false)
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
-        assert!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
 
         FeeTiers(feeTiersContractId).remove(fee, tickSpacing)
     }
@@ -159,7 +156,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createTick(
+    fn createTick(
         caller: Address,
         poolKey: ByteVec,
         tickSpacing: U256,
@@ -196,7 +193,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn initPosition(
+    pub fn initializeEmptyPosition(
         token0: ByteVec,
         token1: ByteVec,
         fee: U256,
@@ -235,7 +232,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
-    pub fn createPosition(
+    pub fn increasePositionLiquidity(
         index: U256,
         token0: ByteVec,
         token1: ByteVec,
@@ -266,7 +263,7 @@ Contract Invariant(
 
         assert!(poolCurrentSqrtPrice >= slippageLimitLower && poolCurrentSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         let tokenX = pools.getTokenX(poolKey)
         let tokenY = pools.getTokenY(poolKey)
@@ -287,7 +284,7 @@ Contract Invariant(
 
         let tickSpacing = Pools(poolsContractId).getTickSpacing(poolKey)
 
-        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let pools = Pools(poolsContractId)
 
@@ -310,7 +307,7 @@ Contract Invariant(
         Positions(positionsContractId).transfer(callerAddress!(), index, newOwner)
     }
 
-    @using(updateFields = false, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn quote(
         token0: ByteVec,
         token1: ByteVec,
@@ -365,7 +362,7 @@ Contract Invariant(
         let lowerTick = positions.getLowerTickIndex(index)
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        positions.wrappedModify(index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
+        positions.wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
         
         let tokensOwedX = positions.getTokensOwedX(index)
         let tokensOwedY = positions.getTokensOwedY(index)
