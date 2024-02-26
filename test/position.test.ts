@@ -5,8 +5,8 @@ import {
   AddFeeTier,
   ClaimFee,
   CreatePool,
-  CreatePosition,
-  InitPosition,
+  IncreasePositionLiquidity,
+  InitializeEmptyPosition,
   RemovePosition,
   Swap,
   Withdraw
@@ -67,7 +67,7 @@ describe('position tests', () => {
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
 
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -94,7 +94,7 @@ describe('position tests', () => {
     const upperTickIndex = 10n
     const liquidityDelta = 10000000000n
 
-    await CreatePosition.execute(sender, {
+    await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -228,7 +228,7 @@ describe('position tests', () => {
       attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
     })
 
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -245,7 +245,7 @@ describe('position tests', () => {
     const upperTickIndex = 10n
     const liquidityDelta = 10000000000n
 
-    await CreatePosition.execute(sender, {
+    await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -372,7 +372,7 @@ describe('position tests', () => {
     const lowerTickIndex = -10n
     const upperTickIndex = 10n
 
-    await InitPosition.execute(sender, {
+    await InitializeEmptyPosition.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,
@@ -387,7 +387,7 @@ describe('position tests', () => {
 
     const liquidityDelta = 100000000000000n
 
-    await CreatePosition.execute(sender, {
+    await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
         invariant: invariant.contractId,
         token0: token0.contractInstance.contractId,

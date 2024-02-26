@@ -1,4 +1,5 @@
 Contract Pool(
+    admin: Address,
     poolTokenX: ByteVec,
     poolTokenY: ByteVec,
     poolTickSpacing: U256,
@@ -14,6 +15,9 @@ Contract Pool(
     mut poolFeeReceiver: Address,
     clammContractId: ByteVec
 ) extends Decimal() {
+    enum PoolError {
+        NotAdmin = 1200
+    }
     pub fn getTokenX() -> ByteVec {
         return poolTokenX
     }
@@ -70,28 +74,39 @@ Contract Pool(
         return poolLiquidity, poolCurrentSqrtPrice, poolCurrentTickIndex, poolFeeGrowthGlobalX, poolFeeGrowthGlobalY, poolFeeProtocolTokenX, poolFeeProtocolTokenY, poolStartTimestamp, poolLastTimestamp, poolFeeReceiver
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setFeeReceiver(recipient: Address) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
         poolFeeReceiver = recipient
     }
     
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setLastTimestamp(timestamp: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
         poolLastTimestamp = timestamp
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setSqrtPrice(v: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
         poolCurrentSqrtPrice = v
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setPoolCurrentTickIndex(v: I256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
         poolCurrentTickIndex = v
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn addFee(amount: U256, inX: Bool, protocolFee: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
+
         let invariantProtocolFee = mulUp(amount, protocolFee, getPercentageScale())
 
         let poolFee = amount - invariantProtocolFee
@@ -111,8 +126,11 @@ Contract Pool(
         }
     }
     
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn updateLiquidity(liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
+
         let (x, y, updateLiq) = CLAMM(clammContractId).calculateAmountDelta(getPoolCurrentTickIndex(), getPoolCurrentSqrtPrice(), liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y
@@ -126,7 +144,7 @@ Contract Pool(
         return x, y
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn crossTick(
         nextSqrtPrice: U256,
         swapLimit: U256,
@@ -138,6 +156,9 @@ Contract Pool(
         fee: U256,
         tickSpacing: U256
     ) -> (U256, U256, Bool) {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
+
         let mut hasCrossed = false
         let mut totalAmount = 0
 
@@ -167,8 +188,11 @@ Contract Pool(
         return totalAmount, remainingAmount, hasCrossed
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn crossLiquidityUpdate(add: Bool, liquidityDelta: U256) -> () {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
+
         if (add) {
             poolLiquidity = poolLiquidity + liquidityDelta
         } else {
@@ -176,8 +200,11 @@ Contract Pool(
         }
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn withdrawProtocolFee() -> (U256, U256) {
+        let callerId = callerAddress!()
+        checkCaller!(callerId == admin, PoolError.NotAdmin)
+        
         let x = poolFeeProtocolTokenX
         let y = poolFeeProtocolTokenY
         poolFeeProtocolTokenX = 0

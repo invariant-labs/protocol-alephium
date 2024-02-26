@@ -1,4 +1,4 @@
-Abstract Contract Utils() {
+Abstract Contract PoolKeyHelper() {
     const TokenAddressBytes = 32
     
     pub fn generatePoolKey(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> ByteVec {

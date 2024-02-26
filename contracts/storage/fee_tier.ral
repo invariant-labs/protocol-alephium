@@ -15,9 +15,9 @@ Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Boo
       return isActive
     }
 
-    @using(updateFields = true, checkExternalCaller = false)
+    @using(updateFields = true)
     pub fn setActive(active: Bool) -> () {
-        assert!(callerAddress!() == admin, FeeTierError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, FeeTierError.NotAdmin)
         isActive = active
     }
 }
