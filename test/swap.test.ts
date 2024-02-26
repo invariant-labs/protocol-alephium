@@ -262,7 +262,7 @@ describe('swap tests', () => {
 
       expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
       expect(poolAfter.currentTickIndex).toBe(-20n)
-      expect(poolAfter.currentSqrtPrice).toBe(999006987054867461743028n)
+      expect(poolAfter.sqrtPrice).toBe(999006987054867461743028n)
       expect(poolAfter.feeGrowthGlobalX).toBe(50000000000000000000000n)
       expect(poolAfter.feeGrowthGlobalY).toBe(0n)
       expect(poolAfter.feeProtocolTokenX).toBe(1n)
@@ -492,7 +492,7 @@ describe('swap tests', () => {
       )
       expect(poolAfter.liquidity - liquidityDelta).toBe(poolBefore.liquidity)
       expect(poolAfter.currentTickIndex).toBe(10n)
-      expect(poolAfter.currentSqrtPrice).toBe(1000746100010000000000000n)
+      expect(poolAfter.sqrtPrice).toBe(1000746100010000000000000n)
       expect(poolAfter.feeGrowthGlobalX).toBe(0n)
       expect(poolAfter.feeGrowthGlobalY).toBe(40000000000000000000000n)
       expect(poolAfter.feeProtocolTokenX).toBe(0n)
@@ -915,7 +915,7 @@ describe('swap tests', () => {
       const positionLiquidity = 1000000n * 10n ** 5n
       expect(poolAfter.liquidity - positionLiquidity).toBe(poolBefore.liquidity)
       expect(poolAfter.currentTickIndex).toBe(-20n)
-      expect(poolAfter.currentSqrtPrice).toBe(999254832903522185303508n)
+      expect(poolAfter.sqrtPrice).toBe(999254832903522185303508n)
       expect(poolAfter.feeGrowthGlobalX).toBe(40000000000000000000000n)
       expect(poolAfter.feeGrowthGlobalY).toBe(0n)
       expect(poolAfter.feeProtocolTokenX).toBe(2n)

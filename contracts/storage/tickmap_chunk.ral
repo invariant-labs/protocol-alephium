@@ -2,6 +2,7 @@ Contract TickmapChunk(mut value: U256, admin: Address) {
     enum TickmapChunkError {
         NotAdmin = 1100
     }
+    
     pub fn get() -> U256 {
         return value
     }

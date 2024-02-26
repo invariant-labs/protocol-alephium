@@ -1,33 +1,33 @@
-Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256, mut invariantId: Address, mut areAdminsSet: Bool) {
+Contract PoolKeys(
+    poolKeyTemplateContractId: ByteVec,
+    mut poolKeyCount: U256,
+    mut invariantId: Address,
+    mut areAdminsSet: Bool
+) {
     enum PoolKeysError {
         NotAdmin = 200
-        PoolKeyAlreadyExist = 201
-        AdminsAreSet = 202
+        AdminsAreSet = 201
+        PoolKeyAlreadyExist = 202
     }
 
-
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invtId: Address) -> () {
+    pub fn setAdmins(invariant: Address) -> () {
         assert!(!areAdminsSet, PoolKeysError.AdminsAreSet)
-        invariantId = invtId
+        invariantId = invariant
         areAdminsSet = true
     }
 
     @using(preapprovedAssets = true, updateFields = true)
     pub fn add(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
+        checkCaller!(callerAddress!() == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
 
-        for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-            let contract = PoolKey(subContractId!(toByteVec!(i)))
-    
-            assert!(tokenX != contract.getTokenX() || tokenY != contract.getTokenY() || fee != contract.getFee() || tickSpacing != contract.getTickSpacing(), PoolKeysError.PoolKeyAlreadyExist)
-        }
+        let exists = contains(tokenX, tokenY, fee, tickSpacing)
+        assert!(!exists, PoolKeysError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
         let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(tokenX, tokenY, fee, tickSpacing)
         copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
-            toByteVec!(i),
+            toByteVec!(poolKeyCount),
             poolKeyTemplateContractId,
             encodedImmFields,
             encodedMutFields
@@ -35,9 +35,6 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256, mu
     }
 
     pub fn contains(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
-        let callerId = callerAddress!()
-        assert!(callerId == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
-
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
 
@@ -49,14 +46,18 @@ Contract PoolKeys(poolKeyTemplateContractId: ByteVec, mut poolKeyCount: U256, mu
         return false
     }
 
+    pub fn count() -> U256 {
+        return poolKeyCount
+    }
+
     pub fn getAll() -> ByteVec {
-        let mut poolsBytes = b``
+        let mut poolKeysBytes = b``
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let contract = PoolKey(subContractId!(toByteVec!(i)))
-            poolsBytes = poolsBytes ++ contract.getTokenX() ++ b`break` ++ contract.getTokenY() ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+            poolKeysBytes = poolKeysBytes ++ contract.getTokenX() ++ b`break` ++ contract.getTokenY() ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
         }
 
-        return poolsBytes
+        return poolKeysBytes
     }
 }

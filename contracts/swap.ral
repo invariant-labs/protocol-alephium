@@ -30,24 +30,24 @@ Contract SwapUtils(
 
         assert!(amount != 0, SwapError.ZeroAmount)
         
-        let mut currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
+        let mut sqrtPrice = Pools(poolsContractId).getSqrtPrice(poolKey)
 
         if(xToY) {
-            assert!(currentSqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, SwapError.WrongLimit)             
+            assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, SwapError.WrongLimit)             
         } else {
-            assert!(currentSqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, SwapError.WrongLimit)
+            assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, SwapError.WrongLimit)
         }
 
         let mut totalAmountIn = 0
         let mut totalAmountOut = 0
         let mut eventFeeAmount = 0
         let mut remainingAmount = amount
-        let eventStartSqrtPrice = currentSqrtPrice
+        let eventStartSqrtPrice = sqrtPrice
 
         while (remainingAmount != 0) {
             let currentTickIndex = Pools(poolsContractId).getCurrentTickIndex(poolKey)
-            let currentLiquidity = Pools(poolsContractId).getCurrentLiquidity(poolKey)
-            currentSqrtPrice = Pools(poolsContractId).getCurrentSqrtPrice(poolKey)
+            let liquidity = Pools(poolsContractId).getLiquidity(poolKey)
+            sqrtPrice = Pools(poolsContractId).getSqrtPrice(poolKey)
 
             let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = Tickmap(tickmapContractId).getCloserLimit(
                 sqrtPriceLimit,
@@ -58,9 +58,9 @@ Contract SwapUtils(
             )
 
             let (nextSqrtPrice, amountIn, amountOut, feeAmount) = CLAMM(clammContractId).computeSwapStep(
-                currentSqrtPrice,
+                sqrtPrice,
                 swapLimit,
-                currentLiquidity,
+                liquidity,
                 remainingAmount,
                 byAmountIn,
                 fee
@@ -105,13 +105,13 @@ Contract SwapUtils(
                 }
             } else {
                 let newTickIndex = CLAMM(clammContractId).getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
-                Pools(poolsContractId).setTickIndex(poolKey, newTickIndex)
+                Pools(poolsContractId).setCurrentTickIndex(poolKey, newTickIndex)
                 Pools(poolsContractId).setLastTimestamp(poolKey, currentTimestamp)
             }
         }
         assert!(totalAmountOut != 0, SwapError.NoGainSwap)
 
-        return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getCurrentSqrtPrice(poolKey), eventFeeAmount
+        return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getSqrtPrice(poolKey), eventFeeAmount
     }
 
     @using(checkExternalCaller = false)

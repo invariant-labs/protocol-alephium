@@ -62,12 +62,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     positionsCounter.contractInstance.contractId
   )
   const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(
-    signer,
-    account.address,
-    chunk.contractInstance.contractId,
-    clamm.contractInstance.contractId
-  )
+  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
 
   const swap = await deploySwap(
     signer,
@@ -237,7 +232,7 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
         poolTokenX: '',
         poolTokenY: '',
         poolLiquidity: 0n,
-        poolCurrentSqrtPrice: 0n,
+        poolSqrtPrice: 0n,
         poolCurrentTickIndex: 0n,
         poolFeeGrowthGlobalX: 0n,
         poolFeeGrowthGlobalY: 0n,
@@ -295,17 +290,11 @@ export async function deployChunk(signer: SignerProvider) {
   )
 }
 
-export async function deployTickmap(
-  signer: SignerProvider,
-  admin: string,
-  chunkTemplateContractId: string,
-  clammContractId: string
-) {
+export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
         chunkTemplateContractId: chunkTemplateContractId,
-        clammContractId: clammContractId,
         invariantId: ZERO_ADDRESS,
         swapUtilsId: ZERO_ADDRESS,
         areAdminsSet: false
@@ -377,7 +366,7 @@ export function decodeFeeTiers(string: string) {
   const parts = string.split('627265616b')
   const feeTiers: any[] = []
 
-  for (let i = 0; i < parts.length - 1; i += 3) {
+  for (let i = 0; i < parts.length - 1; i += 2) {
     const feeTier = {
       fee: decodeU256(parts[i]),
       tickSpacing: decodeU256(parts[i + 1])
@@ -395,8 +384,8 @@ export function decodePools(string: string) {
 
   for (let i = 0; i < parts.length - 1; i += 4) {
     const pool = {
-      token0: parts[i],
-      token1: parts[i + 1],
+      tokenX: parts[i],
+      tokenY: parts[i + 1],
       fee: decodeU256(parts[i + 2]),
       tickSpacing: decodeU256(parts[i + 3])
     }
@@ -413,7 +402,7 @@ export function decodePool(
   return {
     exist: array[0],
     liquidity: array[1],
-    currentSqrtPrice: array[2],
+    sqrtPrice: array[2],
     currentTickIndex: array[3],
     feeGrowthGlobalX: array[4],
     feeGrowthGlobalY: array[5],
@@ -425,7 +414,7 @@ export function decodePool(
   }
 }
 
-export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) => {
+export function decodeTick(array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) {
   return {
     exist: array[0],
     sign: array[1],
@@ -438,9 +427,9 @@ export const decodeTick = (array: [boolean, boolean, bigint, bigint, bigint, big
   }
 }
 
-export const decodePosition = (
+export function decodePosition(
   array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
-) => {
+) {
   return {
     exist: array[0],
     liquidity: array[1],
@@ -455,10 +444,10 @@ export const decodePosition = (
   }
 }
 
-export const hexToBytes = (hex: string): Uint8Array => {
+export function hexToBytes(hex: string): Uint8Array {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
 }
 
-export const decodeU256 = (string: string) => {
+export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }

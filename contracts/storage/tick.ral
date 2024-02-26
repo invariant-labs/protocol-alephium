@@ -9,8 +9,8 @@ Contract Tick(
     tickSecondsOutside: U256
 ) extends Decimal() {
     enum TickError {
-        InvalidTickLiquidity = 1000
-        NotAdmin = 1001
+        NotAdmin = 1000
+        InvalidTickLiquidity = 1001
     }
 
     pub fn getSign() -> Bool {
@@ -47,8 +47,7 @@ Contract Tick(
 
     @using(updateFields = true)
     pub fn updateTick(liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == admin, TickError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, TickError.NotAdmin)
 
         tickLiquidityGross = calculateNewLiquidityGross(isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
@@ -57,8 +56,7 @@ Contract Tick(
 
     @using(updateFields = true)
     pub fn cross(feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256, index: I256) -> (Bool, U256) {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == admin, TickError.NotAdmin)
+        checkCaller!(callerAddress!() == admin, TickError.NotAdmin)
 
         tickFeeGrowthOutsideX = wrappingSub(feeGrowthGlobalX, tickFeeGrowthOutsideX)
         tickFeeGrowthOutsideY = wrappingSub(feeGrowthGlobalY, tickFeeGrowthOutsideY)
@@ -70,8 +68,7 @@ Contract Tick(
 
     @using(updateFields = true)
     fn updateLiquidityChange(liquidityDelta: U256, add: Bool) -> () {
-        let callerId = callerAddress!()
-        checkCaller!(callerId == selfAddress!(), TickError.NotAdmin)
+        checkCaller!(callerAddress!() == selfAddress!(), TickError.NotAdmin)
 
         if (tickSign && !add || !tickSign && add) {
             if (tickLiquidityChange > liquidityDelta) {
@@ -83,7 +80,6 @@ Contract Tick(
         } else {
             tickLiquidityChange = tickLiquidityChange + liquidityDelta
         }
-        return
     }
 
     fn calculateNewLiquidityGross(sign: Bool, liquidityDelta: U256, maxLiquidityPerTick: U256) -> U256 {

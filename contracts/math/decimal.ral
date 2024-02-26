@@ -1,5 +1,4 @@
 Abstract Contract Decimal() {
-
     const SqrtPriceScale = 24
     const LiquidityScale = 5
     const FeeGrowthScale = 28
@@ -197,6 +196,7 @@ Abstract Contract Decimal() {
             return a + b
         }
     }
+
     pub fn wrappingSub(a: U256, b: U256) -> U256 {
         let u256Max = u256Max!()
         if (b > a) {

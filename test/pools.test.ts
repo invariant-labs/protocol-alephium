@@ -84,7 +84,7 @@ describe('pools tests', () => {
     const parsedPool = decodePool(pool.returns)
 
     expect(parsedPool.liquidity).toBe(0n)
-    expect(parsedPool.currentSqrtPrice).toBe(1_000_000_000_000_000_000_000_000n)
+    expect(parsedPool.sqrtPrice).toBe(1_000_000_000_000_000_000_000_000n)
     expect(parsedPool.currentTickIndex).toBe(0n)
     expect(parsedPool.feeGrowthGlobalX).toBe(0n)
     expect(parsedPool.feeGrowthGlobalY).toBe(0n)
