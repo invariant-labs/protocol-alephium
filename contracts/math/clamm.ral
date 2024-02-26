@@ -102,12 +102,12 @@ Contract CLAMM() extends Log(){
 
         let nominator = mul(deltaSqrtPrice, liquidity, liquidityScale)
         if (roundingUp == true) {
-            return divValuesToTokenUp(
+            return divToTokenUp(
                     nominator,
                     mul(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
                 )
         } else {
-            return divValuesToToken(
+            return divToToken(
                 nominator,
                 mulUp(sqrtPriceA, sqrtPriceB, sqrtPriceScale)
             )
@@ -173,7 +173,7 @@ Contract CLAMM() extends Log(){
         let sqrtPriceScale = getSqrtPriceScale()
         let tokenAmountScale = getTokenAmountScale()
 
-        let deltaSqrtPrice = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+        let deltaSqrtPrice = rescale(liquidity, liquidityScale, sqrtPriceScale)
 
         let mut denominator = 0
         if (addX) {
@@ -182,9 +182,9 @@ Contract CLAMM() extends Log(){
             denominator = deltaSqrtPrice - mul(startingSqrtPrice, x, tokenAmountScale)
         }
 
-        return divValuesToTokenUp(
+        return divToTokenUp(
             mulUp(startingSqrtPrice, liquidity, liquidityScale),
-            fromDecimalToValue(denominator, sqrtPriceScale, tokenAmountScale)
+            rescale(denominator, sqrtPriceScale, tokenAmountScale)
         )
     }
     pub fn getNextSqrtPriceYDown(
@@ -197,13 +197,13 @@ Contract CLAMM() extends Log(){
         let sqrtPriceScale = getSqrtPriceScale()
         let tokenAmountScale = getTokenAmountScale()
 
-        let numerator = fromDecimalToValue(y, tokenAmountScale, sqrtPriceScale)
-        let denominator = fromDecimalToValue(liquidity, liquidityScale, sqrtPriceScale)
+        let numerator = rescale(y, tokenAmountScale, sqrtPriceScale)
+        let denominator = rescale(liquidity, liquidityScale, sqrtPriceScale)
 
         if (addY) {
-            return startingSqrtPrice + divValues(numerator, denominator)
+            return startingSqrtPrice + div(numerator, denominator)
         } else {
-            return startingSqrtPrice - divValuesUp(numerator, denominator)
+            return startingSqrtPrice - divUp(numerator, denominator)
         }
 
     }

@@ -57,22 +57,19 @@ Abstract Contract Decimal() {
         return (l * r + almostOne(rScale)) / one(rScale)
     }
     
-    // SqrtPrice related
-    pub fn divValuesToTokenUp(l: U256, r: U256) -> U256 {
+    pub fn divToTokenUp(l: U256, r: U256) -> U256 {
         return (((l * one(getSqrtPriceScale()) + (r - 1)) / r) + almostOne(getSqrtPriceScale())) / one(getSqrtPriceScale())
     }   
 
-    // SqrtPrice related
-    pub fn divValuesToToken(l: U256, r: U256) -> U256 {
+    pub fn divToToken(l: U256, r: U256) -> U256 {
         return ((l * one(getSqrtPriceScale())) / r) / one(getSqrtPriceScale())
     }   
 
-    // SqrtPrice related
-    pub fn divValuesUp(l: U256, r: U256) -> U256 {
+    pub fn divUp(l: U256, r: U256) -> U256 {
         return l * one(getSqrtPriceScale()) + (r - 1) / r
     }   
 
-    pub fn divValues(l: U256, r: U256) -> U256 {
+    pub fn div(l: U256, r: U256) -> U256 {
         return l * one(getSqrtPriceScale()) / r
     }   
 
@@ -103,10 +100,8 @@ Abstract Contract Decimal() {
 
         let fixedPointScale = getFixedPointScale()
         let sqrtPriceScale = getSqrtPriceScale()
-
-        let mut sqrtPrice = one(fixedPointScale)
-
         
+        let mut sqrtPrice = one(fixedPointScale)  
 
         if (tick & 0x1 != 0) {
             sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** fixedPointScale)
@@ -164,24 +159,23 @@ Abstract Contract Decimal() {
         }
 
         if (tickIndex >= 0i) {
-            return fromDecimalToValue(sqrtPrice, fixedPointScale, sqrtPriceScale)
+            return rescale(sqrtPrice, fixedPointScale, sqrtPriceScale)
         } else {
             let intermediate = one(sqrtPriceScale) / sqrtPrice 
-            return fromDecimalToValue(intermediate, fixedPointScale, sqrtPriceScale)
+            return rescale(intermediate, fixedPointScale, sqrtPriceScale)
         }
     }
 
-    pub fn fromDecimalToValue(from: U256, fromScale: U256, expectedScale: U256) -> U256 {
+    pub fn rescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U256 {
         if (expectedScale > fromScale) {
             let multiplierScale = expectedScale - fromScale
-            return from * (10 ** multiplierScale)
+            return fromValue * (10 ** multiplierScale)
         } else {
             let denominatorScale = fromScale - expectedScale
-            return from / (10 ** denominatorScale)
+            return fromValue / (10 ** denominatorScale)
         }
     }
 
-    // FeeGrowth related
     pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
         return fee * one(getFeeGrowthScale()) * one(getLiquidityScale()) / liquidity
     }
@@ -203,7 +197,6 @@ Abstract Contract Decimal() {
         }
     }
 
-    // // FeeGrowth related
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,
         tickLowerFeeGrowthOutsideX: U256,
@@ -245,8 +238,7 @@ Abstract Contract Decimal() {
         return feeGrowthInsideX, feeGrowthInsideY
     }
 
-    // FeeGrowth related
-    pub fn toFee(fee: U256, liquidity: U256) -> U256 {
-        return fee * liquidity / (10 ** (getFeeGrowthScale() + getLiquidityScale()))
+    pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
+        return feeGrowth * liquidity / (10 ** (getFeeGrowthScale() + getLiquidityScale()))
     }
 }
