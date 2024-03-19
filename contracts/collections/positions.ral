@@ -56,7 +56,7 @@ Contract Positions(
             originalCaller,
             true
         )
-        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(length + 1),
             positionTemplateContractId,
             encodedImmFields,

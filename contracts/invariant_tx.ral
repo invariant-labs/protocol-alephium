@@ -65,8 +65,8 @@ TxScript Swap(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256,
     let poolKey = invariant.generatePoolKey(token0, token1, fee, tickSpacing)
     let (tokenX, tokenY) = invariant.extractTokensFromPoolKey(poolKey)
     if(xToY) {
-        invariant.swap{callerAddress!() -> tokenX: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let (_, _, _, _, _) = invariant.swap{callerAddress!() -> tokenX: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     } else {
-        invariant.swap{callerAddress!() -> tokenY: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let (_, _, _, _, _) = invariant.swap{callerAddress!() -> tokenY: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 }

@@ -49,7 +49,7 @@ Contract Ticks(
             feeGrowthOutsideY,
             secondsOutside
         )
-        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             path,
             tickTemplateContractId,
             encodedImmFields,

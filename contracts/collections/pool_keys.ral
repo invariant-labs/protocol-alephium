@@ -26,7 +26,7 @@ Contract PoolKeys(
     
         poolKeyCount = poolKeyCount + 1
         let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(tokenX, tokenY, fee, tickSpacing)
-        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(poolKeyCount),
             poolKeyTemplateContractId,
             encodedImmFields,

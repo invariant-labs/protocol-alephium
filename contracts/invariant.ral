@@ -156,7 +156,7 @@ Contract Invariant(
         return Tickmap(tickmapContractId).get(index, tickSpacing, poolKey)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     fn createTick(
         caller: Address,
         poolKey: ByteVec,
@@ -369,7 +369,7 @@ Contract Invariant(
         let lowerTick = positions.getLowerTickIndex(index)
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        positions.wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
+        let (_, _) = positions.wrappedModify(callerAddress!(), index, poolsContractId, ticksContractId, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
         
         let tokensOwedX = positions.getTokensOwedX(index)
         let tokensOwedY = positions.getTokensOwedY(index)

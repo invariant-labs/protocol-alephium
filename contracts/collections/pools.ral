@@ -29,7 +29,7 @@ Contract Pools(
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
         let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), tokenX, tokenY, tickSpacing, 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
-        copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,
             encodedImmFields,
