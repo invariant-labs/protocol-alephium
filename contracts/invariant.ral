@@ -3,7 +3,7 @@ struct InvariantConfig { admin: Address, mut protocolFee: U256 }
 Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
-    feeTiersContractId: ByteVec,
+    feeTiers: FeeTiers,
     poolKeysContractId: ByteVec, 
     poolsContractId: ByteVec, 
     ticksContractId: ByteVec, 
@@ -39,7 +39,7 @@ Contract Invariant(
         let positionsId = Positions(positionsContractId).getAddress()
         let swapId = SwapUtils(swapContractId).getSelfId()
 
-        FeeTiers(feeTiersContractId).setAdmins(invtId)
+        feeTiers.setAdmins(invtId)
         PoolKeys(poolKeysContractId).setAdmins(invtId)
         Pools(poolsContractId).setAdmins(invtId, positionsId, swapId)
         Positions(positionsContractId).setAdmins(invtId)
@@ -89,7 +89,7 @@ Contract Invariant(
     pub fn createPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
         assert!(init, InvariantError.NotInitialized)
 
-        let feeTierExist = FeeTiers(feeTiersContractId).contains(fee, tickSpacing)
+        let feeTierExist = feeTiers.contains(fee, tickSpacing)
         assert!(feeTierExist, InvariantError.FeeTierNotFound)
 
         CLAMM(clammContractId).checkTick(initTick, tickSpacing)
@@ -119,22 +119,22 @@ Contract Invariant(
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= one(PercentageScale), InvariantError.InvalidFee)
 
-        FeeTiers(feeTiersContractId).add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
+        feeTiers.add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
     }
 
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
 
-        FeeTiers(feeTiersContractId).remove(fee, tickSpacing)
+        feeTiers.remove(fee, tickSpacing)
     }
 
     pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {
-        return FeeTiers(feeTiersContractId).contains(fee, tickSpacing)
+        return feeTiers.contains(fee, tickSpacing)
     }
 
     pub fn getFeeTiers() -> ByteVec {
-        return FeeTiers(feeTiersContractId).getAll()
+        return feeTiers.getAll()
     }
 
     pub fn getPools() -> ByteVec {
