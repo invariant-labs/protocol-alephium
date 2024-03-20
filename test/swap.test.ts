@@ -200,7 +200,7 @@ describe('swap tests', () => {
 
       const slippage = 15258932000000000000n
 
-      const [amountIn, amountOut, targetSqrtPrice] = (
+      const { amountIn, amountOut, targetSqrtPrice } = (
         await invariant.methods.quote({
           args: {
             token0: tokenX.contractInstance.contractId,
@@ -431,7 +431,7 @@ describe('swap tests', () => {
 
       const slippage = 65535383934512647000000000000n
 
-      const [amountIn, amountOut, targetSqrtPrice] = (
+      const { amountIn, amountOut, targetSqrtPrice } = (
         await invariant.methods.quote({
           args: {
             token0: token0.contractInstance.contractId,
@@ -852,7 +852,7 @@ describe('swap tests', () => {
 
       const slippage = 15258932000000000000n
 
-      const [amountIn, amountOut, targetSqrtPrice] = (
+      const { amountIn, amountOut, targetSqrtPrice } = (
         await invariant.methods.quote({
           args: {
             token0: token0.contractInstance.contractId,

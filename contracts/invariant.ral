@@ -321,7 +321,7 @@ Contract Invariant(
         amount: U256,
         byAmountIn: Bool,
         sqrtPriceLimit: U256
-    ) -> (U256, U256, U256) {
+    ) -> QuoteResult {
         return swap.wrappedQuote(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 

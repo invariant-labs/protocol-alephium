@@ -202,7 +202,7 @@ describe('protocol fee tests', () => {
 
       const slippage = 15258932000000000000n
 
-      const [amountIn, amountOut, targetSqrtPrice] = (
+      const { amountIn, amountOut, targetSqrtPrice } = (
         await invariant.methods.quote({
           args: {
             token0: tokenX.contractInstance.contractId,

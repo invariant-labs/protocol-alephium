@@ -2,8 +2,14 @@ struct CalculateSwapResult {
     amountIn: U256,
     amountOut: U256,
     startSqrtPrice: U256,
-    targetSqrtprice: U256,
+    targetSqrtPrice: U256,
     fee: U256
+}
+
+struct QuoteResult {
+    amountIn: U256,
+    amountOut: U256,
+    targetSqrtPrice: U256
 }
 
 Contract SwapUtils(
@@ -123,7 +129,7 @@ Contract SwapUtils(
             amountIn: totalAmountIn,
             amountOut: totalAmountOut,
             startSqrtPrice: eventStartSqrtPrice,
-            targetSqrtprice: pools.getSqrtPrice(poolKey),
+            targetSqrtPrice: pools.getSqrtPrice(poolKey),
             fee: eventFeeAmount
         }
     }
@@ -138,10 +144,14 @@ Contract SwapUtils(
         amount: U256,
         byAmountIn: Bool,
         sqrtPriceLimit: U256
-    ) -> (U256, U256, U256) {
+    ) -> QuoteResult {
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
-        return calculateSwapResult.amountIn, calculateSwapResult.amountOut, calculateSwapResult.targetSqrtprice
+        return QuoteResult { 
+            amountIn: calculateSwapResult.amountIn,
+            amountOut: calculateSwapResult.amountOut,
+            targetSqrtPrice: calculateSwapResult.targetSqrtPrice
+        }
     }
 
     @using(checkExternalCaller = false)
