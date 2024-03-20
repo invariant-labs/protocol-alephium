@@ -4,7 +4,7 @@ Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
     feeTiers: FeeTiers,
-    poolKeysContractId: ByteVec, 
+    poolKeys: PoolKeys, 
     poolsContractId: ByteVec, 
     ticksContractId: ByteVec, 
     positionsContractId: ByteVec,
@@ -40,7 +40,7 @@ Contract Invariant(
         let swapId = SwapUtils(swapContractId).getSelfId()
 
         feeTiers.setAdmins(invtId)
-        PoolKeys(poolKeysContractId).setAdmins(invtId)
+        poolKeys.setAdmins(invtId)
         Pools(poolsContractId).setAdmins(invtId, positionsId, swapId)
         Positions(positionsContractId).setAdmins(invtId)
         Tickmap(tickmapContractId).setAdmins(invtId, swapId)
@@ -99,14 +99,14 @@ Contract Invariant(
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let (tokenX, tokenY) = extractTokensFromPoolKey(poolKey)
         
-        let poolKeyExist = PoolKeys(poolKeysContractId).contains(tokenX, tokenY, fee, tickSpacing)
+        let poolKeyExist = poolKeys.contains(tokenX, tokenY, fee, tickSpacing)
         assert!(!poolKeyExist, InvariantError.PoolKeyAlreadyExist)
 
         assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
-        PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
+        poolKeys.add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
         Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
@@ -138,7 +138,7 @@ Contract Invariant(
     }
 
     pub fn getPools() -> ByteVec {
-        return PoolKeys(poolKeysContractId).getAll()
+        return poolKeys.getAll()
     }
 
     pub fn getTick(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {

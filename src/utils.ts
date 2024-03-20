@@ -79,7 +79,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         init: false,
         config: { admin: account.address, protocolFee },
         feeTiers: feeTiers.contractInstance.contractId,
-        poolKeysContractId: poolKeys.contractInstance.contractId,
+        poolKeys: poolKeys.contractInstance.contractId,
         poolsContractId: pools.contractInstance.contractId,
         ticksContractId: ticks.contractInstance.contractId,
         positionsContractId: positions.contractInstance.contractId,
