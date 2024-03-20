@@ -207,4 +207,14 @@ Contract Positions(
 
         return pools.wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
+
+    @using(checkExternalCaller = false)
+    pub fn removePosition(index: U256) -> () {
+        checkCaller!(callerAddress!() == invariantId && areAdminsSet, PositionsError.NotAdmin)
+
+        let subContractId = subContractId!(toByteVec!(index))
+        assert!(contractExists!(subContractId), PositionsError.PositionNotExist)
+        let position = Position(subContractId)
+        position.remove()
+    }
 }

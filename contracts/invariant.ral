@@ -297,6 +297,8 @@ Contract Invariant(
 
         transferTokenFromSelf!(caller, tokenX, x)
         transferTokenFromSelf!(caller, tokenY, y)
+
+        positions.removePosition(index)
     }
 
     @using(checkExternalCaller = false)

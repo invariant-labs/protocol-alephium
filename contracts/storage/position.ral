@@ -160,4 +160,11 @@ Contract Position(
             return position.liquidity - liquidityDelta
         }
     }
+
+    @using(assetsInContract = true, checkExternalCaller = false)
+    pub fn remove() -> () {
+        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
+
+        destroySelf!(position.owner)
+    }
 }
