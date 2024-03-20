@@ -143,7 +143,7 @@ Contract Invariant(
         return ticks.get(generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
 
-    pub fn getPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> (Bool, U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
+    pub fn getPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> (Bool, PoolState) {
         return pools.get(generatePoolKey(token0, token1, fee, tickSpacing))
     }
 

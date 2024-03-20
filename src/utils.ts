@@ -19,6 +19,7 @@ import {
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
+import { PoolState } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -223,20 +224,22 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
     Pool.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        poolTickSpacing: 0n,
-        poolTokenX: '',
-        poolTokenY: '',
-        poolLiquidity: 0n,
-        poolSqrtPrice: 0n,
-        poolCurrentTickIndex: 0n,
-        poolFeeGrowthGlobalX: 0n,
-        poolFeeGrowthGlobalY: 0n,
-        poolFeeProtocolTokenX: 0n,
-        poolFeeProtocolTokenY: 0n,
-        poolStartTimestamp: 0n,
-        poolLastTimestamp: 0n,
-        poolFeeReceiver: ZERO_ADDRESS,
-        clammContractId: clammId
+        pool: {
+          tickSpacing: 0n,
+          tokenX: '',
+          tokenY: '',
+          liquidity: 0n,
+          sqrtPrice: 0n,
+          currentTickIndex: 0n,
+          feeGrowthGlobalX: 0n,
+          feeGrowthGlobalY: 0n,
+          feeProtocolTokenX: 0n,
+          feeProtocolTokenY: 0n,
+          startTimestamp: 0n,
+          lastTimestamp: 0n,
+          feeReceiver: ZERO_ADDRESS
+        },
+        clamm: clammId
       }
     })
   )
@@ -247,7 +250,7 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
     Pools.deploy(signer, {
       initialFields: {
         poolTemplateContractId: poolId,
-        clammContractId: clammId,
+        clamm: clammId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS,
         positionsId: ZERO_ADDRESS,
@@ -391,21 +394,10 @@ export function decodePools(string: string) {
   return pools
 }
 
-export function decodePool(
-  array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
-) {
+export function decodePool(array: [boolean, PoolState]) {
   return {
     exist: array[0],
-    liquidity: array[1],
-    sqrtPrice: array[2],
-    currentTickIndex: array[3],
-    feeGrowthGlobalX: array[4],
-    feeGrowthGlobalY: array[5],
-    feeProtocolTokenX: array[6],
-    feeProtocolTokenY: array[7],
-    startTimestamp: array[8],
-    lastTimestamp: array[9],
-    feeReceiver: array[10]
+    ...array[1]
   }
 }
 

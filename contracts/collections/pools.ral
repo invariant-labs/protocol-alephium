@@ -1,6 +1,6 @@
 Contract Pools(
     poolTemplateContractId: ByteVec,
-    clammContractId: ByteVec,
+    clamm: CLAMM,
     mut invariantId: Address,
     mut positionsId: Address,
     mut swapUtilsId: Address,
@@ -28,7 +28,24 @@ Contract Pools(
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
-        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(selfAddress!(), tokenX, tokenY, tickSpacing, 0, initSqrtPrice, initTick, 0, 0, 0, 0, currentTimestamp, currentTimestamp, feeReceiver, clammContractId)
+        let (encodedImmFields, encodedMutFields) = Pool.encodeFields!(
+            selfAddress!(), 
+            PoolState {
+                tokenX: tokenX,
+                tokenY: tokenY,
+                tickSpacing: tickSpacing,
+                liquidity: 0,
+                sqrtPrice: initSqrtPrice,
+                currentTickIndex: initTick,
+                feeGrowthGlobalX: 0,
+                feeGrowthGlobalY: 0,
+                feeProtocolTokenX: 0,
+                feeProtocolTokenY: 0,
+                startTimestamp: currentTimestamp,
+                lastTimestamp: currentTimestamp,
+                feeReceiver: feeReceiver
+            },
+            clamm)
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,
@@ -99,11 +116,27 @@ Contract Pools(
         Pool(subContractId!(poolKey)).setFeeReceiver(newReceiver)
     }
 
-    pub fn get(poolKey: ByteVec) -> (Bool, U256, U256, I256, U256, U256, U256, U256, U256, U256, Address) {
+    pub fn get(poolKey: ByteVec) -> (Bool, PoolState) {
         let subContractId = subContractId!(poolKey)
 
         if (!contractExists!(subContractId)) {
-            return false, 0, 0, 0i, 0, 0, 0, 0, 0, 0, byteVecToAddress!(b``)
+            return 
+            false,
+            PoolState {
+                tokenX: #,
+                tokenY: #,
+                tickSpacing: 0,
+                liquidity: 0,
+                sqrtPrice: 0,
+                currentTickIndex: 0i,
+                feeGrowthGlobalX: 0,
+                feeGrowthGlobalY: 0,
+                feeProtocolTokenX: 0,
+                feeProtocolTokenY: 0,
+                startTimestamp: 0,
+                lastTimestamp: 0,
+                feeReceiver: selfAddress!()
+            }
         } else {
             return true, Pool(subContractId).get()
         }
