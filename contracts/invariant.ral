@@ -29,8 +29,6 @@ Contract Invariant(
         NotOwner = 13
     }
 
-    pub fn test() -> () {}
-
     @using(preapprovedAssets = false, updateFields = true)
     pub fn init() -> () {
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
