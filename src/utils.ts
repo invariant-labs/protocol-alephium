@@ -77,8 +77,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     Invariant.deploy(signer, {
       initialFields: {
         init: false,
-        admin: account.address,
-        protocolFee,
+        config: { admin: account.address, protocolFee },
         feeTiersContractId: feeTiers.contractInstance.contractId,
         poolKeysContractId: poolKeys.contractInstance.contractId,
         poolsContractId: pools.contractInstance.contractId,

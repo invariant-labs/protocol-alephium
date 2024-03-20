@@ -1,7 +1,8 @@
+struct InvariantConfig { admin: Address, mut protocolFee: U256 }
+
 Contract Invariant(
     mut init: Bool,
-    admin: Address,
-    mut protocolFee: U256,
+    mut config: InvariantConfig,
     feeTiersContractId: ByteVec,
     poolKeysContractId: ByteVec, 
     poolsContractId: ByteVec, 
@@ -28,9 +29,11 @@ Contract Invariant(
         NotOwner = 13
     }
 
+    pub fn test() -> () {}
+
     @using(preapprovedAssets = false, updateFields = true)
     pub fn init() -> () {
-        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
         let positionsId = Positions(positionsContractId).getAddress()
@@ -47,14 +50,14 @@ Contract Invariant(
     }
     
     pub fn getProtocolFee() -> U256 {
-        return protocolFee
+        return config.protocolFee
     }
 
     @using(updateFields = true)
     pub fn changeProtocolFee(newProtocolFee: U256) -> () {
-        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
         assert!(newProtocolFee < one(PercentageScale), InvariantError.InvalidProtocolFee)
-        protocolFee = newProtocolFee
+        config.protocolFee = newProtocolFee
     }
 
     @using(assetsInContract = true)
@@ -77,7 +80,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        checkCaller!(admin == caller, InvariantError.NotAdmin)
+        checkCaller!(config.admin == caller, InvariantError.NotAdmin)
 
         Pools(poolsContractId).setFeeReceiver(poolKey, newFeeReceiver)
     }
@@ -104,14 +107,14 @@ Contract Invariant(
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
         PoolKeys(poolKeysContractId).add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, admin)
+        Pools(poolsContractId).add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
         let caller = callerAddress!()
-        checkCaller!(caller == admin, InvariantError.NotAdmin)
+        checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= one(PercentageScale), InvariantError.InvalidFee)
@@ -121,7 +124,7 @@ Contract Invariant(
 
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
-        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
+        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
 
         FeeTiers(feeTiersContractId).remove(fee, tickSpacing)
     }
