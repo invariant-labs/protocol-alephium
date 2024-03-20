@@ -19,7 +19,7 @@ import {
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { PoolState } from '../artifacts/ts/types'
+import { PoolState, TickState } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -265,13 +265,15 @@ export async function deployTick(signer: SignerProvider) {
     Tick.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        tickSign: false,
-        tickLiquidityChange: 0n,
-        tickLiquidityGross: 0n,
-        tickSqrtPrice: 0n,
-        tickFeeGrowthOutsideX: 0n,
-        tickFeeGrowthOutsideY: 0n,
-        tickSecondsOutside: 0n
+        tick: {
+          sign: false,
+          liquidityChange: 0n,
+          liquidityGross: 0n,
+          sqrtPrice: 0n,
+          feeGrowthOutsideX: 0n,
+          feeGrowthOutsideY: 0n,
+          secondsOutside: 0n
+        }
       }
     })
   )
@@ -401,16 +403,10 @@ export function decodePool(array: [boolean, PoolState]) {
   }
 }
 
-export function decodeTick(array: [boolean, boolean, bigint, bigint, bigint, bigint, bigint, bigint]) {
+export function decodeTick(array: [boolean, TickState]) {
   return {
     exist: array[0],
-    sign: array[1],
-    liquidityChange: array[2],
-    liquidityGross: array[3],
-    sqrtPrice: array[4],
-    feeGrowthOutsideX: array[5],
-    feeGrowthOutsideY: array[6],
-    secondsOutside: array[7]
+    ...array[1]
   }
 }
 

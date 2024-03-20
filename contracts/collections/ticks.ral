@@ -41,13 +41,15 @@ Contract Ticks(
 
         let (encodedImmFields, encodedMutFields) = Tick.encodeFields!(
             selfAddress!(),
-            sign,
-            liquidityChange,
-            liquidityGross,
-            sqrtPrice,
-            feeGrowthOutsideX,
-            feeGrowthOutsideY,
-            secondsOutside
+            TickState {
+                sign: sign,
+                liquidityChange: liquidityChange,
+                liquidityGross: liquidityGross,
+                sqrtPrice: sqrtPrice,
+                feeGrowthOutsideX: feeGrowthOutsideX,
+                feeGrowthOutsideY: feeGrowthOutsideY,
+                secondsOutside: secondsOutside
+            }
         )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             path,
@@ -84,11 +86,21 @@ Contract Ticks(
         return Tick(subContractId!(poolKey ++ toByteVec!(index))).getLiquidityGross()
     }
 
-    pub fn get(poolKey: ByteVec, index: I256) -> (Bool, Bool, U256, U256, U256, U256, U256, U256) {
+    pub fn get(poolKey: ByteVec, index: I256) -> (Bool, TickState) {
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
         if (!contractExists!(subContractId)) {
-            return false, false, 0, 0, 0, 0, 0, 0
+            return
+            false,
+            TickState {
+                sign: false,
+                liquidityChange: 0,
+                liquidityGross: 0,
+                sqrtPrice: 0,
+                feeGrowthOutsideX: 0,
+                feeGrowthOutsideY: 0,
+                secondsOutside: 0
+            }
         } else {
             return true, Tick(subContractId).get()
         }
