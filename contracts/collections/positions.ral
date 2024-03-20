@@ -148,7 +148,7 @@ Contract Positions(
         originalCaller: Address,
         index: U256,
         pools: Pools,
-        ticksContractId: ByteVec,
+        ticks: Ticks,
         clammContractId: ByteVec,
         poolKey: ByteVec,
         upperTick: I256,
@@ -166,8 +166,6 @@ Contract Positions(
         pools.setLastTimestamp(poolKey, currentTimestamp)
 
         let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
-
-        let ticks = Ticks(ticksContractId)
 
         ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
         ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
