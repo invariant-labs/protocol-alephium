@@ -19,7 +19,7 @@ import {
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { PoolState, TickState } from '../artifacts/ts/types'
+import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
@@ -166,17 +166,19 @@ export async function deployPosition(signer: SignerProvider) {
     Position.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        posPoolKey: '',
-        posLiquidity: 0n,
-        posLowerTickIndex: 0n,
-        posUpperTickIndex: 0n,
-        posFeeGrowthInsideX: 0n,
-        posFeeGrowthInsideY: 0n,
-        posLastBlockNumber: 0n,
-        posTokensOwedX: 0n,
-        posTokensOwedY: 0n,
-        posOwner: ZERO_ADDRESS,
-        posIsActive: false
+        position: {
+          poolKey: '',
+          liquidity: 0n,
+          lowerTickIndex: 0n,
+          upperTickIndex: 0n,
+          feeGrowthInsideX: 0n,
+          feeGrowthInsideY: 0n,
+          lastBlockNumber: 0n,
+          tokensOwedX: 0n,
+          tokensOwedY: 0n,
+          owner: ZERO_ADDRESS
+        },
+        isActive: false
       }
     })
   )
@@ -410,20 +412,10 @@ export function decodeTick(array: [boolean, TickState]) {
   }
 }
 
-export function decodePosition(
-  array: [boolean, bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, string]
-) {
+export function decodePosition(array: [boolean, PositionState]) {
   return {
     exist: array[0],
-    liquidity: array[1],
-    lowerTickIndex: array[2],
-    upperTickIndex: array[3],
-    feeGrowthInsideX: array[4],
-    feeGrowthInsideY: array[5],
-    lastBlockNumber: array[6],
-    tokensOwedX: array[7],
-    tokensOwedY: array[8],
-    owner: array[9]
+    ...array[1]
   }
 }
 

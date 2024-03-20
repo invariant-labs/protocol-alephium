@@ -135,7 +135,7 @@ Contract Pools(
                 feeProtocolTokenY: 0,
                 startTimestamp: 0,
                 lastTimestamp: 0,
-                feeReceiver: selfAddress!()
+                feeReceiver: byteVecToAddress!(#)
             }
         } else {
             return true, Pool(subContractId).get()

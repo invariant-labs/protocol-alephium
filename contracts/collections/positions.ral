@@ -44,16 +44,18 @@ Contract Positions(
 
         let (encodedImmFields, encodedMutFields) = Position.encodeFields!(
             selfAddress!(),
-            poolKey,
-            liquidity,
-            lowerTickIndex,
-            upperTickIndex,
-            feeGrowthInsideX,
-            feeGrowthInsideY,
-            lastBlockNumber,
-            tokensOwedX,
-            tokensOwedY,
-            originalCaller,
+            PositionState {
+                poolKey: poolKey,
+                liquidity: liquidity,
+                lowerTickIndex: lowerTickIndex,
+                upperTickIndex: upperTickIndex,
+                feeGrowthInsideX: feeGrowthInsideX,
+                feeGrowthInsideY: feeGrowthInsideY,
+                lastBlockNumber: lastBlockNumber,
+                tokensOwedX: tokensOwedX,
+                tokensOwedY: tokensOwedY,
+                owner: originalCaller
+            },
             true
         )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
@@ -122,11 +124,24 @@ Contract Positions(
         Position(subContractId!(toByteVec!(index))).setTokensOwedY(value)
     }
 
-    pub fn get(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256, Address) {
+    pub fn get(index: U256) -> (Bool, PositionState) {
         let subContractId = subContractId!(toByteVec!(index))
         
         if (!contractExists!(subContractId)) {
-            return false, 0, 0i, 0i, 0, 0, 0, 0, 0, byteVecToAddress!(b``)
+            return
+            false,
+            PositionState {
+                poolKey: #,
+                liquidity: 0,
+                lowerTickIndex: 0i,
+                upperTickIndex: 0i,
+                feeGrowthInsideX: 0,
+                feeGrowthInsideY: 0,
+                lastBlockNumber: 0,
+                tokensOwedX: 0,
+                tokensOwedY: 0,
+                owner: byteVecToAddress!(#)
+            }
         } else {
             return true, Position(subContractId).get()
         }

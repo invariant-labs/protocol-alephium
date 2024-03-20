@@ -1,16 +1,20 @@
+struct PositionState {
+    poolKey: ByteVec,
+    mut liquidity: U256,
+    lowerTickIndex: I256,
+    upperTickIndex: I256,
+    mut feeGrowthInsideX: U256,
+    mut feeGrowthInsideY: U256,
+    lastBlockNumber: U256,
+    mut tokensOwedX: U256,
+    mut tokensOwedY: U256,
+    mut owner: Address
+}
+
 Contract Position(
     admin: Address,
-    posPoolKey: ByteVec,
-    mut posLiquidity: U256,
-    posLowerTickIndex: I256,
-    posUpperTickIndex: I256,
-    mut posFeeGrowthInsideX: U256,
-    mut posFeeGrowthInsideY: U256,
-    posLastBlockNumber: U256,
-    mut posTokensOwedX: U256,
-    mut posTokensOwedY: U256,
-    mut posOwner: Address,
-    mut posIsActive: Bool
+    mut position: PositionState,
+    mut isActive: Bool
 ) extends Decimal() {
     enum PositionError {
         NotAdmin = 900
@@ -19,71 +23,71 @@ Contract Position(
     }
 
     pub fn getPoolKey() -> ByteVec {
-        return posPoolKey
+        return position.poolKey
     }
 
     pub fn getLiquidity() -> U256 {
-        return posLiquidity
+        return position.liquidity
     }
 
     pub fn getLowerTickIndex() -> I256 {
-        return posLowerTickIndex
+        return position.lowerTickIndex
     }
 
     pub fn getUpperTickIndex() -> I256 {
-        return posUpperTickIndex
+        return position.upperTickIndex
     }
 
     pub fn getFeeGrowthInsideX() -> U256 {
-        return posFeeGrowthInsideX
+        return position.feeGrowthInsideX
     }
 
     pub fn getFeeGrowthInsideY() -> U256 {
-        return posFeeGrowthInsideY
+        return position.feeGrowthInsideY
     }
 
     pub fn getLastBlockNumber() -> U256 {
-        return posLastBlockNumber
+        return position.lastBlockNumber
     }
 
     pub fn getTokensOwedX() -> U256 {
-        return posTokensOwedX
+        return position.tokensOwedX
     }
 
     pub fn getTokensOwedY() -> U256 {
-        return posTokensOwedY
+        return position.tokensOwedY
     }
 
     pub fn getOwner() -> Address {
-        return posOwner
+        return position.owner
     }
 
-    pub fn get() -> (U256, I256, I256, U256, U256, U256, U256, U256, Address) {
-        return posLiquidity, posLowerTickIndex, posUpperTickIndex, posFeeGrowthInsideX, posFeeGrowthInsideY, posLastBlockNumber, posTokensOwedX, posTokensOwedY, posOwner
+    pub fn get() -> PositionState {
+        return position
     }
 
     @using(updateFields = true)
     pub fn setTokensOwedX(tokensOwedX: U256) -> () {
         checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        posTokensOwedX = tokensOwedX
+        position.tokensOwedX = tokensOwedX
     }
 
     @using(updateFields = true)
     pub fn setTokensOwedY(tokensOwedY: U256) -> () {
         checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        posTokensOwedY = tokensOwedY
+        position.tokensOwedY = tokensOwedY
     }
 
     @using(updateFields = true)
     pub fn setOwner(owner: Address) -> () {
         checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        posOwner = owner
+        position.owner = owner
     }
 
     @using(updateFields = true)
-    pub fn setIsActive(isActive: Bool) -> () {
+    pub fn setIsActive(active: Bool) -> () {
         checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        posIsActive = isActive
+        isActive = active
     }
 
     @using(updateFields = false)
@@ -128,17 +132,17 @@ Contract Position(
         let caller = callerAddress!()
         checkCaller!(caller == admin || caller == selfAddress!(), PositionError.NotAdmin)
 
-        assert!(liquidityDelta != 0 || posLiquidity != 0, PositionError.EmptyPositionPokes)
+        assert!(liquidityDelta != 0 || position.liquidity != 0, PositionError.EmptyPositionPokes)
 
-        let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, posFeeGrowthInsideX), posLiquidity)
-        let tokensOwedY = toFee(wrappingSub(feeGrowthInsideY, posFeeGrowthInsideY), posLiquidity)
+        let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
+        let tokensOwedY = toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
 
-        posLiquidity = calculateNewLiquidity(sign, liquidityDelta)
-        posFeeGrowthInsideX = feeGrowthInsideX
-        posFeeGrowthInsideY = feeGrowthInsideY
+        position.liquidity = calculateNewLiquidity(sign, liquidityDelta)
+        position.feeGrowthInsideX = feeGrowthInsideX
+        position.feeGrowthInsideY = feeGrowthInsideY
 
-        posTokensOwedX = tokensOwedX
-        posTokensOwedY = tokensOwedY
+        position.tokensOwedX = tokensOwedX
+        position.tokensOwedY = tokensOwedY
     }
 
     pub fn calculateNewLiquidity(
@@ -148,12 +152,12 @@ Contract Position(
         let caller = callerAddress!()
         checkCaller!(caller == admin || caller == selfAddress!(), PositionError.NotAdmin)
         
-        assert!(sign || posLiquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
+        assert!(sign || position.liquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
 
         if (sign) {
-            return posLiquidity + liquidityDelta
+            return position.liquidity + liquidityDelta
         } else {
-            return posLiquidity - liquidityDelta
+            return position.liquidity - liquidityDelta
         }
     }
 }
