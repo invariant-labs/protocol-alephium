@@ -35,7 +35,7 @@ Contract FeeTiers(
         }
     
         feeTierCount = feeTierCount + 1
-        let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), fee, tickSpacing, true)
+        let (encodedImmFields, encodedMutFields) = FeeTier.encodeFields!(selfAddress!(), FeeTierState { fee: fee, tickSpacing: tickSpacing }, true)
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(feeTierCount),
             feeTierTemplateContractId,

@@ -127,8 +127,7 @@ export async function deployFeeTier(signer: SignerProvider) {
     FeeTier.deploy(signer, {
       initialFields: {
         admin: ZERO_ADDRESS,
-        fee: 0n,
-        tickSpacing: 0n,
+        feeTier: { fee: 0n, tickSpacing: 0n },
         isActive: false
       }
     })
