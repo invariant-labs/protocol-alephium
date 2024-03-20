@@ -199,10 +199,7 @@ export async function deployPoolKey(signer: SignerProvider) {
   return await waitTxConfirmed(
     PoolKey.deploy(signer, {
       initialFields: {
-        tokenX: ZERO_ADDRESS,
-        tokenY: ZERO_ADDRESS,
-        fee: 0n,
-        tickSpacing: 0n
+        poolKey: { tokenX: ZERO_ADDRESS, tokenY: ZERO_ADDRESS, fee: 0n, tickSpacing: 0n }
       }
     })
   )

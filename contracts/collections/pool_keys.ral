@@ -25,7 +25,7 @@ Contract PoolKeys(
         assert!(!exists, PoolKeysError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
-        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(tokenX, tokenY, fee, tickSpacing)
+        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(PoolKeyState{ tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(poolKeyCount),
             poolKeyTemplateContractId,
