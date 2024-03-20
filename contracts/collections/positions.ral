@@ -147,7 +147,7 @@ Contract Positions(
     pub fn wrappedModify(
         originalCaller: Address,
         index: U256,
-        poolsContractId: ByteVec,
+        pools: Pools,
         ticksContractId: ByteVec,
         clammContractId: ByteVec,
         poolKey: ByteVec,
@@ -163,7 +163,6 @@ Contract Positions(
         let position = Position(subContractId!(toByteVec!(index)))
         assert!(originalCaller == position.getOwner(), PositionsError.NotOwner)
 
-        let pools = Pools(poolsContractId)
         pools.setLastTimestamp(poolKey, currentTimestamp)
 
         let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
