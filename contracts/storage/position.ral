@@ -88,7 +88,7 @@ Contract Position(
 
     @using(updateFields = false)
     pub fn modify(
-        clammContractId: ByteVec,
+        clamm: CLAMM,
         upperTick: I256,
         upperTickFeeGrowthOutsideX: U256,
         upperTickFeeGrowthOutsideY: U256,
@@ -103,7 +103,7 @@ Contract Position(
     ) -> () {
         checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
 
-        let (feeGrowthInsideX, feeGrowthInsideY) = CLAMM(clammContractId).calculateFeeGrowthInside(
+        let (feeGrowthInsideX, feeGrowthInsideY) = clamm.calculateFeeGrowthInside(
             lowerTick,
             lowerTickFeeGrowthOutsideX,
             lowerTickFeeGrowthOutsideY,

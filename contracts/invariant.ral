@@ -10,7 +10,7 @@ Contract Invariant(
     positions: Positions,
     tickmap: Tickmap,
     swap: SwapUtils,
-    clammContractId: ByteVec
+    clamm: CLAMM
 ) extends PoolKeyHelper(), Decimal() {
     enum InvariantError {
         NotAdmin = 0
@@ -92,7 +92,7 @@ Contract Invariant(
         let feeTierExist = feeTiers.contains(fee, tickSpacing)
         assert!(feeTierExist, InvariantError.FeeTierNotFound)
 
-        CLAMM(clammContractId).checkTick(initTick, tickSpacing)
+        clamm.checkTick(initTick, tickSpacing)
 
         assert!(token0 != token1, InvariantError.TokensAreSame)
 
@@ -102,7 +102,7 @@ Contract Invariant(
         let poolKeyExist = poolKeys.contains(tokenX, tokenY, fee, tickSpacing)
         assert!(!poolKeyExist, InvariantError.PoolKeyAlreadyExist)
 
-        assert!(CLAMM(clammContractId).checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
+        assert!(clamm.checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
@@ -170,7 +170,7 @@ Contract Invariant(
         feeGrowthGlobalY: U256,
         startTimestamp: U256
     ) -> () {
-        CLAMM(clammContractId).checkTick(index, tickSpacing)
+        clamm.checkTick(index, tickSpacing)
 
         let mut feeGrowthOutsideX = 0
         let mut feeGrowthOutsideY = 0
@@ -189,7 +189,7 @@ Contract Invariant(
             true,
             0,
             0,
-            CLAMM(clammContractId).calculateSqrtPrice(index),
+            clamm.calculateSqrtPrice(index),
             feeGrowthOutsideX,
             feeGrowthOutsideY, 
             0
@@ -264,7 +264,7 @@ Contract Invariant(
 
         assert!(poolSqrtPrice >= slippageLimitLower && poolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clamm,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
 
@@ -286,7 +286,7 @@ Contract Invariant(
 
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        let (mut x, mut y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clamm,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
         let tokensOwedX = positions.getTokensOwedX(index)
@@ -363,7 +363,7 @@ Contract Invariant(
         let lowerTick = positions.getLowerTickIndex(index)
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        let (_, _) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
+        let (_, _) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clamm,  poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!(), tickSpacing)
         
         let tokensOwedX = positions.getTokensOwedX(index)
         let tokensOwedY = positions.getTokensOwedY(index)

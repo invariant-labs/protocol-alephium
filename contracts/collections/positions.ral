@@ -149,7 +149,7 @@ Contract Positions(
         index: U256,
         pools: Pools,
         ticks: Ticks,
-        clammContractId: ByteVec,
+        clamm: CLAMM,
         poolKey: ByteVec,
         upperTick: I256,
         lowerTick: I256,
@@ -165,7 +165,7 @@ Contract Positions(
 
         pools.setLastTimestamp(poolKey, currentTimestamp)
 
-        let maxLiquidityPerTick = CLAMM(clammContractId).calculateMaxLiquidityPerTick(tickSpacing)
+        let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(tickSpacing)
 
         ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
         ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
@@ -176,7 +176,7 @@ Contract Positions(
         let (poolFeeGrowthGlobalX, poolFeeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
 
         position.modify(
-            clammContractId,
+            clamm,
             upperTick,
             upperTickFeeGrowthOutsideX,
             upperTickFeeGrowthOutsideY,
