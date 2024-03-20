@@ -335,23 +335,23 @@ Contract Invariant(
         amount: U256,
         byAmountIn: Bool,
         sqrtPriceLimit: U256
-    ) -> (U256, U256, U256, U256, U256) {
+    ) -> CalculateSwapResult {
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        let (amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount) = swap.wrappedSwap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let calculateSwapResult = swap.wrappedSwap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
 
         if (xToY) {
-            transferTokenToSelf!(caller, tokenX, amountIn)
-            transferTokenFromSelf!(caller, tokenY, amountOut)
+            transferTokenToSelf!(caller, tokenX, calculateSwapResult.amountIn)
+            transferTokenFromSelf!(caller, tokenY, calculateSwapResult.amountOut)
         } else {
-            transferTokenFromSelf!(caller, tokenX, amountOut)
-            transferTokenToSelf!(caller, tokenY, amountIn)
+            transferTokenFromSelf!(caller, tokenX, calculateSwapResult.amountOut)
+            transferTokenToSelf!(caller, tokenY, calculateSwapResult.amountIn)
         }
 
-        return amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount
+        return calculateSwapResult
     }
     
     @using(assetsInContract = true, checkExternalCaller = false)

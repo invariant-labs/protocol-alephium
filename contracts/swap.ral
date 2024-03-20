@@ -1,9 +1,17 @@
+struct CalculateSwapResult {
+    amountIn: U256,
+    amountOut: U256,
+    startSqrtPrice: U256,
+    targetSqrtprice: U256,
+    fee: U256
+}
+
 Contract SwapUtils(
     protocolFee: U256,
-    poolsContractId: ByteVec, 
-    ticksContractId: ByteVec, 
-    tickmapContractId: ByteVec,
-    clammContractId: ByteVec
+    pools: Pools, 
+    ticks: Ticks,
+    tickmap: Tickmap,
+    clamm: CLAMM
 ) extends Decimal(), PoolKeyHelper() {
     enum SwapError {
         ZeroAmount = 10001
@@ -25,12 +33,12 @@ Contract SwapUtils(
         sqrtPriceLimit: U256,
         fee: U256,
         tickSpacing: U256
-    ) -> (U256, U256, U256, U256, U256) {
+    ) -> CalculateSwapResult {
         let currentTimestamp = blockTimeStamp!()
 
         assert!(amount != 0, SwapError.ZeroAmount)
         
-        let mut sqrtPrice = Pools(poolsContractId).getSqrtPrice(poolKey)
+        let mut sqrtPrice = pools.getSqrtPrice(poolKey)
 
         if(xToY) {
             assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, SwapError.WrongLimit)             
@@ -45,11 +53,11 @@ Contract SwapUtils(
         let eventStartSqrtPrice = sqrtPrice
 
         while (remainingAmount != 0) {
-            let currentTickIndex = Pools(poolsContractId).getCurrentTickIndex(poolKey)
-            let liquidity = Pools(poolsContractId).getLiquidity(poolKey)
-            sqrtPrice = Pools(poolsContractId).getSqrtPrice(poolKey)
+            let currentTickIndex = pools.getCurrentTickIndex(poolKey)
+            let liquidity = pools.getLiquidity(poolKey)
+            sqrtPrice = pools.getSqrtPrice(poolKey)
 
-            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = Tickmap(tickmapContractId).getCloserLimit(
+            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = tickmap.getCloserLimit(
                 sqrtPriceLimit,
                 xToY,
                 currentTickIndex,
@@ -57,7 +65,7 @@ Contract SwapUtils(
                 poolKey
             )
 
-            let (nextSqrtPrice, amountIn, amountOut, feeAmount) = CLAMM(clammContractId).computeSwapStep(
+            let (nextSqrtPrice, amountIn, amountOut, feeAmount) = clamm.computeSwapStep(
                 sqrtPrice,
                 swapLimit,
                 liquidity,
@@ -72,8 +80,8 @@ Contract SwapUtils(
                 remainingAmount = remainingAmount - amountOut
             }
 
-            Pools(poolsContractId).wrappedAddFee(poolKey, feeAmount, xToY, protocolFee)
-            Pools(poolsContractId).setSqrtPrice(poolKey, nextSqrtPrice)
+            pools.wrappedAddFee(poolKey, feeAmount, xToY, protocolFee)
+            pools.setSqrtPrice(poolKey, nextSqrtPrice)
 
             totalAmountIn = totalAmountIn + amountIn + feeAmount
             totalAmountOut = totalAmountOut + amountOut
@@ -83,7 +91,7 @@ Contract SwapUtils(
 
             if (hasLimitingTick) {
                 if (isInitialized) {
-                    let (amountToAdd, updatedRemainingAmount, hasCrossed) = Pools(poolsContractId).wrappedCrossTick(
+                    let (amountToAdd, updatedRemainingAmount, hasCrossed) = pools.wrappedCrossTick(
                         poolKey,
                         nextSqrtPrice,
                         swapLimit,
@@ -98,20 +106,26 @@ Contract SwapUtils(
                     remainingAmount = updatedRemainingAmount
                     totalAmountIn = totalAmountIn + amountToAdd
                     if (hasCrossed) {
-                        let (feeGrowthGlobalX, feeGrowthGlobalY) = Pools(poolsContractId).getFeeGrowthGlobal(poolKey)
-                        let (add, liquidityDelta) = Ticks(ticksContractId).wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
-                        Pools(poolsContractId).wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
+                        let (feeGrowthGlobalX, feeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+                        let (add, liquidityDelta) = ticks.wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
+                        pools.wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
                     }
                 }
             } else {
-                let newTickIndex = CLAMM(clammContractId).getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
-                Pools(poolsContractId).setCurrentTickIndex(poolKey, newTickIndex)
-                Pools(poolsContractId).setLastTimestamp(poolKey, currentTimestamp)
+                let newTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+                pools.setCurrentTickIndex(poolKey, newTickIndex)
+                pools.setLastTimestamp(poolKey, currentTimestamp)
             }
         }
         assert!(totalAmountOut != 0, SwapError.NoGainSwap)
 
-        return totalAmountIn, totalAmountOut, eventStartSqrtPrice, Pools(poolsContractId).getSqrtPrice(poolKey), eventFeeAmount
+        return CalculateSwapResult {
+            amountIn: totalAmountIn,
+            amountOut: totalAmountOut,
+            startSqrtPrice: eventStartSqrtPrice,
+            targetSqrtprice: pools.getSqrtPrice(poolKey),
+            fee: eventFeeAmount
+        }
     }
 
     @using(checkExternalCaller = false)
@@ -126,8 +140,8 @@ Contract SwapUtils(
         sqrtPriceLimit: U256
     ) -> (U256, U256, U256) {
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let (amountIn, amountOut, _, targetSqrtPrice, _) = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
-        return amountIn, amountOut, targetSqrtPrice
+        let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
+        return calculateSwapResult.amountIn, calculateSwapResult.amountOut, calculateSwapResult.targetSqrtprice
     }
 
     @using(checkExternalCaller = false)
@@ -140,9 +154,8 @@ Contract SwapUtils(
         amount: U256,
         byAmountIn: Bool,
         sqrtPriceLimit: U256
-    ) -> (U256, U256, U256, U256, U256) {
+    ) -> CalculateSwapResult {
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
-        let (amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount) = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
-        return amountIn, amountOut, startingSqrtPrice, targetSqrtPrice, feeAmount
+        return calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
     }
 }

@@ -104,19 +104,19 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
 export async function deploySwap(
   signer: SignerProvider,
-  clammContractId: string,
-  poolsContractId: string,
-  ticksContractId: string,
-  tickmapContractId: string,
+  clamm: string,
+  pools: string,
+  ticks: string,
+  tickmap: string,
   protocolFee: bigint
 ) {
   return await waitTxConfirmed(
     SwapUtils.deploy(signer, {
       initialFields: {
-        clammContractId,
-        poolsContractId,
-        ticksContractId,
-        tickmapContractId,
+        clamm,
+        pools,
+        ticks,
+        tickmap,
         protocolFee
       }
     })
