@@ -7,7 +7,7 @@ Contract Invariant(
     poolKeys: PoolKeys, 
     pools: Pools, 
     ticks: Ticks, 
-    positionsContractId: ByteVec,
+    positions: Positions,
     tickmapContractId: ByteVec,
     swapContractId: ByteVec,
     clammContractId: ByteVec
@@ -36,13 +36,13 @@ Contract Invariant(
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
-        let positionsId = Positions(positionsContractId).getAddress()
+        let positionsId = positions.getAddress()
         let swapId = SwapUtils(swapContractId).getSelfId()
 
         feeTiers.setAdmins(invtId)
         poolKeys.setAdmins(invtId)
         pools.setAdmins(invtId, positionsId, swapId)
-        Positions(positionsContractId).setAdmins(invtId)
+        positions.setAdmins(invtId)
         Tickmap(tickmapContractId).setAdmins(invtId, swapId)
         ticks.setAdmins(invtId, positionsId, swapId)
         
@@ -150,7 +150,7 @@ Contract Invariant(
     }
 
     pub fn getPosition(index: U256) -> (Bool, U256, I256, I256, U256, U256, U256, U256, U256, Address) {
-        return Positions(positionsContractId).get(index)
+        return positions.get(index)
     }
 
     pub fn isTickInitialized(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> Bool {
@@ -230,7 +230,7 @@ Contract Invariant(
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        Positions(positionsContractId).add{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
+        positions.add{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
@@ -264,7 +264,7 @@ Contract Invariant(
 
         assert!(poolSqrtPrice >= slippageLimitLower && poolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
 
@@ -275,7 +275,6 @@ Contract Invariant(
     @using(assetsInContract = true, checkExternalCaller = false)
     pub fn removePosition(index: U256) -> () {
         let caller = callerAddress!()
-        let positions = Positions(positionsContractId)
 
         let owner = positions.getOwner(index)
         assert!(caller == owner, InvariantError.NotOwner)
@@ -287,7 +286,7 @@ Contract Invariant(
 
         let tickSpacing = pools.getTickSpacing(poolKey)
 
-        let (mut x, mut y) = Positions(positionsContractId).wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = positions.wrappedModify(callerAddress!(), index, pools, ticks, clammContractId,  poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
         let tokensOwedX = positions.getTokensOwedX(index)
@@ -305,12 +304,11 @@ Contract Invariant(
     @using(checkExternalCaller = false)
     pub fn transferPosition(index: U256, newOwner: Address) -> () {
         let caller = callerAddress!()
-        let positions = Positions(positionsContractId)
 
         let owner = positions.getOwner(index)
         assert!(caller == owner, InvariantError.NotOwner)
 
-        Positions(positionsContractId).transfer(index, newOwner)
+        positions.transfer(index, newOwner)
     }
 
     @using(checkExternalCaller = false)
@@ -359,7 +357,6 @@ Contract Invariant(
     @using(assetsInContract = true, checkExternalCaller = false)
     pub fn claimFee(index: U256) -> () {
         let caller = callerAddress!()
-        let positions = Positions(positionsContractId)
 
         let poolKey = positions.getPoolKey(index)
         let upperTick = positions.getUpperTickIndex(index)

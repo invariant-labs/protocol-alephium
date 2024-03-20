@@ -82,7 +82,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolKeys: poolKeys.contractInstance.contractId,
         pools: pools.contractInstance.contractId,
         ticks: ticks.contractInstance.contractId,
-        positionsContractId: positions.contractInstance.contractId,
+        positions: positions.contractInstance.contractId,
         tickmapContractId: tickmap.contractInstance.contractId,
         clammContractId: clamm.contractInstance.contractId,
         swapContractId: swap.contractInstance.contractId
