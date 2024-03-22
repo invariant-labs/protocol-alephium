@@ -1,17 +1,24 @@
-Contract PoolKey(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) {
+struct PoolKeyState {
+    tokenX: ByteVec,
+    tokenY: ByteVec,
+    fee: U256,
+    tickSpacing: U256
+}
+
+Contract PoolKey(poolKey: PoolKeyState) {
     pub fn getTokenX() -> ByteVec {
-        return tokenX
+        return poolKey.tokenX
     }
 
     pub fn getTokenY() -> ByteVec {
-        return tokenY
+        return poolKey.tokenY
     }
 
     pub fn getFee() -> U256 {
-        return fee
+        return poolKey.fee
     }
 
     pub fn getTickSpacing() -> U256 {
-        return tickSpacing
+        return poolKey.tickSpacing
     }
 }

@@ -222,7 +222,7 @@ Contract Tickmap(
 
         if(!exists) {
             let (encodedImmFields, encodedMutFields) = TickmapChunk.encodeFields!(0, selfAddress!())
-            copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+            let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
                 id,
                 chunkTemplateContractId,
                 encodedImmFields,

@@ -1,14 +1,19 @@
-Contract FeeTier(admin: Address, fee: U256, tickSpacing: U256, mut isActive: Bool) {
+struct FeeTierState {
+    fee: U256,
+    tickSpacing: U256
+}
+
+Contract FeeTier(admin: Address, feeTier: FeeTierState, mut isActive: Bool) {
     enum FeeTierError {
         NotAdmin = 800
     }
     
     pub fn getFee() -> U256 {
-      return fee
+      return feeTier.fee
     }
 
     pub fn getTickSpacing() -> U256 {
-      return tickSpacing
+      return feeTier.tickSpacing
     }
 
     pub fn isActive() -> Bool {
