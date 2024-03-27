@@ -12,6 +12,33 @@ describe('math tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
   })
+  test('big add', async () => {
+    const clamm = await deployCLAMM(sender)
+    {
+      const a = 10000n
+      const b = 1000n
+      const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 11000n })
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 999n
+      const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: b, lower: a })
+    }
+    {
+      const a = 777n
+      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: a, lower: b })
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: a, lower: b })
+    }
+  })
   test('fee growth from fee', async () => {
     const clamm = await deployCLAMM(sender)
     {
