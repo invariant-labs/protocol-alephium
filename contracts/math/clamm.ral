@@ -11,9 +11,14 @@ Contract CLAMM() extends Log(){
         amount: U256,
         byAmountIn: Bool,
         fee: U256
-    ) -> (U256, U256, U256, U256) {
+    ) -> SwapResult {
         if (liquidity == 0) {
-            return targetSqrtPrice, 0, 0, 0
+            return SwapResult { 
+                nextSqrtPrice: targetSqrtPrice,
+                amountIn: 0,
+                amountOut: 0,
+                feeAmount: 0
+            }
         }
 
         let xToY = currentSqrtPrice >= targetSqrtPrice
@@ -80,7 +85,12 @@ Contract CLAMM() extends Log(){
             feeAmount = mulUp(amountIn, fee, PercentageScale)
         }
 
-        return nextSqrtPrice, amountIn, amountOut, feeAmount
+        return SwapResult { 
+            nextSqrtPrice: nextSqrtPrice,
+            amountIn: amountIn,
+            amountOut: amountOut,
+            feeAmount: feeAmount
+        }
     }
 
     pub fn getDeltaX(
