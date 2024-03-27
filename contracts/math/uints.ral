@@ -1,21 +1,18 @@
 struct U512T{
-    mut higher: U256,
-    mut lower: U256
+    mut v: [U256; 2]
 }
 
 Abstract Contract U512() {
     pub fn bigAdd(a: U256, b: U256) -> U512T {
-        let u256Max = u256Max!()
-        if (u256Max - a < b) {
-            return U512T {
-                higher: b - (u256Max - a),
-                lower: u256Max
-            }
+        let mut result = [0, 0]
+
+        if (u256Max!() - a > b) {
+            return U512T { v: [0, a + b] }
         } else {
-            return U512T {
-                higher: 0,
-                lower: a + b
-            }
+            result[0] = 1
+            result[1] = u256Max!() - a + b - 1
         }
+
+        return U512T { v: result }
     }
 }
