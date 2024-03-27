@@ -1,3 +1,10 @@
+struct SwapResult {
+    nextSqrtPrice: U256,
+    amountIn: U256,
+    amountOut: U256,
+    feeAmount: U256
+}
+
 struct CalculateSwapResult {
     amountIn: U256,
     amountOut: U256,
@@ -71,7 +78,7 @@ Contract SwapUtils(
                 poolKey
             )
 
-            let (nextSqrtPrice, amountIn, amountOut, feeAmount) = clamm.computeSwapStep(
+            let swapResult = clamm.computeSwapStep(
                 sqrtPrice,
                 swapLimit,
                 liquidity,
@@ -81,25 +88,25 @@ Contract SwapUtils(
             )
 
             if (byAmountIn) {
-                remainingAmount = remainingAmount - (amountIn + feeAmount)
+                remainingAmount = remainingAmount - (swapResult.amountIn + swapResult.feeAmount)
             } else {
-                remainingAmount = remainingAmount - amountOut
+                remainingAmount = remainingAmount - swapResult.amountOut
             }
 
-            pools.wrappedAddFee(poolKey, feeAmount, xToY, protocolFee)
-            pools.setSqrtPrice(poolKey, nextSqrtPrice)
+            pools.wrappedAddFee(poolKey, swapResult.feeAmount, xToY, protocolFee)
+            pools.setSqrtPrice(poolKey, swapResult.nextSqrtPrice)
 
-            totalAmountIn = totalAmountIn + amountIn + feeAmount
-            totalAmountOut = totalAmountOut + amountOut
-            eventFeeAmount = eventFeeAmount + feeAmount
+            totalAmountIn = totalAmountIn + swapResult.amountIn + swapResult.feeAmount
+            totalAmountOut = totalAmountOut + swapResult.amountOut
+            eventFeeAmount = eventFeeAmount + swapResult.feeAmount
 
-            assert!(nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, SwapError.PriceLimitReached)
+            assert!(swapResult.nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, SwapError.PriceLimitReached)
 
             if (hasLimitingTick) {
                 if (isInitialized) {
                     let (amountToAdd, updatedRemainingAmount, hasCrossed) = pools.wrappedCrossTick(
                         poolKey,
-                        nextSqrtPrice,
+                        swapResult.nextSqrtPrice,
                         swapLimit,
                         limitingTickIndex,
                         remainingAmount,
@@ -118,7 +125,7 @@ Contract SwapUtils(
                     }
                 }
             } else {
-                let newTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+                let newTickIndex = clamm.getTickAtSqrtPrice(swapResult.nextSqrtPrice, tickSpacing)
                 pools.setCurrentTickIndex(poolKey, newTickIndex)
                 pools.setLastTimestamp(poolKey, currentTimestamp)
             }

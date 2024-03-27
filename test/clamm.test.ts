@@ -334,7 +334,7 @@ describe('math tests', () => {
       const byAmountIn = true
       const fee = 60000n
       const params = { args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn, fee } }
-      const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
+      const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
         await clamm.contractInstance.methods.computeSwapStep(params)
       ).returns
       expect(nextSqrtPrice).toEqual(currentSqrtPrice)
@@ -352,7 +352,7 @@ describe('math tests', () => {
         const paramsIn = {
           args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
         }
-        const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
+        const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
           await clamm.contractInstance.methods.computeSwapStep(paramsIn)
         ).returns
         expect(nextSqrtPrice).toEqual(targetSqrtPrice)
@@ -364,7 +364,7 @@ describe('math tests', () => {
         const paramsOut = {
           args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
         }
-        const [nextSqrtPrice, amountIn, amountOut, feeAmount] = (
+        const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
           await clamm.contractInstance.methods.computeSwapStep(paramsOut)
         ).returns
         expect(nextSqrtPrice).toEqual(targetSqrtPrice)
