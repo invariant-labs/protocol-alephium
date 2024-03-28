@@ -47,8 +47,9 @@ describe('math tests', () => {
         lower: 37n
       }
       const divisor = 5n
+      const divisorScale = 0n
       {
-        const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor } })).returns
+        const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
         // expected: 4.86326774796728020778998137036489212983733935595690368965721 × 10^77
         // received: 4 86326774796728020778998137036489212983733935595690368965721852833235144487738
         expect(result).toStrictEqual({
@@ -70,8 +71,9 @@ describe('math tests', () => {
         lower: 37n
       }
       const divisor = 1n
+      const divisorScale = 0n
       {
-        const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor } })).returns
+        const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
         expect(result).toStrictEqual(a)
       }
       {

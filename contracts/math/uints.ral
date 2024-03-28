@@ -19,7 +19,7 @@ Abstract Contract U512() {
             }
         }
 
-        pub fn bigDiv(a: U512T, divisor: U256) -> U512T {
+        pub fn bigDiv(a: U512T, divisor: U256, divisorScale: U256) -> U512T {
             assert!(divisor > 0, 0x02)
             if (divisor == 1) {
                 return a
@@ -33,14 +33,15 @@ Abstract Contract U512() {
             }
 
             let max = u256Max!()
+            let scale = 10 ** divisorScale
             // Calculate new higher
-            let h = a.higher / divisor
-            let hr = a.higher % divisor
+            let h = a.higher * scale / divisor
+            let hr = a.higher * scale % divisor
             // calculate higher remainder
             let maxdiv = max / divisor
             let deltahr = hr * maxdiv
             // Calculate lower
-            let l = a.lower / divisor
+            let l = a.lower * scale / divisor
             let deltaL = deltahr + l
 
             return U512T {
