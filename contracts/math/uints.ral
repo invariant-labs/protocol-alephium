@@ -1,18 +1,34 @@
-struct U512T{
+struct U512 {
     mut higher: U256,
     mut lower: U256
 }
 
-Abstract Contract U512() {
-    pub fn bigAdd(a: U256, b: U256) -> U512T {
+Abstract Contract U512Impl () {
+    enum ArithmeticErrors {
+        CastOverflow = 100001
+    }
+    
+    pub fn toU512(v: U256) -> U512 {
+        return U512 {
+            higher: 0,
+            lower: v
+        }
+    }
+
+    pub fn toU256(v: U512) -> U256 {
+        assert!(v.higher == 0, ArithmeticErrors.CastOverflow)
+        return v.lower  
+    }
+
+    pub fn bigAdd(a: U256, b: U256) -> U512 {
         let u256Max = u256Max!()
         if (u256Max - a < b) {
-            return U512T {
-                higher: b - (u256Max - a),
-                lower: u256Max
+            return U512 {
+                higher: 1,
+                lower: (b - (u256Max - a)) - 1
             }
         } else {
-            return U512T {
+            return U512 {
                 higher: 0,
                 lower: a + b
             }

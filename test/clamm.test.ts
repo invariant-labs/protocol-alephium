@@ -12,6 +12,14 @@ describe('math tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
   })
+  test('test casting between u512 and u256', async () => {
+    const clamm = await deployCLAMM(sender)
+    const v = 100n
+    const result = (await clamm.contractInstance.methods.toU512({ args: { v } })).returns
+    expect(result).toStrictEqual({ higher: 0n, lower: 100n })
+    const castBack = (await clamm.contractInstance.methods.toU256({ args: { v: result } })).returns
+    expect(castBack).toStrictEqual(v)
+  })
   test('big add', async () => {
     const clamm = await deployCLAMM(sender)
     {
@@ -24,19 +32,19 @@ describe('math tests', () => {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 999n
       const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: b, lower: a })
+      expect(result).toStrictEqual({ higher: 1n, lower: b - 1n })
     }
     {
       const a = 777n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: a, lower: b })
+      expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
     {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const result = (await clamm.contractInstance.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: a, lower: b })
+      expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
   })
   test('fee growth from fee', async () => {
