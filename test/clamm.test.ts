@@ -13,19 +13,82 @@ describe('math tests', () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
   })
 
-  test('big mul', async () => {
+  test('big add 512', async () => {
     const clamm = await deployCLAMM(sender)
     {
-      const a = { higher: 123n, lower: 0n }
-      const b = 2n
-      const result = (await clamm.contractInstance.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 246n, lower: 0n })
+      const a = { higher: 0n, lower: 10n }
+      const b = { higher: 0n, lower: 20n }
+      const result = (await clamm.contractInstance.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 30n })
     }
     {
-      const a = { higher: 0n, lower: 340282366920938463463374607431768211458n }
-      const b = 340282366920938463463374607431768211458n
-      const result = (await clamm.contractInstance.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: 3n })
+      const a = { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
+      const b = { higher: 0n, lower: 20n }
+      const result = (await clamm.contractInstance.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 19n })
+    }
+  })
+
+  test('big mul 256', async () => {
+    const clamm = await deployCLAMM(sender)
+    {
+      const a = 123n
+      const b = 2n
+      const result = (await clamm.contractInstance.methods.bigMul256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 246n })
+      // expected: 246
+      // real: 246
+    }
+    {
+      const a = 340282366920938463463374607431768211457n
+      const b = 340282366920938463463374607431768211457n
+      const result = (await clamm.contractInstance.methods.bigMul256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
+      // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+      //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const result = (await clamm.contractInstance.methods.bigMul256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
+        lower: 680564733841876926926749214863536422909n
+      })
+      // expected: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370779510884422601683867654778417822746804225
+      //     real: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370780191449156443560794581527632686283227133
+    }
+  })
+
+  test('overflowing add 256', async () => {
+    const clamm = await deployCLAMM(sender)
+    {
+      const a = 10n
+      const b = 20n
+      const result = (await clamm.contractInstance.methods.overflowingAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual([30n, 0n])
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 20n
+      const result = (await clamm.contractInstance.methods.overflowingAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual([19n, 1n])
+    }
+  })
+
+  test('wrapping add 256', async () => {
+    const clamm = await deployCLAMM(sender)
+    {
+      const a = 10n
+      const b = 20n
+      const result = (await clamm.contractInstance.methods.wrappingAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual(30n)
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 20n
+      const result = (await clamm.contractInstance.methods.wrappingAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual(19n)
     }
   })
 

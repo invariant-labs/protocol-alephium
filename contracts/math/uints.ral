@@ -1,24 +1,53 @@
-struct U512T{
+struct U512T {
     mut higher: U256,
     mut lower: U256
 }
 
 Abstract Contract U512() {
-    pub fn bigMul(a: U512T, b: U256) -> U512T {
-        let mut h = 0
-        let mut l = 0
+    pub fn bigAdd512(a: U512T, b: U512T) -> U512T {
+        let (r0, overflow) = overflowingAdd256(a.lower, b.lower)
+        let r1 = wrappingAdd256(wrappingAdd256(a.higher, b.higher), overflow)
+        return U512T { higher: r1, lower: r0 }
+    }
 
-        if (u256Max!() / b < a.lower) {
-            h = (a.higher * b) + 1
-            l = u256Max!() % b
+    pub fn bigMul256(a: U256, b: U256) -> U512T {
+        let a0 = low256(a)
+        let a1 = high256(a)
+        let b0 = low256(b)
+        let b1 = high256(b)
+
+        let r0 = a0 * b0
+        let r1 = a1 * b1
+        let r2 = a1 * b0
+        let r3 = a0 * b1
+
+        let mut u512 = bigAdd512(U512T { higher: r1, lower: r0 }, U512T { higher: high256(r2), lower: low256(r2) << 128 })
+        u512 = bigAdd512(u512, U512T { higher: high256(r3), lower: low256(r3) << 128 })
+
+        return u512
+    }
+    
+    pub fn overflowingAdd256(a: U256, b: U256) -> (U256, U256) {
+        if (u256Max!() - a >= b) {
+            return a + b, 0
         } else {
-            h = a.higher * b
-            l = a.lower * b
+            return b + (u256Max!() - a) - 1, 1
         }
-        
-        return U512T {
-            higher: h,
-            lower: l
+    }
+
+    pub fn wrappingAdd256(a: U256, b: U256) -> U256 {
+        if (u256Max!() - a >= b) {
+            return a + b
+        } else {
+            return b + (u256Max!() - a) - 1
         }
+    }
+
+    pub fn low256(a: U256) -> U256 {
+        return a << 128 >> 128
+    }
+    
+    pub fn high256(a: U256) -> U256 {
+        return a >> 128
     }
 }
