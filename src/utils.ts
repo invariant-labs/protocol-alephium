@@ -14,7 +14,8 @@ import {
   SwapUtils,
   Tickmap,
   TickmapChunk,
-  Ticks
+  Ticks,
+  Uints
 } from '../artifacts/ts'
 import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
@@ -323,6 +324,10 @@ export async function deployCLAMM(signer: SignerProvider) {
       initialFields: {}
     })
   )
+}
+
+export async function deployUints(signer: SignerProvider) {
+  return await waitTxConfirmed(Uints.deploy(signer, { initialFields: {} }))
 }
 
 export async function deployTokenFaucet(
