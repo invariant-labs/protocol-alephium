@@ -25,12 +25,6 @@ Abstract Contract U512() {
                 return a
             }
 
-            if (a.higher == 0) {
-                return U512T {
-                    higher: 0,
-                    lower: a.lower / divisor
-                }
-            }
 
             let max = u256Max!()
             let scale = 10 ** divisorScale
