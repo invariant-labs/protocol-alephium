@@ -41,44 +41,76 @@ describe('math tests', () => {
   })
   test('big div', async () => {
     const clamm = await deployCLAMM(sender)
+
     {
       const a = {
         higher: 21n,
         lower: 37n
       }
-      const divisor = 5n
-      const divisorScale = 0n
+      const divisor = 50n
+      const divisorScale = 1n
       {
         const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
-        // expected: 4.86326774796728020778998137036489212983733935595690368965721 × 10^77
-        // received: 4 86326774796728020778998137036489212983733935595690368965721852833235144487738
+        // expected: 486326774796728020778998137036489212983733935595690368965721000000000000000000
+        // received: 486326774796728020778998137036489212983733935595690368965721852833235144487731
         expect(result).toStrictEqual({
           higher: 4n,
-          lower: 23158417847463239084714197001737581570653996933128112807891516801582625927994n
+          lower: 23158417847463239084714197001737581570653996933128112807891516801582625927987n
         })
       }
       {
-        const result = (await clamm.contractInstance.methods.bigDivUp({ args: { a, divisor } })).returns
+        const result = (await clamm.contractInstance.methods.bigDivUp({ args: { a, divisor, divisorScale } })).returns
         expect(result).toStrictEqual({
           higher: 4n,
-          lower: 23158417847463239084714197001737581570653996933128112807891516801582625927995n
+          lower: 23158417847463239084714197001737581570653996933128112807891516801582625927988n
         })
       }
-    }
-    {
-      const a = {
-        higher: 21n,
-        lower: 37n
-      }
-      const divisor = 1n
-      const divisorScale = 0n
+
       {
-        const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
-        expect(result).toStrictEqual(a)
+        const a = {
+          higher: 50216813883093446110686315385661331328818843555712276103168n,
+          lower: 0n
+        }
+        const divisor = 2n
+        const divisorScale = 0n
+        {
+          const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
+          // expected: 2907354897182427562197295231552018137414565442749272241125960796722557152453591693304764202855054262243050086425064711734138406514458624n
+          // received: 2907354897182427562197295231552018137414565442749272241125960796722557152453591693304764202855054262243050086425064711734138406514458624n
+          expect(result).toStrictEqual({
+            higher: 25108406941546723055343157692830665664409421777856138051584n,
+            lower: 0n
+          })
+        }
+        {
+          const result = (await clamm.contractInstance.methods.bigDivUp({ args: { a, divisor, divisorScale } })).returns
+          expect(result).toStrictEqual({
+            higher: 25108406941546723055343157692830665664409421777856138051584n,
+            lower: 0n
+          })
+        }
       }
       {
-        const result = (await clamm.contractInstance.methods.bigDivUp({ args: { a, divisor } })).returns
-        expect(result).toStrictEqual(a)
+        const a = {
+          higher: 0n,
+          lower: 1n
+        }
+        const divisor = 2n
+        const divisorScale = 0n
+        {
+          const result = (await clamm.contractInstance.methods.bigDiv({ args: { a, divisor, divisorScale } })).returns
+          expect(result).toStrictEqual({
+            higher: 0n,
+            lower: 0n
+          })
+        }
+        {
+          const result = (await clamm.contractInstance.methods.bigDivUp({ args: { a, divisor, divisorScale } })).returns
+          expect(result).toStrictEqual({
+            higher: 0n,
+            lower: 1n
+          })
+        }
       }
     }
   })
