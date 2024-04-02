@@ -8,7 +8,7 @@ Abstract Contract U512Impl () {
 
     enum ArithmeticErrors {
         CastOverflow = 100001
-        NotPositiveDivisor = 100002
+        DivByZero = 100002
     }
     
     pub fn toU512(v: U256) -> U512 {
@@ -24,10 +24,11 @@ Abstract Contract U512Impl () {
     }
 
     pub fn bigAdd(a: U256, b: U256) -> U512 {
-        if (MaxU256 - a < b) {
+        let sub = MaxU256 - a
+        if (sub < b) {
             return U512 {
                 higher: 1,
-                lower: (b - (MaxU256 - a)) - 1
+                lower: (b - sub) - 1
             }
         } else {
             return U512 {
@@ -37,58 +38,58 @@ Abstract Contract U512Impl () {
         }
     }
 
-        pub fn bigDiv(a: U512, divisor: U256, denominator: U256) -> U512 {
-            assert!(divisor > 0, ArithmeticErrors.NotPositiveDivisor)
+    pub fn bigDiv(a: U512, divisor: U256, denominator: U256) -> U512 {
+        assert!(divisor != 0, ArithmeticErrors.DivByZero)
 
-            if (divisor == 1) {
-                return a
-            }
+        if (divisor == 1) {
+            return a
+        }
 
-            // Calculate new higher
-            let newh = a.higher * denominator 
-            let h = newh / divisor
-            let hr = newh % divisor
-            // calculate higher remainder
-            let maxdiv = MaxU256 / divisor
-            let deltahr = hr * maxdiv
-            // Calculate lower
-            let l = a.lower * denominator / divisor
-            let deltal = deltahr + l
+        // Calculate new higher
+        let newh = a.higher * denominator 
+        let h = newh / divisor
+        let hr = newh % divisor
+        // calculate higher remainder
+        let deltahr = hr * (MaxU256 / divisor)
+        // Calculate lower
+        let l = a.lower * denominator / divisor
 
+        return U512 {
+            higher: h,
+            lower: deltahr + l
+        }
+    }
+
+    pub fn bigDivUp(a: U512, divisor: U256, denominator: U256) -> U512 {
+        assert!(divisor != 0, ArithmeticErrors.DivByZero)
+
+        if (divisor == 1) {
+            return a
+        }
+
+        // Calculate new higher
+        let newh = a.higher * denominator
+        let h = newh / divisor
+        let hr = newh % divisor
+        // calculate higher remainder
+        let deltahr = hr * (MaxU256 / divisor)
+        let hdecimal = deltahr % divisor
+        // Calculate lower
+        let newl = a.lower * denominator
+        let l = newl / divisor
+        let lr = newl % divisor
+
+        if (hdecimal + lr != 0) {               
             return U512 {
                 higher: h,
-                lower: deltal
+                lower: deltahr + l + 1
             }
         }
 
-        pub fn bigDivUp(a: U512, divisor: U256, denominator: U256) -> U512 {
-            assert!(divisor > 0, 0x02)
-            if (divisor == 1) {
-                return a
-            }
-
-            // Calculate new higher
-            let newh = a.higher * denominator
-            let h = newh / divisor
-            let hr = newh % divisor
-            // calculate higher remainder
-            let maxdiv = MaxU256 / divisor
-            let deltahr = hr * maxdiv
-            let hdecimal = deltahr % divisor
-            // Calculate lower
-            let newl = a.lower * denominator
-            let l = newl / divisor
-            let lr = newl % divisor
-            let mut deltaL = deltahr + l
-
-            if (hdecimal + lr != 0) {
-                deltaL = deltaL + 1
-            }
-
-            return U512 {
-                higher: h,
-                lower: deltaL
-            }
+        return U512 {
+            higher: h,
+            lower: deltahr + l
         }
+    }
 }                           
 
