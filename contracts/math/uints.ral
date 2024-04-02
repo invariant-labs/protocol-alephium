@@ -103,13 +103,13 @@ Contract Uints () {
         let bLower = low128(b)
         let bHigher = high128(b)
 
-        let rLowerLower = aLower * bLower
-        let rHigherHigher = aHigher * bHigher
-        let rHigherLower = aHigher * bLower
-        let rLowerHigher = aLower * bHigher
+        let aLowerBLower = aLower * bLower
+        let aHigherBHigher = aHigher * bHigher
+        let aHigherBLower = aHigher * bLower
+        let aLowerBHigher = aLower * bHigher
 
-        let mut result = bigAdd512(U512 { higher: rHigherHigher, lower: rLowerLower }, U512 { higher: high128(rHigherLower), lower: low128(rHigherLower) << 128 })
-        result = bigAdd512(result, U512 { higher: high128(rLowerHigher), lower: low128(rLowerHigher) << 128 })
+        let mut result = bigAdd512(U512 { higher: aHigherBHigher, lower: aLowerBLower }, U512 { higher: high128(aHigherBLower), lower: low128(aHigherBLower) << 128 })
+        result = bigAdd512(result, U512 { higher: high128(aLowerBHigher), lower: low128(aLowerBHigher) << 128 })
 
         result = bigDiv(result, denominator, 1)
 
@@ -117,40 +117,38 @@ Contract Uints () {
     }
 
     pub fn bigMulUp(a: U256, b: U256, denominator: U256) -> U512 {
-        let a0 = low128(a)
-        let a1 = high128(a)
-        let b0 = low128(b)
-        let b1 = high128(b)
+        let aLower = low128(a)
+        let aHigher = high128(a)
+        let bLower = low128(b)
+        let bHigher = high128(b)
 
-        let r0 = a0 * b0
-        let r1 = a1 * b1
-        let r2 = a1 * b0
-        let r3 = a0 * b1
+        let aLowerBLower = aLower * bLower
+        let aHigherBHigher = aHigher * bHigher
+        let aHigherBLower = aHigher * bLower
+        let aLowerBHigher = aLower * bHigher
 
-        let mut result = bigAdd512(U512 { higher: r1, lower: r0 }, U512 { higher: high128(r2), lower: low128(r2) << 128 })
-        result = bigAdd512(result, U512 { higher: high128(r3), lower: low128(r3) << 128 })
+        let mut result = bigAdd512(U512 { higher: aHigherBHigher, lower: aLowerBLower }, U512 { higher: high128(aHigherBLower), lower: low128(aHigherBLower) << 128 })
+        result = bigAdd512(result, U512 { higher: high128(aLowerBHigher), lower: low128(aLowerBHigher) << 128 })
 
-        result = bigAdd512(result, U512 { higher: 0, lower: 10 ** denominator - 1 })
+        result = bigAdd512(result, U512 { higher: 0, lower: denominator - 1 })
         result = bigDiv(result, denominator, 1)
 
         return result
     }
     
     pub fn overflowingAdd(a: U256, b: U256) -> (U256, U256) {
-        if (u256Max!() - a >= b) {
+        if (MaxU256 - a >= b) {
             return a + b, 0
         } else {
-            return b + (u256Max!() - a) - 1, 1
+            return b + (MaxU256 - a) - 1, 1
         }
     }
 
     pub fn wrappingAdd(a: U256, b: U256) -> U256 {
-        let u256Max = u256Max!()
-
-        if (u256Max - a >= b) {
+        if (MaxU256 - a >= b) {
             return a + b
         } else {
-            return b + (u256Max - a) - 1
+            return b + (MaxU256 - a) - 1
         }
     }
 

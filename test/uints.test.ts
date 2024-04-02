@@ -231,6 +231,73 @@ describe('uints tests', () => {
       const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, denominator: 1000n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 2000n })
     }
+    {
+      const a = 10n
+      const b = 37n
+      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, denominator: 100n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
+    }
+  })
+
+  test('big mul up', async () => {
+    const uints = await deployUints(sender)
+    {
+      const a = 123n
+      const b = 2n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 1n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 246n })
+      // expected: 246
+      // real: 246
+    }
+    {
+      const a = 340282366920938463463374607431768211457n
+      const b = 340282366920938463463374607431768211457n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 1n } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
+      // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+      //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+    }
+    {
+      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 1n } })).returns
+      expect(result).toStrictEqual({
+        higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
+        lower: 680564733841876926926749214863536422909n
+      })
+      // expected: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370779510884422601683867654778417822746804225
+      //     real: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370780191449156443560794581527632686283227133
+    }
+    {
+      const a = 500n
+      const b = 0n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 1n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+    {
+      const a = 100n
+      const b = 100n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 100n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 100n })
+    }
+    {
+      const a = 30n
+      const b = 1n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 10n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
+    }
+    {
+      const a = 500n
+      const b = 4000n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 1000n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 2000n })
+    }
+    {
+      const a = 10n
+      const b = 37n
+      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, denominator: 100n } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 4n })
+    }
   })
 
   test('overflowing add', async () => {
