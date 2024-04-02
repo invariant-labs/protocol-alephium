@@ -127,13 +127,13 @@ Contract Uints () {
         let r2 = a1 * b0
         let r3 = a0 * b1
 
-        let mut u512 = bigAdd512(U512 { higher: r1, lower: r0 }, U512 { higher: high128(r2), lower: low128(r2) << 128 })
-        u512 = bigAdd512(u512, U512 { higher: high128(r3), lower: low128(r3) << 128 })
+        let mut result = bigAdd512(U512 { higher: r1, lower: r0 }, U512 { higher: high128(r2), lower: low128(r2) << 128 })
+        result = bigAdd512(result, U512 { higher: high128(r3), lower: low128(r3) << 128 })
 
-        u512 = bigAdd512(u512, U512 { higher: 0, lower: 10 ** denominator - 1 })
+        result = bigAdd512(result, U512 { higher: 0, lower: 10 ** denominator - 1 })
         result = bigDiv(result, denominator, 1)
 
-        return u512
+        return result
     }
     
     pub fn overflowingAdd(a: U256, b: U256) -> (U256, U256) {
