@@ -101,8 +101,7 @@ Abstract Contract U512Impl () {
         let deltahr = hr * (MaxU256 / divisor)
         let hdecimal = deltahr % divisor
 
-
-        if (hdecimal + lr != 0) {               
+        if (hdecimal != 0 || lr != 0) {               
             return U512 {
                 higher: h,
                 lower: deltahr + l + 1
