@@ -45,6 +45,13 @@ Abstract Contract U512Impl () {
             return a
         }
 
+        if (a.higher == 0) {
+            return U512 {
+                higher: 0,
+                lower: a.lower * denominator / divisor
+            }
+        }
+
         // Calculate new higher
         let newh = a.higher * denominator 
         let h = newh / divisor
@@ -67,6 +74,25 @@ Abstract Contract U512Impl () {
             return a
         }
 
+        // Calculate lower
+        let newl = a.lower * denominator
+        let l = newl / divisor
+        let lr = newl % divisor
+
+        if (a.higher == 0) {
+            if (lr != 0) {
+                return U512 {
+                    higher: 0,
+                    lower: l + 1
+                }
+            } else {
+                return U512 {
+                    higher: 0,
+                    lower: l
+                }
+            }
+        }
+
         // Calculate new higher
         let newh = a.higher * denominator
         let h = newh / divisor
@@ -74,10 +100,7 @@ Abstract Contract U512Impl () {
         // calculate higher remainder
         let deltahr = hr * (MaxU256 / divisor)
         let hdecimal = deltahr % divisor
-        // Calculate lower
-        let newl = a.lower * denominator
-        let l = newl / divisor
-        let lr = newl % divisor
+
 
         if (hdecimal + lr != 0) {               
             return U512 {
