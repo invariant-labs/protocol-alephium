@@ -3,7 +3,7 @@ struct U512 {
     mut lower: U256
 }
 
-Abstract Contract U512Impl () {
+Contract Uints () {
     const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
 
     enum ArithmeticErrors {
@@ -38,80 +38,129 @@ Abstract Contract U512Impl () {
         }
     }
 
-    pub fn bigDiv(a: U512, divisor: U256, denominator: U256) -> U512 {
-        assert!(divisor != 0, ArithmeticErrors.DivByZero)
+    pub fn div(a: U512, b: U256, bDenominator: U256, up: Bool) -> U512 {
+        assert!(b != 0, ArithmeticErrors.DivByZero)
 
-        if (divisor == 1) {
+        if (b == 1) {
             return a
         }
 
+        // Calculate lower
+        let newLower = a.lower * bDenominator
+        let lower = newLower / b
+
         if (a.higher == 0) {
+            if(up) {
+                if (newLower % b != 0) {
+                    return U512 {
+                        higher: 0,
+                        lower: lower + 1
+                    }
+                }
+            } 
             return U512 {
                 higher: 0,
-                lower: a.lower * denominator / divisor
+                lower: lower
             }
         }
 
         // Calculate new higher
-        let newh = a.higher * denominator 
-        let h = newh / divisor
-        let hr = newh % divisor
+        let newHigher = a.higher * bDenominator
+        let higher = newHigher / b
+        let higherRemainder = newHigher % b
         // calculate higher remainder
-        let deltahr = hr * (MaxU256 / divisor)
-        // Calculate lower
-        let l = a.lower * denominator / divisor
+        let deltaHigherRemainder = higherRemainder * (MaxU256 / b)
+
+        if (up) {
+            let lowerRemainder = newLower % b
+            let higherDecimal = deltaHigherRemainder % b
+            if (higherDecimal != 0 || lowerRemainder != 0) {
+                return U512 {
+                    higher: higher,
+                    lower: deltaHigherRemainder + lower + 1
+                }
+            }
+        }
 
         return U512 {
-            higher: h,
-            lower: deltahr + l
+            higher: higher,
+            lower: deltaHigherRemainder + lower
         }
     }
 
-    pub fn bigDivUp(a: U512, divisor: U256, denominator: U256) -> U512 {
-        assert!(divisor != 0, ArithmeticErrors.DivByZero)
+    pub fn bigDiv(a: U512, b: U256, bDenominator: U256) -> U512 {
+        return div(a, b, bDenominator, false)
+    }
 
-        if (divisor == 1) {
-            return a
+    pub fn bigDivUp(a: U512, b: U256, bDenominator: U256) -> U512 {
+        return div(a, b, bDenominator, true)
+    }
+
+    pub fn bigAdd512(a: U512, b: U512) -> U512 {
+        let (aLowerBLower, overflow) = overflowingAdd(a.lower, b.lower)
+        let aHigherBHigherOverflow = wrappingAdd(wrappingAdd(a.higher, b.higher), overflow)
+        return U512 { lower: aLowerBLower, higher: aHigherBHigherOverflow }
+    }
+
+    pub fn mul(a: U256, b: U256) -> U512 {
+        let aLower = low128(a)
+        let aHigher = high128(a)
+        let bLower = low128(b)
+        let bHigher = high128(b)
+
+        let aLowerBLower = aLower * bLower
+        let aHigherBHigher = aHigher * bHigher
+        let aHigherBLower = aHigher * bLower
+        let aLowerBHigher = aLower * bHigher
+
+        let mut result = U512 { lower: aLowerBLower, higher: aHigherBHigher }
+        result = bigAdd512(result, U512 { lower: low128(aHigherBLower) << 128, higher: high128(aHigherBLower) })
+        result = bigAdd512(result, U512 { lower: low128(aLowerBHigher) << 128, higher: high128(aLowerBHigher) })
+
+        return result
+    }
+
+    pub fn bigMul(a: U256, b: U256, bDenominator: U256) -> U512 {
+        let mut result = mul(a, b)
+
+        result = bigDiv(result, bDenominator, 1)
+
+        return result
+    }
+
+    pub fn bigMulUp(a: U256, b: U256, bDenominator: U256) -> U512 {
+        let mut result = mul(a, b)
+
+        result = bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 })
+        result = bigDiv(result, bDenominator, 1)
+
+        return result
+    }
+    
+    pub fn overflowingAdd(a: U256, b: U256) -> (U256, U256) {
+        let sub = MaxU256 - a
+        if (sub >= b) {
+            return a + b, 0
+        } else {
+            return b + sub - 1, 1
         }
+    }
 
-        // Calculate lower
-        let newl = a.lower * denominator
-        let l = newl / divisor
-        let lr = newl % divisor
-
-        if (a.higher == 0) {
-            if (lr != 0) {
-                return U512 {
-                    higher: 0,
-                    lower: l + 1
-                }
-            } else {
-                return U512 {
-                    higher: 0,
-                    lower: l
-                }
-            }
+    pub fn wrappingAdd(a: U256, b: U256) -> U256 {
+        let sub = MaxU256 - a
+        if (sub >= b) {
+            return a + b
+        } else {
+            return b + sub - 1
         }
+    }
 
-        // Calculate new higher
-        let newh = a.higher * denominator
-        let h = newh / divisor
-        let hr = newh % divisor
-        // calculate higher remainder
-        let deltahr = hr * (MaxU256 / divisor)
-        let hdecimal = deltahr % divisor
-
-        if (hdecimal != 0 || lr != 0) {               
-            return U512 {
-                higher: h,
-                lower: deltahr + l + 1
-            }
-        }
-
-        return U512 {
-            higher: h,
-            lower: deltahr + l
-        }
+    pub fn low128(a: U256) -> U256 {
+        return a & ((1 << 128) - 1)
+    }
+    
+    pub fn high128(a: U256) -> U256 {
+        return a >> 128
     }
 }                           
 

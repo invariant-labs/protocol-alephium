@@ -1,4 +1,4 @@
-Abstract Contract Decimal() extends U512Impl() {
+Abstract Contract Decimal() {
     const SqrtPriceScale = 24
     const LiquidityScale = 5
     const FeeGrowthScale = 28
