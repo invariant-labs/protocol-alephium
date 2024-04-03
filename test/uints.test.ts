@@ -21,29 +21,29 @@ describe('uints tests', () => {
     expect(castBack).toStrictEqual(v)
   })
 
-  test('big add', async () => {
+  test('big add 256', async () => {
     const uints = await deployUints(sender)
     {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 999n
-      const result = (await uints.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: b - 1n })
     }
     {
       const a = 777n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
     {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.contractInstance.methods.bigAdd({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
   })
 
-  test('big div', async () => {
+  test('big div 512 / big div up 512', async () => {
     const uints = await deployUints(sender)
     {
       const a = {
@@ -53,7 +53,7 @@ describe('uints tests', () => {
       const b = 50n
       const bDenominator = 10n
       {
-        const result = (await uints.contractInstance.methods.bigDiv({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator } })).returns
         // expected: 486326774796728020778998137036489212983733935595690368965721000000000000000000
         // received: 486326774796728020778998137036489212983733935595690368965721852833235144487731
         expect(result).toStrictEqual({
@@ -62,7 +62,7 @@ describe('uints tests', () => {
         })
       }
       {
-        const result = (await uints.contractInstance.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDivUp512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 4n,
           lower: 23158417847463239084714197001737581570653996933128112807891516801582625927988n
@@ -77,7 +77,7 @@ describe('uints tests', () => {
       const b = 2n
       const bDenominator = 1n
       {
-        const result = (await uints.contractInstance.methods.bigDiv({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator } })).returns
         // expected: 2907354897182427562197295231552018137414565442749272241125960796722557152453591693304764202855054262243050086425064711734138406514458624n
         // received: 2907354897182427562197295231552018137414565442749272241125960796722557152453591693304764202855054262243050086425064711734138406514458624n
         expect(result).toStrictEqual({
@@ -86,7 +86,7 @@ describe('uints tests', () => {
         })
       }
       {
-        const result = (await uints.contractInstance.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDivUp512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 25108406941546723055343157692830665664409421777856138051584n,
           lower: 0n
@@ -101,14 +101,14 @@ describe('uints tests', () => {
       const b = 2n
       const bDenominator = 1n
       {
-        const result = (await uints.contractInstance.methods.bigDiv({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 0n
         })
       }
       {
-        const result = (await uints.contractInstance.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDivUp512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 1n
@@ -123,14 +123,14 @@ describe('uints tests', () => {
       const b = 1n
       const bDenominator = 1000n
       {
-        const result = (await uints.contractInstance.methods.bigDiv({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 10n
         })
       }
       {
-        const result = (await uints.contractInstance.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDivUp512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 10n
@@ -146,14 +146,14 @@ describe('uints tests', () => {
       const b = 3n * 10n ** 3n
       const bDenominator = 1000n
       {
-        const result = (await uints.contractInstance.methods.bigDiv({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 20n
         })
       }
       {
-        const result = (await uints.contractInstance.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
+        const result = (await uints.contractInstance.methods.bigDivUp512({ args: { a, b, bDenominator } })).returns
         expect(result).toStrictEqual({
           higher: 0n,
           lower: 20n
@@ -183,7 +183,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 123n }
       const b = 2n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 246n })
       // expected: 246
       // real: 246
@@ -191,7 +191,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 340282366920938463463374607431768211457n }
       const b = 340282366920938463463374607431768211457n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
       // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
       //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
@@ -199,7 +199,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
         higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
         lower: 1n
@@ -210,13 +210,13 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 500n }
       const b = 0n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = { higher: 1n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
       const b = 100n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
         higher: 199n,
         lower: 115792089237316195423570985008687907853269984665640564039457584007913129639836n
@@ -225,7 +225,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 340282366920938463463374607431768211455n, lower: 340282366920938463463374607431768211455n }
       const b = 340282366920938463463374607431768211455n
-      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      const result = (await uints.contractInstance.methods.bigMul512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
         higher: 115792089237316195423570985008687907852589419931798687112530834793049593217025n,
         lower: 115792089237316195423570985008687907852589419931798687112530834793049593217025n
@@ -233,12 +233,12 @@ describe('uints tests', () => {
     }
   })
 
-  test('big mul', async () => {
+  test('big mul div 256', async () => {
     const uints = await deployUints(sender)
     {
       const a = 123n
       const b = 2n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 246n })
       // expected: 246
       // real: 246
@@ -246,7 +246,7 @@ describe('uints tests', () => {
     {
       const a = 340282366920938463463374607431768211457n
       const b = 340282366920938463463374607431768211457n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
       // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
       //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
@@ -254,7 +254,7 @@ describe('uints tests', () => {
     {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({
         higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
         lower: 1n
@@ -265,41 +265,42 @@ describe('uints tests', () => {
     {
       const a = 500n
       const b = 0n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 100n
       const b = 100n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 100n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 100n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 100n })
     }
     {
       const a = 30n
       const b = 1n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 10n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 10n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
       const a = 500n
       const b = 4000n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 1000n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 1000n } }))
+        .returns
       expect(result).toStrictEqual({ higher: 0n, lower: 2000n })
     }
     {
       const a = 10n
       const b = 37n
-      const result = (await uints.contractInstance.methods.bigMul({ args: { a, b, bDenominator: 100n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDiv256({ args: { a, b, bDenominator: 100n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
   })
 
-  test('big mul up', async () => {
+  test('big mul div up 256', async () => {
     const uints = await deployUints(sender)
     {
       const a = 123n
       const b = 2n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 246n })
       // expected: 246
       // real: 246
@@ -307,7 +308,7 @@ describe('uints tests', () => {
     {
       const a = 340282366920938463463374607431768211457n
       const b = 340282366920938463463374607431768211457n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
       // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
       //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
@@ -315,7 +316,7 @@ describe('uints tests', () => {
     {
       const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({
         higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
         lower: 1n
@@ -326,31 +327,35 @@ describe('uints tests', () => {
     {
       const a = 500n
       const b = 0n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 1n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 1n } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 100n
       const b = 100n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 100n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 100n } }))
+        .returns
       expect(result).toStrictEqual({ higher: 0n, lower: 100n })
     }
     {
       const a = 30n
       const b = 1n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 10n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 10n } }))
+        .returns
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
       const a = 500n
       const b = 4000n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 1000n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 1000n } }))
+        .returns
       expect(result).toStrictEqual({ higher: 0n, lower: 2000n })
     }
     {
       const a = 10n
       const b = 37n
-      const result = (await uints.contractInstance.methods.bigMulUp({ args: { a, b, bDenominator: 100n } })).returns
+      const result = (await uints.contractInstance.methods.bigMulDivUp256({ args: { a, b, bDenominator: 100n } }))
+        .returns
       expect(result).toStrictEqual({ higher: 0n, lower: 4n })
     }
   })
