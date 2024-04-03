@@ -166,13 +166,13 @@ describe('uints tests', () => {
     const uints = await deployUints(sender)
     {
       const a = { higher: 0n, lower: 10n }
-      const b = { higher: 0n, lower: 20n }
+      const b = 20n
       const result = (await uints.contractInstance.methods.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 30n })
     }
     {
       const a = { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
-      const b = { higher: 0n, lower: 20n }
+      const b = 20n
       const result = (await uints.contractInstance.methods.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 19n })
     }

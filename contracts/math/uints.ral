@@ -79,10 +79,10 @@ Contract Uints () {
             return div(a, b, bDenominator, true)
         }
 
-    pub fn bigAdd512(a: U512, b: U512) -> U512 {
-        let (aLowerBLower, overflow) = overflowingAdd(a.lower, b.lower)
-        let aHigherBHigherOverflow = wrappingAdd(wrappingAdd(a.higher, b.higher), overflow)
-        return U512 { lower: aLowerBLower, higher: aHigherBHigherOverflow }
+    pub fn bigAdd512(a: U512, b: U256) -> U512 {
+        let (aLowerB, overflow) = overflowingAdd(a.lower, b)
+        let aHigherOverflow = wrappingAdd(a.higher, overflow)
+        return U512 { lower: aLowerB, higher: aHigherOverflow }
     }
 
     pub fn mul(a: U256, b: U256) -> U512 {
@@ -117,7 +117,7 @@ Contract Uints () {
     pub fn bigMulUp(a: U256, b: U256, bDenominator: U256) -> U512 {
         let mut result = mul(a, b)
 
-        result = bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 })
+        result = bigAdd512(result, bDenominator - 1)
         result = bigDiv(result, bDenominator, 1)
 
         return result
