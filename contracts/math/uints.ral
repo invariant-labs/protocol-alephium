@@ -96,11 +96,14 @@ Contract Uints () {
         let aHigherBLower = aHigher * bLower
         let aLowerBHigher = aLower * bHigher
 
-        let mut result = U512 { lower: aLowerBLower, higher: aHigherBHigher }
-        result = bigAdd512(result, U512 { lower: low128(aHigherBLower) << 128, higher: high128(aHigherBLower) })
-        result = bigAdd512(result, U512 { lower: low128(aLowerBHigher) << 128, higher: high128(aLowerBHigher) })
+        let lowerLower = low128(aLowerBLower)
+        let lowerHigher = high128(aLowerBLower) + low128(aLowerBHigher) + low128(aHigherBLower)
+        let higherLower = low128(aHigherBHigher) + high128(aLowerBHigher) + high128(aHigherBLower)
+        let higherHigher = high128(aHigherBHigher)
+        let lower = lowerLower + (lowerHigher << 128)
+        let higher = high128(lowerHigher) + higherLower + (higherHigher << 128)
 
-        return result
+        return U512 { higher: higher, lower: lower }
     }
 
     pub fn bigMul(a: U256, b: U256, bDenominator: U256) -> U512 {
