@@ -178,6 +178,61 @@ describe('uints tests', () => {
     }
   })
 
+  test('big mul 512', async () => {
+    const uints = await deployUints(sender)
+    {
+      const a = { higher: 0n, lower: 123n }
+      const b = 2n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 246n })
+      // expected: 246
+      // real: 246
+    }
+    {
+      const a = { higher: 0n, lower: 340282366920938463463374607431768211457n }
+      const b = 340282366920938463463374607431768211457n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 680564733841876926926749214863536422913n })
+      // expected: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+      //     real: 115792089237316195423570985008687907853950549399482440966384333222776666062849
+    }
+    {
+      const a = { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
+      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 115792089237316195423570985008687907853269984665640564039457584007913129639934n,
+        lower: 1n
+      })
+      // expected: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370779510884422601683867654778417822746804225
+      //     real: 13407807929942597099574024998205846127479365820592393377723561443721764030073315392623399665776056285720014482370779510884422601683867654778417822746804225
+    }
+    {
+      const a = { higher: 0n, lower: 500n }
+      const b = 0n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+    {
+      const a = { higher: 1n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
+      const b = 100n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 199n,
+        lower: 115792089237316195423570985008687907853269984665640564039457584007913129639836n
+      })
+    }
+    {
+      const a = { higher: 340282366920938463463374607431768211455n, lower: 340282366920938463463374607431768211455n }
+      const b = 340282366920938463463374607431768211455n
+      const result = (await uints.contractInstance.methods.mul512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 115792089237316195423570985008687907852589419931798687112530834793049593217025n,
+        lower: 115792089237316195423570985008687907852589419931798687112530834793049593217025n
+      })
+    }
+  })
+
   test('big mul', async () => {
     const uints = await deployUints(sender)
     {
