@@ -108,20 +108,20 @@ Contract CLAMM(
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = uints.bigMul(deltaSqrtPrice, liquidity, one(LiquidityScale))
+        let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
         if (roundingUp) {
             let denominator = mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-            let mut deltaXUp = uints.mul512(nominator, one(SqrtPriceScale))
+            let mut deltaXUp = uints.bigMul512(nominator, one(SqrtPriceScale))
             deltaXUp = uints.bigAdd512(deltaXUp, uints.toU512(denominator - 1)) 
-            deltaXUp = uints.bigDiv(deltaXUp, denominator, 1)
+            deltaXUp = uints.bigDiv512(deltaXUp, denominator, 1)
             deltaXUp = uints.bigAdd512(deltaXUp, uints.toU512(almostOne(SqrtPriceScale))) 
-            deltaXUp = uints.bigDiv(deltaXUp, one(SqrtPriceScale), 1)
+            deltaXUp = uints.bigDiv512(deltaXUp, one(SqrtPriceScale), 1)
             return uints.toU256(deltaXUp)
         } else {
             let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-            let mut deltaX = uints.mul512(nominator, one(SqrtPriceScale))
-            deltaX = uints.bigDiv(deltaX, denominatorUp, 1)
-            deltaX = uints.bigDiv(deltaX, one(SqrtPriceScale), 1)
+            let mut deltaX = uints.bigMul512(nominator, one(SqrtPriceScale))
+            deltaX = uints.bigDiv512(deltaX, denominatorUp, 1)
+            deltaX = uints.bigDiv512(deltaX, one(SqrtPriceScale), 1)
             return uints.toU256(deltaX)
         }
     }
