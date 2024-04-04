@@ -473,4 +473,244 @@ describe('math tests', () => {
       }
     }
   })
+
+  describe('calculate fee growth inside', () => {
+    let clamm: CLAMMInstance
+    const globalFeeGrowthX = 15_0000000000000000000000000000n
+    const globalFeeGrowthY = 15_0000000000000000000000000000n
+
+    const tickLowerIndex = -2n
+    const tickLowerFeeGrowthOutsideX = 0n
+    const tickLowerFeeGrowthOutsideY = 0n
+
+    const tickUpperIndex = 2n
+    const tickUpperFeeGrowthOutsideX = 0n
+    const tickUpperFeeGrowthOutsideY = 0n
+
+    beforeEach(async () => {
+      clamm = (await deployCLAMM(sender)).contractInstance
+    })
+
+    test('sqrt price between ticks', async () => {
+      // <──────────────                    ──────────────>
+      // fee_outside_t0| fee_growth_inside |fee_outside_t1
+      //<───────────── t0 ────── C ────── t1 ───────────────────>
+      // fee_growth_inside = fee_growth_global - t0.fee_outside - t1.fee_outside
+
+      const tickCurrent = 0n
+
+      // current tick inside range
+      // lower    current     upper
+      // |        |           |
+      // -2       0           2
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(15_0000000000000000000000000000n)
+      expect(result.returns[1]).toBe(15_0000000000000000000000000000n)
+    })
+
+    test('sqrt price below ticks', async () => {
+      //                      ───────fee_outside_t0──────────>
+      //                     |fee_growth_inside| fee_outside_t1
+      // ─────── c ─────── t0 ──────────────> t1 ───────────>
+      // fee_growth_inside = t0.fee_outside - t1.fee_outside
+
+      const tickCurrent = -4n
+
+      // current tick below range
+      // current  lower       upper
+      // |        |           |
+      // -4       2           2
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(0n)
+      expect(result.returns[1]).toBe(0n)
+    })
+
+    test('sqrt price above ticks', async () => {
+      // <──────────fee_outside_t0──────────
+      // fee_outside_t1  | fee_growth_inside|
+      // ────────────── t1 ──────────────── t0 ─────── c ───────────>
+      // fee_growth_inside = t0.fee_outside - t1.fee_outside
+
+      const tickCurrent = 3n
+
+      // current tick upper range
+      // lower    upper       current
+      // |        |           |
+      // -2       2           4
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(0n)
+      expect(result.returns[1]).toBe(0n)
+    })
+
+    test('sqrt price above ticks, liquidity outside upper tick', async () => {
+      const tickCurrent = 3n
+
+      const tickUpperFeeGrowthOutsideX = 1n
+      const tickUpperFeeGrowthOutsideY = 2n
+
+      const globalFeeGrowthX = 5_0000000000000000000000000000n
+      const globalFeeGrowthY = 5_0000000000000000000000000000n
+
+      // current tick upper range
+      // lower    upper       current
+      // |        |           |
+      // -2       2           3
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(1n)
+      expect(result.returns[1]).toBe(2n)
+    })
+
+    test('sqrt price in between ticks, liquidity outside upper tick', async () => {
+      const tickCurrent = 0n
+
+      const tickUpperFeeGrowthOutsideX = 2_0000000000000000000000000000n
+      const tickUpperFeeGrowthOutsideY = 3_0000000000000000000000000000n
+
+      // current tick inside range
+      // lower    current     upper
+      // |        |           |
+      // -2       0           2
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(13_0000000000000000000000000000n)
+      expect(result.returns[1]).toBe(12_0000000000000000000000000000n)
+    })
+
+    test('sqrt price in between ticks, liquidity outside lower tick', async () => {
+      const tickCurrent = 0n
+
+      const tickLowerFeeGrowthOutsideX = 2_0000000000000000000000000000n
+      const tickLowerFeeGrowthOutsideY = 3_0000000000000000000000000000n
+
+      // current tick inside range
+      // lower    current     upper
+      // |        |           |
+      // -2       0           2
+
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(13_0000000000000000000000000000n)
+      expect(result.returns[1]).toBe(12_0000000000000000000000000000n)
+    })
+  })
+
+  describe('calculate fee growth inside - domain', () => {
+    let clamm: CLAMMInstance
+
+    const tickCurrent = 0n
+    const globalFeeGrowthX = 20_0000000000000000000000000000n
+    const globalFeeGrowthY = 20_0000000000000000000000000000n
+
+    const tickLowerIndex = -20n
+    const tickLowerFeeGrowthOutsideX = 20_0000000000000000000000000000n
+    const tickLowerFeeGrowthOutsideY = 20_0000000000000000000000000000n
+
+    const tickUpperIndex = -10n
+    const tickUpperFeeGrowthOutsideX = 15_0000000000000000000000000000n
+    const tickUpperFeeGrowthOutsideY = 15_0000000000000000000000000000n
+
+    beforeEach(async () => {
+      clamm = (await deployCLAMM(sender)).contractInstance
+    })
+
+    test('max fee growth', async () => {
+      const result = await clamm.methods.calculateFeeGrowthInside({
+        args: {
+          tickLowerIndex,
+          tickLowerFeeGrowthOutsideX,
+          tickLowerFeeGrowthOutsideY,
+          tickUpperIndex,
+          tickUpperFeeGrowthOutsideX,
+          tickUpperFeeGrowthOutsideY,
+          tickCurrent,
+          globalFeeGrowthX,
+          globalFeeGrowthY
+        }
+      })
+
+      expect(result.returns[0]).toBe(2n ** 256n - 1n - 5_0000000000000000000000000000n + 1n)
+      expect(result.returns[1]).toBe(2n ** 256n - 1n - 5_0000000000000000000000000000n + 1n)
+    })
+  })
 })
