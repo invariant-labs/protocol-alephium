@@ -319,13 +319,9 @@ export async function deployPositionsCounter(signer: SignerProvider) {
 }
 
 export async function deployCLAMM(signer: SignerProvider) {
-  const uints = await deployUints(signer)
-
   return await waitTxConfirmed(
     CLAMM.deploy(signer, {
-      initialFields: {
-        uints: uints.contractInstance.contractId
-      }
+      initialFields: {}
     })
   )
 }

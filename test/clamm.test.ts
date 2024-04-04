@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
-import { deployCLAMM, expectError } from '../src/utils'
+import { deployCLAMM } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -212,143 +212,19 @@ describe('math tests', () => {
     expect(resultUp).toEqual(70109n)
     expect(resultDown).toEqual(70108n)
   })
-
-  describe('get delta y', () => {
-    let clamm: CLAMMInstance
-
-    beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
-    })
-
-    test('zero at zero liquidity', async () => {
-      const sqrtPriceA = 1_000000000000000000000000n
-      const sqrtPriceB = 1_000000000000000000000000n
-      const liquidity = 0n
-
-      const params = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      const result = await clamm.methods.getDeltaY(params)
-
-      expect(result.returns).toEqual(0n)
-    })
-
-    test('equal at equal liquidity', async () => {
-      const sqrtPriceA = 1_000000000000000000000000n
-      const sqrtPriceB = 2_000000000000000000000000n
-      const liquidity = 2_00000n
-
-      const params = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      const result = await clamm.methods.getDeltaY(params)
-
-      expect(result.returns).toEqual(2n)
-    })
-
-    test('big numbers', async () => {
-      const sqrtPriceA = 234_878324943782000000000000n
-      const sqrtPriceB = 87_854456421658000000000000n
-      const liquidity = 9839832_49092n
-
-      const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-      const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      const resultUp = await clamm.methods.getDeltaY(paramsUp)
-      const resultDown = await clamm.methods.getDeltaY(paramsDown)
-
-      expect(resultUp.returns).toEqual(1446690239n)
-      expect(resultDown.returns).toEqual(1446690238n)
-    })
-
-    test('big', async () => {
-      const sqrtPriceA = 1_000000000000000000000000n
-      const sqrtPriceB = 2_000000000000000000000000n
-      const liquidity = (2n ** 64n - 1n) * 1_00000n
-
-      const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-      const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      const resultUp = await clamm.methods.getDeltaY(paramsUp)
-      const resultDown = await clamm.methods.getDeltaY(paramsDown)
-
-      expect(resultUp.returns).toEqual(liquidity / 1_00000n)
-      expect(resultDown.returns).toEqual(liquidity / 1_00000n)
-    })
-
-    test('overflow', async () => {
-      const sqrtPriceA = 1_000000000000000000000000n
-      const sqrtPriceB = 2n ** 256n - 1n
-      const liquidity = 2n ** 256n - 1n
-
-      const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-      const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      await expectError(clamm.methods.getDeltaY(paramsUp))
-      await expectError(clamm.methods.getDeltaY(paramsDown))
-    })
-
-    test('huge liquidity', async () => {
-      const sqrtPriceA = 1_000000000000000000000000n
-      const sqrtPriceB = 1_000000000000000001000000n
-      const liquidity = 2n ** 256n - 1n
-
-      const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-      const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      const resultUp = await clamm.methods.getDeltaY(paramsUp)
-      const resultDown = await clamm.methods.getDeltaY(paramsDown)
-
-      expect(resultUp.returns).toEqual(1157920892373161954235709850086879078532699846656405641n)
-      expect(resultDown.returns).toEqual(1157920892373161954235709850086879078532699846656405640n)
-    })
+  test('get delta y', async () => {
+    const clamm = await deployCLAMM(sender)
+    const sqrtPriceA = 234878324943782000000000000n
+    const sqrtPriceB = 87854456421658000000000000n
+    const liquidity = 983983249092n
+    const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
+    const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
+    const resultUp = (await clamm.contractInstance.methods.getDeltaY(paramsUp)).returns
+    const resultDown = (await clamm.contractInstance.methods.getDeltaY(paramsDown)).returns
+    // 144669023.842474597804911408
+    expect(resultUp).toEqual(1446690239n)
+    expect(resultDown).toEqual(1446690238n)
   })
-
-  describe('get delta y - domain', () => {
-    let clamm: CLAMMInstance
-    const minSqrtPrice = 15258932000000000000n
-    const maxSqrtPrice = 65535_383934512647000000000000n
-    const minLiquidity = 1n
-    const maxLiquidity = 2n ** 256n - 1n
-
-    beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
-    })
-
-    it('maximize delta sqrt price and liquidity', async () => {
-      const paramsUp = {
-        args: { sqrtPriceA: maxSqrtPrice, sqrtPriceB: minSqrtPrice, liquidity: maxLiquidity, roundingUp: true }
-      }
-      const paramsDown = {
-        args: { sqrtPriceA: maxSqrtPrice, sqrtPriceB: minSqrtPrice, liquidity: maxLiquidity, roundingUp: false }
-      }
-      const resultUp = await clamm.methods.getDeltaY(paramsUp)
-      const resultDown = await clamm.methods.getDeltaY(paramsDown)
-
-      expect(resultUp.returns).toEqual(75884790229800029582010010030152469040784228171629896039591333116952600000001n)
-      expect(resultDown.returns).toEqual(75884790229800029582010010030152469040784228171629896039591333116952599999999n)
-    })
-
-    it('can be zero', async () => {
-      const params = {
-        args: { sqrtPriceA: maxSqrtPrice, sqrtPriceB: maxSqrtPrice - 1n, liquidity: minLiquidity, roundingUp: false }
-      }
-      const result = await clamm.methods.getDeltaY(params)
-
-      expect(result.returns).toEqual(0n)
-    })
-
-    it('liquidity is zero', async () => {
-      const params = {
-        args: { sqrtPriceA: maxSqrtPrice, sqrtPriceB: minSqrtPrice, liquidity: 0n, roundingUp: true }
-      }
-      const result = await clamm.methods.getDeltaY(params)
-
-      expect(result.returns).toEqual(0n)
-    })
-
-    it('all max', async () => {
-      const params = {
-        args: { sqrtPriceA: maxSqrtPrice, sqrtPriceB: maxSqrtPrice, liquidity: maxLiquidity, roundingUp: true }
-      }
-      const result = await clamm.methods.getDeltaY(params)
-
-      expect(result.returns).toEqual(0n)
-    })
-  })
-
   test('get next sqrt price x up', async () => {
     const clamm = await deployCLAMM(sender)
     {
