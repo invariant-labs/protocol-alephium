@@ -22,7 +22,18 @@ Contract Pools(
     }
 
     @using(preapprovedAssets = true)
-    pub fn add(originalCaller: Address, poolKey: ByteVec, tokenX: ByteVec, tokenY: ByteVec, tickSpacing: U256, initSqrtPrice: U256, initTick: I256, currentTimestamp: U256, feeReceiver: Address) -> () {
+    pub fn add(
+        originalCaller: Address,
+        poolKey: ByteVec,
+        tokenX: ByteVec,
+        tokenY: ByteVec,
+        tickSpacing: U256,
+        initSqrtPrice: U256,
+        initTick: I256,
+        currentTimestamp: U256,
+        feeReceiver: Address,
+        uints: Uints
+    ) -> () {
         let caller = callerAddress!()
         checkCaller!((caller == invariantId || caller == positionsId || caller == swapUtilsId) && areAdminsSet, PoolsError.NotAdmin)
 
@@ -45,7 +56,9 @@ Contract Pools(
                 lastTimestamp: currentTimestamp,
                 feeReceiver: feeReceiver
             },
-            clamm)
+            clamm,
+            uints
+        )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,

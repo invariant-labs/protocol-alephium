@@ -1,4 +1,4 @@
-Abstract Contract Decimal() {
+Abstract Contract Decimal(uints: Uints) {
     const SqrtPriceScale = 24
     const LiquidityScale = 5
     const FeeGrowthScale = 28
@@ -169,8 +169,8 @@ Abstract Contract Decimal() {
         if (tickIndex >= 0i) {
             return rescale(sqrtPrice, FixedPointScale, SqrtPriceScale)
         } else {
-            let intermediate = one(SqrtPriceScale) / sqrtPrice 
-            return rescale(intermediate, FixedPointScale, SqrtPriceScale)
+            let intermediate = uints.bigDiv(uints.toU512(one(SqrtPriceScale)), sqrtPrice, 1) 
+            return rescale(intermediate.lower, FixedPointScale, SqrtPriceScale)
         }
     }
 

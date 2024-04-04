@@ -10,8 +10,9 @@ struct TickState {
 
 Contract Tick(
     admin: Address,
-    mut tick: TickState
-) extends Decimal() {
+    mut tick: TickState,
+    uints: Uints
+) extends Decimal(uints) {
     enum TickError {
         NotAdmin = 1000
         InvalidTickLiquidity = 1001

@@ -10,8 +10,9 @@ Contract Invariant(
     positions: Positions,
     tickmap: Tickmap,
     swap: SwapUtils,
-    clamm: CLAMM
-) extends PoolKeyHelper(), Decimal() {
+    clamm: CLAMM,
+    uints: Uints
+) extends PoolKeyHelper(), Decimal(uints) {
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -105,7 +106,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
         poolKeys.add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        pools.add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
+        pools.add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin, uints)
     }
 
     @using(preapprovedAssets = true)
@@ -190,7 +191,8 @@ Contract Invariant(
             clamm.calculateSqrtPrice(index),
             feeGrowthOutsideX,
             feeGrowthOutsideY, 
-            0
+            0,
+            uints
         )
     }
 
@@ -228,7 +230,7 @@ Contract Invariant(
             createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        positions.add{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
+        positions.add{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0, uints)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)

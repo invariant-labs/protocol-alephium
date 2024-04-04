@@ -1,4 +1,4 @@
-Abstract Contract Log() extends Decimal() {
+Abstract Contract Log(uints: Uints) extends Decimal(uints) {
     const Log2Scale = 32
     const Log2DoubleScale = 64
     const Log2Sqrt10001 = 309801

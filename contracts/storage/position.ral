@@ -14,8 +14,9 @@ struct PositionState {
 Contract Position(
     admin: Address,
     mut position: PositionState,
-    mut isActive: Bool
-) extends Decimal() {
+    mut isActive: Bool,
+    uints: Uints
+) extends Decimal(uints) {
     enum PositionError {
         NotAdmin = 900
         InsufficientLiquidity = 901
