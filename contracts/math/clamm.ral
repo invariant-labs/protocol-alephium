@@ -1,4 +1,6 @@
-Contract CLAMM() extends Log(){ 
+Contract CLAMM(
+    uints: Uints
+) extends Log(){ 
     enum CLAMMError {
         InvalidTickIndex = 800
         InvalidTickSpacing = 801
@@ -106,17 +108,21 @@ Contract CLAMM() extends Log(){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = mul(deltaSqrtPrice, liquidity, LiquidityScale)
-        if (roundingUp == true) {
-            return divToTokenUp(
-                    nominator,
-                    mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-                )
+        let nominator = uints.bigMul(deltaSqrtPrice, liquidity, one(LiquidityScale))
+        if (roundingUp) {
+            let denominator = mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            let mut deltaXUp = uints.mul512(nominator, one(SqrtPriceScale))
+            deltaXUp = uints.bigAdd512(deltaXUp, uints.toU512(denominator - 1)) 
+            deltaXUp = uints.bigDiv(deltaXUp, denominator, 1)
+            deltaXUp = uints.bigAdd512(deltaXUp, uints.toU512(almostOne(SqrtPriceScale))) 
+            deltaXUp = uints.bigDiv(deltaXUp, one(SqrtPriceScale), 1)
+            return uints.toU256(deltaXUp)
         } else {
-            return divToToken(
-                nominator,
-                mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-            )
+            let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            let mut deltaX = uints.mul512(nominator, one(SqrtPriceScale))
+            deltaX = uints.bigDiv(deltaX, denominatorUp, 1)
+            deltaX = uints.bigDiv(deltaX, one(SqrtPriceScale), 1)
+            return uints.toU256(deltaX)
         }
     }
 
