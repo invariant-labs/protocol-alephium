@@ -85,6 +85,11 @@ Contract Uints () {
         return U512 { lower: aLowerBLower, higher: aHigherBHigherOverflow }
     }
 
+    pub fn mul512(a: U512, b: U256) -> U512 {        
+        let result = mul(a.lower, b)
+        return bigAdd512(result, U512 { higher: a.higher * b, lower: 0 })
+    }
+
     pub fn mul(a: U256, b: U256) -> U512 {
         let aLower = low128(a)
         let aHigher = high128(a)
