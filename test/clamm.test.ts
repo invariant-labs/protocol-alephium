@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
-import { deployCLAMM } from '../src/utils'
+import { deployCLAMM, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -43,6 +43,148 @@ describe('math tests', () => {
       const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
         .returns
       expect(result).toBe(10000n * 10n ** 28n)
+    }
+  })
+  test('fee growth from fee - domain', async () => {
+    const clamm = await deployCLAMM(sender)
+
+    const liquidityDenominator = 10n ** 5n
+    const sqrtPriceDenominator = 10n ** 24n
+    const feeGrowthDenominator = 10n ** 28n
+    // max FeeGrowth case inside of domain
+    {
+      const maxTickSpacing = 100n
+      const tickSearchRange = 256n
+      const sqrtPriceUpper = 65535383934512647000000000000n
+      const sqrtPriceLowerIndex = 221818n - maxTickSpacing * tickSearchRange
+      const sqrtPriceLower = (
+        await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: sqrtPriceLowerIndex } })
+      ).returns
+
+      const maxDeltaSqrtPrice = sqrtPriceUpper - sqrtPriceLower
+      const maxLiquidity = (1n << 256n) - 1n
+
+      const maxToken = (maxLiquidity * maxDeltaSqrtPrice) / liquidityDenominator / sqrtPriceDenominator
+      const feeGrowth = (
+        await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity: maxLiquidity, fee: maxToken } })
+      ).returns
+      expect(feeGrowth).toBe(473129365723326089999999999999999n)
+    }
+    // min FeeGrowth case inside of domain
+    {
+      const basisPoint = 10000n
+      const minToken = 1n
+      const maxLiquidity = minToken * feeGrowthDenominator * liquidityDenominator * basisPoint
+      const feeGrowth = (
+        await clamm.contractInstance.methods.feeGrowthFromFee({
+          args: { liquidity: maxLiquidity, fee: minToken + basisPoint }
+        })
+      ).returns
+      expect(feeGrowth).toBe(1n)
+    }
+    // outside of domain trigger overflow due to result not fit into FeeGrowth
+    {
+      const liquidity = 1n
+      const fee = (1n << 256n) - 1n
+
+      await expectError(
+        clamm.contractInstance.methods.feeGrowthFromFee({
+          args: { liquidity, fee }
+        })
+      )
+    }
+    // amount = 0
+    {
+      const liquidity = 1000n * 10n ** 5n
+      const fee = 0n
+      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee } })).returns
+      expect(feeGrowth).toBe(0n)
+    }
+    // L = 0
+    {
+      const liquidity = 0n
+      const fee = 1100n
+      await expectError(clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee } }))
+    }
+  })
+  test('fee growth to fee', async () => {
+    const clamm = await deployCLAMM(sender)
+    // Equal
+    {
+      const amount = 100n
+      const liquidity = 1000000n * 10n ** 5n
+      const params = { args: { liquidity, fee: amount } }
+      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
+      const outParams = { args: { liquidity, feeGrowth } }
+      const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
+      expect(out).toBe(amount)
+    }
+    // Greater Liquidity
+    {
+      const amount = 100n
+      const liquidityBefore = 1000000n * 10n ** 5n
+      const liquidityAfter = 10000000n * 10n ** 5n
+      const params = { args: { liquidity: liquidityBefore, fee: amount } }
+      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
+      const outParams = { args: { liquidity: liquidityAfter, feeGrowth } }
+      const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
+      expect(out).toBe(1000n)
+    }
+    // huge liquidity
+    {
+      const amount = 100000000000000n
+      const liquidity = (1n << 77n) * 10n ** 5n
+      const params = { args: { liquidity, fee: amount } }
+      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
+      // real    6.61744490042422139897126953655970282852649688720703125 × 10^-10
+      // expected 6617444900424221398
+      expect(feeGrowth).toBe(6617444900424221398n)
+      const outParams = { args: { liquidity, feeGrowth } }
+      const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
+      // real    9.99999999999999999853225897430980027744256 × 10^13
+      // expected 99999999999999
+      expect(out).toBe(99_999_999_999_999n)
+    }
+  })
+  test('fee growth to fee - domain', async () => {
+    const clamm = await deployCLAMM(sender)
+    // overflowing mul
+    {
+      const amount = 600000000000000000n
+      const liquidity = 10000000000000000000n * 10n ** 5n
+      const params = { args: { liquidity, fee: amount } }
+      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
+      expect(feeGrowth).toBe(600000000000000000000000000n)
+      const outParams = { args: { liquidity, feeGrowth } }
+      const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
+      expect(out).toBe(amount)
+    }
+    // max value inside domain
+    {
+      const liquidity = (1n << 256n) - 1n
+      const feeGrowth = 100000n * 10n ** 28n
+      const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
+      expect(out).toBe(115792089237316195423570985008687907853269983999999999999999999999999999999999n)
+    }
+    // Overflow
+    {
+      const liquidity = (1n << 256n) - 1n
+      const feeGrowth = (1n << 256n) - 1n
+      await expectError(clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } }))
+    }
+    // FeeGrowth = 0
+    {
+      const liquidity = 1000n * 10n ** 5n
+      const feeGrowth = 0n
+      const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
+      expect(out).toBe(0n)
+    }
+    // Liquidity = 0
+    {
+      const liquidity = 0n
+      const feeGrowth = 1000n * 10n ** 28n
+      const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
+      expect(out).toBe(0n)
     }
   })
   test('tick from sqrt price', async () => {

@@ -1,4 +1,6 @@
-Contract CLAMM() extends Log(){ 
+Contract CLAMM(
+    uints: Uints
+) extends Log(){ 
     enum CLAMMError {
         InvalidTickIndex = 800
         InvalidTickSpacing = 801
@@ -326,5 +328,13 @@ Contract CLAMM() extends Log(){
         }
 
         return true
+    }
+
+    pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
+        return uints.toU256(uints.bigMul(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
+    }
+
+    pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
+        return uints.toU256(uints.bigMul(fee, one(LiquidityScale + FeeGrowthScale), liquidity))
     }
 }
