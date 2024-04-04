@@ -10,6 +10,10 @@ Abstract Contract Decimal(uints: Uints) {
     const MaxSqrtPrice = 65535383934512647000000000000
     const MinSqrtPrice = 15258932000000000000
 
+    enum DecimalError {
+        TickOverBounds = 0
+    }
+
     pub fn getSqrtPriceScale() -> U256 {
         return SqrtPriceScale
     }
@@ -110,6 +114,8 @@ Abstract Contract Decimal(uints: Uints) {
         }
 
         let mut sqrtPrice = one(FixedPointScale)  
+
+        assert!(tickIndexAbs <= toU256!(GlobalMaxTick), DecimalError.TickOverBounds)
 
         if (tickIndexAbs & 0x1 != 0) {
             sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** FixedPointScale)

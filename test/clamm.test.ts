@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
-import { deployCLAMM, deployUints } from '../src/utils'
+import { deployCLAMM, deployUints, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -643,12 +643,10 @@ describe('math tests', () => {
     const uints = await deployUints(sender)
     const clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     {
-      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } })
-      expect(result.returns).toBe(65538_660621581670000000000000n)
+      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } }))
     }
     {
-      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_819n } })
-      expect(result.returns).toBe(15258169000000000000n)
+      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_819n } }))
     }
   })
 })
