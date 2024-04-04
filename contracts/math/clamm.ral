@@ -331,12 +331,12 @@ Contract CLAMM(
     }
 
     pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
-        let fee = uints.bigMul(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale))
+        let fee = uints.bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale))
         return uints.toU256(fee)
     }
 
     pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
-        let feeGrowth = uints.bigMul(fee, one(LiquidityScale + FeeGrowthScale), liquidity)
+        let feeGrowth = uints.bigMulDiv256(fee, one(LiquidityScale + FeeGrowthScale), liquidity)
         return uints.toU256(feeGrowth)
     }
 }
