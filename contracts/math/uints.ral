@@ -42,6 +42,12 @@ Contract Uints () {
         }
     }
 
+    pub fn bigAdd(a: U512, b: U256) -> U512 {
+        let (lower, overflow) = overflowingAdd(a.lower, b)
+        let higher = wrappingAdd(a.higher, overflow)
+        return U512 { lower: lower, higher: higher }
+    }
+
     pub fn bigAdd512(a: U512, b: U512) -> U512 {
         let (aLowerBLower, overflow) = overflowingAdd(a.lower, b.lower)
         let aHigherBHigherOverflow = wrappingAdd(wrappingAdd(a.higher, b.higher), overflow)
