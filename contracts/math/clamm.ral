@@ -2,7 +2,6 @@ Contract CLAMM(uints: Uints) extends Log() {
     enum CLAMMError {
         InvalidTickIndex = 800
         InvalidTickSpacing = 801
-        CastOverflow = 802
     }
 
     pub fn computeSwapStep(
@@ -140,13 +139,11 @@ Contract CLAMM(uints: Uints) extends Log() {
             result = uints.bigMulUp(deltaSqrtPrice, liquidity, one(LiquidityScale))
             result = uints.bigAdd512(result, almostOne(SqrtPriceScale))
             result = uints.bigDiv(result, one(SqrtPriceScale), 1)
-            assert!(result.higher == 0, CLAMMError.CastOverflow)
-            return result.lower
+            return uints.toU256(result)
         } else {
             result = uints.bigMulUp(deltaSqrtPrice, liquidity, one(LiquidityScale))
             result = uints.bigDiv(result, one(SqrtPriceScale), 1)
-            assert!(result.higher == 0, CLAMMError.CastOverflow)
-            return result.lower
+            return uints.toU256(result)
         }
     }
 
