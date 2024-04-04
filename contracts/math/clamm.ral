@@ -138,11 +138,11 @@ Contract CLAMM(uints: Uints) extends Log() {
         if (roundingUp) {
             result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
             result = uints.bigAdd512(result, uints.toU512(almostOne(SqrtPriceScale)))
-            result = uints.bigDiv(result, one(SqrtPriceScale), 1)
+            result = uints.bigDiv512(result, one(SqrtPriceScale), 1)
             return uints.toU256(result)
         } else {
             result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
-            result = uints.bigDiv(result, one(SqrtPriceScale), 1)
+            result = uints.bigDiv512(result, one(SqrtPriceScale), 1)
             return uints.toU256(result)
         }
     }
