@@ -434,5 +434,8 @@ export function decodeU256(string: string): bigint {
 
 export const ArithmeticErrors = {
   CastOverflow: 100001n,
-  NotPositiveDivisor: 100002n
+  AddOverflow: 100002n,
+  NotPositiveDivisor: 100003n
 }
+
+export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n

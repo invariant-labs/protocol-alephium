@@ -1,7 +1,7 @@
 import { ONE_ALPH, SignerProvider, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { UintsInstance } from '../artifacts/ts'
-import { ArithmeticErrors, deployUints, expectError } from '../src/utils'
+import { ArithmeticErrors, MaxU256, deployUints, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -42,10 +42,10 @@ describe('uints tests', () => {
     expect(result).toEqual({ value: value.lower, error: 0n })
   })
 
-  test('to u256 return an error if number is higher than u256', async () => {
+  test('to u256 returns an error if number is higher than u256', async () => {
     const value = { higher: 2n, lower: 1n }
     const result = (await uints.methods.toU256({ args: { value } })).returns
-    expect(result).toEqual({ value: value.lower, error: ArithmeticErrors.CastOverflow })
+    expect(result).toEqual({ value: MaxU256, error: ArithmeticErrors.CastOverflow })
   })
 
   test('to u512 works', async () => {
@@ -56,22 +56,181 @@ describe('uints tests', () => {
 
   test('big add 256', async () => {
     {
-      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const b = 999n
+      const a = 1n
+      const b = 2n
       const result = (await uints.methods.bigAdd256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: b - 1n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = 777n
-      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+      const a = MaxU256
+      const b = 2n
+      const result = (await uints.methods.bigAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 1n })
+    }
+    {
+      const a = MaxU256
+      const b = MaxU256
       const result = (await uints.methods.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
+  })
+
+  test('big add', async () => {
     {
-      const a = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const b = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
-      const result = (await uints.methods.bigAdd256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: 3n }, error: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = 2n
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 1n, lower: 1n }, error: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = MaxU256
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 1n, lower: a.lower - 1n }, error: 0n })
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = MaxU256
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: 0n
+      })
+    }
+  })
+
+  test('big add returns an error if number if higher than u512', async () => {
+    {
+      const a = {
+        higher: MaxU256,
+        lower: MaxU256
+      }
+      const b = 1n
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: ArithmeticErrors.AddOverflow
+      })
+    }
+    {
+      const a = {
+        higher: MaxU256,
+        lower: 1n
+      }
+      const b = MaxU256
+      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: ArithmeticErrors.AddOverflow
+      })
+    }
+  })
+
+  test('big add 512', async () => {
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = { higher: 0n, lower: 2n }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: 3n }, error: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = { higher: 0n, lower: 2n }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 1n, lower: 1n }, error: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = { higher: 0n, lower: MaxU256 }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 1n, lower: a.lower - 1n }, error: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = {
+        higher: MaxU256,
+        lower: 0n
+      }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: 0n
+      })
+    }
+  })
+
+  test('big add 512 returns an error if number if higher than u512', async () => {
+    {
+      const a = {
+        higher: MaxU256,
+        lower: MaxU256
+      }
+      const b = {
+        higher: 0n,
+        lower: 1n
+      }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: ArithmeticErrors.AddOverflow
+      })
+    }
+    {
+      const a = {
+        higher: 1n,
+        lower: MaxU256
+      }
+      const b = {
+        higher: MaxU256,
+        lower: 0n
+      }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: ArithmeticErrors.AddOverflow
+      })
+    }
+    {
+      const a = {
+        higher: 1n,
+        lower: 0n
+      }
+      const b = {
+        higher: MaxU256,
+        lower: 0n
+      }
+      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        value: {
+          higher: MaxU256,
+          lower: MaxU256
+        },
+        error: ArithmeticErrors.AddOverflow
+      })
     }
   })
 
@@ -190,21 +349,6 @@ describe('uints tests', () => {
           lower: 20n
         })
       }
-    }
-  })
-
-  test('big add 512', async () => {
-    {
-      const a = { higher: 0n, lower: 10n }
-      const b = { higher: 0n, lower: 20n }
-      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 0n, lower: 30n })
-    }
-    {
-      const a = { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n }
-      const b = { higher: 0n, lower: 20n }
-      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: 19n })
     }
   })
 
