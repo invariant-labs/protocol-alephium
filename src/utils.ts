@@ -431,3 +431,8 @@ export function hexToBytes(hex: string): Uint8Array {
 export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }
+
+export const ArithmeticErrors = {
+  CastOverflow: 100001n,
+  NotPositiveDivisor: 100002n
+}

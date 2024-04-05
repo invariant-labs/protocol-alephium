@@ -1,11 +1,16 @@
-struct Result {
-    mut value: U512,
-    mut error: Bool
-}
-
 struct U512 {
     mut higher: U256,
     mut lower: U256
+}
+
+struct ResultU256 {
+    mut value: U256,
+    mut error: U256
+}
+
+struct ResultU512 {
+    mut value: U512,
+    mut error: U256
 }
 
 Contract Uints () {
@@ -15,17 +20,30 @@ Contract Uints () {
         CastOverflow = 100001
         NotPositiveDivisor = 100002
     }
+
+    pub fn unwrapU256(result: ResultU256) -> U256 {
+        assert!(result.error == 0, result.error)
+        return result.value
+    }
+
+    pub fn unwrapU512(result: ResultU512) -> U512 {
+        assert!(result.error == 0, result.error)
+        return result.value
+    }
     
-    pub fn toU512(v: U256) -> U512 {
+    pub fn toU512(value: U256) -> U512 {
         return U512 {
             higher: 0,
-            lower: v
+            lower: value
         }
     }
 
-    pub fn toU256(v: U512) -> U256 {
-        assert!(v.higher == 0, ArithmeticErrors.CastOverflow)
-        return v.lower  
+    pub fn toU256(value: U512) -> ResultU256 {
+        if(value.higher > 0) {
+            return ResultU256 { value: value.lower, error: ArithmeticErrors.CastOverflow }
+        }
+
+        return ResultU256 { value: value.lower, error: 0 }
     }
 
     pub fn bigAdd256(a: U256, b: U256) -> U512 {
