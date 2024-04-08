@@ -20,7 +20,8 @@ Contract Uints () {
         CastOverflow = 100001
         AddOverflow = 100002
         MulOverflow = 100003
-        NotPositiveDivisor = 100005
+        DivNotPositiveDivisor = 100004
+        DivNotPositiveDenominator = 100005
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -81,11 +82,17 @@ Contract Uints () {
         return ResultU512 { value: U512 { higher: higher, lower: lower }, error: 0 }
     }
 
-    pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256, up: Bool) -> U512 {
-        assert!(b > 0, ArithmeticError.NotPositiveDivisor)
+    pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256, up: Bool) -> ResultU512 {
+        if(b == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
+        }
+
+        if(bDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
+        }
 
         if (b == 1) {
-            return a
+            return ResultU512 { value: a, error: 0 }
         }
 
         // Calculate new higher
@@ -109,17 +116,14 @@ Contract Uints () {
             }
         }
 
-        return U512 {
-            higher: higher,
-            lower: deltaLower
-        }
+        return ResultU512 { value: U512 { higher: higher, lower: deltaLower }, error: 0 }
     }
 
-    pub fn bigDiv512(a: U512, b: U256, bDenominator: U256) -> U512 {
+    pub fn bigDiv(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
         return bigDivWrapper(a, b, bDenominator, false)
     }
 
-    pub fn bigDivUp512(a: U512, b: U256, bDenominator: U256) -> U512 {
+    pub fn bigDivUp(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
         return bigDivWrapper(a, b, bDenominator, true)
     }
 
@@ -157,8 +161,7 @@ Contract Uints () {
 
     pub fn bigMulDiv256(a: U256, b: U256, bDenominator: U256) -> U512 {
         let mut result = bigMul256(a, b)
-
-        result = bigDiv512(result, bDenominator, 1)
+        result = unwrapU512(bigDiv(result, bDenominator, 1))
 
         return result
     }
@@ -167,7 +170,7 @@ Contract Uints () {
         let mut result = bigMul256(a, b)
 
         result = unwrapU512(bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 }))
-        result = bigDiv512(result, bDenominator, 1)
+        result = unwrapU512(bigDiv(result, bDenominator, 1))
 
         return result
     }
