@@ -115,7 +115,7 @@ Contract Pool(
             return
         }
 
-        let feeGrowth = feeGrowthFromFee(pool.liquidity, poolFee)
+        let feeGrowth = clamm.feeGrowthFromFee(pool.liquidity, poolFee)
 
         if (inX) {
             pool.feeGrowthGlobalX = wrappingAdd(pool.feeGrowthGlobalX, feeGrowth)
