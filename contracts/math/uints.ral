@@ -19,7 +19,8 @@ Contract Uints () {
     enum ArithmeticError {
         CastOverflow = 100001
         AddOverflow = 100002
-        NotPositiveDivisor = 100003
+        MulOverflow = 100003
+        NotPositiveDivisor = 100005
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -122,11 +123,6 @@ Contract Uints () {
         return bigDivWrapper(a, b, bDenominator, true)
     }
 
-    pub fn bigMul512(a: U512, b: U256) -> U512 {        
-        let result = bigMul256(a.lower, b)
-        return unwrapU512(bigAdd512(result, U512 { higher: a.higher * b, lower: 0 }))
-    }
-
     pub fn bigMul256(a: U256, b: U256) -> U512 {
         let aLower = low128(a)
         let aHigher = high128(a)
@@ -146,6 +142,17 @@ Contract Uints () {
         let higher = high128(lowerHigher) + higherLower + (higherHigher << 128)
 
         return U512 { higher: higher, lower: lower }
+    }
+
+    pub fn bigMul(a: U512, b: U256) -> ResultU512 {        
+        let result = bigMul256(a.lower, b)
+        let higher = toU256(bigMul256(a.higher, b))
+        
+        if(higher.error != 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulOverflow }
+        }
+
+        return bigAdd512(result, U512 { higher: higher.value, lower: 0 })
     }
 
     pub fn bigMulDiv256(a: U256, b: U256, bDenominator: U256) -> U512 {

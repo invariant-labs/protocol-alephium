@@ -432,10 +432,12 @@ export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }
 
-export const ArithmeticErrors = {
+export const ArithmeticError = {
   CastOverflow: 100001n,
   AddOverflow: 100002n,
-  NotPositiveDivisor: 100003n
+  MulOverflow: 100003n,
+  MulDivOverflow: 100004n,
+  NotPositiveDivisor: 100005n
 }
 
 export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
