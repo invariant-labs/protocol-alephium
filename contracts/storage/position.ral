@@ -15,7 +15,8 @@ Contract Position(
     admin: Address,
     mut position: PositionState,
     mut isActive: Bool,
-    uints: Uints
+    uints: Uints,
+    clammContractInstance: CLAMM
 ) extends Decimal(uints) {
     enum PositionError {
         NotAdmin = 900
@@ -135,8 +136,8 @@ Contract Position(
 
         assert!(liquidityDelta != 0 || position.liquidity != 0, PositionError.EmptyPositionPokes)
 
-        let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
-        let tokensOwedY = toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
+        let tokensOwedX = clammContractInstance.toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
+        let tokensOwedY = clammContractInstance.toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
 
         position.liquidity = calculateNewLiquidity(sign, liquidityDelta)
         position.feeGrowthInsideX = feeGrowthInsideX
