@@ -22,6 +22,7 @@ Contract Uints () {
         MulOverflow = 100003
         DivNotPositiveDivisor = 100004
         DivNotPositiveDenominator = 100005
+        MulNotPositiveDenominator = 100006
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -159,20 +160,28 @@ Contract Uints () {
         return bigAdd512(result, U512 { higher: higher.value, lower: 0 })
     }
 
-    pub fn bigMulDiv256(a: U256, b: U256, bDenominator: U256) -> U512 {
+    pub fn bigMulDiv256(a: U256, b: U256, bDenominator: U256) -> ResultU512 {
+        if(bDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulNotPositiveDenominator }
+        }
+
         let mut result = bigMul256(a, b)
         result = unwrapU512(bigDiv(result, bDenominator, 1))
 
-        return result
+        return ResultU512 { value: result, error: 0 }
     }
 
-    pub fn bigMulDivUp256(a: U256, b: U256, bDenominator: U256) -> U512 {
+    pub fn bigMulDivUp256(a: U256, b: U256, bDenominator: U256) -> ResultU512 {
+        if(bDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulNotPositiveDenominator }
+        }
+
         let mut result = bigMul256(a, b)
 
         result = unwrapU512(bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 }))
         result = unwrapU512(bigDiv(result, bDenominator, 1))
 
-        return result
+        return ResultU512 { value: result, error: 0 }
     }
     
     pub fn overflowingAdd(a: U256, b: U256) -> (U256, U256) {

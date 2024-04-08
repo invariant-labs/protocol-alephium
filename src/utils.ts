@@ -437,7 +437,8 @@ export const ArithmeticError = {
   AddOverflow: 100002n,
   MulOverflow: 100003n,
   DivNotPositiveDivisor: 100004n,
-  DivNotPositiveDenominator: 100005n
+  DivNotPositiveDenominator: 100005n,
+  MulNotPositiveDenominator: 100006n
 }
 
 export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
