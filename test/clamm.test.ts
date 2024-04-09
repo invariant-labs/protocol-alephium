@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
-import { ArithmeticError, MaxU256, deployCLAMM } from '../src/utils'
+import { ArithmeticError, MaxTick, MaxU256, deployCLAMM, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -748,25 +748,7 @@ describe('math tests', () => {
       expect(nextSqrtPrice).toEqual(3666666666666666666666666n)
     }
   })
-  test('calculate amount delta', async () => {
-    const clamm = await deployCLAMM(sender)
-    // in-range
-    {
-      const currentTickIndex = 2n
-      const currentSqrtPrice = 1000140000000000000000000n
-      const liquidityDelta = 5000000n * 10n ** 5n
-      const liquiditySign = true
-      const upperTick = 3n
-      const lowerTick = 0n
-      const params = {
-        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
-      }
-      const [x, y, add] = (await clamm.contractInstance.methods.calculateAmountDelta(params)).returns
-      expect(x).toEqual(51n)
-      expect(y).toEqual(700n)
-      expect(add).toEqual(true)
-    }
-  })
+
   test('calculate max liquidity per tick', async () => {
     const clamm = await deployCLAMM(sender)
     const params = { args: { tickSpacing: 1n } }
@@ -1080,6 +1062,148 @@ describe('math tests', () => {
 
       expect(result.returns[0]).toBe(2n ** 256n - 1n - 5_0000000000000000000000000000n + 1n)
       expect(result.returns[1]).toBe(2n ** 256n - 1n - 5_0000000000000000000000000000n + 1n)
+    })
+  })
+
+  describe('calculate amount delta', () => {
+    let clamm: CLAMMInstance
+
+    beforeEach(async () => {
+      clamm = (await deployCLAMM(sender)).contractInstance
+    })
+
+    test('current tick between lower tick and upper tick', async () => {
+      const currentTickIndex = 2n
+      const currentSqrtPrice = 1_000140000000000000000000n
+      const liquidityDelta = 5000000_00000n
+      const liquiditySign = true
+      const upperTick = 3n
+      const lowerTick = 0n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([51n, 700n, true])
+    })
+
+    test('current tick in the middle between lower tick and upper tick', async () => {
+      const currentTickIndex = 2n
+      const currentSqrtPrice = 1_000140000000000000000000n
+      const liquidityDelta = 5000000_00000n
+      const liquiditySign = true
+      const upperTick = 4n
+      const lowerTick = 0n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([300n, 700n, true])
+    })
+
+    test('current tick smaller than lower tick', async () => {
+      const currentTickIndex = 0n
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const liquidityDelta = 10_00000n
+      const liquiditySign = true
+      const upperTick = 4n
+      const lowerTick = 2n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([1n, 0n, false])
+    })
+
+    test('current tick greater than upper tick', async () => {
+      const currentTickIndex = 6n
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const liquidityDelta = 10_00000n
+      const liquiditySign = true
+      const upperTick = 4n
+      const lowerTick = 2n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([0n, 1n, false])
+    })
+  })
+
+  describe('calculate amount delta - domain', () => {
+    let clamm: CLAMMInstance
+    let maxLiquidity = MaxU256
+
+    beforeEach(async () => {
+      clamm = (await deployCLAMM(sender)).contractInstance
+    })
+
+    test('max x', async () => {
+      const currentTickIndex = -MaxTick
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const liquiditySign = true
+      const upperTick = MaxTick
+      const lowerTick = -MaxTick + 1n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta: maxLiquidity, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([
+        75880998414682858767056931020720040283888865803509762415730143345073325002605n,
+        0n,
+        false
+      ])
+    })
+
+    test('max y', async () => {
+      const currentTickIndex = MaxTick
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const liquiditySign = true
+      const upperTick = MaxTick - 1n
+      const lowerTick = -MaxTick
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta: maxLiquidity, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([
+        0n,
+        75880996274614937472454279923345931777432945506580976051511441183276080000000n,
+        false
+      ])
+    })
+
+    test('delta liquidity = 0', async () => {
+      const currentTickIndex = 2n
+      const currentSqrtPrice = 1_000140000000000000000000n
+      const liquidityDelta = 0n
+      const liquiditySign = true
+      const upperTick = 4n
+      const lowerTick = 0n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      const result = (await clamm.methods.calculateAmountDelta(params)).returns
+      expect(result).toEqual([0n, 0n, true])
+    })
+
+    test('error handling', async () => {
+      const currentTickIndex = 0n
+      const currentSqrtPrice = 1_000140000000000000000000n
+      const liquidityDelta = 0n
+      const liquiditySign = true
+      const upperTick = 4n
+      const lowerTick = 10n
+
+      const params = {
+        args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
+      }
+      await expectError(clamm.methods.calculateAmountDelta(params))
     })
   })
 })
