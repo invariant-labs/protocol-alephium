@@ -108,17 +108,13 @@ Contract CLAMM(
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = mul(deltaSqrtPrice, liquidity, LiquidityScale)
-        if (roundingUp == true) {
-            return divToTokenUp(
-                    nominator,
-                    mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-                )
+        let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+        if (roundingUp) {
+            let denominator = mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            return uints.bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
         } else {
-            return divToToken(
-                nominator,
-                mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-            )
+            let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            return uints.bigDivToToken(nominator, denominatorUp, one(SqrtPriceScale))
         }
     }
 
