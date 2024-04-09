@@ -56,12 +56,13 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const pools = await deployPools(signer, pool.contractInstance.contractId, clamm.contractInstance.contractId)
   const tick = await deployTick(signer)
   const ticks = await deployTicks(signer, tick.contractInstance.contractId)
-  const position = await deployPosition(signer)
+  const position = await deployPosition(signer, clamm.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
   const positions = await deployPositions(
     signer,
     position.contractInstance.contractId,
-    positionsCounter.contractInstance.contractId
+    positionsCounter.contractInstance.contractId,
+    clamm.contractInstance.contractId
   )
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
@@ -149,20 +150,26 @@ export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
   )
 }
 
-export async function deployPositions(signer: SignerProvider, positionId: string, positionsCounterContractId: string) {
+export async function deployPositions(
+  signer: SignerProvider,
+  positionId: string,
+  positionsCounterContractId: string,
+  clammId: string
+) {
   return await waitTxConfirmed(
     Positions.deploy(signer, {
       initialFields: {
         positionTemplateContractId: positionId,
         positionsCounterContractId,
         invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
+        areAdminsSet: false,
+        clammContract: clammId
       }
     })
   )
 }
 
-export async function deployPosition(signer: SignerProvider) {
+export async function deployPosition(signer: SignerProvider, clammId: string) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
@@ -179,7 +186,8 @@ export async function deployPosition(signer: SignerProvider) {
           tokensOwedY: 0n,
           owner: ZERO_ADDRESS
         },
-        isActive: false
+        isActive: false,
+        clammContractInstance: clammId
       }
     })
   )
@@ -320,7 +328,6 @@ export async function deployPositionsCounter(signer: SignerProvider) {
 
 export async function deployCLAMM(signer: SignerProvider) {
   const uints = await deployUints(signer)
-
   return await waitTxConfirmed(
     CLAMM.deploy(signer, {
       initialFields: {
