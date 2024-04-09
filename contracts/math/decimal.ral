@@ -177,8 +177,8 @@ Abstract Contract Decimal(uints: Uints) {
         if (tickIndex >= 0i) {
             return rescale(sqrtPrice, FixedPointScale, SqrtPriceScale)
         } else {
-            let sqrtPriceInFixedPointScale = uints.bigDiv512(uints.toU512(one(SqrtPriceScale)), sqrtPrice, 1) 
-            return rescale(sqrtPriceInFixedPointScale.lower, FixedPointScale, SqrtPriceScale)
+            let sqrtPriceInFixedPointScale = FixedPointDenominator * FixedPointDenominator / sqrtPrice
+            return rescale(sqrtPriceInFixedPointScale, FixedPointScale, SqrtPriceScale)
         }
     }
 
