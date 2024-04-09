@@ -162,5 +162,21 @@ Contract Uints () {
     pub fn high128(a: U256) -> U256 {
         return a >> 128
     }
+
+    pub fn bigDivToTokenUp(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> U256 {
+        let mut result = bigMul512(nominator, sqrtPriceDenominator)
+        result = bigAdd(result, denominator - 1)
+        result = bigDiv512(result, denominator, 1)
+        result = bigAdd(result, sqrtPriceDenominator - 1)
+        result = bigDiv512(result, sqrtPriceDenominator, 1)
+        return toU256(result)
+    }
+
+    pub fn bigDivToToken(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> U256 {
+        let mut result = bigMul512(nominator, sqrtPriceDenominator)
+        result = bigDiv512(result, denominator, 1)
+        result = bigDiv512(result, sqrtPriceDenominator, 1)
+        return toU256(result)
+    }
 }                           
 
