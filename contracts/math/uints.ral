@@ -178,7 +178,7 @@ Contract Uints () {
 
         let mut result = bigMul256(a, b)
 
-        result = unwrapU512(bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 }))
+        result = unwrapU512(bigAdd512(result, toU512(bDenominator - 1)))
         result = unwrapU512(bigDiv(result, bDenominator, 1))
 
         return ResultU512 { value: result, error: 0 }
@@ -214,6 +214,62 @@ Contract Uints () {
     
     pub fn high128(a: U256) -> U256 {
         return a >> 128
+    }
+
+    pub fn bigDivToTokenUp(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> ResultU256 {
+        let mut wrappedResult = bigMul(nominator, sqrtPriceDenominator)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        let mut result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigAdd(result, denominator - 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigDiv(result, denominator, 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigAdd(result, sqrtPriceDenominator - 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigDiv(result, sqrtPriceDenominator, 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        return toU256(result)
+    }
+
+    pub fn bigDivToToken(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> ResultU256 {
+        let mut wrappedResult = bigMul(nominator, sqrtPriceDenominator)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        let mut result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigDiv(result, denominator, 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        wrappedResult = bigDiv(result, sqrtPriceDenominator, 1)
+        if (wrappedResult.error != 0) {
+            return ResultU256 { value: u256Max!(), error: wrappedResult.error }
+        }
+        result = unwrapU512(wrappedResult)
+
+        return toU256(result)
     }
 }                           
 

@@ -17,7 +17,8 @@ struct PoolState {
 Contract Pool(
     admin: Address,
     mut pool: PoolState,
-    clamm: CLAMM
+    clamm: CLAMM,
+    uints: Uints
 ) extends Decimal() {
     enum PoolError {
         NotAdmin = 1200
@@ -115,7 +116,7 @@ Contract Pool(
             return
         }
 
-        let feeGrowth = feeGrowthFromFee(pool.liquidity, poolFee)
+        let feeGrowth = uints.unwrapU256(clamm.feeGrowthFromFee(pool.liquidity, poolFee))
 
         if (inX) {
             pool.feeGrowthGlobalX = wrappingAdd(pool.feeGrowthGlobalX, feeGrowth)
