@@ -1,6 +1,7 @@
 Contract Pools(
     poolTemplateContractId: ByteVec,
     clamm: CLAMM,
+    uints: Uints,
     mut invariantId: Address,
     mut positionsId: Address,
     mut swapUtilsId: Address,
@@ -45,7 +46,9 @@ Contract Pools(
                 lastTimestamp: currentTimestamp,
                 feeReceiver: feeReceiver
             },
-            clamm)
+            clamm,
+            uints
+        )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             poolKey,
             poolTemplateContractId,
