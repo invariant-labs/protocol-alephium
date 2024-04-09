@@ -35,8 +35,7 @@ Contract Positions(
         feeGrowthInsideY: U256,
         lastBlockNumber: U256,
         tokensOwedX: U256,
-        tokensOwedY: U256,
-        uints: Uints
+        tokensOwedY: U256
     ) -> () {
         checkCaller!(callerAddress!() == invariantId && areAdminsSet, PositionsError.NotAdmin)
     
@@ -59,7 +58,6 @@ Contract Positions(
                 owner: originalCaller
             },
             true,
-            uints,
             clammContract
         )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(

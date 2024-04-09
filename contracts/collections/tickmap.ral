@@ -1,10 +1,9 @@
 Contract Tickmap(
     chunkTemplateContractId: ByteVec,
-    uints: Uints,
     mut invariantId: Address,
     mut swapUtilsId: Address,
     mut areAdminsSet: Bool
-) extends Decimal(uints) {
+) extends Decimal() {
     const ChunkSize = 64
     const SearchRange = 256i
 

@@ -17,9 +17,8 @@ struct PoolState {
 Contract Pool(
     admin: Address,
     mut pool: PoolState,
-    clamm: CLAMM,
-    uints: Uints
-) extends Decimal(uints) {
+    clamm: CLAMM
+) extends Decimal() {
     enum PoolError {
         NotAdmin = 1200
     }

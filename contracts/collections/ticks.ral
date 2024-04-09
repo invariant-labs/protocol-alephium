@@ -31,8 +31,7 @@ Contract Ticks(
         sqrtPrice: U256,
         feeGrowthOutsideX: U256,
         feeGrowthOutsideY: U256,
-        secondsOutside: U256,
-        uints: Uints
+        secondsOutside: U256
     ) -> () {
         let caller = callerAddress!()
         checkCaller!((caller == invariantId || caller == swapUtilsId || caller == positionsId) && areAdminsSet, TicksError.NotAdmin)
@@ -50,8 +49,7 @@ Contract Ticks(
                 feeGrowthOutsideX: feeGrowthOutsideX,
                 feeGrowthOutsideY: feeGrowthOutsideY,
                 secondsOutside: secondsOutside
-            },
-            uints
+            }
         )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             path,

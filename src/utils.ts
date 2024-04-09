@@ -53,11 +53,11 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
   const poolKey = await deployPoolKey(signer)
   const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
-  const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
+  const pool = await deployPool(signer, clamm.contractInstance.contractId)
   const pools = await deployPools(signer, pool.contractInstance.contractId, clamm.contractInstance.contractId)
   const tick = await deployTick(signer)
   const ticks = await deployTicks(signer, tick.contractInstance.contractId)
-  const position = await deployPosition(signer, uints.contractInstance.contractId, clamm.contractInstance.contractId)
+  const position = await deployPosition(signer, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
   const positions = await deployPositions(
     signer,
@@ -66,7 +66,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     clamm.contractInstance.contractId
   )
   const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId, uints.contractInstance.contractId)
+  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
 
   const swap = await deploySwap(
     signer,
@@ -74,8 +74,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     pools.contractInstance.contractId,
     ticks.contractInstance.contractId,
     tickmap.contractInstance.contractId,
-    protocolFee,
-    uints.contractInstance.contractId
+    protocolFee
   )
 
   const deployResult = await waitTxConfirmed(
@@ -90,8 +89,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         positions: positions.contractInstance.contractId,
         tickmap: tickmap.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
-        swap: swap.contractInstance.contractId,
-        uints: uints.contractInstance.contractId
+        swap: swap.contractInstance.contractId
       }
     })
   )
@@ -113,8 +111,7 @@ export async function deploySwap(
   pools: string,
   ticks: string,
   tickmap: string,
-  protocolFee: bigint,
-  uintsId: string
+  protocolFee: bigint
 ) {
   return await waitTxConfirmed(
     SwapUtils.deploy(signer, {
@@ -123,8 +120,7 @@ export async function deploySwap(
         pools,
         ticks,
         tickmap,
-        protocolFee,
-        uints: uintsId
+        protocolFee
       }
     })
   )
@@ -174,7 +170,7 @@ export async function deployPositions(
   )
 }
 
-export async function deployPosition(signer: SignerProvider, uintsId: string, clammId: string) {
+export async function deployPosition(signer: SignerProvider, clammId: string) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
@@ -192,7 +188,6 @@ export async function deployPosition(signer: SignerProvider, uintsId: string, cl
           owner: ZERO_ADDRESS
         },
         isActive: false,
-        uints: uintsId,
         clammContractInstance: clammId
       }
     })
@@ -236,7 +231,7 @@ export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) 
   )
 }
 
-export async function deployPool(signer: SignerProvider, clammId: string, uintsId: string) {
+export async function deployPool(signer: SignerProvider, clammId: string) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
@@ -256,8 +251,7 @@ export async function deployPool(signer: SignerProvider, clammId: string, uintsI
           lastTimestamp: 0n,
           feeReceiver: ZERO_ADDRESS
         },
-        clamm: clammId,
-        uints: uintsId
+        clamm: clammId
       }
     })
   )
@@ -279,8 +273,6 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
 }
 
 export async function deployTick(signer: SignerProvider) {
-  const uints = await deployUints(signer)
-
   return await waitTxConfirmed(
     Tick.deploy(signer, {
       initialFields: {
@@ -293,8 +285,7 @@ export async function deployTick(signer: SignerProvider) {
           feeGrowthOutsideX: 0n,
           feeGrowthOutsideY: 0n,
           secondsOutside: 0n
-        },
-        uints: uints.contractInstance.contractId
+        }
       }
     })
   )
@@ -311,12 +302,11 @@ export async function deployChunk(signer: SignerProvider) {
   )
 }
 
-export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string, uintsId: string) {
+export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
         chunkTemplateContractId: chunkTemplateContractId,
-        uints: uintsId,
         invariantId: ZERO_ADDRESS,
         swapUtilsId: ZERO_ADDRESS,
         areAdminsSet: false

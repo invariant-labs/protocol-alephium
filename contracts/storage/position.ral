@@ -15,9 +15,8 @@ Contract Position(
     admin: Address,
     mut position: PositionState,
     mut isActive: Bool,
-    uints: Uints,
     clammContractInstance: CLAMM
-) extends Decimal(uints) {
+) extends Decimal() {
     enum PositionError {
         NotAdmin = 900
         InsufficientLiquidity = 901

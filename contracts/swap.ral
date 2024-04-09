@@ -24,9 +24,8 @@ Contract SwapUtils(
     pools: Pools, 
     ticks: Ticks,
     tickmap: Tickmap,
-    clamm: CLAMM,
-    uints: Uints
-) extends Decimal(uints), PoolKeyHelper() {
+    clamm: CLAMM
+) extends Decimal(), PoolKeyHelper() {
     enum SwapError {
         ZeroAmount = 10001
         WrongLimit = 10002
