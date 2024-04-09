@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
-import { ArithmeticError, MaxTick, MaxU256, deployCLAMM, expectError } from '../src/utils'
+import { ArithmeticError, MaxTick, MaxU256, deployCLAMM, deployUints, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -15,7 +15,8 @@ describe('math tests', () => {
   })
 
   test('fee growth from fee', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const liquidity = 10n ** 5n
       const amount = 1n
@@ -46,7 +47,8 @@ describe('math tests', () => {
     }
   })
   test('fee growth from fee - domain', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
 
     const liquidityDenominator = 10n ** 5n
     const sqrtPriceDenominator = 10n ** 24n
@@ -113,7 +115,8 @@ describe('math tests', () => {
     }
   })
   test('fee growth to fee', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     // Equal
     {
       const amount = 100n
@@ -152,7 +155,8 @@ describe('math tests', () => {
     }
   })
   test('fee growth to fee - domain', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     // overflowing mul
     {
       const amount = 600000000000000000n
@@ -200,7 +204,8 @@ describe('math tests', () => {
     }
   })
   test('tick from sqrt price', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const sqrtPrice = 999006987054867461743028n
       const result = (
@@ -210,7 +215,8 @@ describe('math tests', () => {
     }
   })
   test('allign tick to tickspacing', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const accurateTick = 0n
       const tickSpacing = 3n
@@ -255,7 +261,8 @@ describe('math tests', () => {
     }
   })
   test('log spacing over 1', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       for (let i = 0n; i < 100n; i++) {
         const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
@@ -288,7 +295,8 @@ describe('math tests', () => {
     }
   })
   test('log', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       for (let i = 0n; i < 100n; i++) {
         const sqrtPriceDecimal = (await clamm.contractInstance.methods.calculateSqrtPrice({ args: { tickIndex: i } }))
@@ -315,8 +323,38 @@ describe('math tests', () => {
     }
   })
 
+  test('get delta x', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const sqrtPriceA = 234878324943782000000000000n
+    const sqrtPriceB = 87854456421658000000000000n
+    const liquidity = 983983249092n
+    const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
+    const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
+    const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUp)).returns
+    const resultDown = (await clamm.contractInstance.methods.getDeltaX(paramsDown)).returns
+    // 7010.8199533068819376891841727789301497024557314488455622925765280
+    expect(resultUp).toEqual({ value: 70109n, error: 0n })
+    expect(resultDown).toEqual({ value: 70108n, error: 0n })
+  })
+  test('get delta y', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const sqrtPriceA = 234878324943782000000000000n
+    const sqrtPriceB = 87854456421658000000000000n
+    const liquidity = 983983249092n
+    const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
+    const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
+    const resultUp = (await clamm.contractInstance.methods.getDeltaY(paramsUp)).returns
+    const resultDown = (await clamm.contractInstance.methods.getDeltaY(paramsDown)).returns
+    // 144669023.842474597804911408
+    expect(resultUp).toEqual({ value: 1446690239n, error: 0n })
+    expect(resultDown).toEqual({ value: 1446690238n, error: 0n })
+  })
+
   test('calculate sqrt price', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const params = { args: { tickIndex: 30n } }
       const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
@@ -357,7 +395,8 @@ describe('math tests', () => {
     let clamm: DeployContractResult<CLAMMInstance>
 
     beforeAll(async () => {
-      clamm = await deployCLAMM(sender)
+      const uints = await deployUints(sender)
+      clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     })
     test('zero at zero liquidity', async () => {
       const sqrtPriceA = 1n * 10n ** 24n
@@ -432,7 +471,8 @@ describe('math tests', () => {
     const minLiquidity = 1n
 
     beforeAll(async () => {
-      clamm = await deployCLAMM(sender)
+      const uints = await deployUints(sender)
+      clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     })
     test('maximalize delta sqrt price and liquidity', async () => {
       const params = {
@@ -571,7 +611,8 @@ describe('math tests', () => {
     let clamm: CLAMMInstance
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('zero at zero liquidity', async () => {
@@ -667,7 +708,8 @@ describe('math tests', () => {
     const maxLiquidity = 2n ** 256n - 1n
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     it('maximize delta sqrt price and liquidity', async () => {
@@ -719,7 +761,8 @@ describe('math tests', () => {
   })
 
   test('get next sqrt price x up', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const startingSqrtPrice = 2n * 10n ** 24n
       const liquidity = 3n * 10n ** 5n
@@ -738,7 +781,8 @@ describe('math tests', () => {
     }
   })
   test('get next sqrt price y down', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const startingSqrtPrice = 2n * 10n ** 24n
       const liquidity = 3n * 10n ** 5n
@@ -748,15 +792,16 @@ describe('math tests', () => {
       expect(nextSqrtPrice).toEqual(3666666666666666666666666n)
     }
   })
-
   test('calculate max liquidity per tick', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     const params = { args: { tickSpacing: 1n } }
     const maxLiquidity = (await clamm.contractInstance.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(261006384132333857238172165551313140818439365214444611336425014162283870n)
   })
   test('calculate min amount out', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     // 0% fee
     {
       const expectedAmountOut = 100n
@@ -775,7 +820,8 @@ describe('math tests', () => {
     }
   })
   test('compute swap step', async () => {
-    const clamm = await deployCLAMM(sender)
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const currentSqrtPrice = 10n ** 24n
       const targetSqrtPrice = 1004987562112089027021926n
@@ -839,7 +885,8 @@ describe('math tests', () => {
     const tickUpperFeeGrowthOutsideY = 0n
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('sqrt price between ticks', async () => {
@@ -1042,7 +1089,8 @@ describe('math tests', () => {
     const tickUpperFeeGrowthOutsideY = 15_0000000000000000000000000000n
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('max fee growth', async () => {
@@ -1065,11 +1113,91 @@ describe('math tests', () => {
     })
   })
 
+  test('calculate sqrt price', async () => {
+    const uints = await deployUints(sender)
+    const clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    {
+      const params = { args: { tickIndex: 30n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1001501050455000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 20n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1001000450120000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 10n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1000500100010000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: 0n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(1000000000000000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -10n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(999500149965000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -20n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(999000549780000000000000n)
+    }
+    {
+      const params = { args: { tickIndex: -30n } }
+      const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
+      expect(sqrtPrice).toEqual(998501199320000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: 20_000n } })
+      expect(result.returns).toBe(2_718145925979000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: 200_000n } })
+      expect(result.returns).toBe(22015_455979766288000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: -20_000n } })
+      expect(result.returns).toBe(367897834491000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: -200_000n } })
+      expect(result.returns).toBe(45422634000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: 0n } })
+      expect(result.returns).toBe(1_000000000000000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_818n } })
+      expect(result.returns).toBe(65535_383934512647000000000000n)
+    }
+    {
+      const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_818n } })
+      expect(result.returns).toBe(15258932000000000000n)
+    }
+  })
+
+  test('calculate sqrt price - domain', async () => {
+    const uints = await deployUints(sender)
+    const clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    {
+      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } }))
+    }
+    {
+      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_819n } }))
+    }
+  })
+
   describe('calculate amount delta', () => {
     let clamm: CLAMMInstance
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('current tick between lower tick and upper tick', async () => {
@@ -1138,7 +1266,8 @@ describe('math tests', () => {
     let maxLiquidity = MaxU256
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('max x', async () => {

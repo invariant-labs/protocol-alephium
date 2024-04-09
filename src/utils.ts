@@ -48,7 +48,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const account = await signer.getSelectedAccount()
 
   const uints = await deployUints(signer)
-  const clamm = await deployCLAMM(signer)
+  const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
   const feeTier = await deployFeeTier(signer)
   const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
   const poolKey = await deployPoolKey(signer)
@@ -338,12 +338,11 @@ export async function deployPositionsCounter(signer: SignerProvider) {
   )
 }
 
-export async function deployCLAMM(signer: SignerProvider) {
-  const uints = await deployUints(signer)
+export async function deployCLAMM(signer: SignerProvider, uintsId: string) {
   return await waitTxConfirmed(
     CLAMM.deploy(signer, {
       initialFields: {
-        uints: uints.contractInstance.contractId
+        uints: uintsId
       }
     })
   )
