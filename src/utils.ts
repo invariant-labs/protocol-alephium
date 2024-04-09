@@ -53,17 +53,23 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
   const poolKey = await deployPoolKey(signer)
   const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
-  const pool = await deployPool(signer, clamm.contractInstance.contractId)
-  const pools = await deployPools(signer, pool.contractInstance.contractId, clamm.contractInstance.contractId)
+  const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
+  const pools = await deployPools(
+    signer,
+    pool.contractInstance.contractId,
+    clamm.contractInstance.contractId,
+    uints.contractInstance.contractId
+  )
   const tick = await deployTick(signer)
   const ticks = await deployTicks(signer, tick.contractInstance.contractId)
-  const position = await deployPosition(signer, uints.contractInstance.contractId)
+  const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
   const positions = await deployPositions(
     signer,
     position.contractInstance.contractId,
     positionsCounter.contractInstance.contractId,
-    clamm.contractInstance.contractId
+    clamm.contractInstance.contractId,
+    uints.contractInstance.contractId
   )
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
@@ -155,7 +161,8 @@ export async function deployPositions(
   signer: SignerProvider,
   positionId: string,
   positionsCounterContractId: string,
-  clammId: string
+  clammId: string,
+  uintsId: string
 ) {
   return await waitTxConfirmed(
     Positions.deploy(signer, {
@@ -164,13 +171,14 @@ export async function deployPositions(
         positionsCounterContractId,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false,
-        clammContract: clammId
+        clammContract: clammId,
+        uints: uintsId
       }
     })
   )
 }
 
-export async function deployPosition(signer: SignerProvider, clammId: string) {
+export async function deployPosition(signer: SignerProvider, clammId: string, uintsId: string) {
   return await waitTxConfirmed(
     Position.deploy(signer, {
       initialFields: {
@@ -188,7 +196,8 @@ export async function deployPosition(signer: SignerProvider, clammId: string) {
           owner: ZERO_ADDRESS
         },
         isActive: false,
-        clammContractInstance: clammId
+        clammContractInstance: clammId,
+        uints: uintsId
       }
     })
   )
@@ -231,7 +240,7 @@ export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) 
   )
 }
 
-export async function deployPool(signer: SignerProvider, clammId: string) {
+export async function deployPool(signer: SignerProvider, clammId: string, uintsId: string) {
   return await waitTxConfirmed(
     Pool.deploy(signer, {
       initialFields: {
@@ -251,18 +260,20 @@ export async function deployPool(signer: SignerProvider, clammId: string) {
           lastTimestamp: 0n,
           feeReceiver: ZERO_ADDRESS
         },
-        clamm: clammId
+        clamm: clammId,
+        uints: uintsId
       }
     })
   )
 }
 
-export async function deployPools(signer: SignerProvider, poolId: string, clammId: string) {
+export async function deployPools(signer: SignerProvider, poolId: string, clammId: string, uintsId: string) {
   return await waitTxConfirmed(
     Pools.deploy(signer, {
       initialFields: {
         poolTemplateContractId: poolId,
         clamm: clammId,
+        uints: uintsId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS,
         positionsId: ZERO_ADDRESS,
@@ -442,3 +453,15 @@ export function hexToBytes(hex: string): Uint8Array {
 export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }
+
+export const ArithmeticError = {
+  CastOverflow: 100001n,
+  AddOverflow: 100002n,
+  MulOverflow: 100003n,
+  DivNotPositiveDivisor: 100004n,
+  DivNotPositiveDenominator: 100005n,
+  MulNotPositiveDenominator: 100006n
+}
+
+export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+export const MaxTick = 221818n
