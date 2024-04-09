@@ -54,58 +54,46 @@ Contract Uints () {
         return U512 { lower: aLowerBLower, higher: aHigherBHigherOverflow }
     }
 
-    pub fn knuthDivision(dividend: U512, divisor: U256, divisorDenominator: U256) -> (U512, U256) {
-        let mut q = U512 { higher: 0, lower: 0 }
-        let mut r = 0
+    pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256, up: Bool) -> U512 {
+        assert!(b > 0, ArithmeticErrors.NotPositiveDivisor)
 
-        assert!(divisor != 0, ArithmeticErrors.NotPositiveDivisor)
-
-        if (dividend.higher == 0) {
-            return U512 { higher: 0, lower: dividend.lower / divisor }, dividend.lower % divisor
+        if (b == 1) {
+            return a
         }
 
-        let mut uHigh = dividend.higher * divisorDenominator
-        let mut uLow = dividend.lower * divisorDenominator
-        let v = divisor
+        // Calculate new higher
+        let newHigher = a.higher * bDenominator
+        let higher = newHigher / b
+        let higherRemainder = newHigher % b
+        // calculate higher remainder
+        let maxDiv = MaxU256 / b
+        let deltaHigherRemainder = higherRemainder * maxDiv
+        // Calculate lower
+        let newLower = a.lower * bDenominator
+        let lower = newLower / b
+        let mut deltaLower = deltaHigherRemainder + lower
 
-        for (let mut j = 511; j > 0; j = j - 1) {
-            r = r << 1
+        if (up) {
+            let lowerRemainder = newLower % b
 
-            if (((uHigh >> 255) & 1) != 0) {
-                r = r | 1
-            }
-            uHigh = uHigh << 1
-
-            if ((uLow >> 255) != 0) {
-                uHigh = uHigh | 1
-            }
-            uLow = uLow << 1
-            if (r >= v) {
-                r = r - v
-                if (j >= 256) {
-                    q.higher = q.higher | (1 << (j - 256))
-                } else {
-                    q.lower = q.lower | (1 << j)
-                }
+            let higherDecimal = deltaHigherRemainder % b
+            if (higherDecimal + lowerRemainder != 0) {
+                deltaLower = deltaLower + 1
             }
         }
-        return q, r
+
+        return U512 {
+            higher: higher,
+            lower: deltaLower
+        }
     }
 
-
     pub fn bigDiv512(a: U512, b: U256, bDenominator: U256) -> U512 {
-        let (quotient, _) = knuthDivision(a, b, bDenominator)
-        return quotient
+        return bigDivWrapper(a, b, bDenominator, false)
     }
 
     pub fn bigDivUp512(a: U512, b: U256, bDenominator: U256) -> U512 {
-        let (quotient, remainder) = knuthDivision(a, b, bDenominator)
-
-        if (remainder != 0) {
-            return bigAdd512(quotient, U512 { higher: 0, lower: 1 })
-        } else {
-            return quotient
-        }
+        return bigDivWrapper(a, b, bDenominator, true)
     }
 
     pub fn bigMul512(a: U512, b: U256) -> U512 {        
@@ -146,7 +134,7 @@ Contract Uints () {
         let mut result = bigMul256(a, b)
 
         result = bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 })
-        result = bigDivUp512(result, bDenominator, 1)
+        result = bigDiv512(result, bDenominator, 1)
 
         return result
     }
