@@ -178,5 +178,14 @@ Contract Uints () {
         result = bigDiv512(result, sqrtPriceDenominator, 1)
         return toU256(result)
     }
-}                           
 
+    pub fn bigRescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U512 {
+        if (expectedScale > fromScale) {
+            let multiplierScale = expectedScale - fromScale
+            return bigMul256(fromValue, 10 ** multiplierScale)
+        } else {
+            let denominatorScale = fromScale - expectedScale
+            return bigDiv512(toU512(fromValue), 10 ** denominatorScale, 1)
+        }
+    }
+}
