@@ -42,10 +42,16 @@ Contract Uints () {
         }
     }
 
+    pub fn bigAdd(a: U512, b: U256) -> U512 {
+        let (lower, overflow) = overflowingAdd(a.lower, b)
+        let higher = wrappingAdd(a.higher, overflow)
+        return U512 { lower: lower, higher: higher }
+    }
+
     pub fn bigAdd512(a: U512, b: U512) -> U512 {
-        let (aLowerBLower, overflow) = overflowingAdd(a.lower, b.lower)
-        let aHigherBHigherOverflow = wrappingAdd(wrappingAdd(a.higher, b.higher), overflow)
-        return U512 { lower: aLowerBLower, higher: aHigherBHigherOverflow }
+        let (aLowerB, overflow) = overflowingAdd(a.lower, b.lower)
+        let aHigherOverflow = wrappingAdd(wrappingAdd(a.higher, b.higher), overflow)
+        return U512 { lower: aLowerB, higher: aHigherOverflow }
     }
 
     pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256, up: Bool) -> U512 {
@@ -127,7 +133,7 @@ Contract Uints () {
     pub fn bigMulDivUp256(a: U256, b: U256, bDenominator: U256) -> U512 {
         let mut result = bigMul256(a, b)
 
-        result = bigAdd512(result, U512 { higher: 0, lower: bDenominator - 1 })
+        result = bigAdd512(result, toU512(bDenominator - 1))
         result = bigDiv512(result, bDenominator, 1)
 
         return result
@@ -155,6 +161,22 @@ Contract Uints () {
     
     pub fn high128(a: U256) -> U256 {
         return a >> 128
+    }
+
+    pub fn bigDivToTokenUp(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> U256 {
+        let mut result = bigMul512(nominator, sqrtPriceDenominator)
+        result = bigAdd(result, denominator - 1)
+        result = bigDiv512(result, denominator, 1)
+        result = bigAdd(result, sqrtPriceDenominator - 1)
+        result = bigDiv512(result, sqrtPriceDenominator, 1)
+        return toU256(result)
+    }
+
+    pub fn bigDivToToken(nominator: U512, denominator: U256, sqrtPriceDenominator: U256) -> U256 {
+        let mut result = bigMul512(nominator, sqrtPriceDenominator)
+        result = bigDiv512(result, denominator, 1)
+        result = bigDiv512(result, sqrtPriceDenominator, 1)
+        return toU256(result)
     }
 }                           
 

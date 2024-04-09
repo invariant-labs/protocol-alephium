@@ -106,17 +106,13 @@ Contract CLAMM(uints: Uints) extends Log(uints){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = mul(deltaSqrtPrice, liquidity, LiquidityScale)
-        if (roundingUp == true) {
-            return divToTokenUp(
-                    nominator,
-                    mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-                )
+        let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+        if (roundingUp) {
+            let denominator = mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            return uints.bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
         } else {
-            return divToToken(
-                nominator,
-                mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
-            )
+            let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            return uints.bigDivToToken(nominator, denominatorUp, one(SqrtPriceScale))
         }
     }
 
@@ -133,10 +129,17 @@ Contract CLAMM(uints: Uints) extends Log(uints){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
+        let mut result = U512 { lower: 0, higher: 0 }
+
         if (roundingUp) {
-            return (mulUp(deltaSqrtPrice, liquidity, LiquidityScale) + almostOne(SqrtPriceScale)) / one(SqrtPriceScale)
+            result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+            result = uints.bigAdd512(result, uints.toU512(almostOne(SqrtPriceScale)))
+            result = uints.bigDiv512(result, one(SqrtPriceScale), 1)
+            return uints.toU256(result)
         } else {
-            return mul(deltaSqrtPrice, liquidity, LiquidityScale) / one(SqrtPriceScale)
+            result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+            result = uints.bigDiv512(result, one(SqrtPriceScale), 1)
+            return uints.toU256(result)
         }
     }
 
