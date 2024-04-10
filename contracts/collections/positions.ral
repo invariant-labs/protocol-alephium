@@ -3,7 +3,8 @@ Contract Positions(
     positionsCounterContractId: ByteVec,
     mut invariantId: Address,
     mut areAdminsSet: Bool,
-    clammContract: CLAMM
+    clammContract: CLAMM,
+    uints: Uints
 ) {
     enum PositionsError {
         NotAdmin = 500
@@ -58,7 +59,8 @@ Contract Positions(
                 owner: originalCaller
             },
             true,
-            clammContract
+            clammContract,
+            uints
         )
         let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
             toByteVec!(length + 1),
