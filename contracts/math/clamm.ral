@@ -201,8 +201,6 @@ Contract CLAMM(
         if (addY) {
             return startingSqrtPrice + uints.toU256(uints.bigDiv(numerator, denominator, one(SqrtPriceScale)))
         } else {
-            // 1000000000000000000000000
-            // 1666666666666666666666667
             return startingSqrtPrice - uints.toU256(uints.bigDivUp(numerator, denominator, one(SqrtPriceScale)))
         }
 

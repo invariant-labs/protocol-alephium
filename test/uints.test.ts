@@ -30,7 +30,6 @@ describe('uints tests', () => {
       }
       const b = 10n ** 5n
       const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator: 1n } })).returns
-      console.log(result)
       expect(result).toStrictEqual({
         higher: 655353839192537149999999n,
         lower: 115792089237316195423570985008687907853269984665640563384103744815375979600000n
