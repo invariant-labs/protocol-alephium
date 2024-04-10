@@ -154,12 +154,8 @@ Contract Uints () {
             return divResult
         }
     
-        let extHigh = bigMul256(dividend.higher, divisorDenominator)
-        let extLow = bigMul256(dividend.lower, divisorDenominator)
-        let extDividend = unwrapU512(bigAdd512(extHigh, extLow))
-        let mut uHigh = extDividend.higher
-        let mut uLow = extDividend.lower
-
+        let mut uHigh = dividend.higher * divisorDenominator
+        let mut uLow = dividend.lower * divisorDenominator
         let v = divisor
     
         for (let mut j = 511; j > 0; j = j - 1) {
