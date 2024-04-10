@@ -88,6 +88,74 @@ Contract Uints () {
         }
     }
 
+    pub fn bigDiv(dividend: U512, divisor: U512, divisorDenominator: U256) -> U512 {
+        let mut q = U512 { higher: 0, lower: 0 }
+        let mut r = U512 { higher: 0, lower: 0 }
+    
+        assert!(divisor.higher != 0 || divisor.lower != 0, ArithmeticErrors.NotPositiveDivisor)
+    
+        if (dividend.higher == 0) {
+            let mulResult = bigMul256(dividend.lower, divisorDenominator)
+            let divResult = bigDiv(mulResult, divisor, 1)
+            return divResult
+        }
+    
+        let mut uHigh = dividend.higher * divisorDenominator
+        let mut uLow = dividend.lower * divisorDenominator
+        let v = divisor
+    
+        for (let mut j = 511; j > 0; j = j - 1) {
+            r.lower = r.lower << 1 | (r.higher >> 255)
+            r.higher = r.higher << 1
+    
+            if (((uHigh >> 255) & 1) != 0) {
+                r.lower = r.lower | 1
+            }
+
+            uHigh = uHigh << 1
+    
+            if ((uLow >> 255) != 0) {
+                uHigh = uHigh | 1
+            }
+            uLow = uLow << 1
+    
+            if (r.higher > v.higher || (r.higher == v.higher && r.lower >= v.lower)) {
+                let mut borrow = 1
+
+                if (r.lower >= v.lower) {
+                    borrow = 0
+                }
+            
+                r.lower = r.lower - (v.lower + borrow)
+                r.higher = r.higher - (v.higher + borrow)
+                
+                if (j >= 256) {
+                    q.higher = q.higher | (1 << (j - 256))
+                } else {
+                    q.lower = q.lower | (1 << j)
+                }
+            }
+        }
+        return q
+    }
+
+    pub fn bigDivUp(dividend: U512, divisor: U512, divisorDenominator: U256) -> U512 {
+        let mut result = bigMul512(dividend, divisorDenominator)
+        //     Failed to call contract, error: VM execution error: 
+        // ArithmeticError(Arithmetic error: org.alephium.protocol.vm.U256Add$@a619c2(
+        // U256(115792089237316195423570985008687907853269984665640564039447584007913129639936),
+        // U256(47746052296788569014427912227786750431330020166275795822927122727411994591231)))
+
+        // divisor.lower = 115792089237316195423570985008687907853269984665640564039447584007913129639936
+        // result.lower = 1000000000000000000000000000000000000000000000000
+        result = bigAdd512(result, divisor)
+        assert!(result.lower != divisor.lower, result.lower)
+        result.lower = result.lower - 1
+        result = bigDiv(result, divisor, 1)
+        return result
+    }
+
+
     pub fn bigDiv512(a: U512, b: U256, bDenominator: U256) -> U512 {
         return bigDivWrapper(a, b, bDenominator, false)
     }
@@ -185,6 +253,7 @@ Contract Uints () {
             return bigMul256(fromValue, 10 ** multiplierScale)
         } else {
             let denominatorScale = fromScale - expectedScale
+            // Most likely does not require an extenstion to U512
             return bigDiv512(toU512(fromValue), 10 ** denominatorScale, 1)
         }
     }

@@ -21,6 +21,41 @@ describe('uints tests', () => {
     expect(castBack).toStrictEqual(v)
   })
 
+  test('Knuth division', async () => {
+    const uints = await deployUints(sender)
+    {
+      const a = {
+        higher: 65535383919253714999999999999n,
+        lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+      }
+      const b = 10n ** 5n
+      const result = (await uints.contractInstance.methods.bigDiv512({ args: { a, b, bDenominator: 1n } })).returns
+      console.log(result)
+      expect(result).toStrictEqual({
+        higher: 655353839192537149999999n,
+        lower: 115792089237316195423570985008687907853269984665640563384103744815375979600000n
+      })
+      // received - 75884790229800029582010010030152469040784228171629896065450012281800526658805261388918611085249960064
+      // Expected - 75884790229800029582010010030152469040784228171629896065450012281800526658805261388918611085250000000
+    }
+    {
+      const a = {
+        higher: 65535383919253714999999999999n,
+        lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+      }
+      const b = { higher: 0n, lower: 10n ** 5n }
+      const result = (
+        await uints.contractInstance.methods.bigDiv({ args: { dividend: a, divisor: b, divisorDenominator: 1n } })
+      ).returns
+      // Received - 75884790229800029582010010030152469040784228171629896065450012281800526658805261388918611085250000000
+      // Expected - 75884790229800029582010010030152469040784228171629896065450012281800526658805261388918611085250000000
+      expect(result).toStrictEqual({
+        higher: 655353839192537149999999n,
+        lower: 115792089237316195423570985008687907853269984665640563384103744815375979639936n
+      })
+    }
+  })
+
   test('big add 256', async () => {
     const uints = await deployUints(sender)
     {

@@ -195,13 +195,15 @@ Contract CLAMM(
         y: U256,
         addY: Bool
     ) -> U256 {
-        let numerator = rescale(y, TokenAmountScale, SqrtPriceScale)
-        let denominator = rescale(liquidity, LiquidityScale, SqrtPriceScale)
-
+        let numerator = uints.bigRescale(y, TokenAmountScale, SqrtPriceScale)
+        let denominator = uints.bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
+        
         if (addY) {
-            return startingSqrtPrice + div(numerator, denominator)
+            return startingSqrtPrice + uints.toU256(uints.bigDiv(numerator, denominator, one(SqrtPriceScale)))
         } else {
-            return startingSqrtPrice - divUp(numerator, denominator)
+            // 1000000000000000000000000
+            // 1666666666666666666666667
+            return startingSqrtPrice - uints.toU256(uints.bigDivUp(numerator, denominator, one(SqrtPriceScale)))
         }
 
     }
