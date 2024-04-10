@@ -236,9 +236,9 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let denominator = uints.bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
         
         if (addY) {
-            return startingSqrtPrice + uints.toU256(uints.bigDiv512(numerator, denominator, one(SqrtPriceScale))).value
+            return startingSqrtPrice + uints.unwrapU256(uints.toU256(uints.unwrapU512(uints.bigDiv512(numerator, denominator, one(SqrtPriceScale)))))
         } else {
-            return startingSqrtPrice - uints.toU256(uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale))).value
+            return startingSqrtPrice - uints.unwrapU256(uints.toU256(uints.unwrapU512(uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale)))))
         }
 
     }

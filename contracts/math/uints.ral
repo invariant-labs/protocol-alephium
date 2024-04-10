@@ -42,6 +42,10 @@ Contract Uints () {
         }
     }
 
+    pub fn isZero(a: U512) -> Bool {
+        return a.higher == 0 && a.lower == 0
+    }
+
     pub fn toU256(value: U512) -> ResultU256 {
         if(value.higher > 0) {
             return ResultU256 { value: MaxU256, error: ArithmeticError.CastOverflow }
@@ -128,17 +132,23 @@ Contract Uints () {
         return bigDivWrapper(a, b, bDenominator, true)
     }
 
-    pub fn bigDiv512(dividend: U512, divisor: U512, divisorDenominator: U256) -> U512 {
+    pub fn bigDiv512(dividend: U512, divisor: U512, divisorDenominator: U256) -> ResultU512 {
         let mut q = U512 { higher: 0, lower: 0 }
         let mut r = U512 { higher: 0, lower: 0 }
     
-        assert!(divisor.higher != 0 || divisor.lower != 0, ArithmeticError.DivNotPositiveDivisor)
-    
+        if(isZero(divisor)) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
+        }
+
+        if(divisorDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
+        }
+
         if (dividend.higher == 0) {
             let mulResult = bigMul256(dividend.lower, divisorDenominator)
             
             if (mulResult.higher == 0) {
-                return U512 { higher: 0, lower: mulResult.lower / divisor.lower }
+                return ResultU512 { value: U512 { higher: 0, lower: mulResult.lower / divisor.lower }, error: 0 }
             }
             let divResult = bigDiv512(mulResult, divisor, 1)
             return divResult
@@ -180,15 +190,15 @@ Contract Uints () {
                 }
             }
         }
-        return q
+
+        return ResultU512 { value: q, error: 0 }
     }
 
-    pub fn bigDivUp512(dividend: U512, divisor: U512, divisorDenominator: U256) -> U512 {
-        let mut result = bigMul(dividend, divisorDenominator).value
-        result = bigAdd512(result, divisor).value
+    pub fn bigDivUp512(dividend: U512, divisor: U512, divisorDenominator: U256) -> ResultU512 {
+        let mut result = unwrapU512(bigMul(dividend, divisorDenominator))
+        result = unwrapU512(bigAdd512(result, divisor))
         result.lower = result.lower - 1
-        result = bigDiv512(result, divisor, 1)
-        return result
+        return bigDiv512(result, divisor, 1)
     }
 
     pub fn bigMul256(a: U256, b: U256) -> U512 {
