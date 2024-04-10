@@ -391,6 +391,269 @@ describe('math tests', () => {
       expect(sqrtPrice).toEqual(998501199320000000000000n)
     }
   })
+  test('get next sqrt price y down - base samples', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const sqrtPriceDenominator = 10n ** 24n
+    const liquidityDenominator = 10n ** 5n
+    {
+      const startingSqrtPrice = 1n * sqrtPriceDenominator
+      const liquidity = 1n * liquidityDenominator
+      const y = 1n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: true } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(2n * sqrtPriceDenominator)
+    }
+    {
+      const startingSqrtPrice = 1n * sqrtPriceDenominator
+      const liquidity = 2n * liquidityDenominator
+      const y = 3n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: true } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(25n * 10n ** 23n)
+    }
+    {
+      const startingSqrtPrice = 2n * sqrtPriceDenominator
+      const liquidity = 3n * liquidityDenominator
+      const y = 5n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: true } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual((11n * sqrtPriceDenominator) / 3n)
+    }
+    {
+      const startingSqrtPrice = 24234n * sqrtPriceDenominator
+      const liquidity = 3000n * liquidityDenominator
+      const y = 5000n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: true } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual((72707n * sqrtPriceDenominator) / 3n)
+    }
+    // addY = false
+    {
+      const startingSqrtPrice = 1n * sqrtPriceDenominator
+      const liquidity = 2n * liquidityDenominator
+      const y = 1n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: false } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(5n * 10n ** 23n)
+    }
+    {
+      const startingSqrtPrice = 100000n * sqrtPriceDenominator
+      const liquidity = 500000000n * liquidityDenominator
+      const y = 4000n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: false } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(99999999992000000000000000000n)
+    }
+    {
+      const startingSqrtPrice = 3n * sqrtPriceDenominator
+      const liquidity = 222n * liquidityDenominator
+      const y = 37n
+      const params = { args: { startingSqrtPrice, liquidity, y, addY: false } }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(2833333333333333333333333n)
+    }
+  })
+  test('get next sqrt price y down - domain', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const minY = 1n
+    const maxY = (1n << 256n) - 1n
+    const maxSqrtPrice = 65535383934512647000000000000n
+    const minSqrtPrice = 15258932000000000000n
+    const almostMinSqrtPrice = minSqrtPrice + 1n
+    const almostMaxSqrtPrice = maxSqrtPrice - 1n
+    const minSqrtPriceOutsideDomain = 1n
+    const minLiquidity = 1n
+    const maxLiquidity = (1n << 256n) - 1n
+    const minOverflowTokenY = 340282366920940n
+    const oneLiquidity = 1n * 10n ** 5n
+
+    // Min value inside domain
+    {
+      // increases minSqrtPrice
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: minSqrtPrice,
+            liquidity: maxLiquidity,
+            y: minY + (1n << 128n) * (1n << 32n),
+            addY: true
+          }
+        }
+        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+        // expected: 15258932000000000001n
+        // received: 15258932000000000000n
+        expect(nextSqrtPrice).toEqual(15258932000000000000n)
+      }
+      // decreases almostMinSqrtPrice
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: almostMinSqrtPrice,
+            liquidity: maxLiquidity,
+            y: minY,
+            addY: false
+          }
+        }
+        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+        // expected: 15258932000000000000n
+        // received: 15258932000000000001n
+        expect(nextSqrtPrice).toEqual(15258932000000000001n)
+      }
+    }
+    // Max value inside domain
+    {
+      // decreases maxSqrtPrice
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: maxSqrtPrice,
+            liquidity: maxLiquidity,
+            y: minY + (1n << 128n) * (1n << 32n),
+            addY: false
+          }
+        }
+        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+        // expected: 65535383934512646999999999998n
+        // received: 65535383934512647000000000000n
+        expect(nextSqrtPrice).toEqual(65535383934512647000000000000n)
+      }
+      // increases almostMaxSqrtPrice
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: almostMaxSqrtPrice,
+            liquidity: maxLiquidity,
+            y: minY + 600000000n,
+            addY: true
+          }
+        }
+        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+        expect(nextSqrtPrice).toEqual(65535383934512646999999999999n)
+      }
+    }
+    // Extension TokenAmount to SqrtPrice decimal overflow
+    {
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: maxSqrtPrice,
+            liquidity: minLiquidity,
+            y: maxY,
+            addY: true
+          }
+        }
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: minSqrtPriceOutsideDomain,
+            liquidity: minLiquidity,
+            y: maxY,
+            addY: false
+          }
+        }
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+    }
+    // Overflow in SqrtPrice Diffrence
+    {
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: maxSqrtPrice,
+            liquidity: oneLiquidity,
+            y: minOverflowTokenY + 2n,
+            addY: true
+          }
+        }
+        // Does not panic
+        // await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: minSqrtPriceOutsideDomain,
+            liquidity: oneLiquidity,
+            y: minOverflowTokenY - 2n,
+            addY: false
+          }
+        }
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+    }
+    // Quotient overflow
+    {
+      const minYOverflowDecimalExtension = 1n << 225n
+      const irrelevantSqrtPrice = 1n
+      const irrelevantLiquidity = oneLiquidity
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: irrelevantSqrtPrice,
+            liquidity: irrelevantLiquidity,
+            y: minYOverflowDecimalExtension,
+            addY: true
+          }
+        }
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+      {
+        const params = {
+          args: {
+            startingSqrtPrice: irrelevantSqrtPrice,
+            liquidity: irrelevantLiquidity,
+            y: minYOverflowDecimalExtension,
+            addY: false
+          }
+        }
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+      }
+    }
+    // Y max
+    {
+      const params = {
+        args: {
+          startingSqrtPrice: minSqrtPrice,
+          liquidity: maxLiquidity,
+          y: maxY,
+          addY: true
+        }
+      }
+      // Mul overflow
+      // const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      // console.log(nextSqrtPrice)
+      // expect(nextSqrtPrice).toEqual(100000000015258932000000000000n)
+    }
+    // L = 0
+    {
+      const params = {
+        args: {
+          startingSqrtPrice: minSqrtPrice,
+          liquidity: 0n,
+          y: minY,
+          addY: true
+        }
+      }
+      await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+    }
+    // TokenAmount is zero
+    {
+      const params = {
+        args: {
+          startingSqrtPrice: minSqrtPrice,
+          liquidity: maxLiquidity,
+          y: 0n,
+          addY: true
+        }
+      }
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(minSqrtPrice)
+    }
+  })
+
   describe('get delta x', () => {
     let clamm: DeployContractResult<CLAMMInstance>
 
@@ -1333,152 +1596,6 @@ describe('math tests', () => {
         args: { currentTickIndex, currentSqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick }
       }
       await expectError(clamm.methods.calculateAmountDelta(params))
-    })
-  })
-
-  describe('next sqrt price from input - domain', () => {
-    let clamm: CLAMMInstance
-    let maxLiquidity = MaxU256
-    let minLiquidity = 1n
-    let maxAmount = MaxU256
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
-    const almostMaxSqrtPrice = maxSqrtPrice - 1n
-    const almostMinSqrtPrice = minSqrtPrice + 1n
-
-    beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
-    })
-
-    test('max result, increase sqrt_price case', async () => {
-      // const params = {
-      //   args: {
-      //     startingSqrtPrice: almostMaxSqrtPrice,
-      //     liquidity: maxLiquidity,
-      //     amount: 2n ** 128n + 10n ** 10n,
-      //     xToY: false
-      //   }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromInput(params)).returns
-      // expect(result).toEqual(65535383934512647000000000001n)
-    })
-
-    test('min result, decrease sqrt_price case', async () => {
-      // const params = {
-      //   args: {
-      //     startingSqrtPrice: almostMinSqrtPrice,
-      //     liquidity: maxLiquidity,
-      //     amount: 2n ** 128n + 10n ** 20n,
-      //     xToY: true
-      //   }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromInput(params)).returns
-      // expect(result).toEqual(65535383934512647000000000001n)
-    })
-
-    test('max result, increase sqrt_price case', async () => {
-      // const params = {
-      //   args: { startingSqrtPrice: almostMaxSqrtPrice, liquidity: maxLiquidity, amount: maxAmount, xToY: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromInput(params)).returns
-      // expect(result).toEqual(15258931999999999995n)
-    })
-
-    test('amount = 0', async () => {
-      const params = {
-        args: { startingSqrtPrice: minSqrtPrice, liquidity: maxLiquidity, amount: 0n, xToY: true }
-      }
-      const result = (await clamm.methods.getNextSqrtPriceFromInput(params)).returns
-      expect(result).toEqual(minSqrtPrice)
-    })
-
-    test('liquidity = 0', async () => {
-      // const params = {
-      //   args: { startingSqrtPrice: minSqrtPrice, liquidity: 0n, amount: 20n, xToY: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromInput(params)).returns
-      // expect(result).toEqual(0n)
-    })
-
-    test('error handling', async () => {
-      const params = {
-        args: { startingSqrtPrice: maxSqrtPrice, liquidity: minLiquidity, amount: maxAmount, xToY: false }
-      }
-      await expectError(clamm.methods.getNextSqrtPriceFromInput(params))
-    })
-  })
-
-  describe('next sqrt price from output - domain', () => {
-    let clamm: CLAMMInstance
-    let maxLiquidity = MaxU256
-    let minLiquidity = 1n
-    let maxAmount = MaxU256
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
-    const almostMaxSqrtPrice = maxSqrtPrice - 1n
-    const almostMinSqrtPrice = minSqrtPrice + 1n
-
-    beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
-    })
-
-    test('max result, increase sqrt_price case', async () => {
-      // const params = {
-      //   args: {
-      //     startingSqrtPrice: almostMaxSqrtPrice,
-      //     liquidity: maxLiquidity,
-      //     amount: 1n,
-      //     xToY: false
-      //   }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromOutput(params)).returns
-      // expect(result).toEqual(65535383934512647000000000000n)
-    })
-
-    test('min result, decrease sqrt_price case', async () => {
-      // const params = {
-      //   args: {
-      //     startingSqrtPrice: almostMinSqrtPrice,
-      //     liquidity: maxLiquidity,
-      //     amount: 1n,
-      //     xToY: true
-      //   }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromOutput(params)).returns
-      // expect(result).toEqual(15258932000000000000n)
-    })
-
-    test('max result, increase sqrt_price case', async () => {
-      // const params = {
-      //   args: { startingSqrtPrice: almostMaxSqrtPrice, liquidity: maxLiquidity, amount: maxAmount, xToY: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromOutput(params)).returns
-      // expect(result).toEqual(15258931999999999995n)
-    })
-
-    test('amount = 0', async () => {
-      // const params = {
-      //   args: { startingSqrtPrice: minSqrtPrice, liquidity: maxLiquidity, amount: 0n, xToY: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromOutput(params)).returns
-      // expect(result).toEqual(minSqrtPrice)
-    })
-
-    test('liquidity = 0', async () => {
-      // const params = {
-      //   args: { startingSqrtPrice: minSqrtPrice, liquidity: 0n, amount: 20n, xToY: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceFromOutput(params)).returns
-      // expect(result).toEqual(0n)
-    })
-
-    test('error handling', async () => {
-      const params = {
-        args: { startingSqrtPrice: maxSqrtPrice, liquidity: minLiquidity, amount: maxAmount, xToY: false }
-      }
-      await expectError(clamm.methods.getNextSqrtPriceFromOutput(params))
     })
   })
 })
