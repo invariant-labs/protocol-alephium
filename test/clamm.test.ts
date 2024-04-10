@@ -1347,7 +1347,8 @@ describe('math tests', () => {
     const almostMinSqrtPrice = minSqrtPrice + 1n
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('max result, increase sqrt_price case', async () => {
@@ -1419,7 +1420,8 @@ describe('math tests', () => {
     const almostMinSqrtPrice = minSqrtPrice + 1n
 
     beforeEach(async () => {
-      clamm = (await deployCLAMM(sender)).contractInstance
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
     })
 
     test('max result, increase sqrt_price case', async () => {
