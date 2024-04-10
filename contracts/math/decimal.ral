@@ -5,10 +5,16 @@ Abstract Contract Decimal() {
     const FixedPointScale = 12
     const PercentageScale = 12
     const TokenAmountScale = 0
+    const FixedPointDenominator = 1000000000000
     const GlobalMaxTick = 221818i
     const GlobalMinTick = -221818i
     const MaxSqrtPrice = 65535383934512647000000000000
     const MinSqrtPrice = 15258932000000000000
+
+
+    enum DecimalError {
+        TickOverBounds = 0
+    }
 
     pub fn getSqrtPriceScale() -> U256 {
         return SqrtPriceScale
@@ -111,66 +117,68 @@ Abstract Contract Decimal() {
 
         let mut sqrtPrice = one(FixedPointScale)  
 
+        assert!(tickIndexAbs <= toU256!(GlobalMaxTick), DecimalError.TickOverBounds)
+
         if (tickIndexAbs & 0x1 != 0) {
-            sqrtPrice = (sqrtPrice * 1000049998750) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000049998750) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x2 != 0) {
-            sqrtPrice = (sqrtPrice * 1000100000000) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000100000000) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x4 != 0) {
-            sqrtPrice = (sqrtPrice * 1000200010000) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000200010000) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x8 != 0) {
-            sqrtPrice = (sqrtPrice * 1000400060004) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000400060004) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x10 != 0) {
-            sqrtPrice = (sqrtPrice * 1000800280056)  / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1000800280056)  / FixedPointDenominator
         }
         if (tickIndexAbs & 0x20 != 0) {
-            sqrtPrice = (sqrtPrice * 1001601200560) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1001601200560) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x40 != 0) {
-            sqrtPrice = (sqrtPrice * 1003204964963) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1003204964963) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x80 != 0) {
-            sqrtPrice = (sqrtPrice * 1006420201726) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1006420201726) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x100 != 0) {
-            sqrtPrice = (sqrtPrice * 1012881622442) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1012881622442) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x200 != 0) {
-            sqrtPrice = (sqrtPrice * 1025929181080) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1025929181080) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x400 != 0) {
-            sqrtPrice = (sqrtPrice * 1052530684591) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1052530684591) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x800 != 0) {
-            sqrtPrice = (sqrtPrice * 1107820842005) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1107820842005) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x1000 != 0) {
-            sqrtPrice = (sqrtPrice * 1227267017980) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1227267017980) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x2000 != 0) {
-            sqrtPrice = (sqrtPrice * 1506184333421) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 1506184333421) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x4000 != 0) {
-            sqrtPrice = (sqrtPrice * 2268591246242) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 2268591246242) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x8000 != 0) {
-            sqrtPrice = (sqrtPrice * 5146506242525) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 5146506242525) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x00010000 != 0) {
-            sqrtPrice = (sqrtPrice * 26486526504348) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 26486526504348) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x00020000 != 0) {
-            sqrtPrice = (sqrtPrice * 701536086265529) / (10 ** FixedPointScale)
+            sqrtPrice = (sqrtPrice * 701536086265529) / FixedPointDenominator
         }
 
         if (tickIndex >= 0i) {
             return rescale(sqrtPrice, FixedPointScale, SqrtPriceScale)
         } else {
-            let intermediate = one(SqrtPriceScale) / sqrtPrice 
-            return rescale(intermediate, FixedPointScale, SqrtPriceScale)
+            let sqrtPriceInFixedPointScale = FixedPointDenominator * FixedPointDenominator / sqrtPrice
+            return rescale(sqrtPriceInFixedPointScale, FixedPointScale, SqrtPriceScale)
         }
     }
 
