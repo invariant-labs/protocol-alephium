@@ -304,7 +304,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
 
         let mut nextSqrtPrice = 0
         if (byAmountIn == true) {
-            let amountAfterFee = mul(amount, (one(PercentageScale) - fee), PercentageScale)
+            let amountAfterFee = uints.unwrapU256(uints.toU256(uints.unwrapU512(uints.bigMulDiv256(amount, (one(PercentageScale) - fee), PercentageScale))))
             nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
         } else {
             nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
@@ -340,7 +340,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         expectedAmountOut: U256,
         slippage: U256
     ) -> U256 {
-        return mulUp(expectedAmountOut, (one(PercentageScale) - slippage), PercentageScale)
+        return uints.unwrapU256(uints.toU256(uints.unwrapU512(uints.bigMulUpU256(expectedAmountOut, (one(PercentageScale) - slippage), one(PercentageScale)))))
     }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {

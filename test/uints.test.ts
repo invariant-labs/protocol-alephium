@@ -285,7 +285,6 @@ describe('uints tests', () => {
       const b = MaxU256
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      console.log(result)
       expect(result).toStrictEqual({
         value: { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n },
         error: 0n

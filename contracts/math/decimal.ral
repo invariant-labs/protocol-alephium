@@ -192,8 +192,6 @@ Abstract Contract Decimal() {
         }
     }
 
-
-
     pub fn wrappingAdd(a: U256, b: U256) -> U256 {
         let u256Max = u256Max!()
         if (b > u256Max - a) {
