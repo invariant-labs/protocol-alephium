@@ -832,6 +832,73 @@ describe('math tests', () => {
     }
   })
 
+  test('is enough to change price - domain', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const zeroLiquidity = 0n
+    const maxFee = 10n ** 12n
+    const maxAmount = (1n << 256n) - 1n
+    const minAmount = 1n
+    const minLiquidity = 1n
+    const maxSqrtPrice = 65535383934512647000000000000n
+    const minFee = 0n
+    // max fee
+    {
+      const params = {
+        args: {
+          amount: minAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: minLiquidity,
+          fee: maxFee,
+          byAmountIn: false,
+          xToY: false
+        }
+      }
+      await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+    }
+    // L = 0
+    {
+      const params = {
+        args: {
+          amount: maxAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: zeroLiquidity,
+          fee: maxFee,
+          byAmountIn: false,
+          xToY: false
+        }
+      }
+      const isEnough = (await clamm.contractInstance.methods.isEnoughToChangePrice(params)).returns
+      expect(isEnough).toBe(true)
+    }
+    // Min amount
+    {
+      const params = {
+        args: {
+          amount: minAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: minLiquidity,
+          fee: minFee,
+          byAmountIn: false,
+          xToY: false
+        }
+      }
+      await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+    }
+    // Max amount
+    const params = {
+      args: {
+        amount: maxAmount,
+        startingSqrtPrice: maxSqrtPrice,
+        liquidity: minLiquidity,
+        fee: minFee,
+        byAmountIn: false,
+        xToY: false
+      }
+    }
+    await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+  })
+
   describe('calculate fee growth inside', () => {
     let clamm: CLAMMInstance
     const globalFeeGrowthX = 15_0000000000000000000000000000n
