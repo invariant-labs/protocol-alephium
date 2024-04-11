@@ -99,7 +99,7 @@ Contract Uints () {
         if (b == MaxU256) {
             return ResultU512 { value: U512 { higher: 0, lower: a.higher }, error: 0 }
         }
-        
+
         let mut q = U512 { higher: 0, lower: 0 }
         let mut r = 0
 
@@ -113,7 +113,9 @@ Contract Uints () {
         let mut uLow = a.lower * bDenominator
         let v = b
 
-        for (let mut j = 511; j > 0; j = j - 1) {
+        let mut j = 512
+        while (j > 0) {
+            j = j - 1
             r = r << 1
 
             if (((uHigh >> 255) & 1) != 0) {
@@ -134,17 +136,6 @@ Contract Uints () {
                 }
             }
         }
-
-        r = r << 1
-        
-        if (((uHigh >> 255) & 1) != 0) {
-            r = r | 1
-        }
-        
-        if (r >= v) {
-            q.lower = q.lower | (1 << j)
-        }
-
 
         return ResultU512 { value: q, error: 0 }
     }
