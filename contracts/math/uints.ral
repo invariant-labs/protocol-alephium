@@ -108,7 +108,6 @@ Contract Uints () {
         if (a.higher == 0) {
             return ResultU512 { value: U512 { higher: 0, lower: (a.lower * bDenominator) / b }, error: 0 }
         }
-
         // can overflow
         let extA = unwrapU512(bigMul(a, bDenominator))
         let mut uHigh = extA.higher

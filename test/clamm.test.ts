@@ -172,8 +172,6 @@ describe('math tests', () => {
       const liquidity = (1n << 256n) - 1n
       const feeGrowth = 100000n * 10n ** 28n
       const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
-      // Received: 115792089237316195423570985008687907853269984665640564039457584007913129639934n
-      // Expected: 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       expect(out).toStrictEqual({
         value: 115792089237316195423570985008687907853269984665640564039457584007913129639935n,
         error: 0n
@@ -324,35 +322,6 @@ describe('math tests', () => {
     }
   })
 
-  test('get delta x', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
-    const sqrtPriceA = 234878324943782000000000000n
-    const sqrtPriceB = 87854456421658000000000000n
-    const liquidity = 983983249092n
-    const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-    const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-    const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUp)).returns
-    const resultDown = (await clamm.contractInstance.methods.getDeltaX(paramsDown)).returns
-    // 7010.8199533068819376891841727789301497024557314488455622925765280
-    expect(resultUp).toEqual({ value: 70109n, error: 0n })
-    expect(resultDown).toEqual({ value: 70108n, error: 0n })
-  })
-  test('get delta y', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
-    const sqrtPriceA = 234878324943782000000000000n
-    const sqrtPriceB = 87854456421658000000000000n
-    const liquidity = 983983249092n
-    const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
-    const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-    const resultUp = (await clamm.contractInstance.methods.getDeltaY(paramsUp)).returns
-    const resultDown = (await clamm.contractInstance.methods.getDeltaY(paramsDown)).returns
-    // 144669023.842474597804911408
-    expect(resultUp).toEqual({ value: 1446690239n, error: 0n })
-    expect(resultDown).toEqual({ value: 1446690238n, error: 0n })
-  })
-
   test('calculate sqrt price', async () => {
     const uints = await deployUints(sender)
     const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
@@ -485,14 +454,10 @@ describe('math tests', () => {
       const paramsDown = { args: { ...params, roundingUp: false } }
       const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUp)).returns
       const resultDown = (await clamm.contractInstance.methods.getDeltaX(paramsDown)).returns
-      // expected: 75884792730156830614567103553061795263351065677581979504561495713443442818879n
-      // received: 75884792730156830614567103553061795263351065677581979504561495713443442818879n
       expect(resultUp).toEqual({
         value: 75884792730156830614567103553061795263351065677581979504561495713443442818879n,
         error: 0n
       })
-      // expected: 75884792730156830614567103553061795263351065677581979504561495713443442818878n
-      // received: 75884792730156830614567103553061795263351065677581979504561495713443442818878n
       expect(resultDown).toEqual({
         value: 75884792730156830614567103553061795263351065677581979504561495713443442818878n,
         error: 0n
@@ -521,14 +486,10 @@ describe('math tests', () => {
       const paramsDown = { args: { ...params, roundingUp: false } }
       const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUp)).returns
       const resultDown = (await clamm.contractInstance.methods.getDeltaX(paramsDown)).returns
-      // expected: 3794315473971847510172532341754979462199874072217062973965311338137066234n
-      // received: 3794315473971847510172532341754979462199874072217062973965311338137066234n
       expect(resultUp).toEqual({
         value: 3794315473971847510172532341754979462199874072217062973965311338137066234n,
         error: 0n
       })
-      // expected: 3794315473971847510172532341754979462199874072217062973965311338137066233n
-      // received: 3794315473971847510172532341754979462199874072217062973965311338137066233n
       expect(resultDown).toEqual({
         value: 3794315473971847510172532341754979462199874072217062973965311338137066233n,
         error: 0n
@@ -564,8 +525,6 @@ describe('math tests', () => {
       }
       const paramsUp = { args: { ...params, roundingUp: true } }
       const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUp)).returns
-      // Expected: 45875017378130362421757891862614875858481775310156442203847653871247n
-      // Received: 45875017378130362421757891862614875858481775310156442203847653871247n
       expect(resultUp).toEqual({
         value: 45875017378130362421757891862614875858481775310156442203847653871247n,
         error: 0n
@@ -582,12 +541,7 @@ describe('math tests', () => {
       }
       const resultUp = (await clamm.contractInstance.methods.getDeltaX(paramsUpperBound)).returns
       const resultDown = (await clamm.contractInstance.methods.getDeltaX(paramsBottomBound)).returns
-      // expected: 269608649375997235557394191156352599353486422139915865816324471n
-      // received: 269608649375997235557394191156352599353486422139915865816324471n
       expect(resultUp).toEqual({ value: 269608649375997235557394191156352599353486422139915865816324471n, error: 0n })
-
-      // expected: 75883634844601460750582416171430603974060896681619645705711819135499453546638n
-      // received: 75883634844601460750582416171430603974060896681619645705711819135499453546638n
       expect(resultDown).toEqual({
         value: 75883634844601460750582416171430603974060896681619645705711819135499453546638n,
         error: 0n
