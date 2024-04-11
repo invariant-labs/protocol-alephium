@@ -23,6 +23,7 @@ Contract Uints () {
         DivNotPositiveDivisor = 100004
         DivNotPositiveDenominator = 100005
         MulNotPositiveDenominator = 100006
+        DecrementUnderflow = 100007
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -109,8 +110,9 @@ Contract Uints () {
         }
 
         // can overflow
-        let mut uHigh = a.higher * bDenominator
-        let mut uLow = a.lower * bDenominator
+        let extA = unwrapU512(bigMul(a, bDenominator))
+        let mut uHigh = extA.higher
+        let mut uLow = extA.lower
         let v = b
 
         let mut j = 512
@@ -144,10 +146,28 @@ Contract Uints () {
         return bigDivWrapper(a, b, bDenominator)
     }
 
+    pub fn decrement(a: U512) -> ResultU512 {
+        if(a.lower == 0) {
+            if (a.higher == 0) {
+                return ResultU512 { value: U512 { higher: 0, lower: 0 }, error: ArithmeticError.DecrementUnderflow }
+            }
+            return ResultU512 { value: U512 { higher: a.higher - 1, lower: MaxU256 }, error: 0 }
+        }
+        return ResultU512 { value: U512 { higher: a.higher, lower: a.lower - 1 }, error: 0 }
+    }
+
     pub fn bigDivUp(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
+        if(b == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
+        }
+
+        if(bDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
+        }
+
         let mut result = unwrapU512(bigMul(a, bDenominator))
         result = unwrapU512(bigAdd(result, b))
-        result.lower = result.lower - 1
+        result = unwrapU512(decrement(result))
         return bigDivWrapper(result, b, 1)
     }
 
