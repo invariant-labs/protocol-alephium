@@ -1481,4 +1481,515 @@ describe('math tests', () => {
       await expectError(clamm.methods.getNextSqrtPriceFromOutput(params))
     })
   })
+
+  describe('compute swap step', () => {
+    let clamm: CLAMMInstance
+
+    beforeEach(async () => {
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    })
+
+    test('one token by amount in', async () => {
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const targetSqrtPrice = 1_004987562112089027021926n
+      const liquidity = 2000_00000n
+      const amount = 1n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({ nextSqrtPrice: currentSqrtPrice, amountIn: 0n, amountOut: 0n, feeAmount: 1n })
+    })
+
+    test('amount out capped at target sqrt price', async () => {
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const targetSqrtPrice = 1_004987562112089027021926n
+      const liquidity = 2000_00000n
+      const amount = 20n
+      const fee = 600000000n
+
+      const paramsResultIn = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const paramsResultOut = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
+      }
+      const resultIn = (await clamm.methods.computeSwapStep(paramsResultIn)).returns
+      const resultOut = (await clamm.methods.computeSwapStep(paramsResultOut)).returns
+      expect(resultIn).toEqual({ nextSqrtPrice: targetSqrtPrice, amountIn: 10n, amountOut: 9n, feeAmount: 1n })
+      expect(resultOut).toEqual({ nextSqrtPrice: targetSqrtPrice, amountIn: 10n, amountOut: 9n, feeAmount: 1n })
+    })
+
+    test('amount in not capped', async () => {
+      const currentSqrtPrice = 1_010000000000000000000000n
+      const targetSqrtPrice = 10_000000000000000000000000n
+      const liquidity = 300000000_00000n
+      const amount = 1000000n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 1_013331333333333333333333n,
+        amountIn: 999400n,
+        amountOut: 976487n,
+        feeAmount: 600n
+      })
+    })
+
+    test('amount out not capped', async () => {
+      // const currentSqrtPrice = 101_000000000000000000000000n
+      // const targetSqrtPrice = 100_000000000000000000000000n
+      // const liquidity = 5000000000000_00000n
+      // const amount = 2000000n
+      // const fee = 600000000n
+      // const params = {
+      //   args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 100_999999600000000000000000n,
+      //   amountIn: 197n,
+      //   amountOut: amount,
+      //   feeAmount: 1n
+      // })
+    })
+
+    test('empty swap step when sqrt price is at tick', async () => {
+      const currentSqrtPrice = 999500149965000000000000n
+      const targetSqrtPrice = 999500149965000000000000n
+      const liquidity = 200060000_00000n
+      const amount = 1000000n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: currentSqrtPrice,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: 0n
+      })
+    })
+
+    test('if liquidity is high, small amount in should not push sqrt price', async () => {
+      const currentSqrtPrice = 999500149965000000000000n
+      const targetSqrtPrice = 1_999500149965000000000000n
+      const liquidity = 100000000000000000000000000_00000n
+      const amount = 10n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: currentSqrtPrice,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: 10n
+      })
+    })
+
+    test('amount in > u64 for swap to target sqrt price and when liquidity > 2^64', async () => {
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const targetSqrtPrice = 1_000050000000000000000000n
+      const liquidity = 368944000000000000000000_00000n
+      const amount = 1n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: currentSqrtPrice,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: 1n
+      })
+    })
+
+    test('amount out > u64 for swap to target sqrt price and when liquidity > 2^64', async () => {
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const targetSqrtPrice = 1_000050000000000000000000n
+      const liquidity = 368944000000000000000000_00000n
+      const amount = 1n
+      const fee = 600000000n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 1_000000000000000000000003n,
+        amountIn: 2n,
+        amountOut: 1n,
+        feeAmount: 1n
+      })
+    })
+
+    test('liquidity is zero and by amount in should skip to target sqrt price', async () => {
+      const currentSqrtPrice = 1_000000000000000000000000n
+      const targetSqrtPrice = 1_000050000000000000000000n
+      const liquidity = 0n
+      const amount = 100000n
+      const fee = 600000000n
+
+      const paramsIn = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const paramsOut = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const resultIn = (await clamm.methods.computeSwapStep(paramsIn)).returns
+      const resultOut = (await clamm.methods.computeSwapStep(paramsOut)).returns
+      expect(resultIn).toEqual({
+        nextSqrtPrice: targetSqrtPrice,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: 0n
+      })
+      expect(resultOut).toEqual({
+        nextSqrtPrice: targetSqrtPrice,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: 0n
+      })
+    })
+
+    test('normal swap step but fee is set to 0', async () => {
+      const currentSqrtPrice = 999950000000000000000000n
+      const targetSqrtPrice = 1_000000000000000000000000n
+      const liquidity = 50000000_00000n
+      const amount = 1000n
+      const fee = 0n
+
+      const params = {
+        args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 999970000000000000000000n,
+        amountIn: 1000n,
+        amountOut: 1000n,
+        feeAmount: 0n
+      })
+    })
+
+    test('by amount out and x to y edge cases', async () => {
+      // const tickIndex = -10n
+      // const targetSqrtPrice = (await clamm.methods.calculateSqrtPrice({ args: { tickIndex } })).returns
+      // const currentSqrtPrice = targetSqrtPrice + 1_000000000000000000000000n
+      // const liquidity = 340282366920938463463374607_00000n
+      // const oneToken = 1n
+      // const tokensWithSameOutput = 85n
+      // const zeroToken = 0n
+      // const maxFee = 900000000000n
+      // const minFee = 0n
+      // const oneTokenParams = {
+      //   args: {
+      //     currentSqrtPrice,
+      //     targetSqrtPrice,
+      //     liquidity,
+      //     amount: oneToken,
+      //     byAmountIn: false,
+      //     fee: maxFee
+      //   }
+      // }
+      // const tokensWithSameOutputParams = {
+      //   args: {
+      //     currentSqrtPrice,
+      //     targetSqrtPrice,
+      //     liquidity,
+      //     amount: tokensWithSameOutput,
+      //     byAmountIn: false,
+      //     fee: maxFee
+      //   }
+      // }
+      // const zeroTokenParams = {
+      //   args: {
+      //     currentSqrtPrice,
+      //     targetSqrtPrice,
+      //     liquidity,
+      //     amount: zeroToken,
+      //     byAmountIn: false,
+      //     fee: minFee
+      //   }
+      // }
+      // const oneTokenResult = (await clamm.methods.computeSwapStep(oneTokenParams)).returns
+      // const tokensWithSameOutputResult = (await clamm.methods.computeSwapStep(tokensWithSameOutputParams)).returns
+      // const zeroTokenResult = (await clamm.methods.computeSwapStep(zeroTokenParams)).returns
+      // expect(oneTokenResult).toEqual({
+      //   nextSqrtPrice: currentSqrtPrice - 1n,
+      //   amountIn: 86n,
+      //   amountOut: 1n,
+      //   feeAmount: 78n
+      // })
+      // expect(tokensWithSameOutputResult).toEqual({
+      //   nextSqrtPrice: currentSqrtPrice - 1n,
+      //   amountIn: 86n,
+      //   amountOut: 85n,
+      //   feeAmount: 78n
+      // })
+      // expect(zeroTokenResult).toEqual({
+      //   nextSqrtPrice: currentSqrtPrice,
+      //   amountIn: 0n,
+      //   amountOut: 0n,
+      //   feeAmount: 0n
+      // })
+    })
+  })
+
+  describe('compute swap step - domain', () => {
+    let clamm: CLAMMInstance
+
+    const oneSqrtPrice = 1_000000000000000000000000n
+    const twoSqrtPrice = 2_000000000000000000000000n
+    const maxSqrtPrice = 65535383934512647000000000000n
+    const minSqrtPrice = 15258932000000000000n
+    const oneLiquidity = 1_0000n
+    const maxLiquidity = MaxU256
+    const maxAmount = MaxU256
+    const maxAmountNotReachedTargetSqrtPrice = MaxU256 - 1n
+    const maxFee = 1_000000000000n
+    const minFee = 0n
+
+    beforeEach(async () => {
+      const uints = await deployUints(sender)
+      clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    })
+
+    test('100% fee | max amount', async () => {
+      const params = {
+        args: {
+          currentSqrtPrice: oneSqrtPrice,
+          targetSqrtPrice: twoSqrtPrice,
+          liquidity: oneLiquidity,
+          amount: maxAmount,
+          byAmountIn: true,
+          fee: maxFee
+        }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 1_000000000000000000000000n,
+        amountIn: 0n,
+        amountOut: 0n,
+        feeAmount: maxAmount
+      })
+    })
+
+    test('0% fee | max amount | max liquidity | sqrt price slice', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: oneSqrtPrice,
+      //     targetSqrtPrice: twoSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: maxAmount,
+      //     byAmountIn: true,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 2_000000000000000000000000n,
+      //   amountIn: 1157920892373161954235709850086879078532699846656405640394575840079131297n,
+      //   amountOut: 578960446186580977117854925043439539266349923328202820197287920039565648n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('by amount in == true || close to target sqrt price but not reached', async () => {
+      const bigLiquidity = 100000000000000_00000n
+      const amountPushingSqrtPriceToTarget = 100000000000000n
+
+      const params = {
+        args: {
+          currentSqrtPrice: oneSqrtPrice,
+          targetSqrtPrice: twoSqrtPrice,
+          liquidity: bigLiquidity,
+          amount: amountPushingSqrtPriceToTarget - 1n,
+          byAmountIn: true,
+          fee: minFee
+        }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 1_999999999999990000000000n,
+        amountIn: 99999999999999n,
+        amountOut: 49999999999999n,
+        feeAmount: 0n
+      })
+    })
+
+    test('maximize fee amount || close to target sqrt price but not reached', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: oneSqrtPrice,
+      //     targetSqrtPrice: twoSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: MaxU256,
+      //     byAmountIn: true,
+      //     fee: maxFee - 19n
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 10_00001899999999999999999n,
+      //   amountIn: 2200049695509007711889927822791908294976419858560291638216994249494n,
+      //   amountOut: 2200045515422528409085952759527180615861658807361317178894970210709n,
+      //   feeAmount: 115792089235116145728061977296797980030478076370664144180897292369696135390441n
+      // })
+    })
+
+    test('get next sqrt price from input -> get next sqrt price x up', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: maxSqrtPrice,
+      //     targetSqrtPrice: minSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: maxAmountNotReachedTargetSqrtPrice,
+      //     byAmountIn: true,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 15258932000000000000n,
+      //   amountIn: 75884792730156830614567103553061795263351065677581979504561495713443442818879n,
+      //   amountOut: 75884790229800029582010010030152469040784228171629896065450012281800526658805n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('get next sqrt price from input -> get next sqrt price y down / scale', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: minSqrtPrice,
+      //     targetSqrtPrice: maxSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: maxAmountNotReachedTargetSqrtPrice,
+      //     byAmountIn: true,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 65535_383934512647000000000000n,
+      //   amountIn: 75884790229800029582010010030152469040784228171629896065450012281800526658806n,
+      //   amountOut: 75884792730156830614567103553061795263351065677581979504561495713443442818878n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('get next sqrt price from input -> get next sqrt price y down / big div - no possible to trigger from compute swap step', async () => {
+      // const minOverflowTokenAmount = 340282366920939n
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: minSqrtPrice,
+      //     targetSqrtPrice: maxSqrtPrice,
+      //     liquidity: oneLiquidity - 1n,
+      //     amount: minOverflowTokenAmount - 1n,
+      //     byAmountIn: true,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: maxSqrtPrice,
+      //   amountIn: 65535n,
+      //   amountOut: 65534n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('get next sqrt price from output -> get next sqrt price x up / min sqrt price different at maximum amount', async () => {
+      // const minDiff = 232826265438719159684n
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: maxSqrtPrice - minDiff,
+      //     targetSqrtPrice: maxSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: MaxU256 - 1n,
+      //     byAmountIn: false,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 65535383934512647000000000000n,
+      //   amountIn: 269594397044712364927302271135767871256767389391069984018896158734608n,
+      //   amountOut: 62771017353866807635074993554120737773068233085134433767742n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('get next sqrt price from output -> get next sqrt price x up / min sqrt price different at maximum amount', async () => {
+      const params = {
+        args: {
+          currentSqrtPrice: minSqrtPrice,
+          targetSqrtPrice: maxSqrtPrice,
+          liquidity: 281477613507675_00000n,
+          amount: MaxU256 - 1n,
+          byAmountIn: false,
+          fee: minFee
+        }
+      }
+      const result = (await clamm.methods.computeSwapStep(params)).returns
+      expect(result).toEqual({
+        nextSqrtPrice: 65535383934512647000000000000n,
+        amountIn: 18446743465900796471n,
+        amountOut: 18446744073709559494n,
+        feeAmount: 0n
+      })
+    })
+
+    test('get next sqrt price from output -> get next sqrt price x up / min token change', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: maxSqrtPrice - 1_000000000000000000000000n,
+      //     targetSqrtPrice: maxSqrtPrice,
+      //     liquidity: 10000000000_00000n,
+      //     amount: 1n,
+      //     byAmountIn: false,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 65534813412874974599766965330n,
+      //   amountIn: 4294783624n,
+      //   amountOut: 1n,
+      //   feeAmount: 0n
+      // })
+    })
+
+    test('get next sqrt price from output -> get next sqrt price x up / max amount out, by amount in == false', async () => {
+      // const params = {
+      //   args: {
+      //     currentSqrtPrice: maxSqrtPrice,
+      //     targetSqrtPrice: minSqrtPrice,
+      //     liquidity: maxLiquidity,
+      //     amount: maxAmount,
+      //     byAmountIn: false,
+      //     fee: minFee
+      //   }
+      // }
+      // const result = (await clamm.methods.computeSwapStep(params)).returns
+      // expect(result).toEqual({
+      //   nextSqrtPrice: 15258932000000000000n,
+      //   amountIn: 75884792730156830614567103553061795263351065677581979504561495713443442818879n,
+      //   amountOut: 75884790229800029582010010030152469040784228171629896065450012281800526658805n,
+      //   feeAmount: 0n
+      // })
+    })
+  })
 })
