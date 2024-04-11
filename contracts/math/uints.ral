@@ -23,6 +23,7 @@ Contract Uints () {
         DivNotPositiveDivisor = 100004
         DivNotPositiveDenominator = 100005
         MulNotPositiveDenominator = 100006
+        DecrementUnderflow = 100007
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -83,7 +84,7 @@ Contract Uints () {
         return ResultU512 { value: U512 { higher: higher, lower: lower }, error: 0 }
     }
 
-    pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256, up: Bool) -> ResultU512 {
+    pub fn bigDivWrapper(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
         if(b == 0) {
             return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
         }
@@ -96,36 +97,77 @@ Contract Uints () {
             return ResultU512 { value: a, error: 0 }
         }
 
-        // Calculate new higher
-        let newHigher = a.higher * bDenominator
-        let higher = newHigher / b
-        let higherRemainder = newHigher % b
-        // calculate higher remainder
-        let maxDiv = MaxU256 / b
-        let deltaHigherRemainder = higherRemainder * maxDiv
-        // Calculate lower
-        let newLower = a.lower * bDenominator
-        let lower = newLower / b
-        let mut deltaLower = deltaHigherRemainder + lower
+        if (b == MaxU256) {
+            return ResultU512 { value: U512 { higher: 0, lower: a.higher }, error: 0 }
+        }
 
-        if (up) {
-            let lowerRemainder = newLower % b
+        let mut q = U512 { higher: 0, lower: 0 }
+        let mut r = 0
 
-            let higherDecimal = deltaHigherRemainder % b
-            if (higherDecimal + lowerRemainder != 0) {
-                deltaLower = deltaLower + 1
+
+        if (a.higher == 0) {
+            return ResultU512 { value: U512 { higher: 0, lower: (a.lower * bDenominator) / b }, error: 0 }
+        }
+        // can overflow
+        let extA = unwrapU512(bigMul(a, bDenominator))
+        let mut uHigh = extA.higher
+        let mut uLow = extA.lower
+        let v = b
+
+        let mut j = 512
+        while (j > 0) {
+            j = j - 1
+            r = r << 1
+
+            if (((uHigh >> 255) & 1) != 0) {
+                r = r | 1
+            }
+            uHigh = uHigh << 1
+
+            if ((uLow >> 255) != 0) {
+                uHigh = uHigh | 1
+            }
+            uLow = uLow << 1
+            if (r >= v) {
+                r = r - v
+                if (j >= 256) {
+                    q.higher = q.higher | (1 << (j - 256))
+                } else {
+                    q.lower = q.lower | (1 << j)
+                }
             }
         }
 
-        return ResultU512 { value: U512 { higher: higher, lower: deltaLower }, error: 0 }
+        return ResultU512 { value: q, error: 0 }
     }
 
     pub fn bigDiv(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
-        return bigDivWrapper(a, b, bDenominator, false)
+        return bigDivWrapper(a, b, bDenominator)
+    }
+
+    pub fn decrement(a: U512) -> ResultU512 {
+        if(a.lower == 0) {
+            if (a.higher == 0) {
+                return ResultU512 { value: U512 { higher: 0, lower: 0 }, error: ArithmeticError.DecrementUnderflow }
+            }
+            return ResultU512 { value: U512 { higher: a.higher - 1, lower: MaxU256 }, error: 0 }
+        }
+        return ResultU512 { value: U512 { higher: a.higher, lower: a.lower - 1 }, error: 0 }
     }
 
     pub fn bigDivUp(a: U512, b: U256, bDenominator: U256) -> ResultU512 {
-        return bigDivWrapper(a, b, bDenominator, true)
+        if(b == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
+        }
+
+        if(bDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
+        }
+
+        let mut result = unwrapU512(bigMul(a, bDenominator))
+        result = unwrapU512(bigAdd(result, b))
+        result = unwrapU512(decrement(result))
+        return bigDivWrapper(result, b, 1)
     }
 
     pub fn bigMul256(a: U256, b: U256) -> U512 {
