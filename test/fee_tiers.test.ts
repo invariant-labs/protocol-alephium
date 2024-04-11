@@ -13,7 +13,7 @@ describe('fee tier tests', () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test.only('add fee tier', async () => {
+  test('add fee tier', async () => {
     const invariant = await deployInvariant(sender, 0n)
 
     const fee1 = 0n
