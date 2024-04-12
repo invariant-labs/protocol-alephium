@@ -346,11 +346,7 @@ Contract Uints () {
     }
 
     pub fn isGreaterEqual(v: U512, compareTo: U512) -> Bool {
-        if (v.higher > compareTo.higher) {
-            return true
-        }
-
-        if (v.higher == compareTo.higher && v.lower >= compareTo.lower) {
+        if (v.higher > compareTo.higher || (v.higher == compareTo.higher && v.lower >= compareTo.lower)) {
             return true
         }
 
@@ -358,12 +354,6 @@ Contract Uints () {
     }
 
     pub fn bigShl(mut v: U512, n: U256) -> U512 {
-        if (n >= WordSize * 2) {
-            v.higher = 0
-            v.lower = 0
-            return v
-        }
-
         if (n >= WordSize) {
             v.higher = v.lower << (n - WordSize)
             v.lower = 0

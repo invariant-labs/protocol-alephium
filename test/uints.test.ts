@@ -73,6 +73,12 @@ describe('uints tests', () => {
       const result = (await uints.methods.bigShl({ args: { v, n } })).returns
       expect(result).toEqual({ higher: 2n, lower: 8n })
     }
+    {
+      const v = { higher: MaxU256, lower: MaxU256 }
+      const n = 1n
+      const result = (await uints.methods.bigShl({ args: { v, n } })).returns
+      expect(result).toEqual({ higher: MaxU256, lower: MaxU256 - 1n })
+    }
   })
 
   test('isGreaterEqual', async () => {
