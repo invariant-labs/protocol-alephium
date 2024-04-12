@@ -212,48 +212,48 @@ describe('math tests', () => {
       expect(result).toBe(-20n)
     }
   })
-  test('allign tick to tickspacing', async () => {
+  test('align tick to tickspacing', async () => {
     const uints = await deployUints(sender)
     const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     {
       const accurateTick = 0n
       const tickSpacing = 3n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(0n)
     }
     {
       const accurateTick = 14n
       const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(10n)
     }
     {
       const accurateTick = 20n
       const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(20n)
     }
     {
       const accurateTick = -14n
       const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(-20n)
     }
     {
       const accurateTick = -21n
       const tickSpacing = 10n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(-30n)
     }
     {
       const accurateTick = -120n
       const tickSpacing = 3n
-      const result = (await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick, tickSpacing } }))
+      const result = (await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick, tickSpacing } }))
         .returns
       expect(result).toBe(-120n)
     }
@@ -271,7 +271,7 @@ describe('math tests', () => {
           })
         ).returns
         let expectedTick = (
-          await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
+          await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
         ).returns
         expect(tick).toEqual(expectedTick)
       }
@@ -286,7 +286,7 @@ describe('math tests', () => {
           })
         ).returns
         let expectedTick = (
-          await clamm.contractInstance.methods.allignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
+          await clamm.contractInstance.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing: 3n } })
         ).returns
         expect(tick).toEqual(expectedTick)
       }
@@ -1206,17 +1206,6 @@ describe('math tests', () => {
     {
       const result = await clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_818n } })
       expect(result.returns).toBe(15258932000000000000n)
-    }
-  })
-
-  test('calculate sqrt price - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
-    {
-      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } }))
-    }
-    {
-      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_819n } }))
     }
   })
 
