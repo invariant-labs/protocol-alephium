@@ -1,7 +1,7 @@
 import { ONE_ALPH, SignerProvider, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { UintsInstance } from '../artifacts/ts'
-import { ArithmeticError, MaxU256, deployUints, expectError } from '../src/utils'
+import { MaxU256, deployUints, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -14,38 +14,15 @@ describe('uints tests', () => {
     uints = (await deployUints(sender)).contractInstance
   })
 
-  test('unwrap result u256 works', async () => {
-    const resultU256 = { value: 1n, error: 0n }
-    const result = (await uints.methods.unwrapU256({ args: { result: resultU256 } })).returns
-    expect(result).toEqual(resultU256.value)
-  })
-
-  test('unwrap result u256 throws error when error is not 0', async () => {
-    const resultU256 = { value: 1n, error: ArithmeticError.CastOverflow }
-    expectError(uints.methods.unwrapU256({ args: { result: resultU256 } }))
-  })
-
-  test('unwrap result u512 works', async () => {
-    const resultU256 = { value: { higher: 2n, lower: 1n }, error: 0n }
-    const result = (await uints.methods.unwrapU512({ args: { result: resultU256 } })).returns
-    expect(result).toEqual(resultU256.value)
-  })
-
-  test('unwrap result u512 throws error when error is not 0', async () => {
-    const resultU256 = { value: { higher: 2n, lower: 1n }, error: ArithmeticError.CastOverflow }
-    expectError(uints.methods.unwrapU512({ args: { result: resultU256 } }))
-  })
-
   test('to u256 works', async () => {
     const value = { higher: 0n, lower: 1n }
     const result = (await uints.methods.toU256({ args: { value } })).returns
-    expect(result).toEqual({ value: value.lower, error: 0n })
+    expect(result).toEqual(value.lower)
   })
 
   test('to u256 returns an error if number is higher than u256', async () => {
     const value = { higher: 2n, lower: 1n }
-    const result = (await uints.methods.toU256({ args: { value } })).returns
-    expect(result).toEqual({ value: MaxU256, error: ArithmeticError.CastOverflow })
+    await expectError(uints.methods.toU256({ args: { value } }))
   })
 
   test('to u512 works', async () => {
@@ -80,30 +57,27 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 3n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = 2n
       const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = MaxU256
       const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: a.lower - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
       const a = { higher: MaxU256, lower: 0n }
       const b = MaxU256
       const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: 0n
+        higher: MaxU256,
+        lower: MaxU256
       })
     }
   })
@@ -115,14 +89,7 @@ describe('uints tests', () => {
         lower: MaxU256
       }
       const b = 1n
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: ArithmeticError.AddOverflow
-      })
+      await expectError(uints.methods.bigAdd({ args: { a, b } }))
     }
     {
       const a = {
@@ -130,14 +97,7 @@ describe('uints tests', () => {
         lower: 1n
       }
       const b = MaxU256
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: ArithmeticError.AddOverflow
-      })
+      await expectError(uints.methods.bigAdd({ args: { a, b } }))
     }
   })
 
@@ -146,19 +106,19 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 1n }
       const b = { higher: 0n, lower: 2n }
       const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 3n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = { higher: 0n, lower: 2n }
       const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = { higher: 0n, lower: MaxU256 }
       const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: a.lower - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
@@ -168,11 +128,8 @@ describe('uints tests', () => {
       }
       const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: 0n
+        higher: MaxU256,
+        lower: MaxU256
       })
     }
   })
@@ -187,14 +144,7 @@ describe('uints tests', () => {
         higher: 0n,
         lower: 1n
       }
-      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: ArithmeticError.AddOverflow
-      })
+      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -205,14 +155,7 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: ArithmeticError.AddOverflow
-      })
+      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -223,14 +166,7 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      const result = (await uints.methods.bigAdd512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: ArithmeticError.AddOverflow
-      })
+      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
     }
   })
 
@@ -240,35 +176,35 @@ describe('uints tests', () => {
       const b = 1n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = { higher: 1n, lower: 0n }
       const b = 1n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: 0n })
     }
     {
       const a = { higher: 20n, lower: 20n }
       const b = 10n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 2n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
@@ -276,8 +212,8 @@ describe('uints tests', () => {
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n },
-        error: 0n
+        higher: 0n,
+        lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       })
     }
     {
@@ -286,8 +222,8 @@ describe('uints tests', () => {
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n },
-        error: 0n
+        higher: 0n,
+        lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       })
     }
     {
@@ -295,21 +231,21 @@ describe('uints tests', () => {
       const b = 10n
       const bDenominator = 10n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const bDenominator = 10n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 5n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 5n })
     }
     {
       const a = { higher: 0n, lower: 0n }
       const b = MaxU256
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
@@ -322,7 +258,7 @@ describe('uints tests', () => {
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
   })
 
@@ -331,21 +267,13 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.DivNotPositiveDivisor
-      })
+      await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      const result = (await uints.methods.bigDiv({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.DivNotPositiveDenominator
-      })
+      await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
     }
   })
 
@@ -355,35 +283,35 @@ describe('uints tests', () => {
       const b = 1n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
       const a = { higher: 1n, lower: 0n }
       const b = 1n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: 0n })
     }
     {
       const a = { higher: 20n, lower: 20n }
       const b = 10n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 2n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
@@ -397,8 +325,8 @@ describe('uints tests', () => {
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: { higher: 0n, lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n },
-        error: 0n
+        higher: 0n,
+        lower: 115792089237316195423570985008687907853269984665640564039457584007913129639935n
       })
     }
     {
@@ -406,28 +334,28 @@ describe('uints tests', () => {
       const b = 10n
       const bDenominator = 10n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const bDenominator = 10n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 5n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 5n })
     }
     {
       const a = { higher: 0n, lower: 0n }
       const b = MaxU256
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
   })
 
@@ -436,21 +364,13 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.DivNotPositiveDivisor
-      })
+      await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      const result = (await uints.methods.bigDivUp({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.DivNotPositiveDenominator
-      })
+      await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
     }
   })
 
@@ -492,31 +412,31 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 1n }
       const b = 2n
       const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = 2n
       const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: MaxU256 - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = MaxU256
       const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: MaxU256 - 1n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
     }
     {
       const a = { higher: 0n, lower: MaxU256 }
       const b = 0n
       const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = { higher: 0n, lower: 0n }
       const b = 0n
       const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
   })
 
@@ -524,26 +444,22 @@ describe('uints tests', () => {
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = 2n
-      const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulOverflow })
+      await expectError(uints.methods.bigMul({ args: { a, b } }))
     }
     {
       const a = { higher: MaxU256, lower: 1n }
       const b = MaxU256
-      const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulOverflow })
+      await expectError(uints.methods.bigMul({ args: { a, b } }))
     }
     {
       const a = { higher: MaxU256 - 1n, lower: MaxU256 }
       const b = MaxU256
-      const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulOverflow })
+      await expectError(uints.methods.bigMul({ args: { a, b } }))
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = MaxU256
-      const result = (await uints.methods.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.MulOverflow })
+      await expectError(uints.methods.bigMul({ args: { a, b } }))
     }
   })
 
@@ -553,14 +469,14 @@ describe('uints tests', () => {
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = MaxU256
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: MaxU256 - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
     }
     {
       const a = MaxU256
@@ -568,11 +484,8 @@ describe('uints tests', () => {
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256 - 1n,
-          lower: 1n
-        },
-        error: 0n
+        higher: MaxU256 - 1n,
+        lower: 1n
       })
     }
     {
@@ -580,35 +493,35 @@ describe('uints tests', () => {
       const b = 0n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 0n
       const b = 0n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 100n
       const b = 200n
       const bDenominator = 100n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 200n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 200n })
     }
     {
       const a = 1n
       const b = 150n
       const bDenominator = 100n
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
       const a = MaxU256
       const b = MaxU256
       const bDenominator = MaxU256
       const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: MaxU256 - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: MaxU256 - 1n })
     }
   })
 
@@ -617,11 +530,7 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      const result = (await uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.MulNotPositiveDenominator
-      })
+      await expectError(uints.methods.bigMulDiv256({ args: { a, b, bDenominator } }))
     }
   })
 
@@ -631,14 +540,14 @@ describe('uints tests', () => {
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = MaxU256
       const b = 2n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: MaxU256 - 1n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
     }
     {
       const a = MaxU256
@@ -646,11 +555,8 @@ describe('uints tests', () => {
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256 - 1n,
-          lower: 1n
-        },
-        error: 0n
+        higher: MaxU256 - 1n,
+        lower: 1n
       })
     }
     {
@@ -658,28 +564,28 @@ describe('uints tests', () => {
       const b = 0n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 0n
       const b = 0n
       const bDenominator = 1n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
       const a = 100n
       const b = 200n
       const bDenominator = 100n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 200n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 200n })
     }
     {
       const a = 1n
       const b = 150n
       const bDenominator = 100n
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 2n }, error: 0n })
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
       const a = MaxU256
@@ -687,11 +593,8 @@ describe('uints tests', () => {
       const bDenominator = MaxU256
       const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        value: {
-          higher: 0n,
-          lower: 115792089237316195423570985008687907853269984665640564039457584007913129639934n
-        },
-        error: 0n
+        higher: 0n,
+        lower: 115792089237316195423570985008687907853269984665640564039457584007913129639934n
       })
     }
   })
@@ -701,11 +604,7 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      const result = (await uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({
-        value: { higher: MaxU256, lower: MaxU256 },
-        error: ArithmeticError.MulNotPositiveDenominator
-      })
+      await expectError(uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } }))
     }
   })
 
