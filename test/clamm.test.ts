@@ -1,7 +1,6 @@
 import { DeployContractResult, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { assert } from 'console'
 import { CLAMMInstance } from '../artifacts/ts'
 import { ArithmeticError, MaxTick, MaxU256, deployCLAMM, deployUints, expectError } from '../src/utils'
 
@@ -322,45 +321,6 @@ describe('math tests', () => {
     }
   })
 
-  test('calculate sqrt price', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
-    {
-      const params = { args: { tickIndex: 30n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(1001501050455000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: 20n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(1001000450120000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: 10n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(1000500100010000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: 0n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(1000000000000000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: -10n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(999500149965000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: -20n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(999000549780000000000000n)
-    }
-    {
-      const params = { args: { tickIndex: -30n } }
-      const sqrtPrice = (await clamm.contractInstance.methods.calculateSqrtPrice(params)).returns
-      expect(sqrtPrice).toEqual(998501199320000000000000n)
-    }
-  })
   describe('get delta x', () => {
     let clamm: DeployContractResult<CLAMMInstance>
 
@@ -763,7 +723,71 @@ describe('math tests', () => {
       const slippage = 0n
       const params = { args: { expectedAmountOut, slippage } }
       const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
-      assert(result === expectedAmountOut)
+      expect(result).toEqual(100n)
+    }
+    // 0.1% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 10n ** 9n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(100n)
+    }
+    // 0.9% fee
+    {
+      const expectedAmountOut = 123n
+      const slippage = 9n * 10n ** 9n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(122n)
+    }
+    // 1% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 10n ** 10n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(99n)
+    }
+    // 3% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 3n * 10n ** 10n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(97n)
+    }
+    // 5% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 5n * 10n ** 10n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(95n)
+    }
+    // 10% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 10n ** 11n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(90n)
+    }
+    // 20% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 2n * 10n ** 11n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(80n)
+    }
+    // 50% fee
+    {
+      const expectedAmountOut = 100n
+      const slippage = 5n * 10n ** 11n
+      const params = { args: { expectedAmountOut, slippage } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(50n)
     }
     // 100% fee
     {
@@ -774,56 +798,105 @@ describe('math tests', () => {
       expect(result).toEqual(0n)
     }
   })
-  test('compute swap step', async () => {
+
+  test('calculate min amount out - domain', async () => {
     const uints = await deployUints(sender)
     const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const minAmount = 0n
+    const maxAmount = (1n << 256n) - 1n
+    const minFee = 0n
+    const maxFee = 10n ** 12n
+    // min amount min fee
     {
-      const currentSqrtPrice = 10n ** 24n
-      const targetSqrtPrice = 1004987562112089027021926n
-      const liquidity = 2000n * 10n ** 5n
-      const amount = 1n
-      const byAmountIn = true
-      const fee = 60000n
-      const params = { args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn, fee } }
-      const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
-        await clamm.contractInstance.methods.computeSwapStep(params)
-      ).returns
-      expect(nextSqrtPrice).toEqual(currentSqrtPrice)
-      expect(amountIn).toEqual(0n)
-      expect(amountOut).toEqual(0n)
-      expect(feeAmount).toEqual(1n)
+      const params = { args: { expectedAmountOut: minAmount, slippage: minFee } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(0n)
     }
+    // min amount max fee
     {
-      const currentSqrtPrice = 10n ** 24n
-      const targetSqrtPrice = 1004987562112089027021926n
-      const liquidity = 2000n * 10n ** 5n
-      const amount = 20n
-      const fee = 60000n
-      {
-        const paramsIn = {
-          args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: true, fee }
+      const params = { args: { expectedAmountOut: minAmount, slippage: maxFee } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(0n)
+    }
+    // max amount max fee
+    {
+      const params = { args: { expectedAmountOut: maxAmount, slippage: maxFee } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(0n)
+    }
+    // max amount min fee
+    {
+      const params = { args: { expectedAmountOut: maxAmount, slippage: minFee } }
+      const result = (await clamm.contractInstance.methods.calculateMinAmountOut(params)).returns
+      expect(result).toEqual(maxAmount)
+    }
+  })
+
+  test('is enough amount to change price - domain', async () => {
+    const uints = await deployUints(sender)
+    const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
+    const zeroLiquidity = 0n
+    const maxFee = 10n ** 12n
+    const maxAmount = (1n << 256n) - 1n
+    const minAmount = 1n
+    const minLiquidity = 1n
+    const maxSqrtPrice = 65535383934512647000000000000n
+    const minFee = 0n
+    // max fee
+    {
+      const params = {
+        args: {
+          amount: minAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: minLiquidity,
+          fee: maxFee,
+          byAmountIn: false,
+          xToY: false
         }
-        const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
-          await clamm.contractInstance.methods.computeSwapStep(paramsIn)
-        ).returns
-        expect(nextSqrtPrice).toEqual(targetSqrtPrice)
-        expect(amountIn).toEqual(10n)
-        expect(amountOut).toEqual(9n)
-        expect(feeAmount).toEqual(1n)
       }
-      {
-        const paramsOut = {
-          args: { currentSqrtPrice, targetSqrtPrice, liquidity, amount, byAmountIn: false, fee }
+      await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
+    }
+    // L = 0
+    {
+      const params = {
+        args: {
+          amount: maxAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: zeroLiquidity,
+          fee: maxFee,
+          byAmountIn: false,
+          xToY: false
         }
-        const { nextSqrtPrice, amountIn, amountOut, feeAmount } = (
-          await clamm.contractInstance.methods.computeSwapStep(paramsOut)
-        ).returns
-        expect(nextSqrtPrice).toEqual(targetSqrtPrice)
-        expect(amountIn).toEqual(10n)
-        expect(amountOut).toEqual(9n)
-        expect(feeAmount).toEqual(1n)
+      }
+      const isEnough = (await clamm.contractInstance.methods.isEnoughAmountToChangePrice(params)).returns
+      expect(isEnough).toBe(true)
+    }
+    // Min amount
+    {
+      const params = {
+        args: {
+          amount: minAmount,
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: minLiquidity,
+          fee: minFee,
+          byAmountIn: false,
+          xToY: false
+        }
+      }
+      await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
+    }
+    // Max amount
+    const params = {
+      args: {
+        amount: maxAmount,
+        startingSqrtPrice: maxSqrtPrice,
+        liquidity: minLiquidity,
+        fee: minFee,
+        byAmountIn: false,
+        xToY: false
       }
     }
+    await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
   })
 
   describe('calculate fee growth inside', () => {

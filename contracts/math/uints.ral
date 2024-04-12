@@ -191,6 +191,12 @@ Contract Uints () {
         return U512 { higher: higher, lower: lower }
     }
 
+    pub fn bigMulUpU256(a: U256, b: U256, bDenominator: U256) -> ResultU512 {
+        let mut result = bigMul256(a, b)
+        result = unwrapU512(bigAdd(result, bDenominator - 1))
+        return bigDiv(result, bDenominator, 1)
+    }
+
     pub fn bigMul(a: U512, b: U256) -> ResultU512 {        
         let result = bigMul256(a.lower, b)
         let higher = toU256(bigMul256(a.higher, b))
