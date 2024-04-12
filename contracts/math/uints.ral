@@ -211,26 +211,20 @@ Contract Uints () {
             return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
         }
 
-        if (dividend.higher == 0) {
-            let mulResult = bigMul256(dividend.lower, divisorDenominator)
-            
-            if (mulResult.higher == 0) {
-                return ResultU512 { value: U512 { higher: 0, lower: mulResult.lower / divisor.lower }, error: 0 }
-            }
-            let divResult = bigDiv512(mulResult, divisor, 1)
-            return divResult
-        }
-    
-        let mut uHigh = dividend.higher * divisorDenominator
-        let mut uLow = dividend.lower * divisorDenominator
+
+        let extDividend = unwrapU512(bigMul(dividend, divisorDenominator))
+        let mut uHigh = extDividend.higher
+        let mut uLow = extDividend.lower
+
         let v = divisor
     
-        for (let mut j = 511; j > 0; j = j - 1) {
-            r.lower = r.lower << 1 | (r.higher >> 255)
-            r.higher = r.higher << 1
+        let mut j = 512
+        while (j > 0) {
+            j = j - 1
+            r = bigShl(r, 1)
     
             if (((uHigh >> 255) & 1) != 0) {
-                r.lower = r.lower | 1
+                r = bitOrLower(r, 1)
             }
 
             uHigh = uHigh << 1
@@ -240,16 +234,8 @@ Contract Uints () {
             }
             uLow = uLow << 1
     
-            if (r.higher > v.higher || (r.higher == v.higher && r.lower >= v.lower)) {
-                let mut borrow = 1
-
-                if (r.lower >= v.lower) {
-                    borrow = 0
-                }
-            
-                r.lower = r.lower - (v.lower + borrow)
-                r.higher = r.higher - (v.higher + borrow)
-                
+            if (isGreaterEqual(r,v)) {
+                r = unwrapU512(bigSub512(r, v))
                 if (j >= 256) {
                     q.higher = q.higher | (1 << (j - 256))
                 } else {
