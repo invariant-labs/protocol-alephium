@@ -26,6 +26,19 @@ Contract Uints () {
         DecrementUnderflow = 100007
     }
 
+    pub fn unwrapU256Or(result: ResultU256, value: U256) -> U256 {
+        if(result.error != 0) {
+            return value
+        }
+        
+        return result.value
+    }
+
+    pub fn unwrap(result: ResultU512) -> U256 {
+        let value = unwrapU512(result)
+        return unwrapU256(toU256(value))
+    }
+
     pub fn unwrapU256(result: ResultU256) -> U256 {
         assert!(result.error == 0, result.error)
         return result.value

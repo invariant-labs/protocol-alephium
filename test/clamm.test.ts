@@ -21,28 +21,28 @@ describe('math tests', () => {
       const amount = 1n
       const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
         .returns
-      expect(result).toStrictEqual({ value: 10000000000000000000000000000n, error: 0n })
+      expect(result).toStrictEqual(10000000000000000000000000000n)
     }
     {
       const liquidity = 2n * 10n ** 5n
       const amount = 1n
       const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
         .returns
-      expect(result).toStrictEqual({ value: 5n * 10n ** 27n, error: 0n })
+      expect(result).toStrictEqual(5n * 10n ** 27n)
     }
     {
       const liquidity = ((1n << 64n) - 1n) * 10n ** 5n
       const amount = 1n
       const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
         .returns
-      expect(result).toStrictEqual({ value: 542101086n, error: 0n })
+      expect(result).toStrictEqual(542101086n)
     }
     {
       const liquidity = 100n * 10n ** 5n
       const amount = 1000000n
       const result = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee: amount } }))
         .returns
-      expect(result).toStrictEqual({ value: 10000n * 10n ** 28n, error: 0n })
+      expect(result).toStrictEqual(10000n * 10n ** 28n)
     }
   })
   test('fee growth from fee - domain', async () => {
@@ -68,7 +68,7 @@ describe('math tests', () => {
       const feeGrowth = (
         await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity: maxLiquidity, fee: maxToken } })
       ).returns
-      expect(feeGrowth).toStrictEqual({ value: 473129365723326089999999999999999n, error: 0n })
+      expect(feeGrowth).toStrictEqual(473129365723326089999999999999999n)
     }
     // min FeeGrowth case inside of domain
     {
@@ -80,36 +80,31 @@ describe('math tests', () => {
           args: { liquidity: maxLiquidity, fee: minToken + basisPoint }
         })
       ).returns
-      expect(feeGrowth).toStrictEqual({ value: 1n, error: 0n })
+      expect(feeGrowth).toStrictEqual(1n)
     }
     // outside of domain trigger overflow due to result not fit into FeeGrowth
     {
       const liquidity = 1n
       const fee = (1n << 256n) - 1n
 
-      const feeGrowth = (
-        await clamm.contractInstance.methods.feeGrowthFromFee({
+      await expectError(
+        clamm.contractInstance.methods.feeGrowthFromFee({
           args: { liquidity, fee }
         })
-      ).returns
-      expect(feeGrowth).toStrictEqual({
-        value: MaxU256,
-        error: ArithmeticError.CastOverflow
-      })
+      )
     }
     // amount = 0
     {
       const liquidity = 1000n * 10n ** 5n
       const fee = 0n
       const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee } })).returns
-      expect(feeGrowth).toStrictEqual({ value: 0n, error: 0n })
+      expect(feeGrowth).toStrictEqual(0n)
     }
     // L = 0
     {
       const liquidity = 0n
       const fee = 1100n
-      const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee } })).returns
-      expect(feeGrowth).toStrictEqual({ value: MaxU256, error: ArithmeticError.MulNotPositiveDenominator })
+      await expectError(clamm.contractInstance.methods.feeGrowthFromFee({ args: { liquidity, fee } }))
     }
   })
   test('fee growth to fee', async () => {
@@ -121,9 +116,9 @@ describe('math tests', () => {
       const liquidity = 1000000n * 10n ** 5n
       const params = { args: { liquidity, fee: amount } }
       const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
-      const outParams = { args: { liquidity, feeGrowth: feeGrowth.value } }
+      const outParams = { args: { liquidity, feeGrowth: feeGrowth } }
       const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
-      expect(out).toStrictEqual({ value: amount, error: 0n })
+      expect(out).toStrictEqual(100n)
     }
     // Greater Liquidity
     {
@@ -132,9 +127,9 @@ describe('math tests', () => {
       const liquidityAfter = 10000000n * 10n ** 5n
       const params = { args: { liquidity: liquidityBefore, fee: amount } }
       const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
-      const outParams = { args: { liquidity: liquidityAfter, feeGrowth: feeGrowth.value } }
+      const outParams = { args: { liquidity: liquidityAfter, feeGrowth } }
       const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
-      expect(out).toStrictEqual({ value: 1000n, error: 0n })
+      expect(out).toStrictEqual(1000n)
     }
     // huge liquidity
     {
@@ -144,12 +139,12 @@ describe('math tests', () => {
       const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
       // real    6.61744490042422139897126953655970282852649688720703125 × 10^-10
       // expected 6617444900424221398
-      expect(feeGrowth).toStrictEqual({ value: 6617444900424221398n, error: 0n })
-      const outParams = { args: { liquidity, feeGrowth: feeGrowth.value } }
+      expect(feeGrowth).toStrictEqual(6617444900424221398n)
+      const outParams = { args: { liquidity, feeGrowth } }
       const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
       // real    9.99999999999999999853225897430980027744256 × 10^13
       // expected 99999999999999
-      expect(out).toStrictEqual({ value: 99_999_999_999_999n, error: 0n })
+      expect(out).toStrictEqual(99_999_999_999_999n)
     }
   })
   test('fee growth to fee - domain', async () => {
@@ -161,44 +156,37 @@ describe('math tests', () => {
       const liquidity = 10000000000000000000n * 10n ** 5n
       const params = { args: { liquidity, fee: amount } }
       const feeGrowth = (await clamm.contractInstance.methods.feeGrowthFromFee(params)).returns
-      expect(feeGrowth).toStrictEqual({ value: 600000000000000000000000000n, error: 0n })
-      const outParams = { args: { liquidity, feeGrowth: feeGrowth.value } }
+      expect(feeGrowth).toStrictEqual(600000000000000000000000000n)
+      const outParams = { args: { liquidity, feeGrowth } }
       const out = (await clamm.contractInstance.methods.toFee(outParams)).returns
-      expect(out).toStrictEqual({ value: amount, error: 0n })
+      expect(out).toStrictEqual(600000000000000000n)
     }
     // max value inside domain
     {
       const liquidity = (1n << 256n) - 1n
       const feeGrowth = 100000n * 10n ** 28n
       const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
-      expect(out).toStrictEqual({
-        value: 115792089237316195423570985008687907853269984665640564039457584007913129639935n,
-        error: 0n
-      })
+      expect(out).toStrictEqual(115792089237316195423570985008687907853269984665640564039457584007913129639935n)
     }
     // Overflow
     {
       const liquidity = (1n << 256n) - 1n
       const feeGrowth = (1n << 256n) - 1n
-      const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
-      expect(out).toStrictEqual({
-        value: MaxU256,
-        error: ArithmeticError.CastOverflow
-      })
+      await expectError(clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } }))
     }
     // FeeGrowth = 0
     {
       const liquidity = 1000n * 10n ** 5n
       const feeGrowth = 0n
       const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
-      expect(out).toStrictEqual({ value: 0n, error: 0n })
+      expect(out).toStrictEqual(0n)
     }
     // Liquidity = 0
     {
       const liquidity = 0n
       const feeGrowth = 1000n * 10n ** 28n
       const out = (await clamm.contractInstance.methods.toFee({ args: { liquidity, feeGrowth } })).returns
-      expect(out).toStrictEqual({ value: 0n, error: 0n })
+      expect(out).toStrictEqual(0n)
     }
   })
   test('tick from sqrt price', async () => {

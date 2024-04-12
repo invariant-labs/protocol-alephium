@@ -171,8 +171,7 @@ export async function deployPositions(
         positionsCounterContractId,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false,
-        clammContract: clammId,
-        uints: uintsId
+        clammContract: clammId
       }
     })
   )
@@ -196,8 +195,7 @@ export async function deployPosition(signer: SignerProvider, clammId: string, ui
           owner: ZERO_ADDRESS
         },
         isActive: false,
-        clammContractInstance: clammId,
-        uints: uintsId
+        clammContractInstance: clammId
       }
     })
   )
@@ -260,8 +258,7 @@ export async function deployPool(signer: SignerProvider, clammId: string, uintsI
           lastTimestamp: 0n,
           feeReceiver: ZERO_ADDRESS
         },
-        clamm: clammId,
-        uints: uintsId
+        clamm: clammId
       }
     })
   )
@@ -273,7 +270,6 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
       initialFields: {
         poolTemplateContractId: poolId,
         clamm: clammId,
-        uints: uintsId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS,
         positionsId: ZERO_ADDRESS,
