@@ -15,6 +15,7 @@ struct ResultU512 {
 
 Contract Uints () {
     const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
+    const WordSize = 256
 
     enum ArithmeticError {
         CastOverflow = 100001
@@ -125,6 +126,7 @@ Contract Uints () {
             return ResultU512 { value: U512 { higher: 0, lower: extA.lower / b }, error: 0 }
         }
 
+        // Optimalization case
         if (b == MaxU256) {
             return ResultU512 { value: U512 { higher: 0, lower: extA.higher }, error: 0 }
         }
@@ -343,6 +345,30 @@ Contract Uints () {
         return toU256(result)
     }
 
+    pub fn isGreaterEqual(v: U512, compareTo: U512) -> Bool {
+        if (v.higher > compareTo.higher || (v.higher == compareTo.higher && v.lower >= compareTo.lower)) {
+            return true
+        }
+
+        return false
+    }
+
+    pub fn bigShl(mut v: U512, n: U256) -> U512 {
+        if (n >= WordSize) {
+            v.higher = v.lower << (n - WordSize)
+            v.lower = 0
+        } else {
+            v.higher = (v.higher << n) | (v.lower >> (WordSize - n))
+            v.lower = v.lower << n
+        }
+        
+        return v
+    }
+
+    pub fn bitOrLower(v: U512, n: U256) -> U512 {
+        return U512 { higher: v.higher, lower: v.lower | n }
+    }
+    
     pub fn bigRescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U512 {
         if (expectedScale > fromScale) {
             let multiplierScale = expectedScale - fromScale
