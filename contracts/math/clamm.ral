@@ -290,7 +290,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         return amountX, amountY, updateLiquidity
     }
 
-    pub fn isEnoughToChangePrice(
+    pub fn isEnoughAmountToChangePrice(
         amount: U256,
         startingSqrtPrice: U256,
         liquidity: U256,

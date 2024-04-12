@@ -163,7 +163,7 @@ Contract Pool(
         let mut totalAmount = 0
 
         if (nextSqrtPrice == swapLimit) {
-            let isEnoughToCross = clamm.isEnoughToChangePrice(remainingAmount, nextSqrtPrice, pool.liquidity, fee, byAmountIn, xToY)
+            let isEnoughToCross = clamm.isEnoughAmountToChangePrice(remainingAmount, nextSqrtPrice, pool.liquidity, fee, byAmountIn, xToY)
             if(!xToY || isEnoughToCross) {
                 hasCrossed = true
             } else if (remainingAmount != 0) {

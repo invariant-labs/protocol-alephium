@@ -832,7 +832,7 @@ describe('math tests', () => {
     }
   })
 
-  test('is enough to change price - domain', async () => {
+  test('is enough amount to change price - domain', async () => {
     const uints = await deployUints(sender)
     const clamm = await deployCLAMM(sender, uints.contractInstance.contractId)
     const zeroLiquidity = 0n
@@ -854,7 +854,7 @@ describe('math tests', () => {
           xToY: false
         }
       }
-      await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+      await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
     }
     // L = 0
     {
@@ -868,7 +868,7 @@ describe('math tests', () => {
           xToY: false
         }
       }
-      const isEnough = (await clamm.contractInstance.methods.isEnoughToChangePrice(params)).returns
+      const isEnough = (await clamm.contractInstance.methods.isEnoughAmountToChangePrice(params)).returns
       expect(isEnough).toBe(true)
     }
     // Min amount
@@ -883,7 +883,7 @@ describe('math tests', () => {
           xToY: false
         }
       }
-      await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+      await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
     }
     // Max amount
     const params = {
@@ -896,7 +896,7 @@ describe('math tests', () => {
         xToY: false
       }
     }
-    await expectError(clamm.contractInstance.methods.isEnoughToChangePrice(params))
+    await expectError(clamm.contractInstance.methods.isEnoughAmountToChangePrice(params))
   })
 
   describe('calculate fee growth inside', () => {
