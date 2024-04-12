@@ -54,6 +54,72 @@ describe('uints tests', () => {
     expect(result).toEqual({ higher: 0n, lower: value })
   })
 
+  test('bigShl', async () => {
+    {
+      const v = { higher: 0n, lower: 1n }
+      const n = 1n
+      const result = (await uints.methods.bigShl({ args: { v, n } })).returns
+      expect(result).toEqual({ higher: 0n, lower: 2n })
+    }
+    {
+      const v = { higher: 0n, lower: 1n }
+      const n = 257n
+      const result = (await uints.methods.bigShl({ args: { v, n } })).returns
+      expect(result).toEqual({ higher: 2n, lower: 0n })
+    }
+    {
+      const v = { higher: 1n, lower: 4n }
+      const n = 1n
+      const result = (await uints.methods.bigShl({ args: { v, n } })).returns
+      expect(result).toEqual({ higher: 2n, lower: 8n })
+    }
+  })
+
+  test('isGreaterEqual', async () => {
+    {
+      const v = { higher: 0n, lower: 1n }
+      const compareTo = { higher: 0n, lower: 1n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(true)
+    }
+    {
+      const v = { higher: 1n, lower: 1n }
+      const compareTo = { higher: 1n, lower: 1n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(true)
+    }
+    {
+      const v = { higher: 0n, lower: 1n }
+      const compareTo = { higher: 1n, lower: 0n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(false)
+    }
+    {
+      const v = { higher: 2n, lower: 3n }
+      const compareTo = { higher: 2n, lower: 2n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(true)
+    }
+    {
+      const v = { higher: 3n, lower: 1n }
+      const compareTo = { higher: 0n, lower: 1n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(true)
+    }
+    {
+      const v = { higher: 3n, lower: 0n }
+      const compareTo = { higher: 3n, lower: 0n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(true)
+    }
+    {
+      const v = { higher: 3n, lower: 0n }
+      const compareTo = { higher: 3n, lower: 1n }
+      const result = (await uints.methods.isGreaterEqual({ args: { v, compareTo } })).returns
+      expect(result).toEqual(false)
+    }
+  })
+
   test('big add 256', async () => {
     {
       const a = 1n
