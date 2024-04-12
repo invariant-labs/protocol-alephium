@@ -29,7 +29,7 @@ Abstract Contract Log(uints: Uints) extends Decimal() {
         return 1 << (31 - Log2MinBinaryPosition)
     }
 
-    fn sqrtPriceToX32(val: U256) -> U256 {
+    pub fn sqrtPriceToX32(val: U256) -> U256 {
         return val * getLog2One() / one(SqrtPriceScale)
     }
 
@@ -63,7 +63,7 @@ Abstract Contract Log(uints: Uints) extends Decimal() {
         return msb
     }
 
-    pub fn allignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+    pub fn alignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
         if (accurateTick > 0i) {
             return accurateTick - (accurateTick % tickSpacing)
         } else {
@@ -77,7 +77,7 @@ Abstract Contract Log(uints: Uints) extends Decimal() {
         }
     }
 
-    fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
+    pub fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
         let mut sign = true
         if (sqrtPrice < getLog2One()) {
             sign = false
@@ -121,8 +121,8 @@ Abstract Contract Log(uints: Uints) extends Decimal() {
             fartherTick = ((-1) * toI256!(absFloorTick)) - 1i
         }
 
-        let nearerTickWithSpacing = allignTickToSpacing(nearerTick, toI256!(tickSpacing))
-        let fartherTickWithSpacing = allignTickToSpacing(fartherTick, toI256!(tickSpacing))
+        let nearerTickWithSpacing = alignTickToSpacing(nearerTick, toI256!(tickSpacing))
+        let fartherTickWithSpacing = alignTickToSpacing(fartherTick, toI256!(tickSpacing))
         if (fartherTickWithSpacing == nearerTickWithSpacing) {
             return nearerTickWithSpacing
         }
@@ -145,7 +145,7 @@ Abstract Contract Log(uints: Uints) extends Decimal() {
         }
 
         if (tickSpacing > 1)  {
-            return allignTickToSpacing(accurateTick, toI256!(tickSpacing))
+            return alignTickToSpacing(accurateTick, toI256!(tickSpacing))
         } else {
             return accurateTick
         }
