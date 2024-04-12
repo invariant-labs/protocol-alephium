@@ -715,12 +715,11 @@ describe('math tests', () => {
     }
     {
       const startingSqrtPrice = 1n * sqrtPriceDenominator
-      const liquidity = 3n * liquidityDenominator
-      const y = 5n
+      const liquidity = 2n * liquidityDenominator
+      const y = 1n
       const params = { args: { startingSqrtPrice, liquidity, y, addY: false } }
-      // ('Sub underflow')
-      // const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
-      // expect(nextSqrtPrice).toEqual(5n * 10n ** 23n)
+      const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+      expect(nextSqrtPrice).toEqual(5n * 10n ** 23n)
     }
     {
       const startingSqrtPrice = 100000n * sqrtPriceDenominator
