@@ -93,10 +93,6 @@ Contract Uints () {
             return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
         }
 
-        if (b == 1) {
-            return ResultU512 { value: a, error: 0 }
-        }
-
         let mut q = U512 { higher: 0, lower: 0 }
         let mut r = 0
 
@@ -108,6 +104,10 @@ Contract Uints () {
 
         if (b == MaxU256) {
             return ResultU512 { value: U512 { higher: 0, lower: extA.higher }, error: 0 }
+        }
+
+        if (b == 1) {
+            return ResultU512 { value: extA, error: 0 }
         }
 
         let mut uHigh = extA.higher
