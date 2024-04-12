@@ -211,7 +211,6 @@ Contract Uints () {
             return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
         }
 
-
         let extDividend = unwrapU512(bigMul(dividend, divisorDenominator))
         let mut uHigh = extDividend.higher
         let mut uLow = extDividend.lower
