@@ -141,36 +141,54 @@ describe('uints tests', () => {
     }
   })
 
-  test('big add', async () => {
+  test('big sub', async () => {
+    {
+      const a = { higher: 1n, lower: 0n }
+      const b = { higher: 0n, lower: 1n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: MaxU256 }, error: 0n })
+    }
     {
       const a = { higher: 0n, lower: 1n }
-      const b = 2n
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 0n, lower: 3n }, error: 0n })
+      const b = { higher: 0n, lower: 1n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = 2n
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: 1n }, error: 0n })
+      const a = { higher: 0n, lower: 1n }
+      const b = { higher: 1n, lower: 0n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubOverflow })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ value: { higher: 1n, lower: a.lower - 1n }, error: 0n })
+      const a = { higher: 1n, lower: 0n }
+      const b = { higher: 1n, lower: 0n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
     }
     {
       const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
-      const result = (await uints.methods.bigAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual({
-        value: {
-          higher: MaxU256,
-          lower: MaxU256
-        },
-        error: 0n
-      })
+      const b = { higher: 1n, lower: 0n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: MaxU256 - 1n, lower: 0n }, error: 0n })
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = { higher: 0n, lower: MaxU256 }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: MaxU256 - 1n, lower: 1n }, error: 0n })
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = { higher: MaxU256, lower: 0n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: 0n, lower: 0n }, error: 0n })
+    }
+    {
+      const a = { higher: 1n, lower: 0n }
+      const b = { higher: 1n, lower: 1n }
+      const result = (await uints.methods.bigSub512({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ value: { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubOverflow })
     }
   })
 

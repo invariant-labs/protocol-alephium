@@ -20,13 +20,12 @@ Contract Uints () {
     enum ArithmeticError {
         CastOverflow = 100001
         AddOverflow = 100002
-        MulOverflow = 100003
-        DivNotPositiveDivisor = 100004
-        DivNotPositiveDenominator = 100005
-        MulNotPositiveDenominator = 100006
-        DecrementUnderflow = 100007
-        SubUnderflow = 100008
-
+        SubUnderflow = 100003
+        MulOverflow = 100004
+        DivNotPositiveDivisor = 100005
+        DivNotPositiveDenominator = 100006
+        MulNotPositiveDenominator = 100007
+        DecrementUnderflow = 100008
     }
 
     pub fn unwrapU256(result: ResultU256) -> U256 {
@@ -82,6 +81,28 @@ Contract Uints () {
 
         if(higherIntermediateOverflow == 1 || higherOverflow == 1) {
             return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.AddOverflow }
+        }
+
+        return ResultU512 { value: U512 { higher: higher, lower: lower }, error: 0 }
+    }
+
+    pub fn bigSub512(a: U512, b: U512) -> ResultU512 {
+        if (b.higher > a.higher) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubUnderflow }
+        }
+
+        let mut higher = a.higher - b.higher
+        let mut lower = 0
+
+        if (b.lower > a.lower) {
+            if (higher == 0) {
+                return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubUnderflow }
+            }
+
+            higher = higher - 1
+            lower = MaxU256 - b.lower + a.lower + 1
+        } else {
+            lower = a.lower - b.lower
         }
 
         return ResultU512 { value: U512 { higher: higher, lower: lower }, error: 0 }
@@ -324,28 +345,6 @@ Contract Uints () {
         return toU256(result)
     }
 
-    pub fn bigSub512(a: U512, b: U512) -> ResultU512 {
-        if (b.higher > a.higher) {
-            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubUnderflow }
-        }
-
-        let mut higher = a.higher - b.higher
-        let mut lower = 0
-
-        if (b.lower > a.lower) {
-            if (higher == 0) {
-                return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.SubUnderflow }
-            }
-
-            higher = higher - 1
-            lower = MaxU256 - b.lower + a.lower + 1
-        } else {
-            lower = a.lower - b.lower
-        }
-
-        return ResultU512 { value: U512 { higher: higher, lower: lower }, error: 0 }
-    }
-
     pub fn isGreaterEqual(v: U512, compareTo: U512) -> Bool {
         if (v.higher > compareTo.higher) {
             return true
@@ -378,6 +377,90 @@ Contract Uints () {
 
     pub fn bitOrLower(v: U512, n: U256) -> U512 {
         return U512 { higher: v.higher, lower: v.lower | n }
+    }
+    
+    pub fn bigRescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U512 {
+        if (expectedScale > fromScale) {
+            let multiplierScale = expectedScale - fromScale
+            return bigMul256(fromValue, 10 ** multiplierScale)
+        } else {
+            let denominatorScale = fromScale - expectedScale
+            // Most likely does not require an extenstion to U512
+            return bigDiv(toU512(fromValue), 10 ** denominatorScale, 1).value
+        }
+    }
+
+    pub fn isZero(a: U512) -> Bool {
+        return a.higher == 0 && a.lower == 0
+    }
+
+    pub fn bigDiv512(dividend: U512, divisor: U512, divisorDenominator: U256) -> ResultU512 {
+        let mut q = U512 { higher: 0, lower: 0 }
+        let mut r = U512 { higher: 0, lower: 0 }
+    
+        if(isZero(divisor)) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDivisor }
+        }
+
+        if(divisorDenominator == 0) {
+            return ResultU512 { value: U512 { higher: MaxU256, lower: MaxU256 }, error: ArithmeticError.DivNotPositiveDenominator }
+        }
+
+        if (dividend.higher == 0) {
+            let mulResult = bigMul256(dividend.lower, divisorDenominator)
+            
+            if (mulResult.higher == 0) {
+                return ResultU512 { value: U512 { higher: 0, lower: mulResult.lower / divisor.lower }, error: 0 }
+            }
+            let divResult = bigDiv512(mulResult, divisor, 1)
+            return divResult
+        }
+    
+        let mut uHigh = dividend.higher * divisorDenominator
+        let mut uLow = dividend.lower * divisorDenominator
+        let v = divisor
+    
+        for (let mut j = 511; j > 0; j = j - 1) {
+            r.lower = r.lower << 1 | (r.higher >> 255)
+            r.higher = r.higher << 1
+    
+            if (((uHigh >> 255) & 1) != 0) {
+                r.lower = r.lower | 1
+            }
+
+            uHigh = uHigh << 1
+    
+            if ((uLow >> 255) != 0) {
+                uHigh = uHigh | 1
+            }
+            uLow = uLow << 1
+    
+            if (r.higher > v.higher || (r.higher == v.higher && r.lower >= v.lower)) {
+                let mut borrow = 1
+
+                if (r.lower >= v.lower) {
+                    borrow = 0
+                }
+            
+                r.lower = r.lower - (v.lower + borrow)
+                r.higher = r.higher - (v.higher + borrow)
+                
+                if (j >= 256) {
+                    q.higher = q.higher | (1 << (j - 256))
+                } else {
+                    q.lower = q.lower | (1 << j)
+                }
+            }
+        }
+
+        return ResultU512 { value: q, error: 0 }
+    }
+
+    pub fn bigDivUp512(dividend: U512, divisor: U512, divisorDenominator: U256) -> ResultU512 {
+        let mut result = unwrapU512(bigMul(dividend, divisorDenominator))
+        result = unwrapU512(bigAdd512(result, divisor))
+        result.lower = result.lower - 1
+        return bigDiv512(result, divisor, 1)
     }
 }                           
 
