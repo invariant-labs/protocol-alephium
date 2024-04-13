@@ -55,17 +55,45 @@ describe('uints tests', () => {
   })
 
   test('Big number division', async () => {
-    const a = {
-      higher: 65535383919253714999999999999n,
-      lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+    {
+      const a = {
+        higher: 65535383919253714999999999999n,
+        lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+      }
+      const b = { higher: 0n, lower: 10n ** 5n }
+      const result = (await uints.methods.bigDiv512({ args: { dividend: a, divisor: b, divisorDenominator: 1n } }))
+        .returns
+      expect(result.value).toStrictEqual({
+        higher: 655353839192537149999999n,
+        lower: 115792089237316195423570985008687907853269984665640563384103744815375979639936n
+      })
     }
-    const b = { higher: 0n, lower: 10n ** 5n }
-    const result = (await uints.methods.bigDiv512({ args: { dividend: a, divisor: b, divisorDenominator: 1n } }))
-      .returns
-    expect(result.value).toStrictEqual({
-      higher: 655353839192537149999999n,
-      lower: 115792089237316195423570985008687907853269984665640563384103744815375979639936n
-    })
+    {
+      const a = {
+        higher: 65535383919253714999999999999n,
+        lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+      }
+      const b = { higher: 1n, lower: 0n }
+      const result = (await uints.methods.bigDiv512({ args: { dividend: a, divisor: b, divisorDenominator: 1n } }))
+        .returns
+      expect(result.value).toStrictEqual({
+        higher: 0n,
+        lower: 65535383919253714999999999999n
+      })
+    }
+    {
+      const a = {
+        higher: 65535383919253714999999999999n,
+        lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
+      }
+      const b = { higher: MaxU256, lower: MaxU256 }
+      const result = (await uints.methods.bigDiv512({ args: { dividend: a, divisor: b, divisorDenominator: 1n } }))
+        .returns
+      expect(result.value).toStrictEqual({
+        higher: 0n,
+        lower: 0n
+      })
+    }
   })
 
   test('bigShl', async () => {
