@@ -803,13 +803,13 @@ describe('math tests', () => {
           args: {
             startingSqrtPrice: maxSqrtPrice,
             liquidity: oneLiquidity,
-            y: minOverflowTokenY + 2n,
+            y: minOverflowTokenY - 2n,
             addY: true
           }
         }
-        // Does not panic
-        // still fails, does not panic
-        // await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
+
+        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
+        expect(nextSqrtPrice).toEqual(340282366986473383934512647000000000000n)
       }
       {
         const params = {
