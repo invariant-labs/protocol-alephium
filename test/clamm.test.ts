@@ -1618,15 +1618,14 @@ describe('math tests', () => {
     })
 
     test('sub 3', async () => {
-      // this test fails, rececived: 7558578911564625850340136n
-      // const startingSqrtPrice = 3_333333333333333333333333n
-      // const liquidity = 222_22222n
-      // const x = 37n
-      // const params = {
-      //   args: { startingSqrtPrice, liquidity, x, addX: false }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(7490636797542399944773031n)
+      const startingSqrtPrice = 3_333333333333333333333333n
+      const liquidity = 222_22222n
+      const x = 37n
+      const params = {
+        args: { startingSqrtPrice, liquidity, x, addX: false }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(7490636797542399944773031n)
     })
 
     test('other', async () => {
@@ -1668,48 +1667,53 @@ describe('math tests', () => {
     })
 
     test('min value inside domain / increases min sqrt price', async () => {
-      // this test fails, rececived: 15258932000000000000n
-      // const params = {
-      //   args: { startingSqrtPrice: minSqrtPrice, liquidity: maxLiquidity, x: 600000000n, addX: false }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(15258932000000000001n)
+      const params = {
+        args: { startingSqrtPrice: minSqrtPrice, liquidity: maxLiquidity, x: 600000000n, addX: false }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(15258932000000000001n)
     })
 
     test('min value inside domain / decreases almost min sqrt price', async () => {
-      // this test fails, rececived: 15258931999999999980n
-      // const params = {
-      //   args: { startingSqrtPrice: almostMinSqrtPrice, liquidity: maxLiquidity, x: 2n ** 196n, addX: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(15258932000000000001n)
+      const params = {
+        args: {
+          startingSqrtPrice: almostMinSqrtPrice,
+          liquidity: maxLiquidity,
+          x: (2n ** 128n - 1n) * 2n ** 64n,
+          addX: true
+        }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(15258932000000000000n)
     })
 
     test('max value inside domain / decreases max sqrt price', async () => {
-      // this test fails, received: 65535383934512646999999999999n
-      // const params = {
-      //   args: { startingSqrtPrice: maxSqrtPrice, liquidity: maxLiquidity, x: 2n ** 128n - 1n, addX: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(65535383934512646999999999999n)
+      const params = {
+        args: { startingSqrtPrice: maxSqrtPrice, liquidity: maxLiquidity, x: 2n ** 128n - 1n, addX: true }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(65535383934512646999999999999n)
     })
 
     test('max value inside domain / increases almost max sqrt price', async () => {
-      // this test fails, received: 65535383934512647000000000000n
-      // const params = {
-      //   args: { startingSqrtPrice: almostMaxSqrtPrice, liquidity: maxLiquidity, x: 2n ** 128n - 1n, addX: false }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(65535383934512647000000000001n)
+      const params = {
+        args: { startingSqrtPrice: almostMaxSqrtPrice, liquidity: maxLiquidity, x: 2n ** 128n - 1n, addX: false }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(65535383934512647000000000001n)
     })
 
     test('all max', async () => {
-      // this test fails, received: 0n
-      // const params = {
-      //   args: { startingSqrtPrice: maxSqrtPrice, liquidity: maxLiquidity, x: maxX, addX: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(65535383934512647000000000001n)
+      const params = {
+        args: {
+          startingSqrtPrice: maxSqrtPrice,
+          liquidity: maxLiquidity,
+          x: maxX,
+          addX: true
+        }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(9999999998474106750n)
     })
 
     test('subtraction underflow', async () => {
@@ -1728,12 +1732,11 @@ describe('math tests', () => {
     })
 
     test('liquidity is zero', async () => {
-      // this test fails, received: 0n
-      // const params = {
-      //   args: { startingSqrtPrice: maxSqrtPrice, liquidity: 0n, x: minX, addX: true }
-      // }
-      // const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
-      // expect(result).toEqual(65535383934512647000000000001n)
+      const params = {
+        args: { startingSqrtPrice: maxSqrtPrice, liquidity: 0n, x: minX, addX: true }
+      }
+      const result = (await clamm.methods.getNextSqrtPriceXUp(params)).returns
+      expect(result).toEqual(0n)
     })
 
     test('amount is zero', async () => {

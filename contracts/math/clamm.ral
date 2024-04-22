@@ -191,11 +191,13 @@ Contract CLAMM(uints: Uints) extends Log(uints){
             denominator = uints.bigSub512(deltaSqrtPrice, uints.bigMulDiv256(startingSqrtPrice, x, one(TokenAmountScale)))
         }
 
-        return uints.toU256(uints.bigDivUp512(
-            uints.bigMulDivUp256(startingSqrtPrice, liquidity, one(LiquidityScale)),
-            uints.bigDiv(denominator, one(SqrtPriceScale), 1),
-            1
-        ))
+        let nominator = uints.bigMulDivUp256(startingSqrtPrice, liquidity, one(LiquidityScale))
+
+        let mut result = uints.bigMul(nominator, one(SqrtPriceScale))
+        result = uints.bigAdd512(result, uints.bigSub512(denominator, uints.toU512(1)))
+        result = uints.bigDiv512(result, denominator, 1)
+
+        return uints.toU256(result)
     }
 
     pub fn getNextSqrtPriceYDown(
