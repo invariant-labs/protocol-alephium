@@ -808,6 +808,7 @@ describe('math tests', () => {
           }
         }
         // Does not panic
+        // still fails, does not panic
         // await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
       }
       {
