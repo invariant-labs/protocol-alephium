@@ -71,7 +71,7 @@ Abstract Contract Decimal() {
     }
 
     pub fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
-        return (l * r + almostOne(rScale)) / rScale
+        return (l * r + rScale - 1) / rScale
     }
     
     pub fn divToTokenUp(l: U256, r: U256) -> U256 {
