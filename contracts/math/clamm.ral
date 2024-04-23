@@ -82,7 +82,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
             feeAmount = amount - amountIn
         } else {
-            feeAmount = mulUp(amountIn, fee, PercentageScale)
+            feeAmount = uints.toU256(uints.bigMulDivUp256(amountIn, fee, one(PercentageScale)))
         }
 
         return SwapResult { 
@@ -134,7 +134,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
 
         if (roundingUp) {
             result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
-            result = uints.bigAdd512(result, uints.toU512(almostOne(SqrtPriceScale)))
+            result = uints.bigAdd(result, almostOne(SqrtPriceScale))
             result = uints.bigDiv(result, one(SqrtPriceScale), 1)
 
             return uints.toU256(result)
@@ -291,8 +291,8 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         tickSpacing: U256
     ) -> U256 {
         let maxTicksAmountSqrtPriceLimited = 2 * toU256!(getGlobalMaxTick()) + 1
-        let ticsAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
-        let maxLiquidity = u256Max!() / ticsAmountSpacingLimited
+        let ticksAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
+        let maxLiquidity = u256Max!() / ticksAmountSpacingLimited
         return maxLiquidity
     }
 
