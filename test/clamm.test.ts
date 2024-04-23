@@ -710,7 +710,7 @@ describe('math tests', () => {
     const minSqrtPriceOutsideDomain = 1n
     const minLiquidity = 1n
     const maxLiquidity = (1n << 256n) - 1n
-    const minOverflowTokenY = 340282366920940n
+    const minOverflowTokenY = 115792089237316195423570985008687907853269984665575031n
     const oneLiquidity = 1n * 10n ** 5n
 
     // Min value inside domain
@@ -808,8 +808,7 @@ describe('math tests', () => {
           }
         }
 
-        const nextSqrtPrice = (await clamm.contractInstance.methods.getNextSqrtPriceYDown(params)).returns
-        expect(nextSqrtPrice).toEqual(340282366986473383934512647000000000000n)
+        await expectError(clamm.contractInstance.methods.getNextSqrtPriceYDown(params))
       }
       {
         const params = {
