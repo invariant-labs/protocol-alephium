@@ -109,10 +109,10 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
 
         if (roundingUp) {
-            let denominator = mul(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            let denominator = mul(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
             return uints.bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
         } else {
-            let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, SqrtPriceScale)
+            let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
             return uints.bigDivToToken(nominator, denominatorUp, one(SqrtPriceScale))
         }
     }
