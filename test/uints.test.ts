@@ -563,6 +563,79 @@ describe('uints tests', () => {
     }
   })
 
+  test('new big div', async () => {
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 1n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
+    }
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 2n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
+    }
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+    {
+      const a = { higher: 1n, lower: 0n }
+      const b = 1n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 0n })
+    }
+    {
+      const a = { higher: 20n, lower: 20n }
+      const b = 10n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 2n, lower: 2n })
+    }
+    {
+      const a = { higher: MaxU256, lower: MaxU256 }
+      const b = MaxU256
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 1n,
+        lower: 1n
+      })
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = MaxU256
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: 1n,
+        lower: 0n
+      })
+    }
+    {
+      const a = { higher: 0n, lower: 0n }
+      const b = MaxU256
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const result = (await uints.methods.newBigDiv({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+  })
+
+  test('big div vs new big div comparison', async () => {
+    {
+      const a = { higher: MaxU256, lower: MaxU256 }
+      const b = MaxU256 - 1n
+      const oldResult = await uints.methods.bigDiv({ args: { a, b, bDenominator: 1n } })
+      const newResult = await uints.methods.newBigDiv({ args: { a, b } })
+      console.log('big div', oldResult.gasUsed, newResult.gasUsed)
+    }
+  })
+
   test('big div return error when dividing by zero or b denominator is zero', async () => {
     {
       const a = { higher: 0n, lower: 2n }
@@ -575,6 +648,14 @@ describe('uints tests', () => {
       const b = 1n
       const bDenominator = 0n
       await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
+    }
+  })
+
+  test('new big div return error when dividing by zero or b denominator is zero', async () => {
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 0n
+      await expectError(uints.methods.newBigDiv({ args: { a, b } }))
     }
   })
 

@@ -155,6 +155,31 @@ Contract Uints () {
         return bigDivWrapper(a, b, bDenominator)
     }
 
+    pub fn newBigDiv(a: U512, b: U256) -> U512 {
+        assert!(b != 0, ArithmeticError.DivNotPositiveDivisor)
+
+        if (b == 1) {
+            return a
+        }
+
+        let mut mutA = a
+        let mut result = U512 { higher: 0, lower: 0 }
+
+        let q = (0 |-| b) / b + 1
+        let r = (0 |-| b) % b
+
+        while(mutA.higher != 0) {
+            let mut mul = newBigMul256(mutA.higher, q)
+            result = newBigAdd512(result, mul)
+            mul = newBigMul256(mutA.higher, r)
+            mutA = newBigAdd512(mul, U512 { higher: 0, lower: mutA.lower })
+        }
+
+        result = newBigAdd512(result, U512 { higher: 0, lower: mutA.lower / b })
+
+        return result
+    }
+
     pub fn decrement(a: U512) -> U512 {
         if(a.lower == 0) {
             assert!(a.higher > 0, ArithmeticError.DecrementUnderflow)
