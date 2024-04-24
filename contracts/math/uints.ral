@@ -58,6 +58,17 @@ Contract Uints () {
         return U512 { higher: higher, lower: lower }
     }
 
+    pub fn newBigAdd512(a: U512, b: U512) -> U512 {
+        let lower = a.lower |+| b.lower
+        let mut higher = a.higher + b.higher
+
+        if (lower < b.lower) {
+            higher = higher + 1
+        }
+
+        return U512 { higher: higher, lower: lower }
+    }
+
     pub fn bigSub512(a: U512, b: U512) -> U512 {
         assert!(b.higher <= a.higher, ArithmeticError.SubUnderflow)
 
@@ -71,6 +82,17 @@ Contract Uints () {
             lower = MaxU256 - b.lower + a.lower + 1
         } else {
             lower = a.lower - b.lower
+        }
+
+        return U512 { higher: higher, lower: lower }
+    }
+
+    pub fn newBigSub512(a: U512, b: U512) -> U512 {
+        let lower = a.lower |-| b.lower
+        let mut higher = a.higher - b.higher
+
+        if (a.lower < b.lower) {
+            higher = higher - 1
         }
 
         return U512 { higher: higher, lower: lower }
@@ -218,6 +240,18 @@ Contract Uints () {
         let higherHigher = high128(aHigherBHigher)
         let lower = lowerLower + (lowerHigher << 128)
         let higher = high128(lowerHigher) + higherLower + (higherHigher << 128)
+
+        return U512 { higher: higher, lower: lower }
+    }
+
+    pub fn newBigMul256(a: U256, b: U256) -> U512 {
+        let mulMod = mulModN!(a, b, u256Max!())
+        let lower = a |*| b
+        let mut higher = mulMod |-| lower
+
+        if (mulMod < lower) {
+            higher = higher |-| 1
+        }
 
         return U512 { higher: higher, lower: lower }
     }
