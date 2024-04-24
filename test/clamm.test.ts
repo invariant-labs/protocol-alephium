@@ -1546,7 +1546,7 @@ describe('math tests', () => {
       expect(result).toEqual([0n, 0n, true])
     })
 
-    test('error handling 1', async () => {
+    test('error handling', async () => {
       const currentTickIndex = 0n
       const currentSqrtPrice = 1_000140000000000000000000n
       const liquidityDelta = 0n
@@ -1560,7 +1560,7 @@ describe('math tests', () => {
       await expectError(clamm.methods.calculateAmountDelta(params))
     })
 
-    test('error handling 2', async () => {
+    test('all max', async () => {
       const currentTickIndex = 0n
       const currentSqrtPrice = MaxU256
       const liquidityDelta = MaxU256
