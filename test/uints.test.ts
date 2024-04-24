@@ -849,6 +849,99 @@ describe('uints tests', () => {
     }
   })
 
+  test('new big div up', async () => {
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 1n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
+    }
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 2n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
+    }
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
+    }
+    {
+      const a = { higher: 1n, lower: 0n }
+      const b = 1n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 0n })
+    }
+    {
+      const a = { higher: 20n, lower: 20n }
+      const b = 10n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 2n, lower: 2n })
+    }
+    {
+      const a = { higher: MaxU256, lower: MaxU256 }
+      const b = MaxU256
+      const bDenominator = 1n
+      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = MaxU256
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({
+        higher: 1n,
+        lower: 0n
+      })
+    }
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 10n
+      const bDenominator = 10n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 2n })
+    }
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const bDenominator = 10n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 5n })
+    }
+    {
+      const a = { higher: 0n, lower: 0n }
+      const b = MaxU256
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 0n })
+    }
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const bDenominator = 1n
+      const result = (await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 1n })
+    }
+  })
+
+  test('big div up vs new big div up comparison', async () => {
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = MaxU256
+      const bDenominator = 1n
+      const oldResult = await uints.methods.bigDivUp({ args: { a, b, bDenominator } })
+      const newResult = await uints.methods.newBigDivUp({ args: { a, b, bDenominator } })
+      console.log('big div', oldResult.gasUsed, newResult.gasUsed)
+    }
+  })
+
   test('big div up return error when dividing by zero or b denominator is zero', async () => {
     {
       const a = { higher: 0n, lower: 2n }
@@ -861,6 +954,21 @@ describe('uints tests', () => {
       const b = 1n
       const bDenominator = 0n
       await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
+    }
+  })
+
+  test('new big div up return error when dividing by zero or b denominator is zero', async () => {
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 0n
+      const bDenominator = 1n
+      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
+    }
+    {
+      const a = { higher: 0n, lower: 2n }
+      const b = 1n
+      const bDenominator = 0n
+      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
     }
   })
 

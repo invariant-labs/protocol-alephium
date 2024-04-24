@@ -226,6 +226,14 @@ Contract Uints () {
         return bigDivWrapper(result, b, 1)
     }
 
+    pub fn newBigDivUp(a: U512, b: U256, bDenominator: U256) -> U512 {
+        assert!(bDenominator != 0, ArithmeticError.DivNotPositiveDenominator)
+        let mut result = newBigMul(a, bDenominator)
+        result = newBigAdd(result, b)
+        result = decrement(result)
+        return newBigDivWrapper(result, b)
+    }
+
     pub fn bigDiv512(dividend: U512, divisor: U512, divisorDenominator: U256) -> U512 {
         let mut q = U512 { higher: 0, lower: 0 }
         let mut r = U512 { higher: 0, lower: 0 }
