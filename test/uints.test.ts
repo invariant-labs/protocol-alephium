@@ -166,6 +166,37 @@ describe('uints tests', () => {
     }
   })
 
+  test('new big add 256', async () => {
+    {
+      const a = 1n
+      const b = 2n
+      const result = (await uints.methods.newBigAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
+    }
+    {
+      const a = MaxU256
+      const b = 2n
+      const result = (await uints.methods.newBigAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 1n })
+    }
+    {
+      const a = MaxU256
+      const b = MaxU256
+      const result = (await uints.methods.newBigAdd256({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
+    }
+  })
+
+  test('big add 256 vs new big add 256 comparison', async () => {
+    {
+      const a = MaxU256
+      const b = MaxU256
+      const oldResult = await uints.methods.bigAdd256({ args: { a, b } })
+      const newResult = await uints.methods.newBigAdd256({ args: { a, b } })
+      console.log('big add 256', oldResult.gasUsed, newResult.gasUsed)
+    }
+  })
+
   test('big add', async () => {
     {
       const a = { higher: 0n, lower: 1n }
@@ -193,6 +224,46 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: MaxU256
       })
+    }
+  })
+
+  test('new big add', async () => {
+    {
+      const a = { higher: 0n, lower: 1n }
+      const b = 2n
+      const result = (await uints.methods.newBigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 0n, lower: 3n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = 2n
+      const result = (await uints.methods.newBigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: 1n })
+    }
+    {
+      const a = { higher: 0n, lower: MaxU256 }
+      const b = MaxU256
+      const result = (await uints.methods.newBigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
+    }
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = MaxU256
+      const result = (await uints.methods.newBigAdd({ args: { a, b } })).returns
+      expect(result).toStrictEqual({
+        higher: MaxU256,
+        lower: MaxU256
+      })
+    }
+  })
+
+  test('big add vs new big add comparison', async () => {
+    {
+      const a = { higher: MaxU256, lower: 0n }
+      const b = MaxU256
+      const oldResult = await uints.methods.bigAdd({ args: { a, b } })
+      const newResult = await uints.methods.newBigAdd({ args: { a, b } })
+      console.log('big add', oldResult.gasUsed, newResult.gasUsed)
     }
   })
 

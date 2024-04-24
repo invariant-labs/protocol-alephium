@@ -39,11 +39,32 @@ Contract Uints () {
         return U512 { higher: 0, lower: lower }
     }
 
+    pub fn newBigAdd256(a: U256, b: U256) -> U512 {
+        let lower = a |+| b
+
+        if (lower < b) {
+            return U512 { higher: 1, lower: lower }
+        }
+
+        return U512 { higher: 0, lower: lower }
+    }
+
     pub fn bigAdd(a: U512, b: U256) -> U512 {
         let (lower, lowerOverflow) = overflowingAdd(a.lower, b)
         let (higher, higherOverflow) = overflowingAdd(a.higher, lowerOverflow)
 
         assert!(higherOverflow == 0, ArithmeticError.AddOverflow)
+
+        return U512 { higher: higher, lower: lower }
+    }
+
+    pub fn newBigAdd(a: U512, b: U256) -> U512 {
+        let lower = a.lower |+| b
+        let mut higher = a.higher
+
+        if (lower < b) {
+            higher = higher + 1
+        }
 
         return U512 { higher: higher, lower: lower }
     }
