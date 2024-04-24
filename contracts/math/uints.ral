@@ -335,11 +335,13 @@ Contract Uints () {
     }
     
     pub fn overflowingAdd(a: U256, b: U256) -> (U256, U256) {
-        if (MaxU256 - a >= b) {
-            return wrappingAdd(a, b), 0
-        } else {
-            return wrappingAdd(a, b), 1
+        let lower = a |+| b
+
+        if (lower < b) {
+            return lower, 1
         }
+
+        return lower, 0
     }
 
     pub fn wrappingAdd(a: U256, b: U256) -> U256 {
