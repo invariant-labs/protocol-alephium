@@ -319,143 +319,143 @@ describe('position tests', () => {
     expect(invariantToken1BalanceAfter).toBe(1n)
   })
 
-  // test('claim fee', async () => {
-  //   let amount = 1000000n + 100000n
+  test('claim fee', async () => {
+    let amount = 1000000n + 100000n
 
-  //   const token0 = await deployTokenFaucet(sender, '', '', 0n, amount)
-  //   await Withdraw.execute(sender, {
-  //     initialFields: {
-  //       token: token0.contractInstance.contractId,
-  //       amount: 1000000n
-  //     },
-  //     attoAlphAmount: DUST_AMOUNT * 2n
-  //   })
+    const token0 = await deployTokenFaucet(sender, '', '', 0n, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token0.contractInstance.contractId,
+        amount: 1000000n
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
 
-  //   const token1 = await deployTokenFaucet(sender, '', '', 0n, amount)
-  //   await Withdraw.execute(sender, {
-  //     initialFields: {
-  //       token: token1.contractInstance.contractId,
-  //       amount: 1000000n
-  //     },
-  //     attoAlphAmount: DUST_AMOUNT * 2n
-  //   })
+    const token1 = await deployTokenFaucet(sender, '', '', 0n, amount)
+    await Withdraw.execute(sender, {
+      initialFields: {
+        token: token1.contractInstance.contractId,
+        amount: 1000000n
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
 
-  //   const [tokenX, tokenY] =
-  //     token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
+    const [tokenX, tokenY] =
+      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
 
-  //   const invariant = await deployInvariant(sender, 0n)
+    const invariant = await deployInvariant(sender, 0n)
 
-  //   const fee = 10000000000n
-  //   const tickSpacing = 1n
+    const fee = 10000000000n
+    const tickSpacing = 1n
 
-  //   await AddFeeTier.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       fee,
-  //       tickSpacing
-  //     },
-  //     attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
-  //   })
+    await AddFeeTier.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        fee,
+        tickSpacing
+      },
+      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+    })
 
-  //   await CreatePool.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       token0: token0.contractInstance.contractId,
-  //       token1: token1.contractInstance.contractId,
-  //       fee,
-  //       tickSpacing,
-  //       initSqrtPrice: 1000000000000000000000000n,
-  //       initTick: 0n
-  //     },
-  //     attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
-  //   })
+    await CreatePool.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee,
+        tickSpacing,
+        initSqrtPrice: 1000000000000000000000000n,
+        initTick: 0n
+      },
+      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+    })
 
-  //   const lowerTickIndex = -10n
-  //   const upperTickIndex = 10n
+    const lowerTickIndex = -10n
+    const upperTickIndex = 10n
 
-  //   await InitializeEmptyPosition.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       token0: token0.contractInstance.contractId,
-  //       token1: token1.contractInstance.contractId,
-  //       fee,
-  //       tickSpacing,
-  //       lowerTick: lowerTickIndex,
-  //       upperTick: upperTickIndex
-  //     },
-  //     attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
-  //   })
+    await InitializeEmptyPosition.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee,
+        tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex
+      },
+      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+    })
 
-  //   const liquidityDelta = 100000000000000n
+    const liquidityDelta = 100000000000000n
 
-  //   await IncreasePositionLiquidity.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       token0: token0.contractInstance.contractId,
-  //       token1: token1.contractInstance.contractId,
-  //       approvedTokens0: 1000000n,
-  //       approvedTokens1: 1000000n,
-  //       index: 1n,
-  //       fee,
-  //       tickSpacing,
-  //       lowerTick: lowerTickIndex,
-  //       upperTick: upperTickIndex,
-  //       liquidityDelta,
-  //       slippageLimitLower: 1000000000000000000000000n,
-  //       slippageLimitUpper: 1000000000000000000000000n
-  //     },
-  //     tokens: [
-  //       { id: token0.contractInstance.contractId, amount: 1000000n },
-  //       { id: token1.contractInstance.contractId, amount: 1000000n }
-  //     ]
-  //   })
+    await IncreasePositionLiquidity.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        approvedTokens0: 1000000n,
+        approvedTokens1: 1000000n,
+        index: 1n,
+        fee,
+        tickSpacing,
+        lowerTick: lowerTickIndex,
+        upperTick: upperTickIndex,
+        liquidityDelta,
+        slippageLimitLower: 1000000000000000000000000n,
+        slippageLimitUpper: 1000000000000000000000000n
+      },
+      tokens: [
+        { id: token0.contractInstance.contractId, amount: 1000000n },
+        { id: token1.contractInstance.contractId, amount: 1000000n }
+      ]
+    })
 
-  //   await Swap.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       token0: token0.contractInstance.contractId,
-  //       token1: token1.contractInstance.contractId,
-  //       fee,
-  //       tickSpacing,
-  //       xToY: true,
-  //       amount: 100000n,
-  //       byAmountIn: true,
-  //       sqrtPriceLimit: 0n
-  //     },
-  //     tokens: [
-  //       { id: token0.contractInstance.contractId, amount: 100000n },
-  //       { id: token1.contractInstance.contractId, amount: 100000n }
-  //     ]
-  //   })
+    await Swap.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: token0.contractInstance.contractId,
+        token1: token1.contractInstance.contractId,
+        fee,
+        tickSpacing,
+        xToY: true,
+        amount: 100000n,
+        byAmountIn: true,
+        sqrtPriceLimit: 0n
+      },
+      tokens: [
+        { id: token0.contractInstance.contractId, amount: 100000n },
+        { id: token1.contractInstance.contractId, amount: 100000n }
+      ]
+    })
 
-  //   const senderTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-  //   const senderTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, sender.address)
-  //   const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-  //   const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, sender.address)
+    const senderTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-  //   expect(senderTokenXBalanceBefore).toBe(400149n)
-  //   expect(senderTokenYBalanceBefore).toBe(599139n)
-  //   expect(invariantTokenXBalanceBefore).toBe(599851n)
-  //   expect(invariantTokenYBalanceBefore).toBe(400861n)
+    expect(senderTokenXBalanceBefore).toBe(400149n)
+    expect(senderTokenYBalanceBefore).toBe(599139n)
+    expect(invariantTokenXBalanceBefore).toBe(599851n)
+    expect(invariantTokenYBalanceBefore).toBe(400861n)
 
-  //   await ClaimFee.execute(sender, {
-  //     initialFields: {
-  //       invariant: invariant.contractId,
-  //       index: 1n
-  //     },
-  //     attoAlphAmount: DUST_AMOUNT * 2n
-  //   })
+    await ClaimFee.execute(sender, {
+      initialFields: {
+        invariant: invariant.contractId,
+        index: 1n
+      },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
 
-  //   const senderTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-  //   const senderTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, sender.address)
-  //   const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-  //   const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, sender.address)
+    const senderTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, sender.address)
+    const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
+    const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
 
-  //   expect(senderTokenXBalanceAfter).toBe(401149n)
-  //   expect(senderTokenYBalanceAfter).toBe(599139n)
-  //   expect(invariantTokenXBalanceAfter).toBe(598851n)
-  //   expect(invariantTokenYBalanceAfter).toBe(400861n)
-  // })
+    expect(senderTokenXBalanceAfter).toBe(401149n)
+    expect(senderTokenYBalanceAfter).toBe(599139n)
+    expect(invariantTokenXBalanceAfter).toBe(598851n)
+    expect(invariantTokenYBalanceAfter).toBe(400861n)
+  })
   test('transfer position', async () => {
     let initAmount = 1000n
     let amount = 1000n
