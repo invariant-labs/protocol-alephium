@@ -14,7 +14,6 @@ Contract Uints () {
         DivNotPositiveDivisor = 100005
         DivNotPositiveDenominator = 100006
         MulNotPositiveDenominator = 100007
-        DecrementUnderflow = 100008
     }
     
     pub fn toU512(value: U256) -> U512 {
@@ -207,30 +206,19 @@ Contract Uints () {
         return newBigDivWrapper(result, b)
     }
 
-    pub fn decrement(a: U512) -> U512 {
-        if(a.lower == 0) {
-            assert!(a.higher > 0, ArithmeticError.DecrementUnderflow)
-            return U512 { higher: a.higher - 1, lower: MaxU256 }
-        }
-
-        return U512 { higher: a.higher, lower: a.lower - 1 }
-    }
-
     pub fn bigDivUp(a: U512, b: U256, bDenominator: U256) -> U512 {
         assert!(b != 0, ArithmeticError.DivNotPositiveDivisor)
         assert!(bDenominator != 0, ArithmeticError.DivNotPositiveDenominator)
 
         let mut result = bigMul(a, bDenominator)
-        result = bigAdd(result, b)
-        result = decrement(result)
+        result = bigAdd(result, b - 1)
         return bigDivWrapper(result, b, 1)
     }
 
     pub fn newBigDivUp(a: U512, b: U256, bDenominator: U256) -> U512 {
         assert!(bDenominator != 0, ArithmeticError.DivNotPositiveDenominator)
         let mut result = newBigMul(a, bDenominator)
-        result = newBigAdd(result, b)
-        result = decrement(result)
+        result = newBigAdd(result, b - 1)
         return newBigDivWrapper(result, b)
     }
 
@@ -310,7 +298,7 @@ Contract Uints () {
         let mut higher = mulMod |-| lower
 
         if (mulMod < lower) {
-            higher = higher |-| 1
+            higher = higher - 1
         }
 
         return U512 { higher: higher, lower: lower }
