@@ -314,7 +314,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         expectedAmountOut: U256,
         slippage: U256
     ) -> U256 {
-        return uints.toU256(uints.bigMulUpU256(expectedAmountOut, (one(PercentageScale) - slippage), one(PercentageScale)))
+        return uints.toU256(uints.bigMulDivUp256(expectedAmountOut, (one(PercentageScale) - slippage), one(PercentageScale)))
     }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {

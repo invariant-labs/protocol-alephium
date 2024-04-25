@@ -316,12 +316,6 @@ Contract Uints () {
         return U512 { higher: higher, lower: lower }
     }
 
-    pub fn bigMulUpU256(a: U256, b: U256, bDenominator: U256) -> U512 {
-        let mut result = bigMul256(a, b)
-        result = bigAdd(result, bDenominator - 1)
-        return bigDiv(result, bDenominator, 1)
-    }
-
     pub fn bigMul(a: U512, b: U256) -> U512 {        
         let result = bigMul256(a.lower, b)
         let higher = toU256(bigMul256(a.higher, b))
@@ -345,12 +339,31 @@ Contract Uints () {
         return result
     }
 
+    pub fn newBigMulDiv256(a: U256, b: U256, bDenominator: U256) -> U512 {
+        assert!(bDenominator != 0, ArithmeticError.MulNotPositiveDenominator)
+
+        let mut result = newBigMul256(a, b)
+        result = newBigDiv(result, bDenominator, 1)
+
+        return result
+    }
+
     pub fn bigMulDivUp256(a: U256, b: U256, bDenominator: U256) -> U512 {
         assert!(bDenominator != 0, ArithmeticError.MulNotPositiveDenominator)
         let mut result = bigMul256(a, b)
 
         result = bigAdd512(result, toU512(bDenominator - 1))
         result = bigDiv(result, bDenominator, 1)
+
+        return result
+    }
+
+    pub fn newBigMulDivUp256(a: U256, b: U256, bDenominator: U256) -> U512 {
+        assert!(bDenominator != 0, ArithmeticError.MulNotPositiveDenominator)
+        let mut result = newBigMul256(a, b)
+
+        result = newBigAdd512(result, toU512(bDenominator - 1))
+        result = newBigDiv(result, bDenominator, 1)
 
         return result
     }
