@@ -107,7 +107,7 @@ Contract Pool(
     pub fn addFee(amount: U256, inX: Bool, protocolFee: U256) -> () {
         checkCaller!(callerAddress!() == admin, PoolError.NotAdmin)
 
-        let invariantProtocolFee = mulUp(amount, protocolFee, PercentageScale)
+        let invariantProtocolFee = mulUp(amount, protocolFee, one(PercentageScale))
 
         let poolFee = amount - invariantProtocolFee
 
