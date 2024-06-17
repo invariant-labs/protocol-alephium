@@ -1,5 +1,26 @@
 struct InvariantConfig { admin: Address, mut protocolFee: U256 }
 
+struct SwapResult {
+    nextSqrtPrice: U256,
+    amountIn: U256,
+    amountOut: U256,
+    feeAmount: U256
+}
+
+struct CalculateSwapResult {
+    amountIn: U256,
+    amountOut: U256,
+    startSqrtPrice: U256,
+    targetSqrtPrice: U256,
+    fee: U256
+}
+
+struct QuoteResult {
+    amountIn: U256,
+    amountOut: U256,
+    targetSqrtPrice: U256
+}
+
 Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
@@ -9,7 +30,6 @@ Contract Invariant(
     ticks: Ticks, 
     positions: Positions,
     tickmap: Tickmap,
-    swap: SwapUtils,
     clamm: CLAMM
 ) extends PoolKeyHelper(), Decimal() {
     enum InvariantError {
@@ -27,6 +47,9 @@ Contract Invariant(
         PriceLimitReached = 11
         InvalidProtocolFee = 12
         NotOwner = 13
+        ZeroAmount = 14
+        WrongLimit = 15
+        NoGainSwap = 16
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -35,14 +58,13 @@ Contract Invariant(
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
         let positionsId = positions.getAddress()
-        let swapId = swap.getSelfId()
 
         feeTiers.setAdmins(invtId)
         poolKeys.setAdmins(invtId)
-        pools.setAdmins(invtId, positionsId, swapId)
+        pools.setAdmins(invtId, positionsId)
         positions.setAdmins(invtId)
-        tickmap.setAdmins(invtId, swapId)
-        ticks.setAdmins(invtId, positionsId, swapId)
+        tickmap.setAdmins(invtId)
+        ticks.setAdmins(invtId, positionsId)
         
         init = true
     }
@@ -322,7 +344,117 @@ Contract Invariant(
         byAmountIn: Bool,
         sqrtPriceLimit: U256
     ) -> QuoteResult {
-        return swap.wrappedQuote(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
+        let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
+
+        return QuoteResult { 
+            amountIn: calculateSwapResult.amountIn,
+            amountOut: calculateSwapResult.amountOut,
+            targetSqrtPrice: calculateSwapResult.targetSqrtPrice
+        }
+    }
+
+    fn calculateSwap(
+        poolKey: ByteVec,
+        xToY: Bool,
+        amount: U256,
+        byAmountIn: Bool,
+        sqrtPriceLimit: U256,
+        fee: U256,
+        tickSpacing: U256
+    ) -> CalculateSwapResult {
+        let currentTimestamp = blockTimeStamp!()
+
+        assert!(amount != 0, InvariantError.ZeroAmount)
+        
+        let mut sqrtPrice = pools.getSqrtPrice(poolKey)
+
+        if(xToY) {
+            assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, InvariantError.WrongLimit)             
+        } else {
+            assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, InvariantError.WrongLimit)
+        }
+
+        let mut totalAmountIn = 0
+        let mut totalAmountOut = 0
+        let mut eventFeeAmount = 0
+        let mut remainingAmount = amount
+        let eventStartSqrtPrice = sqrtPrice
+
+        while (remainingAmount != 0) {
+            let currentTickIndex = pools.getCurrentTickIndex(poolKey)
+            let liquidity = pools.getLiquidity(poolKey)
+            sqrtPrice = pools.getSqrtPrice(poolKey)
+
+            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = tickmap.getCloserLimit(
+                sqrtPriceLimit,
+                xToY,
+                currentTickIndex,
+                tickSpacing,
+                poolKey
+            )
+
+            let swapResult = clamm.computeSwapStep(
+                sqrtPrice,
+                swapLimit,
+                liquidity,
+                remainingAmount,
+                byAmountIn,
+                fee
+            )
+
+            if (byAmountIn) {
+                remainingAmount = remainingAmount - (swapResult.amountIn + swapResult.feeAmount)
+            } else {
+                remainingAmount = remainingAmount - swapResult.amountOut
+            }
+
+            pools.wrappedAddFee(poolKey, swapResult.feeAmount, xToY, config.protocolFee)
+            pools.setSqrtPrice(poolKey, swapResult.nextSqrtPrice)
+
+            totalAmountIn = totalAmountIn + swapResult.amountIn + swapResult.feeAmount
+            totalAmountOut = totalAmountOut + swapResult.amountOut
+            eventFeeAmount = eventFeeAmount + swapResult.feeAmount
+
+            assert!(swapResult.nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, InvariantError.PriceLimitReached)
+
+            if (hasLimitingTick) {
+                if (isInitialized) {
+                    let (amountToAdd, updatedRemainingAmount, hasCrossed) = pools.wrappedCrossTick(
+                        poolKey,
+                        swapResult.nextSqrtPrice,
+                        swapLimit,
+                        limitingTickIndex,
+                        remainingAmount,
+                        byAmountIn,
+                        xToY,
+                        config.protocolFee,
+                        fee,
+                        tickSpacing
+                    )
+                    remainingAmount = updatedRemainingAmount
+                    totalAmountIn = totalAmountIn + amountToAdd
+                    if (hasCrossed) {
+                        let (feeGrowthGlobalX, feeGrowthGlobalY) = pools.getFeeGrowthGlobal(poolKey)
+                        let (add, liquidityDelta) = ticks.wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
+                        pools.wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
+                    }
+                }
+            } else {
+                let newTickIndex = clamm.getTickAtSqrtPrice(swapResult.nextSqrtPrice, tickSpacing)
+                pools.setCurrentTickIndex(poolKey, newTickIndex)
+                pools.setLastTimestamp(poolKey, currentTimestamp)
+            }
+        }
+        assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
+
+        return CalculateSwapResult {
+            amountIn: totalAmountIn,
+            amountOut: totalAmountOut,
+            startSqrtPrice: eventStartSqrtPrice,
+            targetSqrtPrice: pools.getSqrtPrice(poolKey),
+            fee: eventFeeAmount
+        }
     }
 
     @using(assetsInContract = true, preapprovedAssets = true, checkExternalCaller = false)
@@ -339,7 +471,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        let calculateSwapResult = swap.wrappedSwap(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit, fee, tickSpacing)
 
         let (tokenX, tokenY) = pools.getToken(poolKey)
 

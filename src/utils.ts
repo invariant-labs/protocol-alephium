@@ -11,7 +11,6 @@ import {
   Pools,
   Position,
   PositionsCounter,
-  SwapUtils,
   Tickmap,
   TickmapChunk,
   Ticks,
@@ -74,15 +73,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
 
-  const swap = await deploySwap(
-    signer,
-    clamm.contractInstance.contractId,
-    pools.contractInstance.contractId,
-    ticks.contractInstance.contractId,
-    tickmap.contractInstance.contractId,
-    protocolFee
-  )
-
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
@@ -95,7 +85,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         positions: positions.contractInstance.contractId,
         tickmap: tickmap.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
-        swap: swap.contractInstance.contractId
       }
     })
   )
@@ -111,26 +100,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   return invariant
 }
 
-export async function deploySwap(
-  signer: SignerProvider,
-  clamm: string,
-  pools: string,
-  ticks: string,
-  tickmap: string,
-  protocolFee: bigint
-) {
-  return await waitTxConfirmed(
-    SwapUtils.deploy(signer, {
-      initialFields: {
-        clamm,
-        pools,
-        ticks,
-        tickmap,
-        protocolFee
-      }
-    })
-  )
-}
 
 export async function deployFeeTier(signer: SignerProvider) {
   return await waitTxConfirmed(
@@ -207,7 +176,6 @@ export async function deployTicks(signer: SignerProvider, tickId: string) {
       initialFields: {
         tickTemplateContractId: tickId,
         invariantId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS,
         positionsId: ZERO_ADDRESS,
         areAdminsSet: false
       }
@@ -272,8 +240,7 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
         clamm: clammId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS,
-        positionsId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS
+        positionsId: ZERO_ADDRESS
       }
     })
   )
@@ -315,7 +282,6 @@ export async function deployTickmap(signer: SignerProvider, chunkTemplateContrac
       initialFields: {
         chunkTemplateContractId: chunkTemplateContractId,
         invariantId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS,
         areAdminsSet: false
       }
     })
