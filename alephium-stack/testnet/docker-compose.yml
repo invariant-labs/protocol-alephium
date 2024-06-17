@@ -1,9 +1,9 @@
 volumes:
-  prometheus-data: {}
-  grafana-data: {}
-  alephium-wallets: {}
-  alephium-data: {}
-  alephium-explorer: {}
+  alephium-testnet-prometheus-data: {}
+  alephium-testnet-grafana-data: {}
+  alephium-testnet-wallets: {}
+  alephium-testnet-data: {}
+  alephium-testnet-explorer: {}
 
 services:
   alephium:
@@ -26,9 +26,9 @@ services:
     security_opt:
       - no-new-privileges:true
     volumes:
-      - alephium-data:/alephium-home/.alephium
+      - alephium-testnet-data:/alephium-home/.alephium
       # - ~/.alephium:/alephium-home/.alephium
-      - alephium-wallets:/alephium-home/.alephium-wallets
+      - alephium-testnet-wallets:/alephium-home/.alephium-testnet-wallets
       - ./user.conf:/alephium-home/.alephium/user.conf
     healthcheck:
       test: ['CMD', 'curl', 'http://127.0.0.1:12973/infos/self-clique']
@@ -44,7 +44,7 @@ services:
   #   ports:
   #     - "127.0.0.1:9974:5432"
   #   volumes:
-  #     - alephium-explorer:/data/postgres
+  #     - alephium-testnet-explorer:/data/postgres
   #   restart: unless-stopped
   #   healthcheck:
   #     test: ["CMD", "pg_isready", "-q", "-d", "postgres", "-U", "postgres"]
@@ -110,7 +110,7 @@ services:
   #   environment:
   #     - VITE_NODE_URL=http://localhost:12973
   #     - VITE_BACKEND_URL=http://localhost:9090
-  #     - VITE_NETWORK_TYPE=mainnet
+  #     - VITE_NETWORK_TYPE=testnet
 
   # grafana:
   #   image: grafana/grafana:7.2.1
@@ -131,7 +131,7 @@ services:
   #  #   - explorer-backend
   #   volumes:
   #     - ./prometheus/:/etc/prometheus
-  #     - prometheus-data:/prometheus
+  #     - alephium-testnet-prometheus-data:/prometheus
   #   command:
   #     - "--config.file=/etc/prometheus/prometheus.yml"
   #     - "--storage.tsdb.path=/prometheus"
