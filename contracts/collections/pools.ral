@@ -2,7 +2,6 @@ Contract Pools(
     poolTemplateContractId: ByteVec,
     clamm: CLAMM,
     mut invariantId: Address,
-    mut positionsId: Address,
     mut areAdminsSet: Bool
 ) extends PoolKeyHelper() {
     enum PoolsError {
@@ -12,10 +11,9 @@ Contract Pools(
     }
 
     @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invariant: Address, positions: Address) -> () {
+    pub fn setAdmins(invariant: Address) -> () {
         assert!(!areAdminsSet, PoolsError.AdminsAreSet)
         invariantId = invariant
-        positionsId = positions
         areAdminsSet = true
     }
 
@@ -32,7 +30,7 @@ Contract Pools(
         feeReceiver: Address
     ) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         assert!(!contractExists!(subContractId!(poolKey)), PoolsError.PoolAlreadyExist)
 
@@ -99,28 +97,28 @@ Contract Pools(
 
     pub fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         Pool(subContractId!(poolKey)).setSqrtPrice(sqrtPrice)
     }
 
     pub fn setCurrentTickIndex(poolKey: ByteVec, tickIndex: I256) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         Pool(subContractId!(poolKey)).setCurrentTickIndex(tickIndex)
     }
 
     pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         Pool(subContractId!(poolKey)).setLastTimestamp(timestamp)
     }
 
     pub fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         Pool(subContractId!(poolKey)).setFeeReceiver(newReceiver)
     }
@@ -153,7 +151,7 @@ Contract Pools(
 
     pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         Pool(subContractId!(poolKey)).addFee(feeAmount, xToY, fee)
     }
@@ -171,7 +169,7 @@ Contract Pools(
         tickSpacing: U256
     ) -> (U256, U256, Bool) {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         return Pool(subContractId!(poolKey)).crossTick(
             nextSqrtPrice,
@@ -192,21 +190,21 @@ Contract Pools(
         liquidityDelta: U256
     ) -> () {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         return Pool(subContractId!(poolKey)).crossLiquidityUpdate(add, liquidityDelta)
     }
 
     pub fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         return Pool(subContractId!(poolKey)).updateLiquidity(liquidityDelta, liquiditySign, upperTick, lowerTick)
     }
 
     pub fn wrappedWithdrawProtocolFee(poolKey: ByteVec) -> (U256, U256) {
         let caller = callerAddress!()
-        checkCaller!((caller == invariantId || caller == positionsId) && areAdminsSet, PoolsError.NotAdmin)
+        checkCaller!((caller == invariantId) && areAdminsSet, PoolsError.NotAdmin)
 
         let (feeProtocolTokenX, feeProtocolTokenY) = Pool(subContractId!(poolKey)).withdrawProtocolFee()
         return feeProtocolTokenX, feeProtocolTokenY
