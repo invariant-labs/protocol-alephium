@@ -11,13 +11,11 @@ import {
   Pools,
   Position,
   PositionsCounter,
-  SwapUtils,
   Tickmap,
   TickmapChunk,
   Ticks,
   Uints
 } from '../artifacts/ts'
-import { Positions } from '../artifacts/ts/Positions'
 import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
@@ -64,24 +62,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const ticks = await deployTicks(signer, tick.contractInstance.contractId)
   const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
-  const positions = await deployPositions(
-    signer,
-    position.contractInstance.contractId,
-    positionsCounter.contractInstance.contractId,
-    clamm.contractInstance.contractId,
-    uints.contractInstance.contractId
-  )
   const chunk = await deployChunk(signer)
   const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
-
-  const swap = await deploySwap(
-    signer,
-    clamm.contractInstance.contractId,
-    pools.contractInstance.contractId,
-    ticks.contractInstance.contractId,
-    tickmap.contractInstance.contractId,
-    protocolFee
-  )
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -92,10 +74,10 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         poolKeys: poolKeys.contractInstance.contractId,
         pools: pools.contractInstance.contractId,
         ticks: ticks.contractInstance.contractId,
-        positions: positions.contractInstance.contractId,
+        positionTemplateContractId: position.contractInstance.contractId,
+        positionsCounterContractId: positionsCounter.contractInstance.contractId,
         tickmap: tickmap.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
-        swap: swap.contractInstance.contractId
       }
     })
   )
@@ -111,26 +93,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   return invariant
 }
 
-export async function deploySwap(
-  signer: SignerProvider,
-  clamm: string,
-  pools: string,
-  ticks: string,
-  tickmap: string,
-  protocolFee: bigint
-) {
-  return await waitTxConfirmed(
-    SwapUtils.deploy(signer, {
-      initialFields: {
-        clamm,
-        pools,
-        ticks,
-        tickmap,
-        protocolFee
-      }
-    })
-  )
-}
 
 export async function deployFeeTier(signer: SignerProvider) {
   return await waitTxConfirmed(
@@ -152,26 +114,6 @@ export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
         feeTierCount: 0n,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false
-      }
-    })
-  )
-}
-
-export async function deployPositions(
-  signer: SignerProvider,
-  positionId: string,
-  positionsCounterContractId: string,
-  clammId: string,
-  uintsId: string
-) {
-  return await waitTxConfirmed(
-    Positions.deploy(signer, {
-      initialFields: {
-        positionTemplateContractId: positionId,
-        positionsCounterContractId,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false,
-        clammContract: clammId
       }
     })
   )
@@ -207,8 +149,6 @@ export async function deployTicks(signer: SignerProvider, tickId: string) {
       initialFields: {
         tickTemplateContractId: tickId,
         invariantId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS,
-        positionsId: ZERO_ADDRESS,
         areAdminsSet: false
       }
     })
@@ -272,8 +212,6 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
         clamm: clammId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS,
-        positionsId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS
       }
     })
   )
@@ -315,7 +253,6 @@ export async function deployTickmap(signer: SignerProvider, chunkTemplateContrac
       initialFields: {
         chunkTemplateContractId: chunkTemplateContractId,
         invariantId: ZERO_ADDRESS,
-        swapUtilsId: ZERO_ADDRESS,
         areAdminsSet: false
       }
     })
