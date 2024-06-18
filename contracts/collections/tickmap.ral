@@ -3,7 +3,7 @@ Contract Tickmap(
     mut invariantId: Address,
     mut areAdminsSet: Bool
 ) extends Decimal() {
-    const ChunkSize = 64
+    const ChunkSize = 256
     const SearchRange = 256i
 
     enum TickmapErrors {
