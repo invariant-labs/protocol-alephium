@@ -12,7 +12,7 @@ import {
   TransferPosition,
   Withdraw
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -32,7 +32,7 @@ describe('position tests', () => {
         token: token0.contractInstance.contractId,
         amount
       },
-      attoAlphAmount: DUST_AMOUNT * 2n
+      attoAlphAmount: DUST_AMOUNT
     })
 
     const token1 = await deployTokenFaucet(sender, '', '', 0n, initAmount)
@@ -41,7 +41,7 @@ describe('position tests', () => {
         token: token1.contractInstance.contractId,
         amount
       },
-      attoAlphAmount: DUST_AMOUNT * 2n
+      attoAlphAmount: DUST_AMOUNT
     })
 
     const invariant = await deployInvariant(sender, 0n)
@@ -52,7 +52,7 @@ describe('position tests', () => {
         fee: 100n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -65,7 +65,7 @@ describe('position tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     await InitializeEmptyPosition.execute(sender, {
@@ -78,7 +78,7 @@ describe('position tests', () => {
         lowerTick: -10n,
         upperTick: 10n
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
     const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
@@ -213,7 +213,7 @@ describe('position tests', () => {
         fee: 100n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -226,7 +226,7 @@ describe('position tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     await InitializeEmptyPosition.execute(sender, {
@@ -239,7 +239,7 @@ describe('position tests', () => {
         lowerTick: -10n,
         upperTick: 10n
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
     const lowerTickIndex = -10n
@@ -294,7 +294,7 @@ describe('position tests', () => {
         invariant: invariant.contractId,
         index: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: 0n
     })
 
     const poolAfter = await invariant.methods.getPool({
@@ -354,7 +354,7 @@ describe('position tests', () => {
         fee,
         tickSpacing
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -367,7 +367,7 @@ describe('position tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     const lowerTickIndex = -10n
@@ -383,7 +383,7 @@ describe('position tests', () => {
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
     const liquidityDelta = 100000000000000n
@@ -486,7 +486,7 @@ describe('position tests', () => {
         fee: 100n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -499,7 +499,7 @@ describe('position tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     await InitializeEmptyPosition.execute(sender, {
@@ -512,7 +512,7 @@ describe('position tests', () => {
         lowerTick: -10n,
         upperTick: 10n
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
     const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)

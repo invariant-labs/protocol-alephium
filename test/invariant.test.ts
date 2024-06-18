@@ -2,7 +2,7 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, ChangeProtocolFee, CreatePool } from '../artifacts/ts'
-import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -21,7 +21,7 @@ describe('invariant tests', () => {
         fee: 0n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
@@ -37,7 +37,7 @@ describe('invariant tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
   })
   test('create pool', async () => {
@@ -49,7 +49,7 @@ describe('invariant tests', () => {
         fee: 100n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     const feeTiers = await invariant.methods.getFeeTiers()
@@ -72,7 +72,7 @@ describe('invariant tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     const pools = await invariant.methods.getPools()

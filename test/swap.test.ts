@@ -9,7 +9,7 @@ import {
   Swap,
   Withdraw
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -60,7 +60,7 @@ describe('swap tests', () => {
         fee: fee,
         tickSpacing: tickSpacing
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -73,7 +73,7 @@ describe('swap tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
     await InitializeEmptyPosition.execute(sender, {
       initialFields: {
@@ -85,7 +85,7 @@ describe('swap tests', () => {
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
     await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
@@ -306,7 +306,7 @@ describe('swap tests', () => {
         fee: fee,
         tickSpacing: tickSpacing
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -319,7 +319,7 @@ describe('swap tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
     await InitializeEmptyPosition.execute(sender, {
       initialFields: {
@@ -331,7 +331,7 @@ describe('swap tests', () => {
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
     {
       const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
@@ -369,7 +369,7 @@ describe('swap tests', () => {
         lowerTick: middleTickIndex,
         upperTick: upperTickIndex + 20n
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
     {
       const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
@@ -611,7 +611,7 @@ describe('swap tests', () => {
         fee: fee,
         tickSpacing: tickSpacing
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -624,7 +624,7 @@ describe('swap tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     {
@@ -642,7 +642,7 @@ describe('swap tests', () => {
           lowerTick: lowerTickIndex,
           upperTick: upperTickIndex
         },
-        attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
       })
       {
         const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
@@ -737,7 +737,7 @@ describe('swap tests', () => {
           lowerTick: lowerTickIndex,
           upperTick: upperTickIndex
         },
-        attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
       })
       {
         const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)

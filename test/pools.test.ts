@@ -1,8 +1,8 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool } from '../artifacts/ts'
-import { decodePool, decodePools, deployInvariant, deployTokenFaucet, expectError } from '../src/utils'
+import { decodePool, decodePools, deployInvariant, deployTokenFaucet, expectError, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -46,7 +46,7 @@ describe('pools tests', () => {
         fee: 0n,
         tickSpacing: 1n
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     const token0 = await deployTokenFaucet(sender, '', '', 0n, 0n)
@@ -62,7 +62,7 @@ describe('pools tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
     const pools = await invariant.methods.getPools()
     const parsedPools = decodePools(pools.returns)
