@@ -47,7 +47,7 @@ Contract Ticks(
                 secondsOutside: secondsOutside
             }
         )
-        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: mapEntryDeposit!()}(
             path,
             tickTemplateContractId,
             encodedImmFields,
@@ -86,8 +86,7 @@ Contract Ticks(
         let subContractId = subContractId!(poolKey ++ toByteVec!(index))
 
         if (!contractExists!(subContractId)) {
-            return
-            false,
+            return false,
             TickState {
                 sign: false,
                 liquidityChange: 0,

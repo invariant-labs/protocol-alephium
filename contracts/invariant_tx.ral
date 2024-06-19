@@ -3,7 +3,7 @@ TxScript Init(invariant: Invariant) {
 }
 
 TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
-    invariant.addFeeTier{callerAddress!() -> ALPH: 1 alph}(fee, tickSpacing)
+    invariant.addFeeTier{callerAddress!() -> ALPH: mapEntryDeposit!()}(fee, tickSpacing)
 }
 
 TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
@@ -11,7 +11,8 @@ TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
 }
 
 TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
-    invariant.createPool{callerAddress!() -> ALPH: 2 alph}(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
+    let mapEntry2Deposits = 2 * mapEntryDeposit!()
+    invariant.createPool{callerAddress!() -> ALPH: mapEntry2Deposits }(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
 }
 
 TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
@@ -27,7 +28,8 @@ TxScript WithdrawProtocolFee(invariant: Invariant, token0: ByteVec, token1: Byte
 }
 
 TxScript InitializeEmptyPosition(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, lowerTick: I256, upperTick: I256) {
-    invariant.initializeEmptyPosition{callerAddress!() -> ALPH: 6 alph}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
+    let mapEntry6Deposits = mapEntryDeposit!() * 6
+    invariant.initializeEmptyPosition{callerAddress!() -> ALPH: mapEntry6Deposits}(token0, token1, fee, tickSpacing, lowerTick, upperTick)
 }
 
 TxScript IncreasePositionLiquidity(

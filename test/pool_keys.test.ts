@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, CreatePool } from '../artifacts/ts'
-import { decodePools, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { decodePools, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -25,7 +25,7 @@ describe('pool key tests', () => {
         fee: fee1,
         tickSpacing: tickSpacing1
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     {
@@ -48,7 +48,7 @@ describe('pool key tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     {
@@ -79,7 +79,7 @@ describe('pool key tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
 
     {

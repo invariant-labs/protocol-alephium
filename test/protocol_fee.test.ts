@@ -11,7 +11,7 @@ import {
   Withdraw,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet } from '../src/utils'
+import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT} from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -62,7 +62,7 @@ describe('protocol fee tests', () => {
         fee: fee,
         tickSpacing: tickSpacing
       },
-      attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await CreatePool.execute(sender, {
@@ -75,7 +75,7 @@ describe('protocol fee tests', () => {
         initSqrtPrice: 1000000000000000000000000n,
         initTick: 0n
       },
-      attoAlphAmount: ONE_ALPH * 2n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
     await InitializeEmptyPosition.execute(sender, {
       initialFields: {
@@ -87,7 +87,7 @@ describe('protocol fee tests', () => {
         lowerTick: lowerTickIndex,
         upperTick: upperTickIndex
       },
-      attoAlphAmount: ONE_ALPH * 6n + DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
     await IncreasePositionLiquidity.execute(sender, {
       initialFields: {
@@ -305,7 +305,7 @@ describe('protocol fee tests', () => {
           fee: fee,
           tickSpacing: tickSpacing
         },
-        attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
+        attoAlphAmount: MAP_ENTRY_DEPOSIT
       })
 
       const newFeeReceiverTokenXBalanceAfter = await balanceOf(

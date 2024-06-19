@@ -128,8 +128,9 @@ Contract Invariant(
 
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
-        poolKeys.add{caller -> ALPH: 1 alph}(caller, tokenX, tokenY, fee, tickSpacing)
-        pools.add{caller -> ALPH: 1 alph}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
+        let mapEntryDeposit = mapEntryDeposit!()
+        poolKeys.add{caller -> ALPH: mapEntryDeposit }(caller, tokenX, tokenY, fee, tickSpacing)
+        pools.add{caller -> ALPH: mapEntryDeposit }(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
@@ -141,7 +142,7 @@ Contract Invariant(
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= one(PercentageScale), InvariantError.InvalidFee)
 
-        feeTiers.add{caller -> ALPH: 1 alph}(caller, fee, tickSpacing)
+        feeTiers.add{caller -> ALPH: mapEntryDeposit!() }(caller, fee, tickSpacing)
     }
 
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
@@ -228,7 +229,7 @@ Contract Invariant(
             true,
             clamm
         )
-        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: mapEntryDeposit!()}(
             toByteVec!(length + 1),
             positionTemplateContractId,
             encodedImmFields,
@@ -265,7 +266,7 @@ Contract Invariant(
             secondsOutside = blockTimeStamp!() - startTimestamp
         }
 
-        ticks.add{caller -> ALPH: 1 alph}(
+        ticks.add{caller -> ALPH: mapEntryDeposit!()}(
             caller,
             poolKey,
             index,
@@ -298,22 +299,24 @@ Contract Invariant(
 
         let (lowerChunk, upperChunk) = tickmap.getChunks(lowerTick, upperTick, tickSpacing)
 
+        let mapEntryDeposit = mapEntryDeposit!()
         if (lowerChunk == upperChunk) {
-            tickmap.initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, lowerChunk)
+            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
         } else {
-            tickmap.initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, lowerChunk)
-            tickmap.initializeChunk{caller -> ALPH: 1 alph}(caller, poolKey, upperChunk)
+            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
+            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
         }
- 
+        
+        let mapEntry2Deposits = mapEntryDeposit * 2
         if (!ticks.contains(poolKey, lowerTick)) {
-            createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
         if (!ticks.contains(poolKey, upperTick)) {
-            createTick{caller -> ALPH: 2 alph}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        addPosition{caller -> ALPH: 2 alph}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
+        addPosition{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)

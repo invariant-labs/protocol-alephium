@@ -1,4 +1,4 @@
-import { NodeProvider, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
+import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import {
   CLAMM,
   FeeTier,
@@ -20,6 +20,9 @@ import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
+
+export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
+
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'

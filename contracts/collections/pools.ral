@@ -53,7 +53,7 @@ Contract Pools(
             },
             clamm
         )
-        let _ = copyCreateSubContract!{originalCaller -> ALPH: 1 alph}(
+        let _ = copyCreateSubContract!{originalCaller -> ALPH: mapEntryDeposit!()}(
             poolKey,
             poolTemplateContractId,
             encodedImmFields,
@@ -127,8 +127,7 @@ Contract Pools(
         let subContractId = subContractId!(poolKey)
 
         if (!contractExists!(subContractId)) {
-            return 
-            false,
+            return false,
             PoolState {
                 tokenX: #,
                 tokenY: #,

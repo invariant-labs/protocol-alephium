@@ -1,8 +1,8 @@
-import { ONE_ALPH, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, RemoveFeeTier } from '../artifacts/ts'
-import { decodeFeeTiers, deployInvariant, expectError } from '../src/utils'
+import { decodeFeeTiers, deployInvariant, expectError, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -25,7 +25,7 @@ describe('fee tier tests', () => {
         fee: fee1,
         tickSpacing: tickSpacing1
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     {
@@ -46,7 +46,7 @@ describe('fee tier tests', () => {
         fee: fee2,
         tickSpacing: tickSpacing2
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     {
@@ -67,7 +67,7 @@ describe('fee tier tests', () => {
           fee: fee2,
           tickSpacing: tickSpacing2
         },
-        attoAlphAmount: ONE_ALPH
+        attoAlphAmount: MAP_ENTRY_DEPOSIT
       })
     )
 
@@ -95,7 +95,7 @@ describe('fee tier tests', () => {
         fee: fee1,
         tickSpacing: tickSpacing1
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     const fee2 = 0n
@@ -107,7 +107,7 @@ describe('fee tier tests', () => {
         fee: fee2,
         tickSpacing: tickSpacing2
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     await RemoveFeeTier.execute(sender, {
@@ -116,7 +116,7 @@ describe('fee tier tests', () => {
         fee: fee1,
         tickSpacing: tickSpacing1
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: 0n
     })
 
     {
@@ -135,7 +135,7 @@ describe('fee tier tests', () => {
           fee: fee1,
           tickSpacing: tickSpacing1
         },
-        attoAlphAmount: ONE_ALPH
+        attoAlphAmount: 0n
       })
     )
 
@@ -154,7 +154,7 @@ describe('fee tier tests', () => {
         fee: fee2,
         tickSpacing: tickSpacing2
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: 0n
     })
 
     {
@@ -194,7 +194,7 @@ describe('fee tier tests', () => {
         fee: fee1,
         tickSpacing: tickSpacing1
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     {
@@ -214,7 +214,7 @@ describe('fee tier tests', () => {
         fee: fee2,
         tickSpacing: tickSpacing2
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     {
@@ -244,7 +244,7 @@ describe('fee tier tests', () => {
           fee,
           tickSpacing
         },
-        attoAlphAmount: ONE_ALPH
+        attoAlphAmount: MAP_ENTRY_DEPOSIT
       })
     )
 
@@ -254,7 +254,7 @@ describe('fee tier tests', () => {
         fee,
         tickSpacing
       },
-      attoAlphAmount: ONE_ALPH
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     expectError(
@@ -264,7 +264,7 @@ describe('fee tier tests', () => {
           fee,
           tickSpacing
         },
-        attoAlphAmount: ONE_ALPH
+        attoAlphAmount: 0n
       })
     )
   })
