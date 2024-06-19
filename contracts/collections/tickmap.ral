@@ -4,6 +4,7 @@ Contract Tickmap(
     mut areAdminsSet: Bool
 ) extends Decimal() {
     const ChunkSize = 256
+    const HalfChunkSize = 128
     const SearchRange = 256i
 
     enum TickmapErrors {
@@ -23,7 +24,7 @@ Contract Tickmap(
         areAdminsSet = true
     }
 
-    fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
+    pub fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
         assert!(tick >= GlobalMinTick && tick <= GlobalMaxTick, TickmapErrors.InvalidTickIndex)
         assert!(tick % toI256!(tickSpacing) == 0i, TickmapErrors.TickAndTickSpacingMismatch)
     
@@ -35,15 +36,15 @@ Contract Tickmap(
         return chunk, bit
     }
 
-    fn getBitAtPosition(value: U256, position: U256) -> Bool {
+    pub fn getBitAtPosition(value: U256, position: U256) -> Bool {
         return (value >> position) & 1 == 1
     }
 
-    fn flipBitAtPosition(value: U256, position: U256) -> U256 {
+    pub fn flipBitAtPosition(value: U256, position: U256) -> U256 {
         return value ^ (1 << position)
     }
 
-    fn getSearchLimit(tick: I256, tickSpacing: U256, up: Bool) -> I256 {
+    pub fn getSearchLimit(tick: I256, tickSpacing: U256, up: Bool) -> I256 {
         let index = tick / toI256!(tickSpacing)
 
         let mut limit = 0i
@@ -71,7 +72,7 @@ Contract Tickmap(
         return limit * toI256!(tickSpacing)
     }
 
-    fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, true)
 
         if (tick + toI256!(tickSpacing) > GlobalMaxTick) {
@@ -81,7 +82,7 @@ Contract Tickmap(
         let (mut chunk, mut bit) = tickToPosition(tick + toI256!(tickSpacing), tickSpacing)
         let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
 
-        while (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingChunk)) {
+        while (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
             let mut shifted = getChunk(chunk, poolKey) >> bit
 
             if (shifted != 0) {
@@ -106,31 +107,81 @@ Contract Tickmap(
         return false, 0i
     }
 
-    fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, false)
         let (mut chunk, mut bit) = tickToPosition(tick, tickSpacing)
         let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
 
+        
         while (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-            let mut mask = 1 << bit
             let value = getChunk(chunk, poolKey)
 
-            if (value % (mask << 1) > 0) {
-                while (value & mask == 0) {
-                    mask = mask >> 1
-                    bit = bit - 1
-                }
+            let upper = value >> HalfChunkSize & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            let lower = value & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
+            let mut part = 0
+            let mut part_bit = 0
+
+            if (bit >= HalfChunkSize) {
+                part = upper
+                part_bit = bit - HalfChunkSize
+            } else {
+                part = lower
+                part_bit = bit
+            }
+
+            let mut mask = 1 << part_bit
+
+            while (part_bit > 0 && part & mask == 0) {
+                mask = mask >> 1
+                part_bit = part_bit - 1
+            }
+
+            if (part & mask != 0) {
+                if (bit >= HalfChunkSize) {
+                    bit = part_bit + HalfChunkSize
+                } else {
+                    bit = part_bit
+                }
                 if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                    let index = chunk * ChunkSize + bit
+                    let mut index = chunk * ChunkSize + bit
                     return true, (toI256!(index) - (GlobalMaxTick / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
             }
 
-            chunk = chunk - 1
+            // Check lower part
+            if (bit >= HalfChunkSize) {
+                part = lower
+                part_bit = HalfChunkSize - 1
+                mask = 1 << part_bit
+
+                while (part_bit > 0 && part & mask == 0) {
+                    mask = mask >> 1
+                    part_bit = part_bit - 1
+                }
+
+                if(part & mask != 0) {
+                    bit = part_bit
+                    if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
+                        index = chunk * ChunkSize + bit
+                        return true, (toI256!(index) - (GlobalMaxTick / toI256!(tickSpacing))) * toI256!(tickSpacing)
+                    } else {
+                        return false, 0i
+                    }
+                }
+
+            }
+
+            // move to next chunk
+            if (chunk > 0) {
+                chunk = chunk - 1
+            } else {
+                return false, 0i
+            }
             bit = ChunkSize - 1
+            
         }
 
         return false, 0i
@@ -139,7 +190,7 @@ Contract Tickmap(
     pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
         let caller = callerAddress!()
         assert!((caller == invariantId) && areAdminsSet, TickmapErrors.NotAdmin)
-
+ 
         let mut closesTickBool = false
         let mut closesTickIndex = 0i
         
@@ -175,7 +226,7 @@ Contract Tickmap(
         }
     }
 
-    fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
+    pub fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
         let subContractId = subContractId!(poolKey ++ toByteVec!(chunk))
         let exists = contractExists!(subContractId)
 
@@ -198,15 +249,17 @@ Contract Tickmap(
         let caller = callerAddress!()
         checkCaller!((caller == invariantId) && areAdminsSet, TickmapErrors.NotAdmin)
 
-        let (chunk, bit) = tickToPosition(tick, tickSpacing)
+        let (chunkIndex, bit) = tickToPosition(tick, tickSpacing)
+        let chunk = getChunk(chunkIndex, poolKey)
         let isInitialized = getBitAtPosition(chunk, bit)
-        let id = poolKey ++ toByteVec!(chunk)
+
+        let id = poolKey ++ toByteVec!(chunkIndex)
         let subContractId = subContractId!(id)
         assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
         let contract = TickmapChunk(subContractId)
 
-        assert!(value == true && isInitialized == false || value == false && isInitialized == true, TickmapErrors.TickInitialized)
-
+        assert!(value && !isInitialized || !value && isInitialized, TickmapErrors.TickInitialized)
+    
         contract.set(flipBitAtPosition(contract.get(), bit))
     }
 

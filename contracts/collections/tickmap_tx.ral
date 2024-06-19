@@ -1,0 +1,11 @@
+TxScript Flip(tickmap: Tickmap, value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) {
+    tickmap.flip(value, tick, tickSpacing, poolKey)    
+}
+
+TxScript InitializeChunk(tickmap: Tickmap, caller: Address, poolKey: ByteVec, chunk: U256) {
+    tickmap.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
+}
+
+TxScript SetAdmins(tickmap: Tickmap, admin: Address) {
+    tickmap.setAdmins(admin)
+}
