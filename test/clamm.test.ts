@@ -2,7 +2,7 @@ import { DeployContractResult, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../artifacts/ts'
-import { MaxTick, MaxU256, deployCLAMM, deployTickmap, deployUints, expectError } from '../src/utils'
+import { MaxTick, MaxU256, deployCLAMM, deployUints, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

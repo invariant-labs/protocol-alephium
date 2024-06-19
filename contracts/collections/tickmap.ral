@@ -36,11 +36,11 @@ Contract Tickmap(
         return chunk, bit
     }
 
-    pub fn getBitAtPosition(value: U256, position: U256) -> Bool {
+    fn getBitAtPosition(value: U256, position: U256) -> Bool {
         return (value >> position) & 1 == 1
     }
 
-    pub fn flipBitAtPosition(value: U256, position: U256) -> U256 {
+    fn flipBitAtPosition(value: U256, position: U256) -> U256 {
         return value ^ (1 << position)
     }
 
@@ -226,7 +226,7 @@ Contract Tickmap(
         }
     }
 
-    pub fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
+    fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
         let subContractId = subContractId!(poolKey ++ toByteVec!(chunk))
         let exists = contractExists!(subContractId)
 

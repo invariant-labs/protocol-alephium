@@ -98,13 +98,6 @@ Abstract Contract Decimal() {
         return 10 ** scale
     }
 
-    pub fn checkedRem(a: U256, b: U256) -> (Bool, U256) {
-        if (b == 0) {
-            return false, 0
-        }
-        return true, a % b
-    }
-
     pub fn sqrtPriceFromTick(
         tickIndex: I256
     ) -> U256 {
