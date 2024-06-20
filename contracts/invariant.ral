@@ -147,9 +147,10 @@ Contract Invariant(
 
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
-        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
+        let caller = callerAddress!()
+        checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        feeTiers.remove(fee, tickSpacing)
+        feeTiers.remove(caller, fee, tickSpacing)
     }
 
     pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {

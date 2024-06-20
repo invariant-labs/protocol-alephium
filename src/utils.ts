@@ -1,7 +1,6 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import {
   CLAMM,
-  FeeTier,
   FeeTiers,
   Init,
   Invariant,
@@ -22,7 +21,6 @@ import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
-
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -50,8 +48,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const uints = await deployUints(signer)
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
-  const feeTier = await deployFeeTier(signer)
-  const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
+
+  const feeTiers = await deployFeeTiers(signer)
   const poolKey = await deployPoolKey(signer)
   const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
   const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
@@ -80,7 +78,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         positionTemplateContractId: position.contractInstance.contractId,
         positionsCounterContractId: positionsCounter.contractInstance.contractId,
         tickmap: tickmap.contractInstance.contractId,
-        clamm: clamm.contractInstance.contractId,
+        clamm: clamm.contractInstance.contractId
       }
     })
   )
@@ -96,24 +94,10 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   return invariant
 }
 
-
-export async function deployFeeTier(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    FeeTier.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        feeTier: { fee: 0n, tickSpacing: 0n },
-        isActive: false
-      }
-    })
-  )
-}
-
-export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
+export async function deployFeeTiers(signer: SignerProvider) {
   return await waitTxConfirmed(
     FeeTiers.deploy(signer, {
       initialFields: {
-        feeTierTemplateContractId: feeTier,
         feeTierCount: 0n,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false
@@ -214,7 +198,7 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
         poolTemplateContractId: poolId,
         clamm: clammId,
         areAdminsSet: false,
-        invariantId: ZERO_ADDRESS,
+        invariantId: ZERO_ADDRESS
       }
     })
   )

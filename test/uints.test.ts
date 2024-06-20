@@ -17,6 +17,7 @@ describe('uints tests', () => {
   test('to u256 works', async () => {
     const value = { higher: 0n, lower: 1n }
     const result = (await uints.methods.toU256({ args: { value } })).returns
+
     expect(result).toEqual(value.lower)
   })
 
