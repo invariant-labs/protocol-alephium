@@ -102,7 +102,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return pool
     }
 
-    pub fn withdrawProtocolFee(mut pool: Pool) -> (U256, U256, Pool) {
+    pub fn getAndUpdateProtocolFee(mut pool: Pool) -> (U256, U256, Pool) {
         let x = pool.feeProtocolTokenX
         let y = pool.feeProtocolTokenY
         pool.feeProtocolTokenX = 0
