@@ -1,36 +1,17 @@
-Contract PoolKeys(
-    mut poolKeyCount: U256,
-    mut invariantId: Address,
-    mut areAdminsSet: Bool
-) {
-    // Key = feeTierCount
-    mapping[U256, PoolKey] poolKeys
-    enum PoolKeysError {
-        NotAdmin = 200
-        AdminsAreSet = 201
-        PoolKeyAlreadyExist = 202
-    }
+Abstract Contract PoolKeys() {
+    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
+    pub fn addPoolKey(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
+        // checkCaller!(callerAddress!() == invariantId && areAdminsSet, InvariantError.NotAdmin)
 
-    @using(updateFields = true, checkExternalCaller = false)
-    pub fn setAdmins(invariant: Address) -> () {
-        assert!(!areAdminsSet, PoolKeysError.AdminsAreSet)
-        invariantId = invariant
-        areAdminsSet = true
-    }
-
-    @using(preapprovedAssets = true, updateFields = true)
-    pub fn add(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
-        checkCaller!(callerAddress!() == invariantId && areAdminsSet, PoolKeysError.NotAdmin)
-
-        let exists = contains(tokenX, tokenY, fee, tickSpacing)
-        assert!(!exists, PoolKeysError.PoolKeyAlreadyExist)
+        let exists = containsPoolKey(tokenX, tokenY, fee, tickSpacing)
+        assert!(!exists, InvariantError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
 
         poolKeys.insert!(originalCaller, poolKeyCount, PoolKey { tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
     }
 
-    pub fn contains(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
+    pub fn containsPoolKey(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let state = poolKeys[i]
 
@@ -42,11 +23,11 @@ Contract PoolKeys(
         return false
     }
 
-    pub fn count() -> U256 {
+    pub fn countPoolKeys() -> U256 {
         return poolKeyCount
     }
 
-    pub fn getAll() -> ByteVec {
+    pub fn getAllPoolKeys() -> ByteVec {
         let mut poolKeysBytes = b``
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {

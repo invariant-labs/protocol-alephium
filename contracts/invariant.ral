@@ -24,18 +24,20 @@ struct QuoteResult {
 Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
-    poolKeys: PoolKeys, 
     pools: Pools, 
     ticks: Ticks, 
     positionTemplateContractId: ByteVec,
     positionsCounterContractId: ByteVec,
     tickmap: Tickmap,
     clamm: CLAMM,
-    mut feeTierCount: U256
-) extends PoolKeyHelper(), Decimal(), FeeTiers() {
+    mut feeTierCount: U256,
+    mut poolKeyCount: U256
+) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys() {
     // Key = feeTierCount
     mapping[U256, FeeTier] feeTiers
-    
+    // Key = poolKeyCount
+    mapping[U256, PoolKey] poolKeys
+
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -64,8 +66,6 @@ Contract Invariant(
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
 
-
-        poolKeys.setAdmins(invtId)
         pools.setAdmins(invtId)
         tickmap.setAdmins(invtId)
         ticks.setAdmins(invtId)
@@ -125,7 +125,7 @@ Contract Invariant(
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
         let (tokenX, tokenY) = extractTokensFromPoolKey(poolKey)
         
-        let poolKeyExist = poolKeys.contains(tokenX, tokenY, fee, tickSpacing)
+        let poolKeyExist = containsPoolKey(tokenX, tokenY, fee, tickSpacing)
         assert!(!poolKeyExist, InvariantError.PoolKeyAlreadyExist)
 
         assert!(clamm.checkTickToSqrtPriceRelationship(initTick, tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
@@ -133,8 +133,8 @@ Contract Invariant(
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
-        poolKeys.add{caller -> ALPH: mapEntryDeposit }(caller, tokenX, tokenY, fee, tickSpacing)
-        pools.add{caller -> ALPH: mapEntryDeposit }(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
+        addPoolKey{caller -> ALPH: mapEntryDeposit}(caller, tokenX, tokenY, fee, tickSpacing)
+        pools.add{caller -> ALPH: mapEntryDeposit}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
@@ -167,7 +167,7 @@ Contract Invariant(
     }
 
     pub fn getPools() -> ByteVec {
-        return poolKeys.getAll()
+        return getAllPoolKeys()
     }
 
     pub fn getTick(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> (Bool, Tick) {
@@ -213,7 +213,6 @@ Contract Invariant(
         tokensOwedX: U256,
         tokensOwedY: U256
     ) -> () {
-
         let positionsCounter = PositionsCounter(positionsCounterContractId)
         let length = positionsCounter.get()
         positionsCounter.set(length + 1)
