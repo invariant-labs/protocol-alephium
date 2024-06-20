@@ -14,7 +14,7 @@ import {
   Uints
 } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { PoolState, PositionState, Tick } from '../artifacts/ts/types'
+import { Pool, PositionState, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
@@ -277,7 +277,7 @@ export function decodePools(string: string) {
   return pools
 }
 
-export function decodePool(array: [boolean, PoolState]) {
+export function decodePool(array: [boolean, Pool]) {
   return {
     exist: array[0],
     ...array[1]
