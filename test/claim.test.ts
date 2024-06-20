@@ -1,18 +1,18 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { AddFeeTier, ChangeProtocolFee, ClaimFee, CreatePool, IncreasePositionLiquidity, InitializeEmptyPosition, Swap, Withdraw } from '../artifacts/ts'
+import { AddFeeTier, ClaimFee, CreatePool, IncreasePositionLiquidity, InitializeEmptyPosition, Swap, Withdraw } from '../artifacts/ts'
 import { balanceOf, decodePool, decodePosition, deployInvariant, deployTokenFaucet, expectError, MAP_ENTRY_DEPOSIT } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let dex: PrivateKeyWallet
+let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
 
 const PercentageScale = 12n
 
 describe('invariant tests', () => {
   beforeAll(async () => {
-    dex = await getSigner(ONE_ALPH * 1000n, 0)
+    admin = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
@@ -20,12 +20,12 @@ describe('invariant tests', () => {
     // init dex and tokens
     // 1%
     const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(dex, protocol_fee)
+    const invariant = await deployInvariant(admin, protocol_fee)
 
     // 0.6%
     const fee = 6n * 10n ** (PercentageScale - 3n)
     const tickSpacing = 10n
-    await AddFeeTier.execute(dex, {
+    await AddFeeTier.execute(admin, {
       initialFields: {
         invariant: invariant.contractId,
         fee,
@@ -36,8 +36,8 @@ describe('invariant tests', () => {
 
     let supply = 10n ** 6n + 1000n
     let amount = 10n ** 6n
-    const token0 = await deployTokenFaucet(dex, 'X', 'X', supply, supply)
-    const token1 = await deployTokenFaucet(dex, 'Y', 'Y', supply, supply)
+    const token0 = await deployTokenFaucet(admin, 'X', 'X', supply, supply)
+    const token1 = await deployTokenFaucet(admin, 'Y', 'Y', supply, supply)
 
     // init basic pool
     await CreatePool.execute(positionOwner, {
@@ -237,12 +237,12 @@ describe('invariant tests', () => {
     // init dex and tokens
     // 1%
     const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(dex, protocol_fee)
+    const invariant = await deployInvariant(admin, protocol_fee)
 
     // 0.6%
     const fee = 6n * 10n ** (PercentageScale - 3n)
     const tickSpacing = 10n
-    await AddFeeTier.execute(dex, {
+    await AddFeeTier.execute(admin, {
       initialFields: {
         invariant: invariant.contractId,
         fee,
@@ -253,8 +253,8 @@ describe('invariant tests', () => {
 
     let supply = 10n ** 6n + 1000n
     let amount = 10n ** 6n
-    const token0 = await deployTokenFaucet(dex, 'X', 'X', supply, supply)
-    const token1 = await deployTokenFaucet(dex, 'Y', 'Y', supply, supply)
+    const token0 = await deployTokenFaucet(admin, 'X', 'X', supply, supply)
+    const token1 = await deployTokenFaucet(admin, 'Y', 'Y', supply, supply)
 
     // init basic pool
     await CreatePool.execute(positionOwner, {
