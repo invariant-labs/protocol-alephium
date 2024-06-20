@@ -5,7 +5,6 @@ import {
   Init,
   Invariant,
   Pool,
-  PoolKey,
   PoolKeys,
   Pools,
   Position,
@@ -50,8 +49,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
 
   const feeTiers = await deployFeeTiers(signer)
-  const poolKey = await deployPoolKey(signer)
-  const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
+  const poolKeys = await deployPoolKeys(signer)
   const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const pools = await deployPools(
     signer,
@@ -142,21 +140,10 @@ export async function deployTicks(signer: SignerProvider, tickId: string) {
   )
 }
 
-export async function deployPoolKey(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    PoolKey.deploy(signer, {
-      initialFields: {
-        poolKey: { tokenX: ZERO_ADDRESS, tokenY: ZERO_ADDRESS, fee: 0n, tickSpacing: 0n }
-      }
-    })
-  )
-}
-
-export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) {
+export async function deployPoolKeys(signer: SignerProvider) {
   return await waitTxConfirmed(
     PoolKeys.deploy(signer, {
       initialFields: {
-        poolKeyTemplateContractId: poolKeyId,
         poolKeyCount: 0n,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false

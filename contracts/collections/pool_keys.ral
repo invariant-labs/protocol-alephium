@@ -1,9 +1,10 @@
 Contract PoolKeys(
-    poolKeyTemplateContractId: ByteVec,
     mut poolKeyCount: U256,
     mut invariantId: Address,
     mut areAdminsSet: Bool
 ) {
+    // Key = feeTierCount
+    mapping[U256, PoolKey] poolKeys
     enum PoolKeysError {
         NotAdmin = 200
         AdminsAreSet = 201
@@ -25,20 +26,15 @@ Contract PoolKeys(
         assert!(!exists, PoolKeysError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
-        let (encodedImmFields, encodedMutFields) = PoolKey.encodeFields!(PoolKeyState{ tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
-        let _ = copyCreateSubContract!{originalCaller -> ALPH: mapEntryDeposit!()}(
-            toByteVec!(poolKeyCount),
-            poolKeyTemplateContractId,
-            encodedImmFields,
-            encodedMutFields
-        )
+
+        poolKeys.insert!(originalCaller, poolKeyCount, PoolKey { tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
     }
 
     pub fn contains(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-            let contract = PoolKey(subContractId!(toByteVec!(i)))
+            let state = poolKeys[i]
 
-            if (tokenX == contract.getTokenX() && tokenY == contract.getTokenY() && fee == contract.getFee() && tickSpacing == contract.getTickSpacing()) {
+            if (tokenX == state.tokenX && tokenY == state.tokenY && fee == state.fee && tickSpacing == state.tickSpacing) {
                 return true
             }
         }
@@ -54,8 +50,8 @@ Contract PoolKeys(
         let mut poolKeysBytes = b``
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
-            let contract = PoolKey(subContractId!(toByteVec!(i)))
-            poolKeysBytes = poolKeysBytes ++ contract.getTokenX() ++ b`break` ++ contract.getTokenY() ++ b`break` ++ toByteVec!(contract.getFee()) ++ b`break` ++ toByteVec!(contract.getTickSpacing()) ++ b`break`
+            let state = poolKeys[i]
+            poolKeysBytes = poolKeysBytes ++ state.tokenX ++ b`break` ++ state.tokenY ++ b`break` ++ toByteVec!(state.fee) ++ b`break` ++ toByteVec!(state.tickSpacing) ++ b`break`
         }
 
         return poolKeysBytes
