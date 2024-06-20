@@ -12,7 +12,8 @@
     "deploy": "npx cli deploy",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
-    "test": "jest -i --config ./jest-config.json"
+    "test": "jest -i --config ./jest-config.json",
+    "test:tickmap": "npm test test/tickmap.test.ts"
   },
   "dependencies": {
     "@alephium/cli": "^1.0.1",
