@@ -165,7 +165,7 @@ Contract Invariant(
         return poolKeys.getAll()
     }
 
-    pub fn getTick(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> (Bool, TickState) {
+    pub fn getTick(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> (Bool, Tick) {
         return ticks.get(generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
 
@@ -377,8 +377,8 @@ Contract Invariant(
 
         let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(tickSpacing)
 
-        ticks.updateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
-        ticks.updateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+        ticks.wrappedUpdateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        ticks.wrappedUpdateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
 
         let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, lowerTick)
         let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, upperTick)

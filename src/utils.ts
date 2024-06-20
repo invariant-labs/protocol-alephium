@@ -14,9 +14,8 @@ import {
   Ticks,
   Uints
 } from '../artifacts/ts'
-import { Tick } from '../artifacts/ts/Tick'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
+import { PoolState, PositionState, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
@@ -57,8 +56,7 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
     clamm.contractInstance.contractId,
     uints.contractInstance.contractId
   )
-  const tick = await deployTick(signer)
-  const ticks = await deployTicks(signer, tick.contractInstance.contractId)
+  const ticks = await deployTicks(signer)
   const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
   const chunk = await deployChunk(signer)
@@ -128,11 +126,10 @@ export async function deployPosition(signer: SignerProvider, clammId: string, ui
   )
 }
 
-export async function deployTicks(signer: SignerProvider, tickId: string) {
+export async function deployTicks(signer: SignerProvider) {
   return await waitTxConfirmed(
     Ticks.deploy(signer, {
       initialFields: {
-        tickTemplateContractId: tickId,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false
       }
@@ -186,25 +183,6 @@ export async function deployPools(signer: SignerProvider, poolId: string, clammI
         clamm: clammId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS
-      }
-    })
-  )
-}
-
-export async function deployTick(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    Tick.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        tick: {
-          sign: false,
-          liquidityChange: 0n,
-          liquidityGross: 0n,
-          sqrtPrice: 0n,
-          feeGrowthOutsideX: 0n,
-          feeGrowthOutsideY: 0n,
-          secondsOutside: 0n
-        }
       }
     })
   )
@@ -339,7 +317,7 @@ export function decodePool(array: [boolean, PoolState]) {
   }
 }
 
-export function decodeTick(array: [boolean, TickState]) {
+export function decodeTick(array: [boolean, Tick]) {
   return {
     exist: array[0],
     ...array[1]
