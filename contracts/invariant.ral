@@ -24,15 +24,18 @@ struct QuoteResult {
 Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
-    feeTiers: FeeTiers,
     poolKeys: PoolKeys, 
     pools: Pools, 
     ticks: Ticks, 
     positionTemplateContractId: ByteVec,
     positionsCounterContractId: ByteVec,
     tickmap: Tickmap,
-    clamm: CLAMM
-) extends PoolKeyHelper(), Decimal() {
+    clamm: CLAMM,
+    mut feeTierCount: U256
+) extends PoolKeyHelper(), Decimal(), FeeTiers() {
+    // Key = feeTierCount
+    mapping[U256, FeeTier] feeTiers
+    
     enum InvariantError {
         NotAdmin = 0
         AlreadyInitialized = 1
@@ -52,6 +55,7 @@ Contract Invariant(
         WrongLimit = 15
         NoGainSwap = 16
         PositionDoesNotExist = 17
+        FeeTierAlreadyExist = 18
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -60,7 +64,7 @@ Contract Invariant(
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
 
-        feeTiers.setAdmins(invtId)
+
         poolKeys.setAdmins(invtId)
         pools.setAdmins(invtId)
         tickmap.setAdmins(invtId)
@@ -111,7 +115,7 @@ Contract Invariant(
     pub fn createPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
         assert!(init, InvariantError.NotInitialized)
 
-        let feeTierExist = feeTiers.contains(fee, tickSpacing)
+        let feeTierExist = containsFeeTier(fee, tickSpacing)
         assert!(feeTierExist, InvariantError.FeeTierNotFound)
 
         clamm.checkTick(initTick, tickSpacing)
@@ -142,23 +146,24 @@ Contract Invariant(
         assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(fee <= one(PercentageScale), InvariantError.InvalidFee)
 
-        feeTiers.add{caller -> ALPH: mapEntryDeposit!() }(caller, fee, tickSpacing)
+        wrappedAddFeeTier{caller -> ALPH: mapEntryDeposit!()}(caller, fee, tickSpacing)
     }
 
+    
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
         assert!(init, InvariantError.NotInitialized)
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        feeTiers.remove(caller, fee, tickSpacing)
+        wrappedRemoveFeeTier(caller, fee, tickSpacing)
     }
 
     pub fn feeTierExist(fee: U256, tickSpacing: U256) -> Bool {
-        return feeTiers.contains(fee, tickSpacing)
+        return containsFeeTier(fee, tickSpacing)
     }
 
     pub fn getFeeTiers() -> ByteVec {
-        return feeTiers.getAll()
+        return getAllFeeTiers()
     }
 
     pub fn getPools() -> ByteVec {

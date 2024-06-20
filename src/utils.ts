@@ -1,7 +1,6 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
 import {
   CLAMM,
-  FeeTiers,
   Init,
   Invariant,
   PoolKeys,
@@ -44,7 +43,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const uints = await deployUints(signer)
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
-  const feeTiers = await deployFeeTiers(signer)
   const poolKeys = await deployPoolKeys(signer)
   const pools = await deployPools(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const ticks = await deployTicks(signer)
@@ -57,14 +55,14 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
       initialFields: {
         init: false,
         config: { admin: account.address, protocolFee },
-        feeTiers: feeTiers.contractInstance.contractId,
         poolKeys: poolKeys.contractInstance.contractId,
         pools: pools.contractInstance.contractId,
         ticks: ticks.contractInstance.contractId,
         positionTemplateContractId: position.contractInstance.contractId,
         positionsCounterContractId: positionsCounter.contractInstance.contractId,
         tickmap: tickmap.contractInstance.contractId,
-        clamm: clamm.contractInstance.contractId
+        clamm: clamm.contractInstance.contractId,
+        feeTierCount: 0n
       }
     })
   )
@@ -78,18 +76,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   })
 
   return invariant
-}
-
-export async function deployFeeTiers(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    FeeTiers.deploy(signer, {
-      initialFields: {
-        feeTierCount: 0n,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
 }
 
 export async function deployPosition(signer: SignerProvider, clammId: string, uintsId: string) {
