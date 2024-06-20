@@ -11,9 +11,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         currentTimestamp: U256,
         feeReceiver: Address
     ) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
-
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
         let state = Pool {
@@ -38,44 +35,8 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         return pools.contains!(poolKey)
     }
 
-    pub fn getToken(poolKey: ByteVec) -> (ByteVec, ByteVec) {
-        let state = pools[poolKey]
-        return state.tokenX, state.tokenY
-    }
-
-    pub fn getTickSpacing(poolKey: ByteVec) -> U256 {
-        return pools[poolKey].tickSpacing
-    }
-
-    pub fn getLiquidity(poolKey: ByteVec) -> U256 {
-        return pools[poolKey].liquidity
-    }
-
-    pub fn getSqrtPrice(poolKey: ByteVec) -> U256 {
-        return pools[poolKey].sqrtPrice
-    }
-
-    pub fn getCurrentTickIndex(poolKey: ByteVec) -> I256 {
-        return pools[poolKey].currentTickIndex
-    }
-
-    pub fn getFeeGrowthGlobal(poolKey: ByteVec) -> (U256, U256) {
-        let state = pools[poolKey]
-        return state.feeGrowthGlobalX, state.feeGrowthGlobalY
-    }
-
-    pub fn getStartTimestamp(poolKey: ByteVec) -> U256 {
-        return pools[poolKey].startTimestamp
-    }
-
-    pub fn getFeeReceiver(poolKey: ByteVec) -> Address {
-        return pools[poolKey].feeReceiver
-    }
-
     @using(checkExternalCaller = false)
     pub fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let mut state = pools[poolKey]
         state.sqrtPrice = sqrtPrice
         pools[poolKey] = state
@@ -83,8 +44,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn setCurrentTickIndex(poolKey: ByteVec, tickIndex: I256) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let mut state = pools[poolKey]
         state.currentTickIndex = tickIndex
         pools[poolKey] = state
@@ -92,8 +51,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let mut state = pools[poolKey]
         state.lastTimestamp = timestamp
         pools[poolKey] = state
@@ -101,8 +58,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let mut state = pools[poolKey]
         state.feeReceiver = newReceiver
         pools[poolKey] = state
@@ -134,8 +89,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let pool = pools[poolKey]
         let updatedPool = addFee(pool, feeAmount, xToY, fee)
         pools[poolKey] = updatedPool
@@ -154,9 +107,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         fee: U256,
         tickSpacing: U256
     ) -> (U256, U256, Bool) {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
-
         let (totalAmount, amountLeft, hasCrossed, updatedPool) = crossTick(
             pools[poolKey],
             nextSqrtPrice,
@@ -180,9 +130,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         add: Bool,
         liquidityDelta: U256
     ) -> () {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
-
         let pool = crossLiquidityUpdate(pools[poolKey], add, liquidityDelta)
         pools[poolKey] = pool
         return
@@ -190,8 +137,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
         let (x, y, pool) = updateLiquidity(pools[poolKey], liquidityDelta, liquiditySign, upperTick, lowerTick)
         pools[poolKey] = pool
         return x, y
@@ -199,9 +144,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
 
     @using(checkExternalCaller = false)
     pub fn wrappedGetProtocolFee(poolKey: ByteVec) -> (U256, U256) {
-        // let caller = callerAddress!()
-        // checkCaller!((caller == invariantId) && areAdminsSet, InvariantError.NotAdmin)
-
         let (feeProtocolTokenX, feeProtocolTokenY, pool) = getAndUpdateProtocolFee(pools[poolKey])
         pools[poolKey] = pool
         return feeProtocolTokenX, feeProtocolTokenY

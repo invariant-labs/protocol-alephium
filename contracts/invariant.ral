@@ -24,21 +24,21 @@ struct QuoteResult {
 Contract Invariant(
     mut init: Bool,
     mut config: InvariantConfig,
-    // pools: Pools, 
-    ticks: Ticks, 
     positionTemplateContractId: ByteVec,
     positionsCounterContractId: ByteVec,
     tickmap: Tickmap,
     clamm: CLAMM,
     mut feeTierCount: U256,
     mut poolKeyCount: U256
-) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm) {
+) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm), Ticks() {
     // Key = feeTierCount
     mapping[U256, FeeTier] feeTiers
     // Key = poolKeyCount
     mapping[U256, PoolKey] poolKeys
     // Key = PoolKey
     mapping[ByteVec, Pool] pools
+    // Key: poolKey ++ index
+    mapping[ByteVec, Tick] ticks
 
     enum InvariantError {
         NotAdmin = 0
@@ -62,6 +62,7 @@ Contract Invariant(
         FeeTierAlreadyExist = 18
         PoolDoesNotExist = 19
         PoolAlreadyExist = 20
+        TickAlreadyExist = 21
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -71,7 +72,6 @@ Contract Invariant(
         let invtId = selfAddress!()
 
         tickmap.setAdmins(invtId)
-        ticks.setAdmins(invtId)
 
         PositionsCounter(positionsCounterContractId).setAdmins(selfAddress!())
         
@@ -175,7 +175,7 @@ Contract Invariant(
     }
 
     pub fn getTick(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> (Bool, Tick) {
-        return ticks.get(generatePoolKey(token0, token1, fee, tickSpacing), index)
+        return wrappedGetTick(generatePoolKey(token0, token1, fee, tickSpacing), index)
     }
 
     pub fn getPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> (Bool, Pool) {
@@ -275,7 +275,7 @@ Contract Invariant(
             secondsOutside = blockTimeStamp!() - startTimestamp
         }
 
-        ticks.add{caller -> ALPH: mapEntryDeposit!()}(
+        wrappedCreateTick{caller -> ALPH: mapEntryDeposit!()}(
             caller,
             poolKey,
             index,
@@ -320,11 +320,11 @@ Contract Invariant(
         }
         
         let mapEntry2Deposits = mapEntryDeposit * 2
-        if (!ticks.contains(poolKey, lowerTick)) {
+        if (!containsTick(poolKey, lowerTick)) {
             createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, tickSpacing, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
-        if (!ticks.contains(poolKey, upperTick)) {
+        if (!containsTick(poolKey, upperTick)) {
             createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, tickSpacing, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
         }
 
@@ -389,11 +389,11 @@ Contract Invariant(
         let (_, pool) = wrappedGetPool(poolKey)
         let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(tickSpacing)
 
-        ticks.wrappedUpdateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
-        ticks.wrappedUpdateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+        wrappedUpdateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        wrappedUpdateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
 
-        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, lowerTick)
-        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = ticks.getFeeGrowthOutside(poolKey, upperTick)
+        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, lowerTick)
+        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, upperTick)
         let poolCurrentTickIndex = pool.currentTickIndex
         let poolFeeGrowthGlobalX = pool.feeGrowthGlobalX
         let poolFeeGrowthGlobalY = pool.feeGrowthGlobalY
@@ -572,7 +572,7 @@ Contract Invariant(
                         let (_, crossedPool) = wrappedGetPool(poolKey)
                         let feeGrowthGlobalX = crossedPool.feeGrowthGlobalX
                         let feeGrowthGlobalY = crossedPool.feeGrowthGlobalY
-                        let (add, liquidityDelta) = ticks.wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
+                        let (add, liquidityDelta) = wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
                         wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
                     }
                 }
