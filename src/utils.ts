@@ -4,7 +4,6 @@ import {
   FeeTiers,
   Init,
   Invariant,
-  Pool,
   PoolKeys,
   Pools,
   Position,
@@ -49,13 +48,8 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const feeTiers = await deployFeeTiers(signer)
   const poolKeys = await deployPoolKeys(signer)
-  const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
-  const pools = await deployPools(
-    signer,
-    pool.contractInstance.contractId,
-    clamm.contractInstance.contractId,
-    uints.contractInstance.contractId
-  )
+
+  const pools = await deployPools(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const ticks = await deployTicks(signer)
   const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
@@ -149,37 +143,10 @@ export async function deployPoolKeys(signer: SignerProvider) {
   )
 }
 
-export async function deployPool(signer: SignerProvider, clammId: string, uintsId: string) {
-  return await waitTxConfirmed(
-    Pool.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        pool: {
-          tickSpacing: 0n,
-          tokenX: '',
-          tokenY: '',
-          liquidity: 0n,
-          sqrtPrice: 0n,
-          currentTickIndex: 0n,
-          feeGrowthGlobalX: 0n,
-          feeGrowthGlobalY: 0n,
-          feeProtocolTokenX: 0n,
-          feeProtocolTokenY: 0n,
-          startTimestamp: 0n,
-          lastTimestamp: 0n,
-          feeReceiver: ZERO_ADDRESS
-        },
-        clamm: clammId
-      }
-    })
-  )
-}
-
-export async function deployPools(signer: SignerProvider, poolId: string, clammId: string, uintsId: string) {
+export async function deployPools(signer: SignerProvider, clammId: string, uintsId: string) {
   return await waitTxConfirmed(
     Pools.deploy(signer, {
       initialFields: {
-        poolTemplateContractId: poolId,
         clamm: clammId,
         areAdminsSet: false,
         invariantId: ZERO_ADDRESS
