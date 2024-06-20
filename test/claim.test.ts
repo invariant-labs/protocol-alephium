@@ -3,12 +3,13 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, ClaimFee, CreatePool, IncreasePositionLiquidity, InitializeEmptyPosition, Swap, Withdraw } from '../artifacts/ts'
 import { balanceOf, decodePool, decodePosition, deployInvariant, deployTokenFaucet, expectError, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import { LIQUIDITY_SCALE, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
 
-const PercentageScale = 12n
+
 
 describe('invariant tests', () => {
   beforeAll(async () => {
@@ -19,11 +20,11 @@ describe('invariant tests', () => {
   test('claim', async () => {
     // init dex and tokens
     // 1%
-    const protocol_fee = 10n ** (PercentageScale - 2n)
+    const protocol_fee = 10n ** (PERCENTAGE_SCALE - 2n)
     const invariant = await deployInvariant(admin, protocol_fee)
 
     // 0.6%
-    const fee = 6n * 10n ** (PercentageScale - 3n)
+    const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
     const tickSpacing = 10n
     await AddFeeTier.execute(admin, {
       initialFields: {
@@ -86,7 +87,7 @@ describe('invariant tests', () => {
 
     const lowerTick = -20n
     const upperTick = 10n
-    const liquidity = 1000000n * 10n ** 5n
+    const liquidity = 1000000n * 10n ** LIQUIDITY_SCALE
     const slippageLimit = poolBefore.sqrtPrice
 
     await InitializeEmptyPosition.execute(positionOwner, {
@@ -166,7 +167,7 @@ describe('invariant tests', () => {
           xToY: true,
           amount: swapAmount,
           byAmountIn: true,
-          sqrtPriceLimit: 15258932000000000000n
+          sqrtPriceLimit: MIN_SQRT_PRICE
         },
         tokens: [
           { id: tokenX.contractInstance.contractId, amount: swapAmount },
@@ -236,11 +237,11 @@ describe('invariant tests', () => {
   test('claim_not_owner', async () => {
     // init dex and tokens
     // 1%
-    const protocol_fee = 10n ** (PercentageScale - 2n)
+    const protocol_fee = 10n ** (PERCENTAGE_SCALE - 2n)
     const invariant = await deployInvariant(admin, protocol_fee)
 
     // 0.6%
-    const fee = 6n * 10n ** (PercentageScale - 3n)
+    const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
     const tickSpacing = 10n
     await AddFeeTier.execute(admin, {
       initialFields: {
@@ -303,7 +304,7 @@ describe('invariant tests', () => {
 
     const lowerTick = -20n
     const upperTick = 10n
-    const liquidity = 1000000n * 10n ** 5n
+    const liquidity = 1000000n * 10n ** LIQUIDITY_SCALE
     const slippageLimit = poolBefore.sqrtPrice
 
     await InitializeEmptyPosition.execute(positionOwner, {
@@ -383,7 +384,7 @@ describe('invariant tests', () => {
           xToY: true,
           amount: swapAmount,
           byAmountIn: true,
-          sqrtPriceLimit: 15258932000000000000n
+          sqrtPriceLimit: MIN_SQRT_PRICE
         },
         tokens: [
           { id: tokenX.contractInstance.contractId, amount: swapAmount },
