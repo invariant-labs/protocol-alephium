@@ -1,0 +1,144 @@
+import { DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import {
+    AddFeeTier,
+    CreatePool,
+    IncreasePositionLiquidity,
+    InitializeEmptyPosition,
+    InvariantInstance,
+    Swap,
+    Withdraw
+} from '../artifacts/ts'
+import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
+import { MAP_ENTRY_DEPOSIT, decodePool, decodePosition, deployTokenFaucet } from './utils'
+import { MIN_SQRT_PRICE } from './consts'
+
+type TokenInstance = TokenFaucetInstance
+
+export async function initTokens(signer: SignerProvider, supply: bigint) {
+    const token0 = TokenFaucet.at((await deployTokenFaucet(signer, 'X', 'X', supply, supply)).contractInstance.address)
+    const token1 = TokenFaucet.at((await deployTokenFaucet(signer, 'Y', 'Y', supply, supply)).contractInstance.address)
+
+    return token0.contractId < token1.contractId ? [token0, token1] : [token1, token0]
+}
+
+export async function initFeeTier(invariant: InvariantInstance, signer: SignerProvider, fee: bigint, tickSpacing: bigint) {
+    await AddFeeTier.execute(signer, {
+        initialFields: {
+            invariant: invariant.contractId,
+            fee,
+            tickSpacing
+        },
+        attoAlphAmount: MAP_ENTRY_DEPOSIT
+    })
+}
+
+export async function initPool(invariant: InvariantInstance, signer: SignerProvider, token0: TokenInstance, token1: TokenInstance, fee: bigint, tickSpacing: bigint, initSqrtPrice: bigint, initTick: bigint = 0n) {
+    await CreatePool.execute(signer, {
+        initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractId,
+            token1: token1.contractId,
+            fee,
+            tickSpacing,
+            initSqrtPrice,
+            initTick
+        },
+        attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
+    })
+}
+
+export async function withdrawTokens(signer: SignerProvider, ...tokens: [token: TokenInstance, amount: bigint][]) {
+    for (const [tokenN, amountN] of tokens) {
+        await Withdraw.execute(signer, {
+            initialFields: {
+                token: tokenN.contractId,
+                amount: amountN
+            },
+            attoAlphAmount: DUST_AMOUNT
+        })
+    }
+}
+
+export async function getPool(invariant: InvariantInstance, token0: TokenInstance, token1: TokenInstance, fee: bigint, tickSpacing: bigint) {
+    return decodePool(
+        (
+            await invariant.methods.getPool({
+                args: {
+                    token0: token0.contractId,
+                    token1: token1.contractId,
+                    fee,
+                    tickSpacing
+                }
+            })
+        ).returns
+    )
+}
+
+export async function getPosition(invariant: InvariantInstance, index: bigint = 1n) {
+    return decodePosition(
+        (
+            await invariant.methods.getPosition({
+                args: {
+                    index
+                }
+            })
+        ).returns
+    )
+}
+
+export async function initPositionWithLiquidity(invariant: InvariantInstance, signer: SignerProvider, token0: TokenInstance, token0Amount: bigint, token1: TokenInstance, token1Amount: bigint, fee: bigint, tickSpacing: bigint, lowerTick: bigint, upperTick: bigint, liquidity: bigint, slippageLimitLower: bigint, slippageLimitUpper: bigint = slippageLimitLower, index: bigint = 1n) {
+    await InitializeEmptyPosition.execute(signer, {
+        initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractId,
+            token1: token1.contractId,
+            fee,
+            tickSpacing,
+            lowerTick,
+            upperTick,
+        },
+        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
+    })
+
+    await IncreasePositionLiquidity.execute(signer, {
+        initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractId,
+            token1: token1.contractId,
+            approvedTokens0: token0Amount,
+            approvedTokens1: token1Amount,
+            index,
+            fee,
+            tickSpacing,
+            lowerTick: lowerTick,
+            upperTick: upperTick,
+            liquidityDelta: liquidity,
+            slippageLimitLower,
+            slippageLimitUpper
+        },
+        tokens: [
+            { id: token0.contractId, amount: token0Amount },
+            { id: token1.contractId, amount: token1Amount }
+        ]
+    })
+}
+
+export async function initSwap(invariant: InvariantInstance, signer: SignerProvider, token0: TokenInstance, token1: TokenInstance, fee: bigint, tickSpacing: bigint, amount: bigint, xToY: boolean = true, byAmountIn: boolean = true, sqrtPriceLimit: bigint = MIN_SQRT_PRICE) {
+    await Swap.execute(signer, {
+        initialFields: {
+            invariant: invariant.contractId,
+            token0: token0.contractId,
+            token1: token1.contractId,
+            fee,
+            tickSpacing,
+            xToY,
+            amount,
+            byAmountIn: true,
+            sqrtPriceLimit: MIN_SQRT_PRICE
+        },
+        tokens: [
+            { id: token0.contractId, amount },
+            { id: token1.contractId, amount }
+        ]
+    })
+}
