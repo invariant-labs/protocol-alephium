@@ -9,7 +9,6 @@ import {
   Position,
   PositionsCounter,
   Tickmap,
-  TickmapChunk,
   Ticks,
   Uints
 } from '../artifacts/ts'
@@ -45,16 +44,13 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const uints = await deployUints(signer)
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
-
   const feeTiers = await deployFeeTiers(signer)
   const poolKeys = await deployPoolKeys(signer)
-
   const pools = await deployPools(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const ticks = await deployTicks(signer)
   const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
-  const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
+  const tickmap = await deployTickmap(signer)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -155,22 +151,10 @@ export async function deployPools(signer: SignerProvider, clammId: string, uints
   )
 }
 
-export async function deployChunk(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    TickmapChunk.deploy(signer, {
-      initialFields: {
-        value: 0n,
-        admin: ZERO_ADDRESS
-      }
-    })
-  )
-}
-
-export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string) {
+export async function deployTickmap(signer: SignerProvider) {
   return await waitTxConfirmed(
     Tickmap.deploy(signer, {
       initialFields: {
-        chunkTemplateContractId: chunkTemplateContractId,
         invariantId: ZERO_ADDRESS,
         areAdminsSet: false
       }

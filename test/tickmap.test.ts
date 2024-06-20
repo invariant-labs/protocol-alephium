@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip, InitializeChunk, SetAdmins } from '../artifacts/ts'
 
-import { MaxTick, deployCLAMM, deployChunk, deployTickmap } from '../src/utils'
+import { MaxTick, deployTickmap } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -15,8 +15,7 @@ describe('tickmap tests', () => {
   })
 
   test('flip', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
 
     await SetAdmins.execute(sender, {
       initialFields: {
@@ -95,8 +94,7 @@ describe('tickmap tests', () => {
     }
   })
   test('next initialized chunk - simple', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 5n
     const tickSpacing = 1n
 
@@ -139,8 +137,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('next initialized chunk - multiple', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick50 = 50n
     const tick100 = 100n
     const tickSpacing = 10n
@@ -222,8 +219,7 @@ describe('tickmap tests', () => {
   })
 
   test('next initialized chunk - current is last', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 10n
 
@@ -265,8 +261,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - just below limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 1n
 
@@ -311,8 +306,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('next initialized chunk - at limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 1n
 
@@ -356,8 +350,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - farther than limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = MaxTick - 10n
     const tickSpacing = 1n
 
@@ -401,8 +394,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - hitting the limit limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = MaxTick - 22n
     const tickSpacing = 4n
 
@@ -420,8 +412,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - already at limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = MaxTick - 2n
     const tickSpacing = 4n
 
@@ -438,8 +429,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - at pos 255', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = MaxTick - 255n
     const tickSpacing = 1n
 
@@ -482,8 +472,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('prev initialized - simple', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = -5n
     const tickSpacing = 1n
 
@@ -526,8 +515,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('prev initialized chunk - multiple', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick50 = -50n
     const tick100 = -100n
     const tickSpacing = 10n
@@ -608,8 +596,7 @@ describe('tickmap tests', () => {
     }
   })
   test('prev initialized chunk - current is last', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 10n
 
@@ -652,8 +639,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('prev initialized chunk - next is last', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 10n
     const tickSpacing = 10n
 
@@ -695,8 +681,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - just below limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 1n
 
@@ -742,8 +727,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('prev initialized chunk - at limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = 0n
     const tickSpacing = 1n
 
@@ -787,8 +771,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - farther than limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = -MaxTick + 1n
     const tickSpacing = 1n
 
@@ -832,8 +815,7 @@ describe('tickmap tests', () => {
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - at pos 255', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = -MaxTick + 255n
     const tickSpacing = 1n
 
@@ -878,8 +860,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('prev initialized chunk - at pos 0', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     const tick = -MaxTick
     const tickSpacing = 1n
 
@@ -924,8 +905,7 @@ describe('tickmap tests', () => {
     expect(index).toBe(tick)
   })
   test('get search limit', async () => {
-    const chunk = await deployChunk(sender)
-    const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+    const tickmap = await deployTickmap(sender)
     await SetAdmins.execute(sender, {
       initialFields: {
         tickmap: tickmap.contractInstance.contractId,
@@ -990,8 +970,7 @@ describe('tickmap tests', () => {
   test('test next and prev intialized', async () => {
     // initialized edges
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
-      const chunk = await deployChunk(sender)
-      const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+      const tickmap = await deployTickmap(sender)
       await SetAdmins.execute(sender, {
         initialFields: {
           tickmap: tickmap.contractInstance.contractId,
@@ -1074,8 +1053,7 @@ describe('tickmap tests', () => {
       }
     }
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
-      const chunk = await deployChunk(sender)
-      const tickmap = await deployTickmap(sender, chunk.contractInstance.contractId)
+      const tickmap = await deployTickmap(sender)
       await SetAdmins.execute(sender, {
         initialFields: {
           tickmap: tickmap.contractInstance.contractId,

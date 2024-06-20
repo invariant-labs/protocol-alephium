@@ -1,8 +1,10 @@
 Contract Tickmap(
-    chunkTemplateContractId: ByteVec,
     mut invariantId: Address,
     mut areAdminsSet: Bool
 ) extends Decimal() {
+    // Key: poolKey ++ chunk index
+    mapping[ByteVec, U256] bitmap
+    
     const ChunkSize = 256
     const HalfChunkSize = 128
     const SearchRange = 256i
@@ -227,14 +229,13 @@ Contract Tickmap(
     }
 
     fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
-        let subContractId = subContractId!(poolKey ++ toByteVec!(chunk))
-        let exists = contractExists!(subContractId)
+        let key = poolKey ++ toByteVec!(chunk)
+        let exists = bitmap.contains!(key)
 
         if (!exists) {
             return 0
         } else {
-            let contract = TickmapChunk(subContractId)
-            return contract.get()
+            return bitmap[key]
         }
     }
 
@@ -253,14 +254,14 @@ Contract Tickmap(
         let chunk = getChunk(chunkIndex, poolKey)
         let isInitialized = getBitAtPosition(chunk, bit)
 
-        let id = poolKey ++ toByteVec!(chunkIndex)
-        let subContractId = subContractId!(id)
-        assert!(contractExists!(subContractId), TickmapErrors.ChunkNotFound)
-        let contract = TickmapChunk(subContractId)
+        let key = poolKey ++ toByteVec!(chunkIndex)
+
+        assert!(bitmap.contains!(key), TickmapErrors.ChunkNotFound)
+        
 
         assert!(value && !isInitialized || !value && isInitialized, TickmapErrors.TickInitialized)
     
-        contract.set(flipBitAtPosition(contract.get(), bit))
+        bitmap[key] = flipBitAtPosition(bitmap[key], bit)
     }
 
     @using(preapprovedAssets = true)
@@ -269,16 +270,10 @@ Contract Tickmap(
         checkCaller!((caller == invariantId) && areAdminsSet, TickmapErrors.NotAdmin)
 
         let id = poolKey ++ toByteVec!(chunk)
-        let exists = contractExists!(subContractId!(id))
+        let exists = bitmap.contains!(id)
 
         if(!exists) {
-            let (encodedImmFields, encodedMutFields) = TickmapChunk.encodeFields!(0, selfAddress!())
-            let _ = copyCreateSubContract!{originalCaller -> ALPH: mapEntryDeposit!() }(
-                id,
-                chunkTemplateContractId,
-                encodedImmFields,
-                encodedMutFields
-            )
+            bitmap.insert!(originalCaller, id, 0)
         }
     }
 
