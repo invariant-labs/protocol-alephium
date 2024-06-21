@@ -1,19 +1,9 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { ClaimFee } from '../artifacts/ts'
-import { balanceOf, deployInvariant, expectError } from '../src/utils'
-import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
-import {
-  getPool,
-  initPool,
-  initFeeTier,
-  initPositionWithLiquidity,
-  initTokensXY,
-  withdrawTokens,
-  initSwap,
-  getPosition
-} from '../src/testUtils'
+import { deployInvariant, expectError } from '../src/utils'
+import { PercentageScale } from '../src/consts'
+import { getPool, initPool, initFeeTier, initTokensXY } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -24,7 +14,6 @@ describe('invariant tests', () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     poolCreator = await getSigner(ONE_ALPH * 1000n, 0)
   })
-
   test('create pool', async () => {
     const protocol_fee = 10n ** (PercentageScale - 2n)
     const invariant = await deployInvariant(admin, protocol_fee)
@@ -33,7 +22,7 @@ describe('invariant tests', () => {
     const tickSpacing = 100n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 0n
@@ -59,7 +48,7 @@ describe('invariant tests', () => {
     const tickSpacing = 100n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 0n
@@ -90,7 +79,7 @@ describe('invariant tests', () => {
     const tickSpacing = 100n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX] = await initTokensXY(admin, supply)
 
     const initTick = 0n
@@ -101,15 +90,14 @@ describe('invariant tests', () => {
       initPool(invariant, poolCreator, tokenX, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
-
-  test('create pool fee tier not added ', async () => {
+  test('create pool fee tier not added', async () => {
     const protocol_fee = 10n ** (PercentageScale - 2n)
     const invariant = await deployInvariant(admin, protocol_fee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 100n
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 0n
@@ -128,7 +116,7 @@ describe('invariant tests', () => {
     const tickSpacing = 3n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 2n
@@ -149,7 +137,7 @@ describe('invariant tests', () => {
     const tickSpacing = 3n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 0n
@@ -166,7 +154,8 @@ describe('invariant tests', () => {
       initTick
     )
 
-    await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    expect(pool.currentTickIndex).toBe(initTick)
   })
   test('create pool init sqrt price has closer init tick', async () => {
     const protocol_fee = 10n ** (PercentageScale - 2n)
@@ -176,7 +165,7 @@ describe('invariant tests', () => {
     const tickSpacing = 1n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 2n
@@ -208,7 +197,7 @@ describe('invariant tests', () => {
     const tickSpacing = 3n
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    let supply = 10n ** 6n + 1000n
+    const supply = 10n ** 6n + 1000n
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 0n
