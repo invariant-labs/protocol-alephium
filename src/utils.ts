@@ -1,41 +1,27 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import {
-  CLAMM,
-  FeeTier,
-  FeeTiers,
-  Init,
-  Invariant,
-  Pool,
-  PoolKey,
-  PoolKeys,
-  Pools,
-  Position,
-  PositionsCounter,
-  Tickmap,
-  TickmapChunk,
-  Ticks,
-  Uints
-} from '../artifacts/ts'
-import { Tick } from '../artifacts/ts/Tick'
+import { CLAMM, Invariant, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { PoolState, PositionState, TickState } from '../artifacts/ts/types'
+import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
-
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
 
-async function _waitTxConfirmed(provider: NodeProvider, txId: string, confirmations: number): Promise<node.Confirmed> {
+async function _waitTxConfirmed(
+  provider: NodeProvider,
+  txId: string,
+  confirmations: number
+): Promise<node.Confirmed> {
   const status = await provider.transactions.getTransactionsStatus({
     txId: txId
   })
   if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
     return status
   }
-  await new Promise((r) => setTimeout(r, 1000))
+  await new Promise(r => setTimeout(r, 1000))
   return _waitTxConfirmed(provider, txId, confirmations)
 }
 
@@ -50,228 +36,21 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const uints = await deployUints(signer)
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
-  const feeTier = await deployFeeTier(signer)
-  const feeTiers = await deployFeeTiers(signer, feeTier.contractInstance.contractId)
-  const poolKey = await deployPoolKey(signer)
-  const poolKeys = await deployPoolKeys(signer, poolKey.contractInstance.contractId)
-  const pool = await deployPool(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
-  const pools = await deployPools(
-    signer,
-    pool.contractInstance.contractId,
-    clamm.contractInstance.contractId,
-    uints.contractInstance.contractId
-  )
-  const tick = await deployTick(signer)
-  const ticks = await deployTicks(signer, tick.contractInstance.contractId)
-  const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
-  const positionsCounter = await deployPositionsCounter(signer)
-  const chunk = await deployChunk(signer)
-  const tickmap = await deployTickmap(signer, chunk.contractInstance.contractId)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
-        init: false,
         config: { admin: account.address, protocolFee },
-        feeTiers: feeTiers.contractInstance.contractId,
-        poolKeys: poolKeys.contractInstance.contractId,
-        pools: pools.contractInstance.contractId,
-        ticks: ticks.contractInstance.contractId,
-        positionTemplateContractId: position.contractInstance.contractId,
-        positionsCounterContractId: positionsCounter.contractInstance.contractId,
-        tickmap: tickmap.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
+        feeTierCount: 0n,
+        poolKeyCount: 0n
       }
     })
   )
 
   const invariant = Invariant.at(deployResult.contractInstance.address)
 
-  await Init.execute(signer, {
-    initialFields: {
-      invariant: invariant.contractId
-    }
-  })
-
   return invariant
-}
-
-
-export async function deployFeeTier(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    FeeTier.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        feeTier: { fee: 0n, tickSpacing: 0n },
-        isActive: false
-      }
-    })
-  )
-}
-
-export async function deployFeeTiers(signer: SignerProvider, feeTier: string) {
-  return await waitTxConfirmed(
-    FeeTiers.deploy(signer, {
-      initialFields: {
-        feeTierTemplateContractId: feeTier,
-        feeTierCount: 0n,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
-}
-
-export async function deployPosition(signer: SignerProvider, clammId: string, uintsId: string) {
-  return await waitTxConfirmed(
-    Position.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        position: {
-          poolKey: '',
-          liquidity: 0n,
-          lowerTickIndex: 0n,
-          upperTickIndex: 0n,
-          feeGrowthInsideX: 0n,
-          feeGrowthInsideY: 0n,
-          lastBlockNumber: 0n,
-          tokensOwedX: 0n,
-          tokensOwedY: 0n,
-          owner: ZERO_ADDRESS
-        },
-        isActive: false,
-        clammContractInstance: clammId
-      }
-    })
-  )
-}
-
-export async function deployTicks(signer: SignerProvider, tickId: string) {
-  return await waitTxConfirmed(
-    Ticks.deploy(signer, {
-      initialFields: {
-        tickTemplateContractId: tickId,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
-}
-
-export async function deployPoolKey(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    PoolKey.deploy(signer, {
-      initialFields: {
-        poolKey: { tokenX: ZERO_ADDRESS, tokenY: ZERO_ADDRESS, fee: 0n, tickSpacing: 0n }
-      }
-    })
-  )
-}
-
-export async function deployPoolKeys(signer: SignerProvider, poolKeyId: string) {
-  return await waitTxConfirmed(
-    PoolKeys.deploy(signer, {
-      initialFields: {
-        poolKeyTemplateContractId: poolKeyId,
-        poolKeyCount: 0n,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
-}
-
-export async function deployPool(signer: SignerProvider, clammId: string, uintsId: string) {
-  return await waitTxConfirmed(
-    Pool.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        pool: {
-          tickSpacing: 0n,
-          tokenX: '',
-          tokenY: '',
-          liquidity: 0n,
-          sqrtPrice: 0n,
-          currentTickIndex: 0n,
-          feeGrowthGlobalX: 0n,
-          feeGrowthGlobalY: 0n,
-          feeProtocolTokenX: 0n,
-          feeProtocolTokenY: 0n,
-          startTimestamp: 0n,
-          lastTimestamp: 0n,
-          feeReceiver: ZERO_ADDRESS
-        },
-        clamm: clammId
-      }
-    })
-  )
-}
-
-export async function deployPools(signer: SignerProvider, poolId: string, clammId: string, uintsId: string) {
-  return await waitTxConfirmed(
-    Pools.deploy(signer, {
-      initialFields: {
-        poolTemplateContractId: poolId,
-        clamm: clammId,
-        areAdminsSet: false,
-        invariantId: ZERO_ADDRESS,
-      }
-    })
-  )
-}
-
-export async function deployTick(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    Tick.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        tick: {
-          sign: false,
-          liquidityChange: 0n,
-          liquidityGross: 0n,
-          sqrtPrice: 0n,
-          feeGrowthOutsideX: 0n,
-          feeGrowthOutsideY: 0n,
-          secondsOutside: 0n
-        }
-      }
-    })
-  )
-}
-
-export async function deployChunk(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    TickmapChunk.deploy(signer, {
-      initialFields: {
-        value: 0n,
-        admin: ZERO_ADDRESS
-      }
-    })
-  )
-}
-
-export async function deployTickmap(signer: SignerProvider, chunkTemplateContractId: string) {
-  return await waitTxConfirmed(
-    Tickmap.deploy(signer, {
-      initialFields: {
-        chunkTemplateContractId: chunkTemplateContractId,
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
-}
-
-export async function deployPositionsCounter(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    PositionsCounter.deploy(signer, {
-      initialFields: {
-        value: 0n,
-        positionsId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
 }
 
 export async function deployCLAMM(signer: SignerProvider, uintsId: string) {
@@ -323,7 +102,7 @@ export async function expectError(script: Promise<any>) {
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
-  const balance = balances.tokenBalances?.find((t) => t.id === tokenId)
+  const balance = balances.tokenBalances?.find(t => t.id === tokenId)
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
 
@@ -361,21 +140,21 @@ export function decodePools(string: string) {
   return pools
 }
 
-export function decodePool(array: [boolean, PoolState]) {
+export function decodePool(array: [boolean, Pool]) {
   return {
     exist: array[0],
     ...array[1]
   }
 }
 
-export function decodeTick(array: [boolean, TickState]) {
+export function decodeTick(array: [boolean, Tick]) {
   return {
     exist: array[0],
     ...array[1]
   }
 }
 
-export function decodePosition(array: [boolean, PositionState]) {
+export function decodePosition(array: [boolean, Position]) {
   return {
     exist: array[0],
     ...array[1]
@@ -383,7 +162,7 @@ export function decodePosition(array: [boolean, PositionState]) {
 }
 
 export function hexToBytes(hex: string): Uint8Array {
-  return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
+  return new Uint8Array(hex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || [])
 }
 
 export function decodeU256(string: string): bigint {
@@ -400,5 +179,6 @@ export const ArithmeticError = {
   MulNotPositiveDenominator: 100007n
 }
 
-export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+export const MaxU256 =
+  115792089237316195423570985008687907853269984665640564039457584007913129639935n
 export const MaxTick = 221818n

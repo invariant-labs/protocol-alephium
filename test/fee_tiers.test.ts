@@ -28,6 +28,11 @@ describe('fee tier tests', () => {
       attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
+    const exist = (
+      await invariant.methods.feeTierExist({ args: { fee: fee1, tickSpacing: tickSpacing1 } })
+    ).returns
+    expect(exist).toBeTruthy()
+
     {
       const feeTiers = await invariant.methods.getFeeTiers()
       const parsedFeeTiers = decodeFeeTiers(feeTiers.returns)
@@ -178,13 +183,19 @@ describe('fee tier tests', () => {
     const tickSpacing3 = 3n
 
     {
-      const feeTier1Exist = await invariant.methods.feeTierExist({ args: { fee: fee1, tickSpacing: tickSpacing1 } })
+      const feeTier1Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee1, tickSpacing: tickSpacing1 }
+      })
       expect(feeTier1Exist.returns).toBe(false)
 
-      const feeTier2Exist = await invariant.methods.feeTierExist({ args: { fee: fee2, tickSpacing: tickSpacing2 } })
+      const feeTier2Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee2, tickSpacing: tickSpacing2 }
+      })
       expect(feeTier2Exist.returns).toBe(false)
 
-      const feeTier3Exist = await invariant.methods.feeTierExist({ args: { fee: fee3, tickSpacing: tickSpacing3 } })
+      const feeTier3Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee3, tickSpacing: tickSpacing3 }
+      })
       expect(feeTier3Exist.returns).toBe(false)
     }
 
@@ -198,13 +209,19 @@ describe('fee tier tests', () => {
     })
 
     {
-      const feeTier1Exist = await invariant.methods.feeTierExist({ args: { fee: fee1, tickSpacing: tickSpacing1 } })
+      const feeTier1Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee1, tickSpacing: tickSpacing1 }
+      })
       expect(feeTier1Exist.returns).toBe(true)
 
-      const feeTier2Exist = await invariant.methods.feeTierExist({ args: { fee: fee2, tickSpacing: tickSpacing2 } })
+      const feeTier2Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee2, tickSpacing: tickSpacing2 }
+      })
       expect(feeTier2Exist.returns).toBe(false)
 
-      const feeTier3Exist = await invariant.methods.feeTierExist({ args: { fee: fee3, tickSpacing: tickSpacing3 } })
+      const feeTier3Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee3, tickSpacing: tickSpacing3 }
+      })
       expect(feeTier3Exist.returns).toBe(false)
     }
 
@@ -218,13 +235,19 @@ describe('fee tier tests', () => {
     })
 
     {
-      const feeTier1Exist = await invariant.methods.feeTierExist({ args: { fee: fee1, tickSpacing: tickSpacing1 } })
+      const feeTier1Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee1, tickSpacing: tickSpacing1 }
+      })
       expect(feeTier1Exist.returns).toBe(true)
 
-      const feeTier2Exist = await invariant.methods.feeTierExist({ args: { fee: fee2, tickSpacing: tickSpacing2 } })
+      const feeTier2Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee2, tickSpacing: tickSpacing2 }
+      })
       expect(feeTier2Exist.returns).toBe(true)
 
-      const feeTier3Exist = await invariant.methods.feeTierExist({ args: { fee: fee3, tickSpacing: tickSpacing3 } })
+      const feeTier3Exist = await invariant.methods.feeTierExist({
+        args: { fee: fee3, tickSpacing: tickSpacing3 }
+      })
       expect(feeTier3Exist.returns).toBe(false)
     }
   })

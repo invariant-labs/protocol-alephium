@@ -1,7 +1,3 @@
-TxScript Init(invariant: Invariant) {
-    invariant.init()
-}
-
 TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
     invariant.addFeeTier{callerAddress!() -> ALPH: mapEntryDeposit!()}(fee, tickSpacing)
 }
@@ -56,7 +52,7 @@ TxScript RemovePosition(invariant: Invariant, index: U256) {
 }
 
 TxScript TransferPosition(invariant: Invariant, index: U256, recipient: Address) {
-    invariant.transferPosition(index, recipient)
+    invariant.transferPosition{callerAddress!() -> ALPH: 2 * mapEntryDeposit!()}(index, recipient)
 }
 
 TxScript ClaimFee(invariant: Invariant, index: U256) {
@@ -71,4 +67,12 @@ TxScript Swap(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256,
     } else {
         let _ = invariant.swap{callerAddress!() -> tokenY: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
+}
+
+TxScript Flip(invariant: Invariant, value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) {
+    invariant.flip(value, tick, tickSpacing, poolKey)    
+}
+
+TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: ByteVec, chunk: U256) {
+    invariant.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
 }

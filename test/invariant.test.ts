@@ -2,7 +2,14 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, ChangeProtocolFee, CreatePool } from '../artifacts/ts'
-import { decodeFeeTiers, decodePool, decodePools, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import {
+  decodeFeeTiers,
+  decodePool,
+  decodePools,
+  deployInvariant,
+  deployTokenFaucet,
+  MAP_ENTRY_DEPOSIT
+} from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
