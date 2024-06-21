@@ -4,12 +4,21 @@ import {
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
+  Invariant,
   InvariantInstance,
+  RemoveFeeTier,
+  RemovePosition,
   Swap,
   Withdraw
 } from '../artifacts/ts'
 import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
-import { MAP_ENTRY_DEPOSIT, decodePool, decodePosition, deployTokenFaucet } from './utils'
+import {
+  MAP_ENTRY_DEPOSIT,
+  decodePool,
+  decodePools,
+  decodePosition,
+  deployTokenFaucet
+} from './utils'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -37,6 +46,38 @@ export async function initFeeTier(
       tickSpacing
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT
+  })
+}
+
+export async function feeTierExists(
+  invariant: InvariantInstance,
+  ...feeTiers: { fee: bigint; tickSpacing: bigint }[]
+) {
+  let tierStatus: Array<boolean> = []
+  for (const feeTier of feeTiers) {
+    tierStatus.push(
+      (
+        await invariant.methods.feeTierExist({
+          args: { fee: feeTier.fee, tickSpacing: feeTier.tickSpacing }
+        })
+      ).returns
+    )
+  }
+  return tierStatus
+}
+
+export const removeFeeTier = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  fee: bigint,
+  tickSpacing: bigint
+) => {
+  return await RemoveFeeTier.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      fee,
+      tickSpacing
+    }
   })
 }
 
@@ -98,6 +139,10 @@ export async function getPool(
       })
     ).returns
   )
+}
+
+export const getPools = async (invariant: InvariantInstance) => {
+  return decodePools((await invariant.methods.getPools()).returns)
 }
 
 export async function getPosition(invariant: InvariantInstance, owner: Address, index: bigint) {
@@ -162,6 +207,19 @@ export async function initPositionWithLiquidity(
       { id: token0.contractId, amount: token0Amount },
       { id: token1.contractId, amount: token1Amount }
     ]
+  })
+}
+
+export const removePosition = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  index: bigint
+) => {
+  return await RemovePosition.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      index
+    }
   })
 }
 
