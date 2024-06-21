@@ -542,6 +542,8 @@ Contract Invariant(
         let tokenX = pool.tokenX
         let tokenY = pool.tokenY
 
+        setTokensOwed(caller, index, 0, 0)
+
         transferTokenFromSelf!(caller, tokenX, tokensOwedX)
         transferTokenFromSelf!(caller, tokenY, tokensOwedY)
     }

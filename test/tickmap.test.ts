@@ -26,7 +26,8 @@ describe('invariant tests', () => {
       { tickSpacing: 100n, tick: 20000n }
     ]
     for (const { tick, tickSpacing } of params) {
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+        .returns
 
       await InitializeChunk.execute(sender, {
         initialFields: {
@@ -90,7 +91,8 @@ describe('invariant tests', () => {
     const tick = 5n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -113,8 +115,9 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const [isSome, index] = (await invariant.methods.nextInitialized({ args: { tick: 0n, tickSpacing: 1n, poolKey } }))
-      .returns
+    const [isSome, index] = (
+      await invariant.methods.nextInitialized({ args: { tick: 0n, tickSpacing: 1n, poolKey } })
+    ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
   })
@@ -125,7 +128,9 @@ describe('invariant tests', () => {
     const tickSpacing = 10n
 
     {
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })).returns
+      const [chunkIndex] = (
+        await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })
+      ).returns
 
       await InitializeChunk.execute(sender, {
         initialFields: {
@@ -149,7 +154,9 @@ describe('invariant tests', () => {
       })
     }
     {
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })).returns
+      const [chunkIndex] = (
+        await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })
+      ).returns
 
       await InitializeChunk.execute(sender, {
         initialFields: {
@@ -193,7 +200,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 10n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -216,7 +224,9 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const [isSome, index] = (await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })).returns
+    const [isSome, index] = (
+      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - just below limit', async () => {
@@ -224,7 +234,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -260,7 +271,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -295,7 +307,8 @@ describe('invariant tests', () => {
     const tick = MaxTick - 10n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -330,7 +343,9 @@ describe('invariant tests', () => {
     const tick = MaxTick - 22n
     const tickSpacing = 4n
 
-    const [isSome, index] = (await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })).returns
+    const [isSome, index] = (
+      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - already at limit', async () => {
@@ -338,7 +353,9 @@ describe('invariant tests', () => {
     const tick = MaxTick - 2n
     const tickSpacing = 4n
 
-    const [isSome] = (await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })).returns
+    const [isSome] = (
+      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - at pos 255', async () => {
@@ -346,7 +363,8 @@ describe('invariant tests', () => {
     const tick = MaxTick - 255n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -370,7 +388,9 @@ describe('invariant tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({ args: { tick: MaxTick - 256n, tickSpacing, poolKey } })
+      await invariant.methods.nextInitialized({
+        args: { tick: MaxTick - 256n, tickSpacing, poolKey }
+      })
     ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
@@ -380,7 +400,8 @@ describe('invariant tests', () => {
     const tick = -5n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -403,8 +424,9 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const [isSome, index] = (await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } }))
-      .returns
+    const [isSome, index] = (
+      await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
   })
@@ -415,7 +437,9 @@ describe('invariant tests', () => {
     const tickSpacing = 10n
 
     {
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })).returns
+      const [chunkIndex] = (
+        await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })
+      ).returns
 
       await InitializeChunk.execute(sender, {
         initialFields: {
@@ -439,7 +463,9 @@ describe('invariant tests', () => {
       })
     }
     {
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })).returns
+      const [chunkIndex] = (
+        await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })
+      ).returns
 
       await InitializeChunk.execute(sender, {
         initialFields: {
@@ -463,8 +489,9 @@ describe('invariant tests', () => {
       })
     }
     {
-      const [isSome, index] = (await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } }))
-        .returns
+      const [isSome, index] = (
+        await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+      ).returns
       expect(isSome).toBe(true)
       expect(index).toBe(tick50)
     }
@@ -481,7 +508,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 10n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -504,7 +532,9 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const [isSome, index] = (await invariant.methods.prevInitialized({ args: { tick, tickSpacing, poolKey } })).returns
+    const [isSome, index] = (
+      await invariant.methods.prevInitialized({ args: { tick, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
   })
@@ -513,7 +543,8 @@ describe('invariant tests', () => {
     const tick = 10n
     const tickSpacing = 10n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -536,7 +567,9 @@ describe('invariant tests', () => {
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
     })
 
-    const [isSome] = (await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })).returns
+    const [isSome] = (
+      await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+    ).returns
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - just below limit', async () => {
@@ -544,7 +577,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -581,7 +615,8 @@ describe('invariant tests', () => {
     const tick = 0n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -616,7 +651,8 @@ describe('invariant tests', () => {
     const tick = -MaxTick + 1n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -651,7 +687,8 @@ describe('invariant tests', () => {
     const tick = -MaxTick + 255n
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -687,7 +724,8 @@ describe('invariant tests', () => {
     const tick = -MaxTick
     const tickSpacing = 1n
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } })).returns
+    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      .returns
 
     await InitializeChunk.execute(sender, {
       initialFields: {
@@ -725,21 +763,24 @@ describe('invariant tests', () => {
       const tick = 0n
       const tickSpacing = 1n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       expect(result).toBe(TICK_SEARCH_RANGE)
     }
     {
       const tick = 0n
       const tickSpacing = 1n
       const up = false
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       expect(result).toBe(-TICK_SEARCH_RANGE)
     }
     {
       const tick = 60n
       const tickSpacing = 12n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       const expected = tick + TICK_SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
     }
@@ -747,7 +788,8 @@ describe('invariant tests', () => {
       const tick = 60n
       const tickSpacing = 12n
       const up = false
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       const expected = tick - TICK_SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
     }
@@ -755,7 +797,8 @@ describe('invariant tests', () => {
       const tick = MaxTick - 22n
       const tickSpacing = 5n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       const expected = MaxTick - 3n
       expect(result).toBe(expected)
     }
@@ -763,7 +806,8 @@ describe('invariant tests', () => {
       const tick = MaxTick - 3n
       const tickSpacing = 5n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } })).returns
+      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+        .returns
       const expected = tick
       expect(result).toBe(expected)
     }
@@ -777,7 +821,9 @@ describe('invariant tests', () => {
       const minIndex = -maxIndex
 
       {
-        const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: maxIndex, tickSpacing } })).returns
+        const [chunkIndex] = (
+          await invariant.methods.tickToPosition({ args: { tick: maxIndex, tickSpacing } })
+        ).returns
 
         await InitializeChunk.execute(sender, {
           initialFields: {
@@ -801,7 +847,9 @@ describe('invariant tests', () => {
         })
       }
       {
-        const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick: minIndex, tickSpacing } })).returns
+        const [chunkIndex] = (
+          await invariant.methods.tickToPosition({ args: { tick: minIndex, tickSpacing } })
+        ).returns
 
         await InitializeChunk.execute(sender, {
           initialFields: {

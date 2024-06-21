@@ -10,14 +10,18 @@ function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
 
-async function _waitTxConfirmed(provider: NodeProvider, txId: string, confirmations: number): Promise<node.Confirmed> {
+async function _waitTxConfirmed(
+  provider: NodeProvider,
+  txId: string,
+  confirmations: number
+): Promise<node.Confirmed> {
   const status = await provider.transactions.getTransactionsStatus({
     txId: txId
   })
   if (isConfirmed(status) && status.chainConfirmations >= confirmations) {
     return status
   }
-  await new Promise((r) => setTimeout(r, 1000))
+  await new Promise(r => setTimeout(r, 1000))
   return _waitTxConfirmed(provider, txId, confirmations)
 }
 
@@ -105,7 +109,7 @@ export async function expectError(script: Promise<any>) {
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
-  const balance = balances.tokenBalances?.find((t) => t.id === tokenId)
+  const balance = balances.tokenBalances?.find(t => t.id === tokenId)
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
 
@@ -165,7 +169,7 @@ export function decodePosition(array: [boolean, Position]) {
 }
 
 export function hexToBytes(hex: string): Uint8Array {
-  return new Uint8Array(hex.match(/.{1,2}/g)?.map((byte) => parseInt(byte, 16)) || [])
+  return new Uint8Array(hex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || [])
 }
 
 export function decodeU256(string: string): bigint {
@@ -182,5 +186,6 @@ export const ArithmeticError = {
   MulNotPositiveDenominator: 100007n
 }
 
-export const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935n
+export const MaxU256 =
+  115792089237316195423570985008687907853269984665640564039457584007913129639935n
 export const MaxTick = 221818n

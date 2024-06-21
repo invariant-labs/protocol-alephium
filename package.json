@@ -40,12 +40,17 @@
     "npm": ">=7.0.0"
   },
   "prettier": {
-    "printWidth": 120,
-    "tabWidth": 2,
-    "useTabs": false,
+    "arrowParens": "avoid",
+    "bracketSpacing": true,
+    "quoteProps": "as-needed",
     "semi": false,
+    "tabWidth": 2,
+    "trailingComma": "none",
+    "useTabs": false,
     "singleQuote": true,
-    "bracketSameLine": false,
-    "trailingComma": "none"
+    "jsxSingleQuote": true,
+    "spaceBeforeFunctionParen": false,
+    "printWidth": 100,
+    "bracketSameLine": true
   }
 }

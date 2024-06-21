@@ -27,7 +27,10 @@ describe('token tests', () => {
     })
 
     const senderBalance = await balanceOf(result.contractInstance.contractId, sender.address)
-    const contractBalance = await balanceOf(result.contractInstance.contractId, result.contractInstance.address)
+    const contractBalance = await balanceOf(
+      result.contractInstance.contractId,
+      result.contractInstance.address
+    )
 
     expect(senderBalance).toEqual(amount)
     expect(contractBalance).toEqual(initAmount - amount)

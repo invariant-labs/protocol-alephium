@@ -45,7 +45,9 @@ describe('protocol fee tests', () => {
     const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
 
     const [tokenX, tokenY] =
-      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
+      token0.contractInstance.contractId < token1.contractInstance.contractId
+        ? [token0, token1]
+        : [token1, token0]
 
     await Withdraw.execute(sender, {
       initialFields: {
@@ -188,9 +190,18 @@ describe('protocol fee tests', () => {
         attoAlphAmount: DUST_AMOUNT * 2n
       })
 
-      const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
-      const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-      const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+      const swapperTokenXBalanceBefore = await balanceOf(
+        tokenX.contractInstance.contractId,
+        swapper.address
+      )
+      const invariantTokenXBalanceBefore = await balanceOf(
+        tokenX.contractInstance.contractId,
+        invariant.address
+      )
+      const invariantTokenYBalanceBefore = await balanceOf(
+        tokenY.contractInstance.contractId,
+        invariant.address
+      )
 
       expect(swapperTokenXBalanceBefore).toBe(swapAmount)
       expect(invariantTokenXBalanceBefore).toBe(500n)
@@ -248,10 +259,22 @@ describe('protocol fee tests', () => {
         ]
       })
 
-      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, swapper.address)
-      const swapperTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, swapper.address)
-      const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-      const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+      const swapperTokenXBalanceAfter = await balanceOf(
+        tokenX.contractInstance.contractId,
+        swapper.address
+      )
+      const swapperTokenYBalanceAfter = await balanceOf(
+        tokenY.contractInstance.contractId,
+        swapper.address
+      )
+      const invariantTokenXBalanceAfter = await balanceOf(
+        tokenX.contractInstance.contractId,
+        invariant.address
+      )
+      const invariantTokenYBalanceAfter = await balanceOf(
+        tokenY.contractInstance.contractId,
+        invariant.address
+      )
 
       expect(swapperTokenXBalanceAfter).toBe(0n)
       expect(swapperTokenYBalanceAfter).toBe(1993n)
@@ -302,8 +325,14 @@ describe('protocol fee tests', () => {
         tokenY.contractInstance.contractId,
         newFeeReceiver.address
       )
-      const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-      const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+      const invariantTokenXBalanceBefore = await balanceOf(
+        tokenX.contractInstance.contractId,
+        invariant.address
+      )
+      const invariantTokenYBalanceBefore = await balanceOf(
+        tokenY.contractInstance.contractId,
+        invariant.address
+      )
 
       await WithdrawProtocolFee.execute(newFeeReceiver, {
         initialFields: {
@@ -324,8 +353,14 @@ describe('protocol fee tests', () => {
         tokenY.contractInstance.contractId,
         newFeeReceiver.address
       )
-      const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-      const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+      const invariantTokenXBalanceAfter = await balanceOf(
+        tokenX.contractInstance.contractId,
+        invariant.address
+      )
+      const invariantTokenYBalanceAfter = await balanceOf(
+        tokenY.contractInstance.contractId,
+        invariant.address
+      )
 
       expect(newFeeReceiverTokenXBalanceAfter).toBe(newFeeReceiverTokenXBalanceBefore + 1n)
       expect(newFeeReceiverTokenYBalanceAfter).toBe(newFeeReceiverTokenYBalanceBefore)
