@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, expectErrorCode } from '../src/utils'
-import { FeeTiersError, InvariantError, PERCENTAGE_SCALE } from '../src/consts'
+import { InvariantError, PercentageScale } from '../src/consts'
 import { feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -18,7 +18,7 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing1 = 1n
     const tickSpacing2 = 2n
     const tickSpacing3 = 4n
@@ -71,19 +71,22 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 1n
 
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    expectErrorCode(FeeTiersError.FeeTierAlreadyExist, initFeeTier(invariant, admin, fee, tickSpacing))
+    expectErrorCode(
+      InvariantError.FeeTierAlreadyExist,
+      initFeeTier(invariant, admin, fee, tickSpacing)
+    )
   })
 
   test('add fee tier not admin', async () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 1n
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
@@ -102,27 +105,33 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 0n
 
-    expectErrorCode(InvariantError.InvalidTickSpacing, initFeeTier(invariant, admin, fee, tickSpacing))
+    expectErrorCode(
+      InvariantError.InvalidTickSpacing,
+      initFeeTier(invariant, admin, fee, tickSpacing)
+    )
   })
 
   test('add fee tier over upper bound tick spacing', async () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 101n
 
-    expectErrorCode(InvariantError.InvalidTickSpacing, initFeeTier(invariant, admin, fee, tickSpacing))
+    expectErrorCode(
+      InvariantError.InvalidTickSpacing,
+      initFeeTier(invariant, admin, fee, tickSpacing)
+    )
   })
 
   test('add fee tier fee above limit', async () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 100%
-    const fee = 10n ** PERCENTAGE_SCALE
+    const fee = 10n ** PercentageScale
     const tickSpacing = 10n
 
     expectErrorCode(InvariantError.InvalidFee, initFeeTier(invariant, admin, fee, tickSpacing))

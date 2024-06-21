@@ -28,6 +28,11 @@ describe('fee tier tests', () => {
       attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
+    const exist = (
+      await invariant.methods.feeTierExist({ args: { fee: fee1, tickSpacing: tickSpacing1 } })
+    ).returns
+    expect(exist).toBeTruthy()
+
     {
       const feeTiers = await invariant.methods.getFeeTiers()
       const parsedFeeTiers = decodeFeeTiers(feeTiers.returns)

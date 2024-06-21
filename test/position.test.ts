@@ -12,7 +12,15 @@ import {
   TransferPosition,
   Withdraw
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import {
+  balanceOf,
+  decodePool,
+  decodePosition,
+  decodeTick,
+  deployInvariant,
+  deployTokenFaucet,
+  MAP_ENTRY_DEPOSIT
+} from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -81,10 +89,22 @@ describe('position tests', () => {
       attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
-    const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceBefore).toBe(1000n)
     expect(senderToken1BalanceBefore).toBe(1000n)
@@ -117,10 +137,22 @@ describe('position tests', () => {
       ]
     })
 
-    const senderToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceAfter).toBe(950n)
     expect(senderToken1BalanceAfter).toBe(950n)
@@ -128,7 +160,7 @@ describe('position tests', () => {
     expect(invariantToken1BalanceAfter).toBe(50n)
 
     const position = await invariant.methods.getPosition({
-      args: { index: 1n }
+      args: { owner: sender.address, index: 1n }
     })
 
     const parsedPosition = decodePosition(position.returns)
@@ -279,10 +311,22 @@ describe('position tests', () => {
     const parsedPoolBefore = decodePool(poolBefore.returns)
     expect(parsedPoolBefore.liquidity).toBe(liquidityDelta)
 
-    const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceBefore).toBe(950n)
     expect(senderToken1BalanceBefore).toBe(950n)
@@ -308,10 +352,22 @@ describe('position tests', () => {
     const parsedPoolAfter = decodePool(poolAfter.returns)
     expect(parsedPoolAfter.liquidity).toBe(0n)
 
-    const senderToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceAfter).toBe(999n)
     expect(senderToken1BalanceAfter).toBe(999n)
@@ -341,7 +397,9 @@ describe('position tests', () => {
     })
 
     const [tokenX, tokenY] =
-      token0.contractInstance.contractId < token1.contractInstance.contractId ? [token0, token1] : [token1, token0]
+      token0.contractInstance.contractId < token1.contractInstance.contractId
+        ? [token0, token1]
+        : [token1, token0]
 
     const invariant = await deployInvariant(sender, 0n)
 
@@ -428,10 +486,22 @@ describe('position tests', () => {
       ]
     })
 
-    const senderTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-    const senderTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, sender.address)
-    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceBefore = await balanceOf(
+      tokenX.contractInstance.contractId,
+      sender.address
+    )
+    const senderTokenYBalanceBefore = await balanceOf(
+      tokenY.contractInstance.contractId,
+      sender.address
+    )
+    const invariantTokenXBalanceBefore = await balanceOf(
+      tokenX.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantTokenYBalanceBefore = await balanceOf(
+      tokenY.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderTokenXBalanceBefore).toBe(400149n)
     expect(senderTokenYBalanceBefore).toBe(599139n)
@@ -446,10 +516,22 @@ describe('position tests', () => {
       attoAlphAmount: DUST_AMOUNT * 2n
     })
 
-    const senderTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, sender.address)
-    const senderTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, sender.address)
-    const invariantTokenXBalanceAfter = await balanceOf(tokenX.contractInstance.contractId, invariant.address)
-    const invariantTokenYBalanceAfter = await balanceOf(tokenY.contractInstance.contractId, invariant.address)
+    const senderTokenXBalanceAfter = await balanceOf(
+      tokenX.contractInstance.contractId,
+      sender.address
+    )
+    const senderTokenYBalanceAfter = await balanceOf(
+      tokenY.contractInstance.contractId,
+      sender.address
+    )
+    const invariantTokenXBalanceAfter = await balanceOf(
+      tokenX.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantTokenYBalanceAfter = await balanceOf(
+      tokenY.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderTokenXBalanceAfter).toBe(401149n)
     expect(senderTokenYBalanceAfter).toBe(599139n)
@@ -515,10 +597,22 @@ describe('position tests', () => {
       attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
     })
 
-    const senderToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceBefore = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceBefore = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceBefore = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceBefore = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceBefore).toBe(1000n)
     expect(senderToken1BalanceBefore).toBe(1000n)
@@ -551,10 +645,22 @@ describe('position tests', () => {
       ]
     })
 
-    const senderToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, sender.address)
-    const senderToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, sender.address)
-    const invariantToken0BalanceAfter = await balanceOf(token0.contractInstance.contractId, invariant.address)
-    const invariantToken1BalanceAfter = await balanceOf(token1.contractInstance.contractId, invariant.address)
+    const senderToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      sender.address
+    )
+    const senderToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      sender.address
+    )
+    const invariantToken0BalanceAfter = await balanceOf(
+      token0.contractInstance.contractId,
+      invariant.address
+    )
+    const invariantToken1BalanceAfter = await balanceOf(
+      token1.contractInstance.contractId,
+      invariant.address
+    )
 
     expect(senderToken0BalanceAfter).toBe(950n)
     expect(senderToken1BalanceAfter).toBe(950n)
@@ -562,7 +668,7 @@ describe('position tests', () => {
     expect(invariantToken1BalanceAfter).toBe(50n)
 
     const position = await invariant.methods.getPosition({
-      args: { index: 1n }
+      args: { owner: sender.address, index: 1n }
     })
 
     const parsedPosition = decodePosition(position.returns)
@@ -625,13 +731,13 @@ describe('position tests', () => {
         index: 1n,
         recipient: recipient.address
       },
-      attoAlphAmount: DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n + DUST_AMOUNT * 2n
     })
 
     const transferedPosition = decodePosition(
       (
         await invariant.methods.getPosition({
-          args: { index: 1n }
+          args: { owner: recipient.address, index: 1n }
         })
       ).returns
     )

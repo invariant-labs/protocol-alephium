@@ -1,99 +1,20 @@
-struct PositionState {
-    poolKey: ByteVec,
+struct Position {
+    mut poolKey: ByteVec,
     mut liquidity: U256,
-    lowerTickIndex: I256,
-    upperTickIndex: I256,
+    mut lowerTickIndex: I256,
+    mut upperTickIndex: I256,
     mut feeGrowthInsideX: U256,
     mut feeGrowthInsideY: U256,
-    lastBlockNumber: U256,
+    mut lastBlockNumber: U256,
     mut tokensOwedX: U256,
     mut tokensOwedY: U256,
     mut owner: Address
 }
 
-Contract Position(
-    admin: Address,
-    mut position: PositionState,
-    mut isActive: Bool,
-    clammContractInstance: CLAMM
-) extends Decimal() {
-    enum PositionError {
-        NotAdmin = 900
-        InsufficientLiquidity = 901
-        EmptyPositionPokes = 902
-    }
-
-    pub fn getPoolKey() -> ByteVec {
-        return position.poolKey
-    }
-
-    pub fn getLiquidity() -> U256 {
-        return position.liquidity
-    }
-
-    pub fn getLowerTickIndex() -> I256 {
-        return position.lowerTickIndex
-    }
-
-    pub fn getUpperTickIndex() -> I256 {
-        return position.upperTickIndex
-    }
-
-    pub fn getFeeGrowthInsideX() -> U256 {
-        return position.feeGrowthInsideX
-    }
-
-    pub fn getFeeGrowthInsideY() -> U256 {
-        return position.feeGrowthInsideY
-    }
-
-    pub fn getLastBlockNumber() -> U256 {
-        return position.lastBlockNumber
-    }
-
-    pub fn getTokensOwedX() -> U256 {
-        return position.tokensOwedX
-    }
-
-    pub fn getTokensOwedY() -> U256 {
-        return position.tokensOwedY
-    }
-
-    pub fn getOwner() -> Address {
-        return position.owner
-    }
-
-    pub fn get() -> PositionState {
-        return position
-    }
-
-    @using(updateFields = true)
-    pub fn setTokensOwedX(tokensOwedX: U256) -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        position.tokensOwedX = tokensOwedX
-    }
-
-    @using(updateFields = true)
-    pub fn setTokensOwedY(tokensOwedY: U256) -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        position.tokensOwedY = tokensOwedY
-    }
-
-    @using(updateFields = true)
-    pub fn setOwner(owner: Address) -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        position.owner = owner
-    }
-
-    @using(updateFields = true)
-    pub fn setIsActive(active: Bool) -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-        isActive = active
-    }
-
+Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
     @using(updateFields = false)
-    pub fn modify(
-        clamm: CLAMM,
+    fn modify(
+        position: Position,
         upperTick: I256,
         upperTickFeeGrowthOutsideX: U256,
         upperTickFeeGrowthOutsideY: U256,
@@ -105,9 +26,7 @@ Contract Position(
         poolFeeGrowthGlobalY: U256,
         liquidityDelta: U256,
         add: Bool
-    ) -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-
+    ) -> Position {
         let (feeGrowthInsideX, feeGrowthInsideY) = clamm.calculateFeeGrowthInside(
             lowerTick,
             lowerTickFeeGrowthOutsideX,
@@ -120,52 +39,41 @@ Contract Position(
             poolFeeGrowthGlobalY
         )
 
-        update(add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+        return update(position, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
-    @using(updateFields = true)
-    pub fn update(
+    fn update(
+        mut position: Position,
         sign: Bool,
         liquidityDelta: U256,
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
-    ) -> () {
-        let caller = callerAddress!()
-        checkCaller!(caller == admin || caller == selfAddress!(), PositionError.NotAdmin)
+    ) -> Position {
+        assert!(liquidityDelta != 0 || position.liquidity != 0, InvariantError.EmptyPositionPokes)
 
-        assert!(liquidityDelta != 0 || position.liquidity != 0, PositionError.EmptyPositionPokes)
+        let tokensOwedX = clamm.toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
+        let tokensOwedY = clamm.toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
 
-        let tokensOwedX = clammContractInstance.toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
-        let tokensOwedY = clammContractInstance.toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
-
-        position.liquidity = calculateNewLiquidity(sign, liquidityDelta)
+        position.liquidity = calculateNewLiquidity(position.liquidity, sign, liquidityDelta)
         position.feeGrowthInsideX = feeGrowthInsideX
         position.feeGrowthInsideY = feeGrowthInsideY
 
         position.tokensOwedX = tokensOwedX
         position.tokensOwedY = tokensOwedY
+        return position
     }
 
-    pub fn calculateNewLiquidity(
+    fn calculateNewLiquidity(
+        currentPositionLiquidity: U256,
         sign: Bool,
         liquidityDelta: U256
     ) -> U256 {
-        let caller = callerAddress!()
-        checkCaller!(caller == admin || caller == selfAddress!(), PositionError.NotAdmin)
-        
-        assert!(sign || position.liquidity >= liquidityDelta, PositionError.InsufficientLiquidity)
+        assert!(sign || currentPositionLiquidity >= liquidityDelta, InvariantError.InsufficientLiquidity)
 
         if (sign) {
-            return position.liquidity + liquidityDelta
+            return currentPositionLiquidity + liquidityDelta
         } else {
-            return position.liquidity - liquidityDelta
+            return currentPositionLiquidity - liquidityDelta
         }
-    }
-
-    @using(assetsInContract = true, checkExternalCaller = false)
-    pub fn remove() -> () {
-        checkCaller!(callerAddress!() == admin, PositionError.NotAdmin)
-
-        destroySelf!(position.owner)
     }
 }
