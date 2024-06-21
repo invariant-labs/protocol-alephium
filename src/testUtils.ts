@@ -9,7 +9,13 @@ import {
   Withdraw
 } from '../artifacts/ts'
 import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
-import { MAP_ENTRY_DEPOSIT, decodePool, decodePosition, deployTokenFaucet } from './utils'
+import {
+  MAP_ENTRY_DEPOSIT,
+  decodeFeeTiers,
+  decodePool,
+  decodePosition,
+  deployTokenFaucet
+} from './utils'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -30,7 +36,7 @@ export async function initFeeTier(
   fee: bigint,
   tickSpacing: bigint
 ) {
-  await AddFeeTier.execute(signer, {
+  return await AddFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       fee,
@@ -38,6 +44,23 @@ export async function initFeeTier(
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT
   })
+}
+
+export async function feeTierExists(
+  invariant: InvariantInstance,
+  ...feeTiers: { fee: bigint; tickSpacing: bigint }[]
+) {
+  let tierStatus: Array<boolean> = []
+  for (const feeTier of feeTiers) {
+    tierStatus.push(
+      (
+        await invariant.view.feeTierExist({
+          args: { fee: feeTier.fee, tickSpacing: feeTier.tickSpacing }
+        })
+      ).returns
+    )
+  }
+  return tierStatus
 }
 
 export async function initPool(
@@ -50,7 +73,7 @@ export async function initPool(
   initSqrtPrice: bigint,
   initTick: bigint
 ) {
-  await CreatePool.execute(signer, {
+  return await CreatePool.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -77,6 +100,10 @@ export async function withdrawTokens(
       attoAlphAmount: DUST_AMOUNT
     })
   }
+}
+
+export async function getFeeTiers(invariant: InvariantInstance) {
+  return decodeFeeTiers((await invariant.view.getFeeTiers()).returns)
 }
 
 export async function getPool(
@@ -142,7 +169,7 @@ export async function initPositionWithLiquidity(
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
   })
 
-  await IncreasePositionLiquidity.execute(signer, {
+  return await IncreasePositionLiquidity.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -177,7 +204,7 @@ export async function initSwap(
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ) {
-  await Swap.execute(signer, {
+  return await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
