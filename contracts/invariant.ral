@@ -22,7 +22,6 @@ struct QuoteResult {
 }
 
 Contract Invariant(
-    mut init: Bool,
     mut config: InvariantConfig,
     clamm: CLAMM,
     mut feeTierCount: U256,
@@ -46,15 +45,15 @@ Contract Invariant(
 
     enum InvariantError {
         NotAdmin = 0
-        AlreadyInitialized = 1
-        NotInitialized = 2
-        InvalidTickSpacing = 3
-        InvalidFee = 4
-        FeeTierNotFound = 5
-        TokensAreSame = 6
-        PoolKeyAlreadyExist = 7
-        TickAndSqrtPriceMismatch = 8
-        NotFeeReceiver = 9
+        InsufficientLiquidity = 1
+        InvalidTickSpacing = 2
+        InvalidFee = 3
+        FeeTierNotFound = 4
+        TokensAreSame = 5
+        PoolKeyAlreadyExist = 6
+        TickAndSqrtPriceMismatch = 7
+        NotFeeReceiver = 8
+        InvalidTickLiquidity = 9
         ZeroLiquidity = 10
         PriceLimitReached = 11
         InvalidProtocolFee = 12
@@ -74,19 +73,6 @@ Contract Invariant(
         TickInitialized = 26
         PositionNotFound = 27
         EmptyPositionPokes = 28
-        InsufficientLiquidity = 29
-        InvalidTickLiquidity = 30
-    }
-
-    @using(preapprovedAssets = false, updateFields = true)
-    pub fn init() -> () {
-        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
-        assert!(!init, InvariantError.AlreadyInitialized)
-        // let invtId = selfAddress!()
-
-        // PositionsCounter(positionsCounterContractId).setAdmins(invtId)
-        
-        init = true
     }
     
     pub fn getProtocolFee() -> U256 {
@@ -128,8 +114,6 @@ Contract Invariant(
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createPool(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256) -> () {
-        assert!(init, InvariantError.NotInitialized)
-
         let feeTierExist = containsFeeTier(fee, tickSpacing)
         assert!(feeTierExist, InvariantError.FeeTierNotFound)
 
@@ -154,7 +138,6 @@ Contract Invariant(
 
     @using(preapprovedAssets = true)
     pub fn addFeeTier(fee: U256, tickSpacing: U256) -> () {
-        assert!(init, InvariantError.NotInitialized)
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
@@ -166,7 +149,6 @@ Contract Invariant(
 
     
     pub fn removeFeeTier(fee: U256, tickSpacing: U256) -> () {
-        assert!(init, InvariantError.NotInitialized)
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 

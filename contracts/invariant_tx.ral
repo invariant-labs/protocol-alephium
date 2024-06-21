@@ -1,7 +1,3 @@
-TxScript Init(invariant: Invariant) {
-    invariant.init()
-}
-
 TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
     invariant.addFeeTier{callerAddress!() -> ALPH: mapEntryDeposit!()}(fee, tickSpacing)
 }

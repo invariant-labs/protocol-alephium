@@ -1,5 +1,5 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { CLAMM, Init, Invariant, Uints } from '../artifacts/ts'
+import { CLAMM, Invariant, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -40,7 +40,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
-        init: false,
         config: { admin: account.address, protocolFee },
         clamm: clamm.contractInstance.contractId,
         feeTierCount: 0n,
@@ -50,12 +49,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   )
 
   const invariant = Invariant.at(deployResult.contractInstance.address)
-
-  await Init.execute(signer, {
-    initialFields: {
-      invariant: invariant.contractId
-    }
-  })
 
   return invariant
 }
