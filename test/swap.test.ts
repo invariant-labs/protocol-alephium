@@ -9,7 +9,15 @@ import {
   Swap,
   Withdraw
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import {
+  balanceOf,
+  decodePool,
+  decodePosition,
+  decodeTick,
+  deployInvariant,
+  deployTokenFaucet,
+  MAP_ENTRY_DEPOSIT
+} from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -109,7 +117,7 @@ describe('swap tests', () => {
       ]
     })
     const position = await invariant.methods.getPosition({
-      args: { index: 1n }
+      args: { owner: sender.address, index: 1n }
     })
     const parsedPosition = decodePosition(position.returns)
     expect(parsedPosition.exist).toBe(true)
@@ -671,7 +679,7 @@ describe('swap tests', () => {
         })
       }
       const position = await invariant.methods.getPosition({
-        args: { index: 1n }
+        args: { owner: sender.address, index: 1n }
       })
       const parsedPosition = decodePosition(position.returns)
       expect(parsedPosition.exist).toBe(true)
@@ -766,7 +774,7 @@ describe('swap tests', () => {
         })
       }
       const position = await invariant.methods.getPosition({
-        args: { index }
+        args: { owner: sender.address, index: 2n }
       })
       const parsedPosition = decodePosition(position.returns)
       expect(parsedPosition.exist).toBe(true)

@@ -1,7 +1,7 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { CLAMM, Init, Invariant, Position, PositionsCounter, Uints } from '../artifacts/ts'
+import { CLAMM, Init, Invariant, PositionsCounter, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { Pool, PositionState, Tick } from '../artifacts/ts/types'
+import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
@@ -32,16 +32,12 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
 
   const uints = await deployUints(signer)
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
-  const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
-  const positionsCounter = await deployPositionsCounter(signer)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
         init: false,
         config: { admin: account.address, protocolFee },
-        positionTemplateContractId: position.contractInstance.contractId,
-        positionsCounterContractId: positionsCounter.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
         feeTierCount: 0n,
         poolKeyCount: 0n
@@ -58,30 +54,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   })
 
   return invariant
-}
-
-export async function deployPosition(signer: SignerProvider, clammId: string, uintsId: string) {
-  return await waitTxConfirmed(
-    Position.deploy(signer, {
-      initialFields: {
-        admin: ZERO_ADDRESS,
-        position: {
-          poolKey: '',
-          liquidity: 0n,
-          lowerTickIndex: 0n,
-          upperTickIndex: 0n,
-          feeGrowthInsideX: 0n,
-          feeGrowthInsideY: 0n,
-          lastBlockNumber: 0n,
-          tokensOwedX: 0n,
-          tokensOwedY: 0n,
-          owner: ZERO_ADDRESS
-        },
-        isActive: false,
-        clammContractInstance: clammId
-      }
-    })
-  )
 }
 
 export async function deployPositionsCounter(signer: SignerProvider) {
@@ -197,7 +169,7 @@ export function decodeTick(array: [boolean, Tick]) {
   }
 }
 
-export function decodePosition(array: [boolean, PositionState]) {
+export function decodePosition(array: [boolean, Position]) {
   return {
     exist: array[0],
     ...array[1]

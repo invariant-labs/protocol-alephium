@@ -12,7 +12,15 @@ import {
   TransferPosition,
   Withdraw
 } from '../artifacts/ts'
-import { balanceOf, decodePool, decodePosition, decodeTick, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import {
+  balanceOf,
+  decodePool,
+  decodePosition,
+  decodeTick,
+  deployInvariant,
+  deployTokenFaucet,
+  MAP_ENTRY_DEPOSIT
+} from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -128,7 +136,7 @@ describe('position tests', () => {
     expect(invariantToken1BalanceAfter).toBe(50n)
 
     const position = await invariant.methods.getPosition({
-      args: { index: 1n }
+      args: { owner: sender.address, index: 1n }
     })
 
     const parsedPosition = decodePosition(position.returns)
@@ -562,7 +570,7 @@ describe('position tests', () => {
     expect(invariantToken1BalanceAfter).toBe(50n)
 
     const position = await invariant.methods.getPosition({
-      args: { index: 1n }
+      args: { owner: sender.address, index: 1n }
     })
 
     const parsedPosition = decodePosition(position.returns)
@@ -625,13 +633,13 @@ describe('position tests', () => {
         index: 1n,
         recipient: recipient.address
       },
-      attoAlphAmount: DUST_AMOUNT * 2n
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n + DUST_AMOUNT * 2n
     })
 
     const transferedPosition = decodePosition(
       (
         await invariant.methods.getPosition({
-          args: { index: 1n }
+          args: { owner: recipient.address, index: 1n }
         })
       ).returns
     )
