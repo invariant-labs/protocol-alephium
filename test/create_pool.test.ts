@@ -15,8 +15,8 @@ describe('invariant tests', () => {
     poolCreator = await getSigner(ONE_ALPH * 1000n, 0)
   })
   test('create pool', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 100n
@@ -41,8 +41,8 @@ describe('invariant tests', () => {
     await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
   })
   test('create pool x to y and y to x', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 100n
@@ -72,8 +72,8 @@ describe('invariant tests', () => {
     )
   })
   test('create pool with same tokens', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 100n
@@ -91,8 +91,8 @@ describe('invariant tests', () => {
     )
   })
   test('create pool fee tier not added', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 100n
@@ -109,8 +109,8 @@ describe('invariant tests', () => {
     )
   })
   test('create pool init tick not divided by tick spacing', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 3n
@@ -130,8 +130,8 @@ describe('invariant tests', () => {
     )
   })
   test('create pool init sqrt price minimal diffrence from tick', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 3n
@@ -158,8 +158,8 @@ describe('invariant tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
   })
   test('create pool init sqrt price has closer init tick', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 1n
@@ -190,8 +190,8 @@ describe('invariant tests', () => {
     expect(pool.currentTickIndex).toBe(correctInitTick)
   })
   test('create pool init sqrt price has closer init tick with tick spacing over one', async () => {
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     const fee = 5n * 10n ** (PercentageScale - 1n)
     const tickSpacing = 3n
