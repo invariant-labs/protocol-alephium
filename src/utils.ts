@@ -1,5 +1,5 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { CLAMM, Init, Invariant, Position, PositionsCounter, Tickmap, Uints } from '../artifacts/ts'
+import { CLAMM, Init, Invariant, Position, PositionsCounter, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, PositionState, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -34,7 +34,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
   const position = await deployPosition(signer, clamm.contractInstance.contractId, uints.contractInstance.contractId)
   const positionsCounter = await deployPositionsCounter(signer)
-  const tickmap = await deployTickmap(signer)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -43,7 +42,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
         config: { admin: account.address, protocolFee },
         positionTemplateContractId: position.contractInstance.contractId,
         positionsCounterContractId: positionsCounter.contractInstance.contractId,
-        tickmap: tickmap.contractInstance.contractId,
         clamm: clamm.contractInstance.contractId,
         feeTierCount: 0n,
         poolKeyCount: 0n
@@ -81,17 +79,6 @@ export async function deployPosition(signer: SignerProvider, clammId: string, ui
         },
         isActive: false,
         clammContractInstance: clammId
-      }
-    })
-  )
-}
-
-export async function deployTickmap(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    Tickmap.deploy(signer, {
-      initialFields: {
-        invariantId: ZERO_ADDRESS,
-        areAdminsSet: false
       }
     })
   )

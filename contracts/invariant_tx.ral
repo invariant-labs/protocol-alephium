@@ -72,3 +72,11 @@ TxScript Swap(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256,
         let _ = invariant.swap{callerAddress!() -> tokenY: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 }
+
+TxScript Flip(invariant: Invariant, value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) {
+    invariant.flip(value, tick, tickSpacing, poolKey)    
+}
+
+TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: ByteVec, chunk: U256) {
+    invariant.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
+}

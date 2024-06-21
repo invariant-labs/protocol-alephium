@@ -26,19 +26,21 @@ Contract Invariant(
     mut config: InvariantConfig,
     positionTemplateContractId: ByteVec,
     positionsCounterContractId: ByteVec,
-    tickmap: Tickmap,
     clamm: CLAMM,
     mut feeTierCount: U256,
     mut poolKeyCount: U256
-) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm), Ticks() {
-    // Key = feeTierCount
+) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm), Ticks(), Tickmap() {
+    // Key: feeTierCount
     mapping[U256, FeeTier] feeTiers
-    // Key = poolKeyCount
+    // Key: poolKeyCount
     mapping[U256, PoolKey] poolKeys
-    // Key = PoolKey
+    // Key: poolKey
     mapping[ByteVec, Pool] pools
     // Key: poolKey ++ index
     mapping[ByteVec, Tick] ticks
+    // Key: poolKey ++ chunk index
+    mapping[ByteVec, U256] bitmap
+    
 
     enum InvariantError {
         NotAdmin = 0
@@ -63,6 +65,11 @@ Contract Invariant(
         PoolDoesNotExist = 19
         PoolAlreadyExist = 20
         TickAlreadyExist = 21
+        InvalidTickIndex = 22
+        TickAndTickSpacingMismatch = 23
+        LimitReached = 24
+        ChunkNotFound = 25
+        TickInitialized = 26
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -71,9 +78,7 @@ Contract Invariant(
         assert!(!init, InvariantError.AlreadyInitialized)
         let invtId = selfAddress!()
 
-        tickmap.setAdmins(invtId)
-
-        PositionsCounter(positionsCounterContractId).setAdmins(selfAddress!())
+        PositionsCounter(positionsCounterContractId).setAdmins(invtId)
         
         init = true
     }
@@ -249,7 +254,7 @@ Contract Invariant(
     pub fn isTickInitialized(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> Bool {
         let poolKey = generatePoolKey(token0, token1, fee, tickSpacing)
 
-        return tickmap.get(index, tickSpacing, poolKey)
+        return getBit(index, tickSpacing, poolKey)
     }
 
     @using(preapprovedAssets = true)
@@ -309,14 +314,14 @@ Contract Invariant(
 
         let caller = callerAddress!()
 
-        let (lowerChunk, upperChunk) = tickmap.getChunks(lowerTick, upperTick, tickSpacing)
+        let (lowerChunk, upperChunk) = getChunks(lowerTick, upperTick, tickSpacing)
 
         let mapEntryDeposit = mapEntryDeposit!()
         if (lowerChunk == upperChunk) {
-            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
         } else {
-            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
-            tickmap.initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
         }
         
         let mapEntry2Deposits = mapEntryDeposit * 2
@@ -354,11 +359,11 @@ Contract Invariant(
         assert!(exist, InvariantError.PoolDoesNotExist)
 
         if (isTickInitialized(token0, token1, fee, tickSpacing, lowerTick) == false) {
-            tickmap.flip(true, lowerTick, tickSpacing, poolKey)
+            flip(true, lowerTick, tickSpacing, poolKey)
         }
         
         if (isTickInitialized(token0, token1, fee, tickSpacing, upperTick) == false) {
-            tickmap.flip(true, upperTick, tickSpacing, poolKey)
+            flip(true, upperTick, tickSpacing, poolKey)
         }
 
         let poolSqrtPrice = pool.sqrtPrice
@@ -520,7 +525,7 @@ Contract Invariant(
             let liquidity = pool.liquidity
             sqrtPrice = pool.sqrtPrice
 
-            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = tickmap.getCloserLimit(
+            let (swapLimit, hasLimitingTick, limitingTickIndex, isInitialized) = getCloserLimit(
                 sqrtPriceLimit,
                 xToY,
                 currentTickIndex,
