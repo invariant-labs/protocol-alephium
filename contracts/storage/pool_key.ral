@@ -7,15 +7,10 @@ struct PoolKey {
 
 Abstract Contract PoolKeyHelper() {
     const TokenAddressBytes = 32
-    
-    enum PoolKeyHelperError {
-        TokensAreSame = 5000
-        InvalidFee = 5001
-    }
-    
+
     pub fn generatePoolKey(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> ByteVec {
-        assert!(token0 != token1, PoolKeyHelperError.TokensAreSame)
-        assert!(fee <= 10 ** 12, PoolKeyHelperError.InvalidFee)
+        assert!(token0 != token1, InvariantError.TokensAreSame)
+        assert!(fee <= 10 ** 12, InvariantError.InvalidFee)
 
         for (let mut i = 0; i <= size!(token0); i = i + 1) {
             if (u256From1Byte!(byteVecSlice!(token0, i, i + 1)) < u256From1Byte!(byteVecSlice!(token1, i, i + 1))) {

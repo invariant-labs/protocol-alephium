@@ -9,10 +9,6 @@ struct Tick {
 }
 
 Abstract Contract TickHelper() extends Decimal() {
-    enum TickError {
-        InvalidTickLiquidity = 1001
-    }
-
     fn updateTick(mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> Tick {
         tick.liquidityGross = calculateNewLiquidityGross(tick, isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
@@ -51,7 +47,7 @@ Abstract Contract TickHelper() extends Decimal() {
             newLiquidity = tick.liquidityGross - liquidityDelta
         }
 
-        assert!(!sign || newLiquidity < maxLiquidityPerTick, TickError.InvalidTickLiquidity)
+        assert!(!sign || newLiquidity < maxLiquidityPerTick, InvariantError.InvalidTickLiquidity)
 
         return newLiquidity
     }

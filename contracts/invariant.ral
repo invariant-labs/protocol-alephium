@@ -75,6 +75,7 @@ Contract Invariant(
         PositionNotFound = 27
         EmptyPositionPokes = 28
         InsufficientLiquidity = 29
+        InvalidTickLiquidity = 30
     }
 
     @using(preapprovedAssets = false, updateFields = true)
@@ -193,42 +194,27 @@ Contract Invariant(
     }
 
     pub fn getPosition(owner: Address, index: U256) -> (Bool, Position) {  
-
-        // let x = Position {
-        //     poolKey: #,
-        //     liquidity: 0,
-        //     lowerTickIndex: 0i,
-        //     upperTickIndex: 0i,
-        //     feeGrowthInsideX: 0,
-        //     feeGrowthInsideY: 0,
-        //     lastBlockNumber: 0,
-        //     tokensOwedX: 0,
-        //     tokensOwedY: 0,
-        //     owner: selfAddress!()
-        // }
-
-        // return index, x
-        let key = toByteVec!(owner) ++ toByteVec!(index)
+        // let key = toByteVec!(owner) ++ toByteVec!(index)
         
-        if (positions.contains!(key)) {
-            let position = positions[key]
-            return true, position
-        } else {   
-            return false,
-            Position {
-                poolKey: #,
-                liquidity: 0,
-                lowerTickIndex: 0i,
-                upperTickIndex: 0i,
-                feeGrowthInsideX: 0,
-                feeGrowthInsideY: 0,
-                lastBlockNumber: 0,
-                tokensOwedX: 0,
-                tokensOwedY: 0,
-                owner: byteVecToAddress!(#)
-            }
-        } 
-        // return wrappedGetPosition(caller, index)
+        // if (positions.contains!(key)) {
+        //     let position = positions[key]
+        //     return true, position
+        // } else {   
+        //     return false,
+        //     Position {
+        //         poolKey: #,
+        //         liquidity: 0,
+        //         lowerTickIndex: 0i,
+        //         upperTickIndex: 0i,
+        //         feeGrowthInsideX: 0,
+        //         feeGrowthInsideY: 0,
+        //         lastBlockNumber: 0,
+        //         tokensOwedX: 0,
+        //         tokensOwedY: 0,
+        //         owner: byteVecToAddress!(#)
+        //     }
+        // } 
+        return wrappedGetPosition(owner, index)
     }
 
     pub fn isTickInitialized(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, index: I256) -> Bool {

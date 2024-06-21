@@ -1,5 +1,5 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { CLAMM, Init, Invariant, PositionsCounter, Uints } from '../artifacts/ts'
+import { CLAMM, Init, Invariant, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -54,18 +54,6 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   })
 
   return invariant
-}
-
-export async function deployPositionsCounter(signer: SignerProvider) {
-  return await waitTxConfirmed(
-    PositionsCounter.deploy(signer, {
-      initialFields: {
-        value: 0n,
-        positionsId: ZERO_ADDRESS,
-        areAdminsSet: false
-      }
-    })
-  )
 }
 
 export async function deployCLAMM(signer: SignerProvider, uintsId: string) {

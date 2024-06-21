@@ -1,5 +1,4 @@
 Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
-
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn wrappedAddPosition(
         caller: Address,
@@ -78,15 +77,6 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         wrappedAddPosition{caller -> ALPH: mapEntryDeposit!() * 2}(newOwner, position.poolKey, position.liquidity, position.lowerTickIndex, position.upperTickIndex, position.feeGrowthInsideX, position.feeGrowthInsideY, position.lastBlockNumber, position.tokensOwedX, position.tokensOwedY, caller)
     }
 
-    @using(checkExternalCaller = false)
-    pub fn setOwedTokens(caller: Address, index: U256, x: U256, y: U256) ->  () {
-        let (exists, mut position) = wrappedGetPosition(caller, index)
-        assert!(exists, InvariantError.PositionNotFound)
-        position.tokensOwedX = x
-        position.tokensOwedY = y
-        let key = toByteVec!(caller) ++ toByteVec!(index)
-        positions[key] = position
-    }
     fn wrappedModifyPosition(
         originalCaller: Address,
         index: U256,

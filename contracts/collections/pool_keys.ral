@@ -1,8 +1,6 @@
 Abstract Contract PoolKeys() {
     @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
     pub fn addPoolKey(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
-        // checkCaller!(callerAddress!() == invariantId && areAdminsSet, InvariantError.NotAdmin)
-
         let exists = containsPoolKey(tokenX, tokenY, fee, tickSpacing)
         assert!(!exists, InvariantError.PoolKeyAlreadyExist)
     
