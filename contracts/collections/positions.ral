@@ -1,6 +1,6 @@
 Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn wrappedAddPosition(
+    @using(preapprovedAssets = true)
+    fn wrappedAddPosition(
         caller: Address,
         poolKey: ByteVec,
         liquidity: U256,
@@ -41,8 +41,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         }
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedGetPosition(owner: Address, index: U256) -> (Bool, Position) {
+    fn wrappedGetPosition(owner: Address, index: U256) -> (Bool, Position) {
         let key = toByteVec!(owner) ++ toByteVec!(index)
         if (positions.contains!(key)) {
             return true, positions[key]
@@ -63,14 +62,13 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         } 
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedRemovePosition(caller: Address, index: U256) -> () {
+    fn wrappedRemovePosition(caller: Address, index: U256) -> () {
         let key = toByteVec!(caller) ++ toByteVec!(index)
         positions.remove!(caller, key)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn wrappedTransferPosition(caller: Address, index: U256, newOwner: Address) -> () {
+    @using(preapprovedAssets = true)
+    fn wrappedTransferPosition(caller: Address, index: U256, newOwner: Address) -> () {
         let key = toByteVec!(caller) ++ toByteVec!(index)
         let position = positions[key]
         wrappedRemovePosition(caller, index)

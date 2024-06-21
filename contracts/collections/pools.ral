@@ -1,6 +1,6 @@
 Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm) {
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn addPool(
+    @using(preapprovedAssets = true)
+    fn addPool(
         originalCaller: Address,
         poolKey: ByteVec,
         tokenX: ByteVec,
@@ -31,40 +31,35 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         pools.insert!(originalCaller, poolKey, state)
     }
 
-    pub fn containsPool(poolKey: ByteVec) -> Bool {
+    fn containsPool(poolKey: ByteVec) -> Bool {
         return pools.contains!(poolKey)
     }
 
-    @using(checkExternalCaller = false)
-    pub fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
+    fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
         let mut state = pools[poolKey]
         state.sqrtPrice = sqrtPrice
         pools[poolKey] = state
     }
 
-    @using(checkExternalCaller = false)
-    pub fn setCurrentTickIndex(poolKey: ByteVec, tickIndex: I256) -> () {
+    fn setCurrentTickIndex(poolKey: ByteVec, tickIndex: I256) -> () {
         let mut state = pools[poolKey]
         state.currentTickIndex = tickIndex
         pools[poolKey] = state
     }
 
-    @using(checkExternalCaller = false)
-    pub fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
+    fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
         let mut state = pools[poolKey]
         state.lastTimestamp = timestamp
         pools[poolKey] = state
     }
-
-    @using(checkExternalCaller = false)
-    pub fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
+    
+    fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
         let mut state = pools[poolKey]
         state.feeReceiver = newReceiver
         pools[poolKey] = state
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedGetPool(poolKey: ByteVec) -> (Bool, Pool) {
+    fn wrappedGetPool(poolKey: ByteVec) -> (Bool, Pool) {
         if(containsPool(poolKey)) {
             return true, pools[poolKey]
         } else {   
@@ -87,15 +82,13 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         } 
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
+    fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
         let pool = pools[poolKey]
         let updatedPool = addFee(pool, feeAmount, xToY, fee)
         pools[poolKey] = updatedPool
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedCrossTick(
+    fn wrappedCrossTick(
         poolKey: ByteVec,
         nextSqrtPrice: U256,
         swapLimit: U256,
@@ -124,8 +117,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         return totalAmount, amountLeft, hasCrossed
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedCrossLiquidityUpdate(
+    fn wrappedCrossLiquidityUpdate(
         poolKey: ByteVec,
         add: Bool,
         liquidityDelta: U256
@@ -135,15 +127,13 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         return
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+    fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
         let (x, y, pool) = updateLiquidity(pools[poolKey], liquidityDelta, liquiditySign, upperTick, lowerTick)
         pools[poolKey] = pool
         return x, y
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedGetProtocolFee(poolKey: ByteVec) -> (U256, U256) {
+    fn wrappedGetProtocolFee(poolKey: ByteVec) -> (U256, U256) {
         let (feeProtocolTokenX, feeProtocolTokenY, pool) = getAndUpdateProtocolFee(pools[poolKey])
         pools[poolKey] = pool
         return feeProtocolTokenX, feeProtocolTokenY

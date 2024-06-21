@@ -12,8 +12,8 @@ struct Position {
 }
 
 Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
-    @using(updateFields = false, checkExternalCaller = false)
-    pub fn modify(
+    @using(updateFields = false)
+    fn modify(
         position: Position,
         upperTick: I256,
         upperTickFeeGrowthOutsideX: U256,
@@ -42,8 +42,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         return update(position, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
-    @using(checkExternalCaller = false)
-    pub fn update(
+    fn update(
         mut position: Position,
         sign: Bool,
         liquidityDelta: U256,
@@ -64,8 +63,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         return position
     }
 
-    @using(checkExternalCaller = false)
-    pub fn calculateNewLiquidity(
+    fn calculateNewLiquidity(
         currentPositionLiquidity: U256,
         sign: Bool,
         liquidityDelta: U256

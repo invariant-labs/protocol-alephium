@@ -1,6 +1,6 @@
 Abstract Contract Ticks() extends TickHelper() {
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn wrappedCreateTick(
+    @using(preapprovedAssets = true)
+    fn wrappedCreateTick(
         originalCaller: Address,
         poolKey: ByteVec,
         index: I256,
@@ -28,7 +28,7 @@ Abstract Contract Ticks() extends TickHelper() {
         ticks.insert!(originalCaller, key, state)
     }
 
-    pub fn containsTick(
+    fn containsTick(
         poolKey: ByteVec,
         index: I256
     ) -> Bool {
@@ -36,21 +36,21 @@ Abstract Contract Ticks() extends TickHelper() {
         return ticks.contains!(key)
     }
 
-    @using(checkExternalCaller = false)
-    pub fn wrappedUpdateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
+    
+    fn wrappedUpdateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
         let key = poolKey ++ toByteVec!(index)
         let tick = ticks[key]
         let updatedTick = updateTick(tick, liquidityDelta, maxLiquidityPerTick, isUpper, isDeposit)
         ticks[key] = updatedTick
     }
 
-    pub fn getTickFeeGrowthOutside(poolKey: ByteVec, index: I256) -> (U256, U256) {
+    fn getTickFeeGrowthOutside(poolKey: ByteVec, index: I256) -> (U256, U256) {
         let key = poolKey ++ toByteVec!(index)
         let tick = ticks[key]
         return tick.feeGrowthOutsideX, tick.feeGrowthOutsideY
     }
 
-    pub fn wrappedGetTick(poolKey: ByteVec, index: I256) -> (Bool, Tick) {
+    fn wrappedGetTick(poolKey: ByteVec, index: I256) -> (Bool, Tick) {
         let key = poolKey ++ toByteVec!(index)
         if (containsTick(poolKey, index)) {
             return true, ticks[key]
@@ -66,8 +66,8 @@ Abstract Contract Ticks() extends TickHelper() {
             }
         }
     }
-    @using(checkExternalCaller = false)
-    pub fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
+
+    fn wrappedCross(poolKey: ByteVec, index: I256, feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
         let key = poolKey ++ toByteVec!(index)
         let tick = ticks[key]
         let (addLiquidity, crossedTick) = cross(tick, feeGrowthGlobalX, feeGrowthGlobalY, currentTick, index)

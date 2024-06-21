@@ -1,6 +1,6 @@
 Abstract Contract FeeTiers() {
-    @using(checkExternalCaller = false, updateFields = true, preapprovedAssets = true)
-    pub fn wrappedAddFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
+    @using(updateFields = true, preapprovedAssets = true)
+    fn wrappedAddFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
 
         let exists = containsFeeTier(fee, tickSpacing)
         assert!(!exists, InvariantError.FeeTierAlreadyExist)    
@@ -10,8 +10,8 @@ Abstract Contract FeeTiers() {
     }
 
 
-    @using(checkExternalCaller = false, updateFields = true)
-    pub fn wrappedRemoveFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
+    @using(updateFields = true)
+    fn wrappedRemoveFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let state = feeTiers[i]
             if (fee == state.fee && tickSpacing == state.tickSpacing) {

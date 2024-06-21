@@ -1,6 +1,6 @@
 Abstract Contract PoolKeys() {
-    @using(preapprovedAssets = true, updateFields = true, checkExternalCaller = false)
-    pub fn addPoolKey(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
+    @using(preapprovedAssets = true, updateFields = true)
+    fn addPoolKey(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
         let exists = containsPoolKey(tokenX, tokenY, fee, tickSpacing)
         assert!(!exists, InvariantError.PoolKeyAlreadyExist)
     
@@ -9,7 +9,7 @@ Abstract Contract PoolKeys() {
         poolKeys.insert!(originalCaller, poolKeyCount, PoolKey { tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
     }
 
-    pub fn containsPoolKey(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
+    fn containsPoolKey(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let state = poolKeys[i]
 
@@ -21,11 +21,7 @@ Abstract Contract PoolKeys() {
         return false
     }
 
-    pub fn countPoolKeys() -> U256 {
-        return poolKeyCount
-    }
-
-    pub fn getAllPoolKeys() -> ByteVec {
+    fn getAllPoolKeys() -> ByteVec {
         let mut poolKeysBytes = b``
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
