@@ -322,14 +322,14 @@ Contract Invariant(
         transferTokenToSelf!(callerAddress!(), pool.tokenY, y)
     }
 
-    @using(assetsInContract = true, checkExternalCaller = false)
+    @using(assetsInContract = true)
     pub fn removePosition(index: U256) -> () {
         let caller = callerAddress!()
 
         let (exist, position) = wrappedGetPosition(caller, index)
 
         assert!(exist, InvariantError.PositionNotFound)
-        assert!(caller == position.owner, InvariantError.NotOwner)
+        checkCaller!(caller == position.owner, InvariantError.NotOwner)
 
         let poolKey = position.poolKey
         let upperTick = position.upperTickIndex
@@ -352,9 +352,12 @@ Contract Invariant(
         wrappedRemovePosition(caller, index)
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true)
     pub fn transferPosition(index: U256, newOwner: Address) -> () {
         let caller = callerAddress!()
+        let (exist, position) = wrappedGetPosition(caller, index)
+        assert!(exist, InvariantError.PositionNotFound)
+        checkCaller!(caller == position.owner, InvariantError.NotOwner)
         wrappedTransferPosition{caller -> ALPH: 2 * mapEntryDeposit!()}(caller, index, newOwner)
     }
 
@@ -520,12 +523,13 @@ Contract Invariant(
         return calculateSwapResult
     }
     
-    @using(assetsInContract = true, checkExternalCaller = false)
+    @using(assetsInContract = true)
     pub fn claimFee(index: U256) -> () {
         let caller = callerAddress!()
         let key = toByteVec!(caller) ++ toByteVec!(index)
         let (exist, position) = wrappedGetPosition(caller, index)
         assert!(exist, InvariantError.PositionDoesNotExist)
+        checkCaller!(caller == position.owner, InvariantError.NotOwner)
     
         let poolKey = position.poolKey
         let (_, pool) = wrappedGetPool(poolKey)

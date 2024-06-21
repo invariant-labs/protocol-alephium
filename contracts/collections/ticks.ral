@@ -35,7 +35,6 @@ Abstract Contract Ticks() extends TickHelper() {
         let key = poolKey ++ toByteVec!(index)
         return ticks.contains!(key)
     }
-
     
     fn wrappedUpdateTick(poolKey: ByteVec, index: I256, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
         let key = poolKey ++ toByteVec!(index)

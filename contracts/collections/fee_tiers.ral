@@ -1,14 +1,12 @@
 Abstract Contract FeeTiers() {
     @using(updateFields = true, preapprovedAssets = true)
     fn wrappedAddFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
-
         let exists = containsFeeTier(fee, tickSpacing)
         assert!(!exists, InvariantError.FeeTierAlreadyExist)    
 
         feeTierCount = feeTierCount + 1
         feeTiers.insert!(originalCaller, feeTierCount, FeeTier { fee: fee, tickSpacing: tickSpacing })
     }
-
 
     @using(updateFields = true)
     fn wrappedRemoveFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
