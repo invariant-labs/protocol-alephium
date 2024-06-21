@@ -40,7 +40,7 @@ Contract Invariant(
     // Key: owner ++ index
     mapping[ByteVec, Position] positions
     // Key: owner
-    mapping[ByteVec, U256] positionsCounter
+    mapping[Address, U256] positionsCounter
     
 
     enum InvariantError {
