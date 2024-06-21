@@ -23,7 +23,6 @@ import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
-
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
@@ -319,6 +318,23 @@ export async function expectError(script: Promise<any>) {
   }
 
   expect(isError).toBe(true)
+}
+
+export async function expectErrorCode(errorCode: bigint, script: Promise<any>) {
+  let thrownErrorCode: string = ''
+
+  try {
+    await script
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      const regex = new RegExp('Error Code: ([0-9]+)')
+      const regexResult = regex.exec(e.message)
+      
+      thrownErrorCode = regexResult ? regexResult[1] : ''
+    }
+  }
+
+  expect(thrownErrorCode).toBe(errorCode.toString())
 }
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
