@@ -298,7 +298,7 @@ Contract Invariant(
 
         assert!(poolSqrtPrice >= slippageLimitLower && poolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = wrappedModifyPosition(callerAddress!(), index,poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         transferTokenToSelf!(callerAddress!(), pool.tokenX, x)
         transferTokenToSelf!(callerAddress!(), pool.tokenY, y)
@@ -314,19 +314,29 @@ Contract Invariant(
         checkCaller!(caller == position.owner, InvariantError.NotOwner)
 
         let poolKey = position.poolKey
-        let upperTick = position.upperTickIndex
-        let lowerTick = position.lowerTickIndex
+        let upperTickIndex = position.upperTickIndex
+        let lowerTickIndex = position.lowerTickIndex
         let liquidity = position.liquidity
 
         let (_, pool) = wrappedGetPool(poolKey)
         let tickSpacing = pool.tickSpacing
 
-        let (mut x, mut y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTickIndex, lowerTickIndex, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let (_, updatedPosition) = wrappedGetPosition(caller, index)
         
         x = x + updatedPosition.tokensOwedX
         y = y + updatedPosition.tokensOwedY
+
+        let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
+        let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
+
+        if (lowerTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, lowerTickIndex)
+        }
+        if (upperTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, upperTickIndex)
+        } 
 
         transferTokenFromSelf!(caller, pool.tokenX, x)
         transferTokenFromSelf!(caller, pool.tokenY, y)

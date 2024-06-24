@@ -107,6 +107,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
 
         let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, lowerTick)
         let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, upperTick)
+        
         let poolCurrentTickIndex = pool.currentTickIndex
         let poolFeeGrowthGlobalX = pool.feeGrowthGlobalX
         let poolFeeGrowthGlobalY = pool.feeGrowthGlobalY
@@ -131,4 +132,5 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
 
         return wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
+    
 }

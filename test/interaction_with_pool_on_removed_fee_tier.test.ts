@@ -1,4 +1,10 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import {
+  ContractCreatedEvent,
+  DUST_AMOUNT,
+  ONE_ALPH,
+  subscribeContractCreatedEvent,
+  web3
+} from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, expectError } from '../src/utils'
@@ -15,12 +21,14 @@ import {
   initSwap,
   removePosition,
   getPools,
-  getPosition
+  getPosition,
+  getTick
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
   ClaimFee,
   InitializeEmptyPosition,
+  Invariant,
   InvariantInstance,
   TokenFaucetInstance,
   TransferPosition,
@@ -226,7 +234,6 @@ describe('invariant tests', () => {
 
     const xBalance = await balanceOf(tokenX.contractId, positionOwner.address)
     const yBalance = await balanceOf(tokenY.contractId, positionOwner.address)
-    console.log(xBalance, yBalance)
 
     await initPositionWithLiquidity(
       invariant,
@@ -255,14 +262,12 @@ describe('invariant tests', () => {
     })
 
     const transferedPosition = await getPosition(invariant, recipient.address, 1n)
-
     expect(transferedPosition.exist).toBe(true)
     expect(transferedPosition.liquidity).toBe(liquidityDelta)
     expect(transferedPosition.lowerTickIndex).toBe(lowerTickIndex)
     expect(transferedPosition.upperTickIndex).toBe(upperTickIndex)
-    // TODO: looks like a bug in the contract
-    // expect(transferedPosition.feeGrowthInsideX).toBe(0n)
-    // expect(transferedPosition.feeGrowthInsideY).toBe(0n)
+    expect(transferedPosition.feeGrowthInsideX).toBe(0n)
+    expect(transferedPosition.feeGrowthInsideY).toBe(0n)
     expect(transferedPosition.lastBlockNumber).toBeGreaterThan(0n)
     expect(transferedPosition.tokensOwedX).toBe(0n)
     expect(transferedPosition.tokensOwedY).toBe(0n)

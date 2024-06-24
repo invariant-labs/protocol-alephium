@@ -187,7 +187,7 @@ export async function initPositionWithLiquidity(
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
   })
 
-  await IncreasePositionLiquidity.execute(signer, {
+  const txId = await IncreasePositionLiquidity.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -208,6 +208,8 @@ export async function initPositionWithLiquidity(
       { id: token1.contractId, amount: token1Amount }
     ]
   })
+
+  console.log('txId:', txId.txId)
 }
 
 export const removePosition = async (
@@ -252,4 +254,25 @@ export async function initSwap(
       { id: token1.contractId, amount }
     ]
   })
+}
+
+export const getTick = async (
+  invariant: InvariantInstance,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  index: bigint
+) => {
+  return (
+    await invariant.methods.getTick({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        index
+      }
+    })
+  ).returns
 }
