@@ -133,7 +133,7 @@ Contract Invariant(
         let timestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
         addPoolKey{caller -> ALPH: mapEntryDeposit}(caller, tokenX, tokenY, fee, tickSpacing)
-        addPool{caller -> ALPH: mapEntryDeposit}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
+        addPool{caller -> ALPH: mapEntryDeposit}(caller, poolKey, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
