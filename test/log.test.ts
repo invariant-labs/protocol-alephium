@@ -2,7 +2,9 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../artifacts/ts'
-import { deployCLAMM, deployUints, expectError } from '../src/utils'
+import { deployCLAMM, deployUints } from '../src/utils'
+import { expectError } from '../src/testUtils'
+import { DecimalError, GlobalMaxTick, GlobalMinTick } from '../src/consts'
 
 describe('log tests', () => {
   let sender: PrivateKeyWallet
@@ -609,12 +611,17 @@ describe('log tests', () => {
   test('calculate sqrt price - domain', async () => {
     const uints = await deployUints(sender)
     const clamm = await deployCLAMM(sender, uints.contractId)
-    {
-      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } }))
-    }
-    {
-      expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: -221_819n } }))
-    }
+
+    await expectError(
+      DecimalError.TickOverBounds,
+      clamm,
+      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } })
+    )
+    await expectError(
+      DecimalError.TickOverBounds,
+      clamm,
+      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } })
+    )
   })
 
   describe('align tick with spacing', () => {

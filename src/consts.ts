@@ -16,7 +16,7 @@ export const {
   InvariantError
 } = Invariant.consts
 
-export const { CLAMMError } = CLAMM.consts
+export const { CLAMMError, DecimalError } = CLAMM.consts
 
 export const {
   // broken in Alephium 1.0.1, their conversion uses BigInt(n), loss of precision
