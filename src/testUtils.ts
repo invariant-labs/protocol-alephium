@@ -16,6 +16,7 @@ import {
   MAP_ENTRY_DEPOSIT,
   decodePool,
   decodePools,
+  decodeFeeTiers,
   decodePosition,
   deployTokenFaucet
 } from './utils'
@@ -39,7 +40,7 @@ export async function initFeeTier(
   fee: bigint,
   tickSpacing: bigint
 ) {
-  await AddFeeTier.execute(signer, {
+  return await AddFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       fee,
@@ -91,7 +92,7 @@ export async function initPool(
   initSqrtPrice: bigint,
   initTick: bigint
 ) {
-  await CreatePool.execute(signer, {
+  return await CreatePool.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -118,6 +119,10 @@ export async function withdrawTokens(
       attoAlphAmount: DUST_AMOUNT
     })
   }
+}
+
+export async function getFeeTiers(invariant: InvariantInstance) {
+  return decodeFeeTiers((await invariant.methods.getFeeTiers()).returns)
 }
 
 export async function getPool(
@@ -187,7 +192,7 @@ export async function initPositionWithLiquidity(
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
   })
 
-  const txId = await IncreasePositionLiquidity.execute(signer, {
+  return await IncreasePositionLiquidity.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -208,8 +213,6 @@ export async function initPositionWithLiquidity(
       { id: token1.contractId, amount: token1Amount }
     ]
   })
-
-  console.log('txId:', txId.txId)
 }
 
 export const removePosition = async (
@@ -237,7 +240,7 @@ export async function initSwap(
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ) {
-  await Swap.execute(signer, {
+  return await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,

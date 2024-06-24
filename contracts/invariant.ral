@@ -141,8 +141,8 @@ Contract Invariant(
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        assert!(tickSpacing > 0 || tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(fee <= one(PercentageScale), InvariantError.InvalidFee)
+        assert!(tickSpacing > 0 && tickSpacing <= 100, InvariantError.InvalidTickSpacing)
+        assert!(fee < one(PercentageScale), InvariantError.InvalidFee)
 
         wrappedAddFeeTier{caller -> ALPH: mapEntryDeposit!()}(caller, fee, tickSpacing)
     }
