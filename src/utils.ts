@@ -87,35 +87,6 @@ export async function deployTokenFaucet(
   )
 }
 
-export async function expectError(script: Promise<any>) {
-  let isError = false
-
-  try {
-    await script
-  } catch (e) {
-    isError = true
-  }
-
-  expect(isError).toBe(true)
-}
-
-export async function expectErrorCode(errorCode: bigint, script: Promise<any>) {
-  let thrownErrorCode: string = ''
-
-  try {
-    await script
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      const regex = new RegExp('Error Code: ([0-9]+)')
-      const regexResult = regex.exec(e.message)
-
-      thrownErrorCode = regexResult ? regexResult[1] : ''
-    }
-  }
-
-  expect(thrownErrorCode).toBe(errorCode.toString())
-}
-
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
   const balance = balances.tokenBalances?.find(t => t.id === tokenId)
