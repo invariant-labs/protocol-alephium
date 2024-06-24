@@ -14,11 +14,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         payer: Address
     ) -> () {
         let counterKey = toByteVec!(caller)
-        let mut count = 0
-        if (positionsCounter.contains!(counterKey)) {
-            count = positionsCounter[counterKey]
-        }
-        let length = count + 1
+        let length = countPositions(caller) + 1
         let key = toByteVec!(caller) ++ toByteVec!(length)
         let state = Position {
             poolKey: poolKey,
@@ -38,6 +34,15 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
             positionsCounter.insert!(payer, counterKey, length)
         } else {
             positionsCounter[counterKey] = length
+        }
+    }
+
+    fn countPositions(caller: Address) -> U256 {
+        let counterKey = toByteVec!(caller)
+        if (positionsCounter.contains!(counterKey)) {
+            return positionsCounter[counterKey]
+        } else {
+            return 0
         }
     }
 
@@ -63,8 +68,16 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     }
 
     fn wrappedRemovePosition(caller: Address, index: U256) -> () {
+        let length = countPositions(caller)
         let key = toByteVec!(caller) ++ toByteVec!(index)
-        positions.remove!(caller, key)
+        if (length == index) {
+            positions.remove!(caller, key)
+        } else {
+            let lastKey = toByteVec!(caller) ++ toByteVec!(length)
+            let lastPosition = positions[lastKey]
+            positions[key] = lastPosition
+            positions.remove!(caller, key)
+        }
     }
 
     @using(preapprovedAssets = true)
