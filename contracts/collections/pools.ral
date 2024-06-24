@@ -77,7 +77,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 feeProtocolTokenY: 0,
                 startTimestamp: 0,
                 lastTimestamp: 0,
-                feeReceiver: byteVecToAddress!(#)
+                feeReceiver: nullContractAddress!()
             }
         } 
     }

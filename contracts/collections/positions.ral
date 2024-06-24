@@ -57,7 +57,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
                 lastBlockNumber: 0,
                 tokensOwedX: 0,
                 tokensOwedY: 0,
-                owner: byteVecToAddress!(#)
+                owner: nullContractAddress!()
             }
         } 
     }
