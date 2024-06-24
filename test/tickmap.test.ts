@@ -1,9 +1,10 @@
-import { DUST_AMOUNT, ONE_ALPH, sleep, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip, InitializeChunk } from '../artifacts/ts'
 
-import { MaxTick, deployInvariant } from '../src/utils'
+import { deployInvariant } from '../src/utils'
+import { GlobalMaxTick } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -21,8 +22,8 @@ describe('invariant tests', () => {
     const params = [
       { tickSpacing: 1n, tick: 0n },
       { tickSpacing: 1n, tick: 7n },
-      { tickSpacing: 1n, tick: MaxTick - 1n },
-      { tickSpacing: 1n, tick: MaxTick - 40n },
+      { tickSpacing: 1n, tick: GlobalMaxTick - 1n },
+      { tickSpacing: 1n, tick: GlobalMaxTick - 40n },
       { tickSpacing: 100n, tick: 20000n }
     ]
     for (const { tick, tickSpacing } of params) {
@@ -304,7 +305,7 @@ describe('invariant tests', () => {
   })
   test('next initialized chunk - farther than limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = MaxTick - 10n
+    const tick = GlobalMaxTick - 10n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -333,14 +334,14 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.nextInitialized({
-        args: { tick: -MaxTick + 1n, tickSpacing: 1n, poolKey }
+        args: { tick: -GlobalMaxTick + 1n, tickSpacing: 1n, poolKey }
       })
     ).returns
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - hitting the limit limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = MaxTick - 22n
+    const tick = GlobalMaxTick - 22n
     const tickSpacing = 4n
 
     const [isSome, index] = (
@@ -350,7 +351,7 @@ describe('invariant tests', () => {
   })
   test('next initialized chunk - already at limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = MaxTick - 2n
+    const tick = GlobalMaxTick - 2n
     const tickSpacing = 4n
 
     const [isSome] = (
@@ -360,7 +361,7 @@ describe('invariant tests', () => {
   })
   test('next initialized chunk - at pos 255', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = MaxTick - 255n
+    const tick = GlobalMaxTick - 255n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -389,7 +390,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.nextInitialized({
-        args: { tick: MaxTick - 256n, tickSpacing, poolKey }
+        args: { tick: GlobalMaxTick - 256n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -648,7 +649,7 @@ describe('invariant tests', () => {
   })
   test('prev initialized chunk - farther than limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -MaxTick + 1n
+    const tick = -GlobalMaxTick + 1n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -677,14 +678,14 @@ describe('invariant tests', () => {
 
     const [isSome] = (
       await invariant.methods.prevInitialized({
-        args: { tick: MaxTick - 1n, tickSpacing, poolKey }
+        args: { tick: GlobalMaxTick - 1n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - at pos 255', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -MaxTick + 255n
+    const tick = -GlobalMaxTick + 255n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -713,7 +714,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.prevInitialized({
-        args: { tick: -MaxTick + 320n, tickSpacing, poolKey }
+        args: { tick: -GlobalMaxTick + 320n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -721,7 +722,7 @@ describe('invariant tests', () => {
   })
   test('prev initialized chunk - at pos 0', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -MaxTick
+    const tick = -GlobalMaxTick
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -750,7 +751,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.prevInitialized({
-        args: { tick: -MaxTick + 255n, tickSpacing, poolKey }
+        args: { tick: -GlobalMaxTick + 255n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -794,16 +795,16 @@ describe('invariant tests', () => {
       expect(result).toBe(expected)
     }
     {
-      const tick = MaxTick - 22n
+      const tick = GlobalMaxTick - 22n
       const tickSpacing = 5n
       const up = true
       const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = MaxTick - 3n
+      const expected = GlobalMaxTick - 3n
       expect(result).toBe(expected)
     }
     {
-      const tick = MaxTick - 3n
+      const tick = GlobalMaxTick - 3n
       const tickSpacing = 5n
       const up = true
       const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
@@ -817,7 +818,7 @@ describe('invariant tests', () => {
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
       const invariant = await deployInvariant(sender, protocolFee)
 
-      const maxIndex = MaxTick - (MaxTick % tickSpacing)
+      const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
       const minIndex = -maxIndex
 
       {
@@ -893,7 +894,7 @@ describe('invariant tests', () => {
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
       const invariant = await deployInvariant(sender, protocolFee)
 
-      const maxIndex = MaxTick - (MaxTick % tickSpacing)
+      const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
       const minIndex = -maxIndex
 
       const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing

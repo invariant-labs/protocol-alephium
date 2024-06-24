@@ -7,9 +7,9 @@ import {
   decodePools,
   deployInvariant,
   deployTokenFaucet,
-  expectError,
   MAP_ENTRY_DEPOSIT
 } from '../src/utils'
+import { getPool, initTokensXY } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -103,16 +103,11 @@ describe('pools tests', () => {
   test('not existing pool', async () => {
     const invariant = await deployInvariant(sender, 0n)
 
-    expectError(
-      invariant.methods.getPool({
-        args: {
-          token0: '',
-          token1: '',
-          fee: 100n,
-          tickSpacing: 1n
-        }
-      })
-    )
+    let [tokenX, tokenY] = await initTokensXY(sender, 0n)
+
+    const pool = await getPool(invariant, tokenX, tokenY, 100n, 1n)
+    expect(pool.exist).toBeFalsy()
+
     const pools = await invariant.methods.getPools()
     const parsedPools = decodePools(pools.returns)
     expect(parsedPools.length).toBe(0)
