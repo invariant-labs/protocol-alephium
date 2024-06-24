@@ -1,6 +1,7 @@
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
+  ChangeProtocolFee,
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
@@ -54,7 +55,7 @@ export async function feeTierExists(
   for (const feeTier of feeTiers) {
     tierStatus.push(
       (
-        await invariant.view.feeTierExist({
+        await invariant.methods.feeTierExist({
           args: { fee: feeTier.fee, tickSpacing: feeTier.tickSpacing }
         })
       ).returns
@@ -103,7 +104,7 @@ export async function withdrawTokens(
 }
 
 export async function getFeeTiers(invariant: InvariantInstance) {
-  return decodeFeeTiers((await invariant.view.getFeeTiers()).returns)
+  return decodeFeeTiers((await invariant.methods.getFeeTiers()).returns)
 }
 
 export async function getPool(
@@ -138,6 +139,23 @@ export async function getPosition(invariant: InvariantInstance, owner: Address, 
       })
     ).returns
   )
+}
+
+export const changeProtocolFee = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  newFee: bigint
+) => {
+  return await ChangeProtocolFee.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      newFee
+    }
+  })
+}
+
+export const getProtocolFee = async (invariant: InvariantInstance) => {
+  return (await invariant.methods.getProtocolFee()).returns
 }
 
 export async function initPositionWithLiquidity(
