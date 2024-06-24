@@ -1,14 +1,8 @@
-import {
-  ContractCreatedEvent,
-  DUST_AMOUNT,
-  ONE_ALPH,
-  subscribeContractCreatedEvent,
-  web3
-} from '@alephium/web3'
+import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, expectError } from '../src/utils'
-import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, expectErrorCode } from '../src/utils'
+import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
   initPool,
@@ -21,20 +15,16 @@ import {
   initSwap,
   removePosition,
   getPools,
-  getPosition,
-  getTick
+  getPosition
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
   ClaimFee,
-  InitializeEmptyPosition,
-  Invariant,
   InvariantInstance,
   TokenFaucetInstance,
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { get } from 'http'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -46,7 +36,8 @@ let recipient: PrivateKeyWallet
 let invariant: InvariantInstance
 let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
-describe('invariant tests', () => {
+
+describe('interaction with pool on removed fee tiers tests', () => {
   const protocolFee = 10n ** (PercentageScale - 2n)
   const fee = 6n * 10n ** (PercentageScale - 3n)
   const tickSpacing = 10n
@@ -91,8 +82,8 @@ describe('invariant tests', () => {
     expect(exists).toBeFalsy()
   })
   test('try to create same pool again', async () => {
-    // TODO: add error assertion
-    await expectError(
+    await expectErrorCode(
+      InvariantError.FeeTierNotFound,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -275,8 +266,9 @@ describe('invariant tests', () => {
   })
   test('readd fee tier and try to create same pool', async () => {
     await initFeeTier(invariant, admin, fee, tickSpacing)
-    // TODO: add error assertion
-    await expectError(
+
+    await expectErrorCode(
+      InvariantError.PoolKeyAlreadyExist,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
