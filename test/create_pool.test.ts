@@ -1,8 +1,8 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, expectError } from '../src/utils'
-import { PercentageScale } from '../src/consts'
+import { deployInvariant, expectError, expectErrorCode } from '../src/utils'
+import { CLAMMError, InvariantError, PercentageScale } from '../src/consts'
 import { getPool, initPool, initFeeTier, initTokensXY } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -66,8 +66,8 @@ describe('invariant tests', () => {
 
     await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
-    // TODO: add error assertion
-    await expectError(
+    await expectErrorCode(
+      InvariantError.PoolKeyAlreadyExist,
       initPool(invariant, poolCreator, tokenY, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -85,8 +85,8 @@ describe('invariant tests', () => {
     const initTick = 0n
     const initSqrtPrice = 10n ** 24n
 
-    // TODO: add error assertion
-    await expectError(
+    await expectErrorCode(
+      InvariantError.TokensAreSame,
       initPool(invariant, poolCreator, tokenX, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -103,8 +103,8 @@ describe('invariant tests', () => {
     const initTick = 0n
     const initSqrtPrice = 10n ** 24n
 
-    // TODO: add error assertion
-    await expectError(
+    await expectErrorCode(
+      InvariantError.FeeTierNotFound,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -124,8 +124,8 @@ describe('invariant tests', () => {
       await invariant.methods.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    // TODO: add error assertion
-    await expectError(
+    await expectErrorCode(
+      CLAMMError.InvalidTickSpacing,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
