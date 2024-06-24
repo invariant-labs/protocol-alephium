@@ -109,7 +109,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
 
         if (roundingUp) {
-            let denominator = mul(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
+            let denominator = uints.toU256(uints.bigMulDiv256(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale)))
             return uints.bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
         } else {
             let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
@@ -209,12 +209,16 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let numerator = uints.bigRescale(y, TokenAmountScale, SqrtPriceScale)
         let denominator = uints.bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
         
+        let mut result = U512 { higher: 0, lower: 0 }
         if (addY) {
-            return startingSqrtPrice + uints.toU256(uints.bigDiv512(numerator, denominator, one(SqrtPriceScale)))
+            result = uints.bigDiv512(numerator, denominator, one(SqrtPriceScale))
+            result = uints.bigAdd(result, startingSqrtPrice)
+            return uints.toU256(result)
         } else {
-            return startingSqrtPrice - uints.toU256(uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale)))
+            result = uints.toU512(startingSqrtPrice)
+            result = uints.bigSub512(result, uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale)))
+            return uints.toU256(result)
         }
-
     }
 
     pub fn calculateAmountDelta(
