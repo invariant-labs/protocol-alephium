@@ -3,7 +3,8 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, expectError, expectErrorCode } from '../src/utils'
 import { CLAMMError, InvariantError, PercentageScale } from '../src/consts'
-import { getPool, initPool, initFeeTier, initTokensXY } from '../src/testUtils'
+import { getPool, initPool, initFeeTier, initTokensXY, objectEquals } from '../src/testUtils'
+import { Pool } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -39,19 +40,23 @@ describe('invariant tests', () => {
     )
 
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    expect(pool.currentTickIndex).toBe(initTick)
-    expect(pool.sqrtPrice).toBe(initSqrtPrice)
-    expect(pool.feeGrowthGlobalX).toBe(0n)
-    expect(pool.feeGrowthGlobalY).toBe(0n)
-    expect(pool.feeProtocolTokenX).toBe(0n)
-    expect(pool.feeProtocolTokenY).toBe(0n)
-    expect(pool.liquidity).toBe(0n)
-    expect(pool.tokenX).toBe(tokenX.contractId)
-    expect(pool.tokenY).toBe(tokenY.contractId)
-    expect(pool.fee).toBe(fee)
-    expect(pool.tickSpacing).toBe(tickSpacing)
-    expect(pool.feeReceiver).toBe(admin.address)
-    expect(pool.exist).toBeTruthy()
+    const expectedPool = {
+      currentTickIndex: initTick,
+      sqrtPrice: initSqrtPrice,
+      feeGrowthGlobalX: 0n,
+      feeGrowthGlobalY: 0n,
+      feeProtocolTokenX: 0n,
+      feeProtocolTokenY: 0n,
+      liquidity: 0n,
+      tokenX: tokenX.contractId,
+      tokenY: tokenY.contractId,
+      fee,
+      tickSpacing,
+      feeReceiver: admin.address,
+      exist: true
+    }
+
+    objectEquals(pool, expectedPool, ['lastTimestamp', 'startTimestamp'])
   })
   test('create pool x to y and y to x', async () => {
     const protocolFee = 10n ** (PercentageScale - 2n)
