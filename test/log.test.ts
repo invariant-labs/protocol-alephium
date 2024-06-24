@@ -11,7 +11,7 @@ describe('log tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
     const uints = await deployUints(sender)
-    clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    clamm = await deployCLAMM(sender, uints.contractId)
   })
 
   describe('sqrt price to x32', () => {
@@ -608,7 +608,7 @@ describe('log tests', () => {
 
   test('calculate sqrt price - domain', async () => {
     const uints = await deployUints(sender)
-    const clamm = (await deployCLAMM(sender, uints.contractInstance.contractId)).contractInstance
+    const clamm = await deployCLAMM(sender, uints.contractId)
     {
       expectError(clamm.methods.calculateSqrtPrice({ args: { tickIndex: 221_819n } }))
     }

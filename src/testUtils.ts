@@ -1,4 +1,4 @@
-import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
   CreatePool,
@@ -16,8 +16,17 @@ import {
   decodePosition,
   deployTokenFaucet
 } from './utils'
+import { expectAssertionError } from '@alephium/web3-test'
 
 type TokenInstance = TokenFaucetInstance
+
+export async function expectError(
+  errorCode: bigint,
+  contract: ContractInstance,
+  script: Promise<any>
+) {
+  return await expectAssertionError(script, contract.address, Number(errorCode))
+}
 
 export async function initTokensXY(signer: SignerProvider, supply: bigint) {
   const token0 = TokenFaucet.at(
