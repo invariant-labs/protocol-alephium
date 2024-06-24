@@ -54,7 +54,7 @@ export async function feeTierExists(
   for (const feeTier of feeTiers) {
     tierStatus.push(
       (
-        await invariant.view.feeTierExist({
+        await invariant.methods.feeTierExist({
           args: { fee: feeTier.fee, tickSpacing: feeTier.tickSpacing }
         })
       ).returns
@@ -103,7 +103,7 @@ export async function withdrawTokens(
 }
 
 export async function getFeeTiers(invariant: InvariantInstance) {
-  return decodeFeeTiers((await invariant.view.getFeeTiers()).returns)
+  return decodeFeeTiers((await invariant.methods.getFeeTiers()).returns)
 }
 
 export async function getPool(
@@ -190,6 +190,34 @@ export async function initPositionWithLiquidity(
       { id: token1.contractId, amount: token1Amount }
     ]
   })
+}
+
+export const quote = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  xToY: boolean,
+  amount: bigint,
+  byAmountIn: boolean,
+  sqrtPriceLimit: bigint
+) => {
+  return (
+    await invariant.methods.quote({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        xToY,
+        amount,
+        byAmountIn,
+        sqrtPriceLimit
+      }
+    })
+  ).returns
 }
 
 export async function initSwap(
