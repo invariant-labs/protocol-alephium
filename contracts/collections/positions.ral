@@ -13,7 +13,6 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         tokensOwedY: U256,
         payer: Address
     ) -> () {
-        let counterKey = toByteVec!(caller)
         let length = countPositions(caller) + 1
         let key = toByteVec!(caller) ++ toByteVec!(length)
         let state = Position {
@@ -38,9 +37,8 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     }
 
     fn countPositions(caller: Address) -> U256 {
-        let counterKey = toByteVec!(caller)
-        if (positionsCounter.contains!(counterKey)) {
-            return positionsCounter[counterKey]
+        if (positionsCounter.contains!(caller)) {
+            return positionsCounter[caller]
         } else {
             return 0
         }
