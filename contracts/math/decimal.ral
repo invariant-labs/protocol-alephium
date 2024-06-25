@@ -226,6 +226,7 @@ Abstract Contract Decimal() {
 
         let mut feeGrowthBelowX = 0
         let mut feeGrowthBelowY = 0
+        
         let mut feeGrowthAboveX = 0
         let mut feeGrowthAboveY = 0
 

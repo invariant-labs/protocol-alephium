@@ -1,4 +1,4 @@
-import { Invariant } from '../artifacts/ts'
+import { CLAMM, Invariant } from '../artifacts/ts'
 
 export const {
   SqrtPriceScale,
@@ -15,3 +15,5 @@ export const {
   SearchRange,
   InvariantError
 } = Invariant.consts
+
+export const { CLAMMError } = CLAMM.consts

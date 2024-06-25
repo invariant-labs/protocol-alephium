@@ -38,7 +38,8 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
             poolFeeGrowthGlobalX,
             poolFeeGrowthGlobalY
         )
-
+        
+        
         return update(position, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
     }
 
