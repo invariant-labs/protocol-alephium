@@ -1,4 +1,4 @@
-import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
   CreatePool,
@@ -20,6 +20,7 @@ import {
   decodePosition,
   deployTokenFaucet
 } from './utils'
+import { expectAssertionError } from '@alephium/web3-test'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -33,6 +34,30 @@ export const objectEquals = (
       expect(object[key]).toEqual(expectedObject[key])
     }
   }
+}
+
+export async function expectError(
+  errorCode: bigint,
+  contract: ContractInstance,
+  script: Promise<any>
+) {
+  return await expectAssertionError(script, contract.address, Number(errorCode))
+}
+
+export async function expectVMError(error: string, script: Promise<any>) {
+  let isError: boolean = false
+  try {
+    await script
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      const regex = new RegExp('VM execution error: ' + error)
+      const regexResult = regex.exec(e.message)
+
+      isError = regexResult ? true : false
+    }
+  }
+
+  expect(isError).toBeTruthy()
 }
 
 export async function initTokensXY(signer: SignerProvider, supply: bigint) {

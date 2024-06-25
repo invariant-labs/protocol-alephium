@@ -1,9 +1,15 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, expectErrorCode } from '../src/utils'
+import { deployInvariant } from '../src/utils'
 import { InvariantError, PercentageScale } from '../src/consts'
-import { feeTierExists, getFeeTiers, initFeeTier, removeFeeTier } from '../src/testUtils'
+import {
+  expectError,
+  feeTierExists,
+  getFeeTiers,
+  initFeeTier,
+  removeFeeTier
+} from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -46,8 +52,9 @@ describe('remove fee tier tests', () => {
     let tierExists = feeTierExists(invariant, { fee, tickSpacing: tickSpacing2 })[0]
     expect(tierExists).toBeFalsy()
 
-    expectErrorCode(
+    expectError(
       InvariantError.FeeTierNotFound,
+      invariant,
       removeFeeTier(invariant, admin, fee, tickSpacing2)
     )
   })
@@ -65,6 +72,10 @@ describe('remove fee tier tests', () => {
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
-    expectErrorCode(InvariantError.NotAdmin, removeFeeTier(invariant, notAdmin, fee, tickSpacing))
+    expectError(
+      InvariantError.NotAdmin,
+      invariant,
+      removeFeeTier(invariant, notAdmin, fee, tickSpacing)
+    )
   })
 })

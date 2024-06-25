@@ -515,13 +515,13 @@ Contract Invariant(
         return calculateSwapResult
     }
     
-    @using(assetsInContract = true)
+    // caller is checked in `wrappedGetPosition`
+    @using(assetsInContract = true, checkExternalCaller = false)
     pub fn claimFee(index: U256) -> () {
         let caller = callerAddress!()
         let key = toByteVec!(caller) ++ toByteVec!(index)
         let (exist, position) = wrappedGetPosition(caller, index)
         assert!(exist, InvariantError.PositionDoesNotExist)
-        checkCaller!(caller == position.owner, InvariantError.NotOwner)
     
         let poolKey = position.poolKey
         let (_, pool) = wrappedGetPool(poolKey)

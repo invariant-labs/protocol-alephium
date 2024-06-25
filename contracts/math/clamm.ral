@@ -214,7 +214,6 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         } else {
             return startingSqrtPrice - uints.toU256(uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale)))
         }
-
     }
 
     pub fn calculateAmountDelta(
