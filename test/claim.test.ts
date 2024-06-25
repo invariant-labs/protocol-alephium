@@ -29,8 +29,8 @@ describe('invariant tests', () => {
   test('claim', async () => {
     // init dex and tokens
     // 1%
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     // 0.6%
     const fee = 6n * 10n ** (PercentageScale - 3n)
@@ -149,8 +149,8 @@ describe('invariant tests', () => {
   test('claim_not_owner', async () => {
     // init dex and tokens
     // 1%
-    const protocol_fee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocol_fee)
+    const protocolFee = 10n ** (PercentageScale - 2n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
     // 0.6%
     const fee = 6n * 10n ** (PercentageScale - 3n)

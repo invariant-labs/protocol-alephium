@@ -5,6 +5,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         poolKey: ByteVec,
         tokenX: ByteVec,
         tokenY: ByteVec,
+        fee: U256,
         tickSpacing: U256,
         initSqrtPrice: U256,
         initTick: I256,
@@ -16,6 +17,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         let state = Pool {
             tokenX: tokenX,
             tokenY: tokenY,
+            fee: fee,
             tickSpacing: tickSpacing,
             liquidity: 0,
             sqrtPrice: initSqrtPrice,
@@ -67,6 +69,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
             Pool {
                 tokenX: #,
                 tokenY: #,
+                fee: 0,
                 tickSpacing: 0,
                 liquidity: 0,
                 sqrtPrice: 0,

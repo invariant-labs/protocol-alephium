@@ -1,5 +1,5 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, node, web3 } from '@alephium/web3'
-import { CLAMM, Invariant, Uints } from '../artifacts/ts'
+import { CLAMM, Invariant, InvariantInstance, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -31,7 +31,7 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
+export async function deployInvariant(signer: SignerProvider, protocolFee: bigint): Promise<InvariantInstance> {
   const account = await signer.getSelectedAccount()
 
   const uints = await deployUints(signer)

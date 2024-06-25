@@ -1,4 +1,4 @@
-import { Invariant, CLAMM, Uints } from '../artifacts/ts'
+import { CLAMM, Invariant, Uints } from '../artifacts/ts'
 
 export const {
   SqrtPriceScale,
