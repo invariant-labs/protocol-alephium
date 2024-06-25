@@ -103,7 +103,7 @@ describe('pools tests', () => {
   test('not existing pool', async () => {
     const invariant = await deployInvariant(sender, 0n)
 
-    let [tokenX, tokenY] = await initTokensXY(sender, 0n)
+    const [tokenX, tokenY] = await initTokensXY(sender, 0n)
 
     const pool = await getPool(invariant, tokenX, tokenY, 100n, 1n)
     expect(pool.exist).toBeFalsy()

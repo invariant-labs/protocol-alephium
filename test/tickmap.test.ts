@@ -4,7 +4,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip, InitializeChunk } from '../artifacts/ts'
 
 import { deployInvariant } from '../src/utils'
-import { GlobalMaxTick } from '../src/consts'
+import { GlobalMinTick, GlobalMaxTick } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -334,7 +334,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.nextInitialized({
-        args: { tick: -GlobalMaxTick + 1n, tickSpacing: 1n, poolKey }
+        args: { tick: GlobalMinTick + 1n, tickSpacing: 1n, poolKey }
       })
     ).returns
     expect(isSome).toBe(false)
@@ -649,7 +649,7 @@ describe('invariant tests', () => {
   })
   test('prev initialized chunk - farther than limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -GlobalMaxTick + 1n
+    const tick = GlobalMinTick + 1n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -685,7 +685,7 @@ describe('invariant tests', () => {
   })
   test('prev initialized chunk - at pos 255', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -GlobalMaxTick + 255n
+    const tick = GlobalMinTick + 255n
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -714,7 +714,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.prevInitialized({
-        args: { tick: -GlobalMaxTick + 320n, tickSpacing, poolKey }
+        args: { tick: GlobalMinTick + 320n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -722,7 +722,7 @@ describe('invariant tests', () => {
   })
   test('prev initialized chunk - at pos 0', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = -GlobalMaxTick
+    const tick = GlobalMinTick
     const tickSpacing = 1n
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
@@ -751,7 +751,7 @@ describe('invariant tests', () => {
 
     const [isSome, index] = (
       await invariant.methods.prevInitialized({
-        args: { tick: -GlobalMaxTick + 255n, tickSpacing, poolKey }
+        args: { tick: GlobalMinTick + 255n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
