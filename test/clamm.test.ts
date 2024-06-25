@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance, UintsInstance } from '../artifacts/ts'
 import { deployCLAMM, deployUints } from '../src/utils'
-import { expectError } from '../src/testUtils'
+import { expectError, expectVMError } from '../src/testUtils'
 import { ArithmeticError, CLAMMError, GlobalMaxTick, GlobalMinTick, MaxU256 } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -897,7 +897,7 @@ describe('math tests', () => {
           }
         }
         await expectError(
-          ArithmeticError.SubUnderflow,
+          ArithmeticError.CastOverflow,
           uints,
           clamm.methods.getNextSqrtPriceYDown(params)
         )
@@ -915,11 +915,7 @@ describe('math tests', () => {
           }
         }
 
-        await expectError(
-          ArithmeticError.CastOverflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
-        )
+        await expectVMError('ArithmeticError', clamm.methods.getNextSqrtPriceYDown(params))
       }
       {
         const params = {
@@ -930,11 +926,7 @@ describe('math tests', () => {
             addY: false
           }
         }
-        await expectError(
-          ArithmeticError.SubUnderflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
-        )
+        await expectVMError('ArithmeticError', clamm.methods.getNextSqrtPriceYDown(params))
       }
     }
     // Quotient overflow
@@ -967,7 +959,7 @@ describe('math tests', () => {
           }
         }
         await expectError(
-          ArithmeticError.SubUnderflow,
+          ArithmeticError.CastOverflow,
           uints,
           clamm.methods.getNextSqrtPriceYDown(params)
         )
@@ -1786,11 +1778,7 @@ describe('math tests', () => {
           lowerTick
         }
       }
-      await expectError(
-        ArithmeticError.CastOverflow,
-        uints,
-        clamm.methods.calculateAmountDelta(params)
-      )
+      await expectVMError('ArithmeticError', clamm.methods.calculateAmountDelta(params))
     })
   })
 
