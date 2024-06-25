@@ -13,11 +13,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         tokensOwedY: U256,
         payer: Address
     ) -> () {
-        let mut count = 0
-        if (positionsCounter.contains!(caller)) {
-            count = positionsCounter[caller]
-        }
-        let length = count + 1
+        let length = countPositions(caller) + 1
         let key = toByteVec!(caller) ++ toByteVec!(length)
         let state = Position {
             poolKey: poolKey,
@@ -37,6 +33,14 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
             positionsCounter.insert!(payer, caller, length)
         } else {
             positionsCounter[caller] = length
+        }
+    }
+
+    fn countPositions(caller: Address) -> U256 {
+        if (positionsCounter.contains!(caller)) {
+            return positionsCounter[caller]
+        } else {
+            return 0
         }
     }
 
@@ -62,8 +66,16 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     }
 
     fn wrappedRemovePosition(caller: Address, index: U256) -> () {
+        let length = countPositions(caller)
         let key = toByteVec!(caller) ++ toByteVec!(index)
-        positions.remove!(caller, key)
+        if (length == index) {
+            positions.remove!(caller, key)
+        } else {
+            let lastKey = toByteVec!(caller) ++ toByteVec!(length)
+            let lastPosition = positions[lastKey]
+            positions[key] = lastPosition
+            positions.remove!(caller, key)
+        }
     }
 
     @using(preapprovedAssets = true)
@@ -106,6 +118,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
 
         let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, lowerTick)
         let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, upperTick)
+        
         let poolCurrentTickIndex = pool.currentTickIndex
         let poolFeeGrowthGlobalX = pool.feeGrowthGlobalX
         let poolFeeGrowthGlobalY = pool.feeGrowthGlobalY
@@ -130,4 +143,5 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
 
         return wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
     }
+    
 }

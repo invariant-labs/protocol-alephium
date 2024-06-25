@@ -4,15 +4,19 @@ import {
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
+  Invariant,
   InvariantInstance,
+  RemoveFeeTier,
+  RemovePosition,
   Swap,
   Withdraw
 } from '../artifacts/ts'
 import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
 import {
   MAP_ENTRY_DEPOSIT,
-  decodeFeeTiers,
   decodePool,
+  decodePools,
+  decodeFeeTiers,
   decodePosition,
   deployTokenFaucet
 } from './utils'
@@ -73,6 +77,21 @@ export async function feeTierExists(
     )
   }
   return tierStatus
+}
+
+export const removeFeeTier = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  fee: bigint,
+  tickSpacing: bigint
+) => {
+  return await RemoveFeeTier.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      fee,
+      tickSpacing
+    }
+  })
 }
 
 export async function initPool(
@@ -137,6 +156,10 @@ export async function getPool(
       })
     ).returns
   )
+}
+
+export const getPools = async (invariant: InvariantInstance) => {
+  return decodePools((await invariant.methods.getPools()).returns)
 }
 
 export async function getPosition(invariant: InvariantInstance, owner: Address, index: bigint) {
@@ -204,6 +227,19 @@ export async function initPositionWithLiquidity(
   })
 }
 
+export const removePosition = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  index: bigint
+) => {
+  return await RemovePosition.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      index
+    }
+  })
+}
+
 export async function initSwap(
   invariant: InvariantInstance,
   signer: SignerProvider,
@@ -233,4 +269,25 @@ export async function initSwap(
       { id: token1.contractId, amount }
     ]
   })
+}
+
+export const getTick = async (
+  invariant: InvariantInstance,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  index: bigint
+) => {
+  return (
+    await invariant.methods.getTick({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        index
+      }
+    })
+  ).returns
 }

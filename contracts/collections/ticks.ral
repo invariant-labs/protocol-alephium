@@ -73,4 +73,10 @@ Abstract Contract Ticks() extends TickHelper() {
         ticks[key] = crossedTick
         return addLiquidity, crossedTick.liquidityChange
     }
+
+    fn removeTick(caller: Address, poolKey: ByteVec, index: I256) -> () {
+        let key = poolKey ++ toByteVec!(index)
+        assert!(containsTick(poolKey, index), InvariantError.TickAlreadyExist)
+        ticks.remove!(caller, key)
+    }
 }
