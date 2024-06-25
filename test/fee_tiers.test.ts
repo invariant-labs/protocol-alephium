@@ -2,7 +2,9 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { AddFeeTier, RemoveFeeTier } from '../artifacts/ts'
-import { decodeFeeTiers, deployInvariant, expectError, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import { decodeFeeTiers, deployInvariant, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import { expectError } from '../src/testUtils'
+import { InvariantError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -65,7 +67,9 @@ describe('fee tier tests', () => {
       expect(parsedFeeTiers[1].tickSpacing).toBe(tickSpacing2)
     }
 
-    expectError(
+    await expectError(
+      InvariantError.FeeTierAlreadyExist,
+      invariant,
       AddFeeTier.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
@@ -133,7 +137,9 @@ describe('fee tier tests', () => {
       expect(parsedFeeTiers[0].tickSpacing).toBe(tickSpacing2)
     }
 
-    expectError(
+    await expectError(
+      InvariantError.FeeTierNotFound,
+      invariant,
       RemoveFeeTier.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
