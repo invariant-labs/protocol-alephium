@@ -1,6 +1,7 @@
 struct Pool {
     mut tokenX: ByteVec,
     mut tokenY: ByteVec,
+    mut fee: U256,
     mut tickSpacing: U256,
     mut liquidity: U256,
     mut sqrtPrice: U256,

@@ -31,9 +31,9 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         positions.insert!(payer, key, state)
 
         if (length == 1) {
-            positionsCounter.insert!(payer, counterKey, length)
+            positionsCounter.insert!(payer, caller, length)
         } else {
-            positionsCounter[counterKey] = length
+            positionsCounter[caller] = length
         }
     }
 

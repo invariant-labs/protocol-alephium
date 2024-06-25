@@ -23,6 +23,18 @@ import {
 
 type TokenInstance = TokenFaucetInstance
 
+export const objectEquals = (
+  object: { [key: string]: any },
+  expectedObject: { [key: string]: any },
+  keys: string[]
+) => {
+  for (const key in object) {
+    if (!keys.includes(key)) {
+      expect(object[key]).toEqual(expectedObject[key])
+    }
+  }
+}
+
 export async function initTokensXY(signer: SignerProvider, supply: bigint) {
   const token0 = TokenFaucet.at(
     (await deployTokenFaucet(signer, '', '', supply, supply)).contractInstance.address
