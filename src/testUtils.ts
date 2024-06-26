@@ -270,6 +270,34 @@ export async function initPositionWithLiquidity(
   })
 }
 
+export const quote = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  xToY: boolean,
+  amount: bigint,
+  byAmountIn: boolean,
+  sqrtPriceLimit: bigint
+) => {
+  return (
+    await invariant.methods.quote({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        xToY,
+        amount,
+        byAmountIn,
+        sqrtPriceLimit
+      }
+    })
+  ).returns
+}
+
 export const removePosition = async (
   invariant: InvariantInstance,
   signer: SignerProvider,
