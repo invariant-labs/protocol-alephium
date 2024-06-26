@@ -6,11 +6,14 @@ import { balanceOf, deployInvariant } from '../src/utils'
 import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
+  getPosition,
+  getTick,
   initFeeTier,
   initPool,
   initPositionWithLiquidity,
   initSwap,
   initTokensXY,
+  objectEquals,
   quote,
   withdrawTokens
 } from '../src/testUtils'
@@ -140,7 +143,7 @@ describe('liquidity gap tests', () => {
     const upperTick = -50n
     const liquidityDelta = 20008000n * 10n ** LiquidityScale
     const amount = 10n ** 6n
-    await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
+    await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
@@ -148,7 +151,7 @@ describe('liquidity gap tests', () => {
 
     await initPositionWithLiquidity(
       invariant,
-      swapper,
+      positionOwner,
       tokenX,
       amount,
       tokenY,
@@ -158,7 +161,7 @@ describe('liquidity gap tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      1n,
+      2n,
       slippageLimitLower,
       slippageLimitUpper
     )
@@ -196,6 +199,80 @@ describe('liquidity gap tests', () => {
     )
 
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    expect(pool.currentTickIndex).toEqual(-60n)
+    const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
+    const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
+
+    const [lowerInMap, lowerTick] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -50n)
+    const [currentInMap] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -60n)
+    const [upperInMap, upperTick] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -10n)
+
+    const expectedFirstPosition = {
+      exist: true,
+      liquidity: 2000600000000n,
+      lowerTickIndex: -10n,
+      upperTickIndex: 10n,
+      feeGrowthInsideX: 0n,
+      feeGrowthInsideY: 0n,
+      tokensOwedX: 0n,
+      tokensOwedY: 0n,
+      owner: positionOwner.address
+    }
+    const expectedSecondPosition = {
+      exist: true,
+      liquidity: 2000800000000n,
+      lowerTickIndex: -90n,
+      upperTickIndex: -50n,
+      feeGrowthInsideX: 0n,
+      feeGrowthInsideY: 0n,
+      tokensOwedX: 0n,
+      tokensOwedY: 0n,
+      owner: positionOwner.address
+    }
+    objectEquals(firstPosition, expectedFirstPosition, ['lastBlockNumber', 'poolKey'])
+    objectEquals(secondPosition, expectedSecondPosition, ['lastBlockNumber', 'poolKey'])
+
+    expect(lowerInMap).toBeTruthy()
+    expect(currentInMap).toBeFalsy()
+    expect(upperInMap).toBeTruthy()
+
+    const expectedLowerTick = {
+      sign: false,
+      // index: -50n,
+      liquidityChange: secondPosition.liquidity,
+      liquidityGross: secondPosition.liquidity,
+      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -50n } }))
+        .returns,
+      feeGrowthOutsideX: 0n,
+      feeGrowthOutsideY: 0n
+    }
+    const expectedUpperTick = {
+      sign: true,
+      // indeX: -10n,
+      liquidityChange: firstPosition.liquidity,
+      liquidityGross: firstPosition.liquidity,
+      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } }))
+        .returns,
+      feeGrowthOutsideX: 29991002699190242927121n,
+      feeGrowthOutsideY: 0n
+    }
+
+    objectEquals(lowerTick, expectedLowerTick, ['secondsOutside'])
+    objectEquals(upperTick, expectedUpperTick, ['secondsOutside'])
+
+    const expectedPool = {
+      exist: true,
+      tokenX: tokenX.contractId,
+      tokenY: tokenY.contractId,
+      fee,
+      tickSpacing,
+      liquidity: secondPosition.liquidity,
+      currentTickIndex: -60n,
+      feeGrowthGlobalX: 59979007497271010620043n,
+      feeGrowthGlobalY: 0n,
+      feeProtocolTokenX: 2n,
+      feeProtocolTokenY: 0n,
+      feeReceiver: deployer.address
+    }
+    objectEquals(pool, expectedPool, ['startTimestamp', 'lastTimestamp', 'sqrtPrice'])
   })
 })
