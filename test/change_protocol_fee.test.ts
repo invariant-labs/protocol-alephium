@@ -1,8 +1,8 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, expectErrorCode } from '../src/utils'
-import { changeProtocolFee, getProtocolFee } from '../src/testUtils'
+import { deployInvariant } from '../src/utils'
+import { changeProtocolFee, expectError, getProtocolFee } from '../src/testUtils'
 import { InvariantError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -26,8 +26,9 @@ describe('change protocol fee tests', () => {
     const protocolFee = 0n
     const invariant = await deployInvariant(admin, protocolFee)
     const newFee = 1n
-    await expectErrorCode(
+    await expectError(
       InvariantError.NotAdmin,
+      invariant,
       changeProtocolFee(invariant, unauthorizedUser, newFee)
     )
   })
