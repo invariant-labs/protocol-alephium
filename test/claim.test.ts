@@ -6,7 +6,7 @@ import { balanceOf } from '../src/utils'
 import { InvariantError } from '../src/consts'
 import { getPool, initFeeTier, getPosition, expectError } from '../src/testUtils'
 import {
-  initBasicFeeTickSpacing,
+  getBasicFeeTickSpacing,
   initBasicPool,
   initBasicPosition,
   initBasicSwap,
@@ -21,7 +21,7 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('invariant tests', () => {
-  const [fee, tickSpacing] = initBasicFeeTickSpacing()
+  const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)

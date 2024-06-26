@@ -18,7 +18,7 @@ type TokenInstance = TokenFaucetInstance
 const fee = 6n * 10n ** (PercentageScale - 3n)
 const tickSpacing = 10n
 
-export const initBasicFeeTickSpacing = (): [bigint, bigint] => {
+export const getBasicFeeTickSpacing = (): [bigint, bigint] => {
   return [fee, tickSpacing]
 }
 
@@ -94,11 +94,11 @@ export const initBasicSwap = async (
   const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
   expect(swapperTokenXBalanceBefore).toBe(swapAmount)
 
-  const invariantBeforeExpectedBalance = {
+  const invariantBeforeBalance = {
     tokenX: await balanceOf(tokenX.contractId, invariant.address),
     tokenY: await balanceOf(tokenY.contractId, invariant.address)
   }
-  expect(invariantBeforeExpectedBalance).toMatchObject({ tokenX: 500n, tokenY: 1000n })
+  expect(invariantBeforeBalance).toMatchObject({ tokenX: 500n, tokenY: 1000n })
 
   await initSwap(
     invariant,
@@ -113,17 +113,17 @@ export const initBasicSwap = async (
     MinSqrtPrice
   )
 
-  const swapperAfterExpectedBalance = {
+  const swapperAfterBalance = {
     tokenX: await balanceOf(tokenX.contractId, swapper.address),
     tokenY: await balanceOf(tokenY.contractId, swapper.address)
   }
-  expect(swapperAfterExpectedBalance).toMatchObject({ tokenX: 0n, tokenY: 993n })
+  expect(swapperAfterBalance).toMatchObject({ tokenX: 0n, tokenY: 993n })
 
-  const invariantAfterExpectedBalance = {
+  const invariantAfterBalance = {
     tokenX: await balanceOf(tokenX.contractId, invariant.address),
     tokenY: await balanceOf(tokenY.contractId, invariant.address)
   }
-  expect(invariantAfterExpectedBalance).toMatchObject({ tokenX: 1500n, tokenY: 7n })
+  expect(invariantAfterBalance).toMatchObject({ tokenX: 1500n, tokenY: 7n })
 
   const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
   const poolExpected = {
