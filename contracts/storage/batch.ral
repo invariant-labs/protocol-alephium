@@ -1,0 +1,24 @@
+struct TickmapBatch {
+    mut chunks: [U256; 94]
+}
+
+
+
+Abstract Contract BatchHelper() {
+    fn extractChunk(key: ByteVec, chunk: U256) -> U256 {
+        let batch = bitmap[key]
+        let id = chunk % ChunksPerBatch
+        return batch.chunks[id]
+    }
+
+    fn rewriteChunk(key: ByteVec, chunk: U256, val: U256) -> () {
+        let mut batch = bitmap[key]
+        let id = chunk % ChunksPerBatch
+        batch.chunks[id] = val
+        bitmap[key] = batch
+    }
+
+    fn getKey(chunk: U256) -> U256 {
+        return chunk / ChunksPerBatch
+    }
+}

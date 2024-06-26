@@ -36,7 +36,8 @@ Contract Invariant(
     // Key: poolKey ++ index
     mapping[ByteVec, Tick] ticks
     // Key: poolKey ++ chunk index
-    mapping[ByteVec, U256] bitmap
+    // Key: poolKey ++ subcontract index
+    mapping[ByteVec, TickmapBatch] bitmap
     // Key: owner ++ index
     mapping[ByteVec, Position] positions
     // Key: owner
