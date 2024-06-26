@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
+import { ChangeFeeReceiver, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { balanceOf, deployInvariant } from '../src/utils'
 import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
@@ -151,5 +151,40 @@ describe('protocol fee tests', () => {
       invariant,
       withdrawProtocolFee(invariant, notAdmin, tokenX, tokenY, fee, tickSpacing)
     )
+  })
+
+  test('protocol fee_not_deployer', async () => {
+    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const newFeeReceiver = await getSigner(ONE_ALPH * 1000n, 0)
+
+    await ChangeFeeReceiver.execute(admin, {
+      initialFields: {
+        invariant: invariant.contractId,
+        token0: tokenX.contractId,
+        token1: tokenY.contractId,
+        fee,
+        tickSpacing,
+        newFeeReceiver: newFeeReceiver.address
+      }
+    })
+    await expectError(
+      InvariantError.NotFeeReceiver,
+      invariant,
+      withdrawProtocolFee(invariant, admin, tokenX, tokenY, fee, tickSpacing)
+    )
+
+    await withdrawProtocolFee(invariant, newFeeReceiver, tokenX, tokenY, fee, tickSpacing)
+    const newFeeReceiverExpected = {
+      balanceX: poolBefore.feeProtocolTokenX,
+      balanceY: poolBefore.feeProtocolTokenY
+    }
+    const newFeeReceiverParams = {
+      balanceX: await balanceOf(tokenX.contractId, newFeeReceiver.address),
+      balanceY: await balanceOf(tokenY.contractId, newFeeReceiver.address)
+    }
+    expect(newFeeReceiverParams).toMatchObject(newFeeReceiverExpected)
+
+    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    expect(poolAfter).toMatchObject({ feeProtocolTokenX: 0n, feeProtocolTokenY: 0n })
   })
 })
