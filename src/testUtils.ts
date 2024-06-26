@@ -9,9 +9,10 @@ import {
   RemovePosition,
   Swap,
   Withdraw,
+  TokenFaucet,
+  TokenFaucetInstance,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
 import {
   MAP_ENTRY_DEPOSIT,
   decodePool,

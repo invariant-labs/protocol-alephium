@@ -62,8 +62,7 @@ describe('invariant tests', () => {
       feeReceiver: admin.address,
       exist: true
     }
-
-    objectEquals(pool, expectedPool, ['lastTimestamp', 'startTimestamp'])
+    expect(pool).toMatchObject(expectedPool)
   })
   test('create pool x to y and y to x', async () => {
     const protocolFee = 10n ** (PercentageScale - 2n)

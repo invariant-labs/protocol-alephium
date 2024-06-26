@@ -1,112 +1,49 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { ClaimFee } from '../artifacts/ts'
-import { balanceOf, deployInvariant } from '../src/utils'
-import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { ClaimFee, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
+import { balanceOf } from '../src/utils'
+import { InvariantError } from '../src/consts'
+import { getPool, initFeeTier, getPosition, expectError } from '../src/testUtils'
 import {
-  getPool,
-  initPool,
-  initFeeTier,
-  initPositionWithLiquidity,
-  initTokensXY,
-  withdrawTokens,
-  initSwap,
-  getPosition,
-  expectError
-} from '../src/testUtils'
+  initBasicFeeTickSpacing,
+  initBasicPool,
+  initBasicPosition,
+  initBasicSwap,
+  initDexAndTokens
+} from '../src/snippets'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
+let invariant: InvariantInstance
 let positionOwner: PrivateKeyWallet
+let tokenX: TokenFaucetInstance
+let tokenY: TokenFaucetInstance
 
 describe('invariant tests', () => {
+  const [fee, tickSpacing] = initBasicFeeTickSpacing()
+
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+    ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
+
+    await initFeeTier(invariant, admin, fee, tickSpacing)
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+    await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    await initBasicSwap(invariant, swapper, tokenX, tokenY)
   })
 
   test('claim', async () => {
-    // init dex and tokens
-    // 1%
-    const protocolFee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocolFee)
-
-    // 0.6%
-    const fee = 6n * 10n ** (PercentageScale - 3n)
-    const tickSpacing = 10n
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-
-    let supply = 10n ** 6n + 1000n
-    let amount = 10n ** 6n
-    const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
-
-    await initPool(invariant, positionOwner, tokenX, tokenY, fee, tickSpacing, 10n ** 24n, 0n)
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-
-    const lowerTick = -20n
-    const upperTick = 10n
-    const liquidity = 1000000n * 10n ** LiquidityScale
-    const slippageLimit = poolBefore.sqrtPrice
-
-    await initPositionWithLiquidity(
-      invariant,
-      positionOwner,
-      tokenX,
-      amount,
-      tokenY,
-      amount,
-      fee,
-      tickSpacing,
-      lowerTick,
-      upperTick,
-      liquidity,
-      1n,
-      slippageLimit,
-      slippageLimit
-    )
-
-    {
-      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const swapAmount = 1000n
-      await withdrawTokens(swapper, [tokenX, swapAmount], [tokenY, swapAmount])
-
-      const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
-      const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
-      const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
-
-      expect(swapperTokenXBalanceBefore).toBe(swapAmount)
-      expect(invariantTokenXBalanceBefore).toBe(500n)
-      expect(invariantTokenYBalanceBefore).toBe(1000n)
-
-      await initSwap(
-        invariant,
-        swapper,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
-        true,
-        swapAmount,
-        true,
-        MinSqrtPrice
-      )
-
-      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractId, swapper.address)
-      expect(swapperTokenXBalanceAfter).toBe(0n)
+    const tokenXBeforeBalance = {
+      invariant: await balanceOf(tokenX.contractId, positionOwner.address),
+      positionOwner: await balanceOf(tokenX.contractId, invariant.address)
     }
-
-    const positionOwnerToken0BalanceBefore = await balanceOf(
-      tokenX.contractId,
-      positionOwner.address
-    )
-    const positionOwnerToken1BalanceBefore = await balanceOf(
-      tokenY.contractId,
-      positionOwner.address
-    )
-    const invariantToken0BalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
-    const invariantToken1BalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
+    const tokenYBeforeBalance = {
+      invariant: await balanceOf(tokenY.contractId, positionOwner.address),
+      positionOwner: await balanceOf(tokenY.contractId, invariant.address)
+    }
 
     await ClaimFee.execute(positionOwner, {
       initialFields: {
@@ -116,109 +53,37 @@ describe('invariant tests', () => {
       attoAlphAmount: DUST_AMOUNT
     })
 
-    const positionOwnerToken0BalanceAfter = await balanceOf(
-      tokenX.contractId,
-      positionOwner.address
-    )
-    const positionOwnerToken1BalanceAfter = await balanceOf(
-      tokenY.contractId,
-      positionOwner.address
-    )
-    const invariantToken0BalanceAfter = await balanceOf(tokenX.contractId, invariant.address)
-    const invariantToken1BalanceAfter = await balanceOf(tokenY.contractId, invariant.address)
-    const expectedTokensClaimed = 5n
+    const tokenXAfterBalance = {
+      invariant: await balanceOf(tokenX.contractId, positionOwner.address),
+      positionOwner: await balanceOf(tokenX.contractId, invariant.address)
+    }
+    const tokenYAfterBalance = {
+      invariant: await balanceOf(tokenY.contractId, positionOwner.address),
+      positionOwner: await balanceOf(tokenY.contractId, invariant.address)
+    }
 
-    // balance of the token we claimed changed
-    expect(positionOwnerToken0BalanceAfter - expectedTokensClaimed).toBe(
-      positionOwnerToken0BalanceBefore
-    )
-    expect(invariantToken0BalanceAfter + expectedTokensClaimed).toBe(invariantToken0BalanceBefore)
+    const tokenXChange = {
+      invariant: tokenXBeforeBalance.invariant - tokenXAfterBalance.invariant,
+      positionOwner: tokenXBeforeBalance.positionOwner - tokenXAfterBalance.positionOwner
+    }
 
-    // and the other one's not
-    expect(invariantToken1BalanceAfter).toBe(invariantToken1BalanceBefore)
-    expect(positionOwnerToken1BalanceAfter).toBe(positionOwnerToken1BalanceBefore)
+    expect(tokenXChange).toMatchObject({ invariant: -5n, positionOwner: 5n })
+    expect(tokenYAfterBalance).toMatchObject(tokenYBeforeBalance)
 
     const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-
     const positionAfter = await getPosition(invariant, positionOwner.address, 1n)
-
-    expect(positionAfter.feeGrowthInsideX).toBe(poolAfter.feeGrowthGlobalX)
-    expect(positionAfter.tokensOwedX).toBe(0n)
+    expect(positionAfter).toMatchObject({
+      feeGrowthInsideX: poolAfter.feeGrowthGlobalX,
+      tokensOwedX: 0n
+    })
   })
 
   test('claim_not_owner', async () => {
-    // init dex and tokens
-    // 1%
-    const protocolFee = 10n ** (PercentageScale - 2n)
-    const invariant = await deployInvariant(admin, protocolFee)
-
-    // 0.6%
-    const fee = 6n * 10n ** (PercentageScale - 3n)
-    const tickSpacing = 10n
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-
-    let supply = 10n ** 6n + 1000n
-    let amount = 10n ** 6n
-    const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
-
-    await initPool(invariant, positionOwner, tokenX, tokenY, fee, tickSpacing, 10n ** 24n, 0n)
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-
-    const lowerTick = -20n
-    const upperTick = 10n
-    const liquidity = 1000000n * 10n ** LiquidityScale
-    const slippageLimit = poolBefore.sqrtPrice
-
-    await initPositionWithLiquidity(
-      invariant,
-      positionOwner,
-      tokenX,
-      amount,
-      tokenY,
-      amount,
-      fee,
-      tickSpacing,
-      lowerTick,
-      upperTick,
-      liquidity,
-      1n,
-      slippageLimit,
-      slippageLimit
-    )
-
-    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-    const swapAmount = 1000n
-    await withdrawTokens(swapper, [tokenX, swapAmount], [tokenY, swapAmount])
-
-    const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
-    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
-    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
-
-    expect(swapperTokenXBalanceBefore).toBe(swapAmount)
-    expect(invariantTokenXBalanceBefore).toBe(500n)
-    expect(invariantTokenYBalanceBefore).toBe(1000n)
-
-    await initSwap(
-      invariant,
-      swapper,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      swapAmount,
-      true,
-      MinSqrtPrice
-    )
-
-    const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractId, swapper.address)
-    expect(swapperTokenXBalanceAfter).toBe(0n)
-
+    const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
     expectError(
       InvariantError.PositionDoesNotExist,
       invariant,
-      ClaimFee.execute(swapper, {
+      ClaimFee.execute(notOwner, {
         initialFields: {
           invariant: invariant.contractId,
           index: 1n
