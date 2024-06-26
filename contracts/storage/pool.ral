@@ -53,24 +53,36 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return x, y, pool
     }
 
-    pub fn crossTick(
+    @using(checkExternalCaller = false)
+    pub fn poolUpdateTick(
         mut pool: Pool,
         nextSqrtPrice: U256,
         swapLimit: U256,
-        tickIndex: I256,
         mut remainingAmount: U256,
         byAmountIn: Bool,
         xToY: Bool,
         protocolFee: U256,
         fee: U256,
-        tickSpacing: U256
+        tickSpacing: U256,
+        hasLimitingTick: Bool,
+        isLimitingTickInitialized: Bool,
+        limitingTickIndex: I256
     ) -> (U256, U256, Bool, Pool) {
         let mut hasCrossed = false
         let mut totalAmount = 0
 
-        if (nextSqrtPrice == swapLimit) {
-            let isEnoughToCross = clamm.isEnoughAmountToChangePrice(remainingAmount, nextSqrtPrice, pool.liquidity, fee, byAmountIn, xToY)
-            if(!xToY || isEnoughToCross) {
+        if (!hasLimitingTick || swapLimit != nextSqrtPrice) {
+            pool.currentTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+            return totalAmount, remainingAmount, hasCrossed, pool
+        }
+
+        let isEnoughAmountToCross = clamm.isEnoughAmountToChangePrice(remainingAmount, nextSqrtPrice, pool.liquidity, fee, byAmountIn, xToY)
+        
+        if (hasLimitingTick && isLimitingTickInitialized) {
+            if (!xToY || isEnoughAmountToCross) {
+                let poolKey = generatePoolKey(pool.tokenX, pool.tokenY, pool.fee, pool.tickSpacing)
+                let (add, liquidityDelta) = wrappedCross(poolKey, limitingTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.currentTickIndex)
+                pool = crossLiquidityUpdate(pool, add, liquidityDelta)
                 hasCrossed = true
             } else if (remainingAmount != 0) {
                 if (byAmountIn) {
@@ -79,16 +91,16 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
                 }
                 remainingAmount = 0
             } else {
-                // placeholder to compile
-            }
-
-            if(xToY && isEnoughToCross) {
-                pool.currentTickIndex = tickIndex - toI256!(tickSpacing)
-            } else {
-                pool.currentTickIndex = tickIndex
+                // do nothing
             }
         } else {
-            pool.currentTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, tickSpacing)
+            // do nothing
+        }
+
+        if(xToY && isEnoughAmountToCross) {
+            pool.currentTickIndex = limitingTickIndex - toI256!(tickSpacing)
+        } else {
+            pool.currentTickIndex = limitingTickIndex
         }
 
         return totalAmount, remainingAmount, hasCrossed, pool

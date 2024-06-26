@@ -385,8 +385,6 @@ Contract Invariant(
         fee: U256,
         tickSpacing: U256
     ) -> CalculateSwapResult {
-        let currentTimestamp = blockTimeStamp!()
-
         assert!(amount != 0, InvariantError.ZeroAmount)
         let (exist, mut pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolDoesNotExist)
@@ -399,6 +397,8 @@ Contract Invariant(
             assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, InvariantError.WrongLimit)
         }
 
+        let tickLimit = if (xToY) getMinTick(tickSpacing) else getMaxTick(tickSpacing)
+
         let mut totalAmountIn = 0
         let mut totalAmountOut = 0
         let mut eventFeeAmount = 0
@@ -406,8 +406,6 @@ Contract Invariant(
         let eventStartSqrtPrice = sqrtPrice
 
         while (remainingAmount != 0) {
-            let (_, wPool) = wrappedGetPool(poolKey)
-            pool = wPool
             let currentTickIndex = pool.currentTickIndex
             let liquidity = pool.liquidity
             sqrtPrice = pool.sqrtPrice
@@ -435,8 +433,8 @@ Contract Invariant(
                 remainingAmount = remainingAmount - swapResult.amountOut
             }
 
-            wrappedAddFee(poolKey, swapResult.feeAmount, xToY, config.protocolFee)
-            setSqrtPrice(poolKey, swapResult.nextSqrtPrice)
+            pool = addFee(pool, swapResult.feeAmount, xToY, config.protocolFee)
+            pool.sqrtPrice = swapResult.nextSqrtPrice
 
             totalAmountIn = totalAmountIn + swapResult.amountIn + swapResult.feeAmount
             totalAmountOut = totalAmountOut + swapResult.amountOut
@@ -444,44 +442,26 @@ Contract Invariant(
 
             assert!(swapResult.nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, InvariantError.PriceLimitReached)
 
-            if (hasLimitingTick) {
-                if (isInitialized) {
-                    let (amountToAdd, updatedRemainingAmount, hasCrossed) = wrappedCrossTick(
-                        poolKey,
-                        swapResult.nextSqrtPrice,
-                        swapLimit,
-                        limitingTickIndex,
-                        remainingAmount,
-                        byAmountIn,
-                        xToY,
-                        config.protocolFee,
-                        fee,
-                        tickSpacing
-                    )
-                    remainingAmount = updatedRemainingAmount
-                    totalAmountIn = totalAmountIn + amountToAdd
-                    if (hasCrossed) {
-                        let (_, crossedPool) = wrappedGetPool(poolKey)
-                        let feeGrowthGlobalX = crossedPool.feeGrowthGlobalX
-                        let feeGrowthGlobalY = crossedPool.feeGrowthGlobalY
-                        let (add, liquidityDelta) = wrappedCross(poolKey, limitingTickIndex, feeGrowthGlobalX, feeGrowthGlobalY, currentTickIndex)
-                        wrappedCrossLiquidityUpdate(poolKey, add, liquidityDelta)
-                    }
-                }
-            } else {
-                let newTickIndex = clamm.getTickAtSqrtPrice(swapResult.nextSqrtPrice, tickSpacing)
-                setCurrentTickIndex(poolKey, newTickIndex)
-                setLastTimestamp(poolKey, currentTimestamp)
-            }
-        }
-        assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
+            let (amountToAdd, amountAfterTickUpdate, _, uPool) = poolUpdateTick(pool, swapResult.nextSqrtPrice, swapLimit, remainingAmount, byAmountIn, xToY, config.protocolFee, fee, tickSpacing, hasLimitingTick, isInitialized, limitingTickIndex)
 
-        let (_, updatedPool) = wrappedGetPool(poolKey)
+            remainingAmount = amountAfterTickUpdate
+            totalAmountIn = totalAmountIn + amountToAdd
+            pool = uPool
+            let reachedTickLimit = if (xToY) pool.currentTickIndex <= tickLimit else pool.currentTickIndex >= tickLimit
+
+            assert!(!reachedTickLimit, InvariantError.LimitReached)
+        }
+
+        pool.lastTimestamp = blockTimeStamp!()
+        pools[poolKey] = pool
+
+        assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
+        
         return CalculateSwapResult {
             amountIn: totalAmountIn,
             amountOut: totalAmountOut,
             startSqrtPrice: eventStartSqrtPrice,
-            targetSqrtPrice: updatedPool.sqrtPrice,
+            targetSqrtPrice: pool.sqrtPrice,
             fee: eventFeeAmount
         }
     }

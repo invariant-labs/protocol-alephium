@@ -37,18 +37,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         return pools.contains!(poolKey)
     }
 
-    fn setSqrtPrice(poolKey: ByteVec, sqrtPrice: U256) -> () {
-        let mut state = pools[poolKey]
-        state.sqrtPrice = sqrtPrice
-        pools[poolKey] = state
-    }
-
-    fn setCurrentTickIndex(poolKey: ByteVec, tickIndex: I256) -> () {
-        let mut state = pools[poolKey]
-        state.currentTickIndex = tickIndex
-        pools[poolKey] = state
-    }
-
     fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
         let mut state = pools[poolKey]
         state.lastTimestamp = timestamp
@@ -83,51 +71,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 feeReceiver: nullContractAddress!()
             }
         } 
-    }
-
-    fn wrappedAddFee(poolKey: ByteVec, feeAmount: U256, xToY: Bool, fee: U256) -> () {
-        let pool = pools[poolKey]
-        let updatedPool = addFee(pool, feeAmount, xToY, fee)
-        pools[poolKey] = updatedPool
-    }
-
-    fn wrappedCrossTick(
-        poolKey: ByteVec,
-        nextSqrtPrice: U256,
-        swapLimit: U256,
-        tickIndex: I256,
-        remainingAmount: U256,
-        byAmountIn: Bool,
-        xToY: Bool,
-        protocolFee: U256,
-        fee: U256,
-        tickSpacing: U256
-    ) -> (U256, U256, Bool) {
-        let (totalAmount, amountLeft, hasCrossed, updatedPool) = crossTick(
-            pools[poolKey],
-            nextSqrtPrice,
-            swapLimit,
-            tickIndex,
-            remainingAmount,
-            byAmountIn,
-            xToY,
-            protocolFee,
-            fee,
-            tickSpacing
-        )
-        pools[poolKey] = updatedPool
-
-        return totalAmount, amountLeft, hasCrossed
-    }
-
-    fn wrappedCrossLiquidityUpdate(
-        poolKey: ByteVec,
-        add: Bool,
-        liquidityDelta: U256
-    ) -> () {
-        let pool = crossLiquidityUpdate(pools[poolKey], add, liquidityDelta)
-        pools[poolKey] = pool
-        return
     }
 
     fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
