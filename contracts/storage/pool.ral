@@ -77,7 +77,6 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         }
 
         let isEnoughAmountToCross = clamm.isEnoughAmountToChangePrice(remainingAmount, nextSqrtPrice, pool.liquidity, fee, byAmountIn, xToY)
-
         
         if (hasLimitingTick && isLimitingTickInitialized) {
             if (!xToY || isEnoughAmountToCross) {

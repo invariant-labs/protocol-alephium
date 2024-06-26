@@ -447,10 +447,7 @@ Contract Invariant(
             remainingAmount = amountAfterTickUpdate
             totalAmountIn = totalAmountIn + amountToAdd
             pool = uPool
-
-
             let reachedTickLimit = if (xToY) pool.currentTickIndex <= tickLimit else pool.currentTickIndex >= tickLimit
-            
 
             assert!(!reachedTickLimit, InvariantError.LimitReached)
         }
