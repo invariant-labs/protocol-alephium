@@ -497,6 +497,22 @@ describe('position tests', () => {
       tickSpacing,
       upperTickIndex
     )
+    const lowerBit = await isTickInitialized(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      lowerTickIndex
+    )
+    const upperBit = await isTickInitialized(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      upperTickIndex
+    )
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
@@ -509,12 +525,14 @@ describe('position tests', () => {
     expect(lowerTick.liquidityGross).toBe(liquidityDelta)
     expect(lowerTick.liquidityChange).toBe(liquidityDelta)
     expect(lowerTick.sign).toBeTruthy()
+    expect(lowerBit).toBeTruthy()
 
     expect(upperInMap).toBeTruthy()
     expect(upperTick.index).toBe(upperTickIndex)
     expect(upperTick.liquidityGross).toBe(liquidityDelta)
     expect(upperTick.liquidityChange).toBe(liquidityDelta)
     expect(upperTick.sign).toBeFalsy()
+    expect(upperBit).toBeTruthy()
 
     expect(pool.liquidity).toBe(0n)
     expect(pool.currentTickIndex).toBe(initTick)

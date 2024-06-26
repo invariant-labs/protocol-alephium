@@ -47,7 +47,6 @@ describe('invariant tests', () => {
           })
         ).returns
       ).toBe(false)
-
       await Flip.execute(sender, {
         initialFields: {
           invariant: invariant.contractId,
