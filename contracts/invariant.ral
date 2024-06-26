@@ -333,9 +333,11 @@ Contract Invariant(
 
         if (lowerTick.liquidityGross == 0) {
             removeTick(caller, poolKey, lowerTickIndex)
+            flip(false, lowerTickIndex, tickSpacing, poolKey)
         }
         if (upperTick.liquidityGross == 0) {
             removeTick(caller, poolKey, upperTickIndex)
+            flip(false, upperTickIndex, tickSpacing, poolKey)
         } 
 
         transferTokenFromSelf!(caller, pool.tokenX, x)

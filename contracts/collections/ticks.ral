@@ -17,6 +17,7 @@ Abstract Contract Ticks() extends TickHelper() {
 
         let state = Tick {
             sign: sign,
+            index: index,
             liquidityChange: liquidityChange,
             liquidityGross: liquidityGross,
             sqrtPrice: sqrtPrice,
@@ -56,6 +57,7 @@ Abstract Contract Ticks() extends TickHelper() {
         } else {
             return false, Tick {
                 sign: false,
+                index: 0i,
                 liquidityChange: 0,
                 liquidityGross: 0,
                 sqrtPrice: 0,

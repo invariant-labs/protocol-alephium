@@ -334,3 +334,24 @@ export const getTick = async (
     })
   ).returns
 }
+
+export const isTickInitialized = async (
+  invariant: InvariantInstance,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  index: bigint
+) => {
+  return (
+    await invariant.view.isTickInitialized({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        index
+      }
+    })
+  ).returns
+}
