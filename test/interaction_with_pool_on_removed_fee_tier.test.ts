@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, expectErrorCode } from '../src/utils'
+import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant } from '../src/utils'
 import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
@@ -15,7 +15,8 @@ import {
   initSwap,
   removePosition,
   getPools,
-  getPosition
+  getPosition,
+  expectError
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
@@ -82,8 +83,9 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(exists).toBeFalsy()
   })
   test('try to create same pool again', async () => {
-    await expectErrorCode(
+    await expectError(
       InvariantError.FeeTierNotFound,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -267,8 +269,9 @@ describe('interaction with pool on removed fee tiers tests', () => {
   test('readd fee tier and try to create same pool', async () => {
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    await expectErrorCode(
+    await expectError(
       InvariantError.PoolKeyAlreadyExist,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })

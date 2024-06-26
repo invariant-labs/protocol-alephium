@@ -1,10 +1,17 @@
-import { ONE_ALPH, web3 } from '@alephium/web3'
+import { ONE_ALPH, addressFromContractId, fetchContractState, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, expectError, expectErrorCode } from '../src/utils'
+import { deployInvariant } from '../src/utils'
 import { CLAMMError, InvariantError, PercentageScale } from '../src/consts'
-import { getPool, initPool, initFeeTier, initTokensXY, objectEquals } from '../src/testUtils'
-import { Pool } from '../artifacts/ts/types'
+import {
+  getPool,
+  initPool,
+  initFeeTier,
+  initTokensXY,
+  objectEquals,
+  expectError
+} from '../src/testUtils'
+import { CLAMM, Invariant } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -84,8 +91,9 @@ describe('invariant tests', () => {
 
     await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
-    await expectErrorCode(
+    await expectError(
       InvariantError.PoolKeyAlreadyExist,
+      invariant,
       initPool(invariant, poolCreator, tokenY, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -103,8 +111,9 @@ describe('invariant tests', () => {
     const initTick = 0n
     const initSqrtPrice = 10n ** 24n
 
-    await expectErrorCode(
+    await expectError(
       InvariantError.TokensAreSame,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -121,8 +130,9 @@ describe('invariant tests', () => {
     const initTick = 0n
     const initSqrtPrice = 10n ** 24n
 
-    await expectErrorCode(
+    await expectError(
       InvariantError.FeeTierNotFound,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -142,8 +152,12 @@ describe('invariant tests', () => {
       await invariant.methods.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await expectErrorCode(
+    const clamm = CLAMM.at(
+      addressFromContractId((await fetchContractState(Invariant, invariant)).fields.clamm)
+    )
+    await expectError(
       CLAMMError.InvalidTickSpacing,
+      clamm,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
   })
@@ -189,6 +203,8 @@ describe('invariant tests', () => {
     const initTick = 2n
     const initSqrtPrice = 1000175003749000000000000n
     await expectError(
+      InvariantError.TickAndSqrtPriceMismatch,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
 
@@ -221,6 +237,8 @@ describe('invariant tests', () => {
     const initTick = 0n
     const initSqrtPrice = 1000225003749000000000000n
     await expectError(
+      InvariantError.TickAndSqrtPriceMismatch,
+      invariant,
       initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     )
 

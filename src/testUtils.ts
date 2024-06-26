@@ -1,6 +1,7 @@
-import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
+  ChangeProtocolFee,
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
@@ -20,6 +21,7 @@ import {
   decodePosition,
   deployTokenFaucet
 } from './utils'
+import { expectAssertionError } from '@alephium/web3-test'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -33,6 +35,30 @@ export const objectEquals = (
       expect(object[key]).toEqual(expectedObject[key])
     }
   }
+}
+
+export async function expectError(
+  errorCode: bigint,
+  contract: ContractInstance,
+  script: Promise<any>
+) {
+  return await expectAssertionError(script, contract.address, Number(errorCode))
+}
+
+export async function expectVMError(error: string, script: Promise<any>) {
+  let isError: boolean = false
+  try {
+    await script
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      const regex = new RegExp('VM execution error: ' + error)
+      const regexResult = regex.exec(e.message)
+
+      isError = regexResult ? true : false
+    }
+  }
+
+  expect(isError).toBeTruthy()
 }
 
 export async function initTokensXY(signer: SignerProvider, supply: bigint) {
@@ -175,6 +201,23 @@ export async function getPosition(invariant: InvariantInstance, owner: Address, 
   )
 }
 
+export const changeProtocolFee = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  newFee: bigint
+) => {
+  return await ChangeProtocolFee.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      newFee
+    }
+  })
+}
+
+export const getProtocolFee = async (invariant: InvariantInstance) => {
+  return (await invariant.methods.getProtocolFee()).returns
+}
+
 export async function initPositionWithLiquidity(
   invariant: InvariantInstance,
   signer: SignerProvider,
@@ -309,6 +352,27 @@ export const getTick = async (
 ) => {
   return (
     await invariant.methods.getTick({
+      args: {
+        token0: token0.contractId,
+        token1: token1.contractId,
+        fee,
+        tickSpacing,
+        index
+      }
+    })
+  ).returns
+}
+
+export const isTickInitialized = async (
+  invariant: InvariantInstance,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint,
+  index: bigint
+) => {
+  return (
+    await invariant.view.isTickInitialized({
       args: {
         token0: token0.contractId,
         token1: token1.contractId,
