@@ -237,7 +237,7 @@ describe('liquidity gap tests', () => {
 
     const expectedLowerTick = {
       sign: false,
-      // index: -50n,
+      index: -50n,
       liquidityChange: secondPosition.liquidity,
       liquidityGross: secondPosition.liquidity,
       sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -50n } }))
@@ -247,7 +247,7 @@ describe('liquidity gap tests', () => {
     }
     const expectedUpperTick = {
       sign: true,
-      // indeX: -10n,
+      index: -10n,
       liquidityChange: firstPosition.liquidity,
       liquidityGross: firstPosition.liquidity,
       sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } }))
