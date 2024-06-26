@@ -1,6 +1,7 @@
 import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
+  ChangeProtocolFee,
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
@@ -198,6 +199,23 @@ export async function getPosition(invariant: InvariantInstance, owner: Address, 
       })
     ).returns
   )
+}
+
+export const changeProtocolFee = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  newFee: bigint
+) => {
+  return await ChangeProtocolFee.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      newFee
+    }
+  })
+}
+
+export const getProtocolFee = async (invariant: InvariantInstance) => {
+  return (await invariant.methods.getProtocolFee()).returns
 }
 
 export async function initPositionWithLiquidity(
