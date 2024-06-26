@@ -1,9 +1,9 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, expectErrorCode } from '../src/utils'
+import { deployInvariant } from '../src/utils'
 import { InvariantError, PercentageScale } from '../src/consts'
-import { feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
+import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -76,8 +76,9 @@ describe('add fee tier tests', () => {
 
     await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    expectErrorCode(
+    expectError(
       InvariantError.FeeTierAlreadyExist,
+      invariant,
       initFeeTier(invariant, admin, fee, tickSpacing)
     )
   })
@@ -91,7 +92,11 @@ describe('add fee tier tests', () => {
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
-    expectErrorCode(InvariantError.NotAdmin, initFeeTier(invariant, notAdmin, fee, tickSpacing))
+    expectError(
+      InvariantError.NotAdmin,
+      invariant,
+      initFeeTier(invariant, notAdmin, fee, tickSpacing)
+    )
   })
 
   test('add fee tier zero fee', async () => {
@@ -108,8 +113,9 @@ describe('add fee tier tests', () => {
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 0n
 
-    expectErrorCode(
+    expectError(
       InvariantError.InvalidTickSpacing,
+      invariant,
       initFeeTier(invariant, admin, fee, tickSpacing)
     )
   })
@@ -121,8 +127,9 @@ describe('add fee tier tests', () => {
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 101n
 
-    expectErrorCode(
+    expectError(
       InvariantError.InvalidTickSpacing,
+      invariant,
       initFeeTier(invariant, admin, fee, tickSpacing)
     )
   })
@@ -134,6 +141,10 @@ describe('add fee tier tests', () => {
     const fee = 10n ** PercentageScale
     const tickSpacing = 10n
 
-    expectErrorCode(InvariantError.InvalidFee, initFeeTier(invariant, admin, fee, tickSpacing))
+    expectError(
+      InvariantError.InvalidFee,
+      invariant,
+      initFeeTier(invariant, admin, fee, tickSpacing)
+    )
   })
 })

@@ -40,7 +40,7 @@ Contract Invariant(
     // Key: owner ++ index
     mapping[ByteVec, Position] positions
     // Key: owner
-    mapping[ByteVec, U256] positionsCounter
+    mapping[Address, U256] positionsCounter
     
 
     enum InvariantError {
@@ -133,7 +133,7 @@ Contract Invariant(
         let timestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
         addPoolKey{caller -> ALPH: mapEntryDeposit}(caller, tokenX, tokenY, fee, tickSpacing)
-        addPool{caller -> ALPH: mapEntryDeposit}(caller, poolKey, tokenX, tokenY, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
+        addPool{caller -> ALPH: mapEntryDeposit}(caller, poolKey, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
@@ -298,7 +298,7 @@ Contract Invariant(
 
         assert!(poolSqrtPrice >= slippageLimitLower && poolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        let (x, y) = wrappedModifyPosition(callerAddress!(), index,poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
+        let (x, y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp, tickSpacing)
 
         transferTokenToSelf!(callerAddress!(), pool.tokenX, x)
         transferTokenToSelf!(callerAddress!(), pool.tokenY, y)
@@ -314,19 +314,29 @@ Contract Invariant(
         checkCaller!(caller == position.owner, InvariantError.NotOwner)
 
         let poolKey = position.poolKey
-        let upperTick = position.upperTickIndex
-        let lowerTick = position.lowerTickIndex
+        let upperTickIndex = position.upperTickIndex
+        let lowerTickIndex = position.lowerTickIndex
         let liquidity = position.liquidity
 
         let (_, pool) = wrappedGetPool(poolKey)
         let tickSpacing = pool.tickSpacing
 
-        let (mut x, mut y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidity, false, blockTimeStamp!(), tickSpacing)
+        let (mut x, mut y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTickIndex, lowerTickIndex, liquidity, false, blockTimeStamp!(), tickSpacing)
 
         let (_, updatedPosition) = wrappedGetPosition(caller, index)
         
         x = x + updatedPosition.tokensOwedX
         y = y + updatedPosition.tokensOwedY
+
+        let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
+        let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
+
+        if (lowerTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, lowerTickIndex)
+        }
+        if (upperTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, upperTickIndex)
+        } 
 
         transferTokenFromSelf!(caller, pool.tokenX, x)
         transferTokenFromSelf!(caller, pool.tokenY, y)
@@ -505,13 +515,13 @@ Contract Invariant(
         return calculateSwapResult
     }
     
-    @using(assetsInContract = true)
+    // caller is checked in `wrappedGetPosition`
+    @using(assetsInContract = true, checkExternalCaller = false)
     pub fn claimFee(index: U256) -> () {
         let caller = callerAddress!()
         let key = toByteVec!(caller) ++ toByteVec!(index)
         let (exist, position) = wrappedGetPosition(caller, index)
         assert!(exist, InvariantError.PositionDoesNotExist)
-        checkCaller!(caller == position.owner, InvariantError.NotOwner)
     
         let poolKey = position.poolKey
         let (_, pool) = wrappedGetPool(poolKey)

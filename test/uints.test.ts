@@ -1,7 +1,9 @@
 import { ONE_ALPH, SignerProvider, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { UintsInstance } from '../artifacts/ts'
-import { MaxU256, deployUints, expectError } from '../src/utils'
+import { deployUints } from '../src/utils'
+import { expectError, expectVMError } from '../src/testUtils'
+import { ArithmeticError, MaxU256 } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -11,7 +13,7 @@ describe('uints tests', () => {
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
-    uints = (await deployUints(sender)).contractInstance
+    uints = await deployUints(sender)
   })
 
   test('to u256 works', async () => {
@@ -23,7 +25,11 @@ describe('uints tests', () => {
 
   test('to u256 returns an error if number is higher than u256', async () => {
     const value = { higher: 2n, lower: 1n }
-    await expectError(uints.methods.toU256({ args: { value } }))
+    await expectError(
+      ArithmeticError.CastOverflow,
+      uints,
+      uints.methods.toU256({ args: { value } })
+    )
   })
 
   test('to u512 works', async () => {
@@ -287,7 +293,11 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 1n }
       const b = { higher: 1n, lower: 0n }
-      await expectError(uints.methods.bigSub512({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.SubUnderflow,
+        uints,
+        uints.methods.bigSub512({ args: { a, b } })
+      )
     }
     {
       const a = { higher: 1n, lower: 0n }
@@ -316,7 +326,11 @@ describe('uints tests', () => {
     {
       const a = { higher: 1n, lower: 0n }
       const b = { higher: 1n, lower: 1n }
-      await expectError(uints.methods.bigSub512({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.SubUnderflow,
+        uints,
+        uints.methods.bigSub512({ args: { a, b } })
+      )
     }
   })
 
@@ -336,7 +350,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 0n, lower: 1n }
       const b = { higher: 1n, lower: 0n }
-      await expectError(uints.methods.newBigSub512({ args: { a, b } }))
+      await expectVMError('ArithmeticError', uints.methods.newBigSub512({ args: { a, b } }))
     }
     {
       const a = { higher: 1n, lower: 0n }
@@ -365,7 +379,7 @@ describe('uints tests', () => {
     {
       const a = { higher: 1n, lower: 0n }
       const b = { higher: 1n, lower: 1n }
-      await expectError(uints.methods.newBigSub512({ args: { a, b } }))
+      await expectVMError('ArithmeticError', uints.methods.newBigSub512({ args: { a, b } }))
     }
   })
 
@@ -386,7 +400,11 @@ describe('uints tests', () => {
         lower: MaxU256
       }
       const b = 1n
-      await expectError(uints.methods.bigAdd({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigAdd({ args: { a, b } })
+      )
     }
     {
       const a = {
@@ -394,7 +412,11 @@ describe('uints tests', () => {
         lower: 1n
       }
       const b = MaxU256
-      await expectError(uints.methods.bigAdd({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigAdd({ args: { a, b } })
+      )
     }
   })
 
@@ -474,7 +496,11 @@ describe('uints tests', () => {
         higher: 0n,
         lower: 1n
       }
-      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigAdd512({ args: { a, b } })
+      )
     }
     {
       const a = {
@@ -485,7 +511,11 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigAdd512({ args: { a, b } })
+      )
     }
     {
       const a = {
@@ -496,7 +526,11 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectError(uints.methods.bigAdd512({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigAdd512({ args: { a, b } })
+      )
     }
   })
 
@@ -510,7 +544,7 @@ describe('uints tests', () => {
         higher: 0n,
         lower: 1n
       }
-      await expectError(uints.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError('ArithmeticError', uints.methods.newBigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -521,7 +555,7 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectError(uints.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError('ArithmeticError', uints.methods.newBigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -532,7 +566,7 @@ describe('uints tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectError(uints.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError('ArithmeticError', uints.methods.newBigAdd512({ args: { a, b } }))
     }
   })
 
@@ -627,7 +661,11 @@ describe('uints tests', () => {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = 1n
       const bDenominator = 100n
-      await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.bigDiv({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 1n }
@@ -719,7 +757,11 @@ describe('uints tests', () => {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = 1n
       const bDenominator = 100n
-      await expectError(uints.methods.newBigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.newBigDiv({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 1n }
@@ -746,13 +788,21 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      await expectError(uints.methods.newBigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDivisor,
+        uints,
+        uints.methods.newBigDiv({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.newBigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDenominator,
+        uints,
+        uints.methods.newBigDiv({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -761,13 +811,21 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDivisor,
+        uints,
+        uints.methods.bigDiv({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.bigDiv({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDenominator,
+        uints,
+        uints.methods.bigDiv({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -811,7 +869,11 @@ describe('uints tests', () => {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = MaxU256
       const bDenominator = 1n
-      await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.AddOverflow,
+        uints,
+        uints.methods.bigDivUp({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: 0n }
@@ -893,7 +955,10 @@ describe('uints tests', () => {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = MaxU256
       const bDenominator = 1n
-      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
+      await expectVMError(
+        'ArithmeticError',
+        uints.methods.newBigDivUp({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: 0n }
@@ -951,13 +1016,21 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDivisor,
+        uints,
+        uints.methods.bigDivUp({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.bigDivUp({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDenominator,
+        uints,
+        uints.methods.bigDivUp({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -966,13 +1039,20 @@ describe('uints tests', () => {
       const a = { higher: 0n, lower: 2n }
       const b = 0n
       const bDenominator = 1n
-      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
+      await expectVMError(
+        'ArithmeticError',
+        uints.methods.newBigDivUp({ args: { a, b, bDenominator } })
+      )
     }
     {
       const a = { higher: 0n, lower: 2n }
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.newBigDivUp({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.DivNotPositiveDenominator,
+        uints,
+        uints.methods.newBigDivUp({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -1132,22 +1212,38 @@ describe('uints tests', () => {
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = 2n
-      await expectError(uints.methods.bigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.bigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: 1n }
       const b = MaxU256
-      await expectError(uints.methods.bigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.bigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256 - 1n, lower: MaxU256 }
       const b = MaxU256
-      await expectError(uints.methods.bigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.bigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = MaxU256
-      await expectError(uints.methods.bigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.bigMul({ args: { a, b } })
+      )
     }
   })
 
@@ -1155,22 +1251,38 @@ describe('uints tests', () => {
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = 2n
-      await expectError(uints.methods.newBigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.newBigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: 1n }
       const b = MaxU256
-      await expectError(uints.methods.newBigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.newBigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256 - 1n, lower: MaxU256 }
       const b = MaxU256
-      await expectError(uints.methods.newBigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.newBigMul({ args: { a, b } })
+      )
     }
     {
       const a = { higher: MaxU256, lower: MaxU256 }
       const b = MaxU256
-      await expectError(uints.methods.newBigMul({ args: { a, b } }))
+      await expectError(
+        ArithmeticError.CastOverflow,
+        uints,
+        uints.methods.newBigMul({ args: { a, b } })
+      )
     }
   })
 
@@ -1314,7 +1426,11 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.bigMulDiv256({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.MulNotPositiveDenominator,
+        uints,
+        uints.methods.bigMulDiv256({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -1323,7 +1439,11 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.newBigMulDiv256({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.MulNotPositiveDenominator,
+        uints,
+        uints.methods.newBigMulDiv256({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -1481,7 +1601,11 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.MulNotPositiveDenominator,
+        uints,
+        uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })
+      )
     }
   })
 
@@ -1490,7 +1614,11 @@ describe('uints tests', () => {
       const a = 1n
       const b = 1n
       const bDenominator = 0n
-      await expectError(uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } }))
+      await expectError(
+        ArithmeticError.MulNotPositiveDenominator,
+        uints,
+        uints.methods.bigMulDivUp256({ args: { a, b, bDenominator } })
+      )
     }
   })
 

@@ -1,5 +1,5 @@
-import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
-import { CLAMM, Invariant, Uints } from '../artifacts/ts'
+import { NodeProvider, ONE_ALPH, SignerProvider, node, web3 } from '@alephium/web3'
+import { CLAMM, Invariant, InvariantInstance, Uints } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -31,40 +31,39 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(signer: SignerProvider, protocolFee: bigint) {
+export async function deployInvariant(signer: SignerProvider, protocolFee: bigint): Promise<InvariantInstance> {
   const account = await signer.getSelectedAccount()
 
   const uints = await deployUints(signer)
-  const clamm = await deployCLAMM(signer, uints.contractInstance.contractId)
+  const clamm = await deployCLAMM(signer, uints.contractId)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
         config: { admin: account.address, protocolFee },
-        clamm: clamm.contractInstance.contractId,
+        clamm: clamm.contractId,
         feeTierCount: 0n,
         poolKeyCount: 0n
       }
     })
   )
-
-  const invariant = Invariant.at(deployResult.contractInstance.address)
-
-  return invariant
+  return Invariant.at(deployResult.contractInstance.address)
 }
 
 export async function deployCLAMM(signer: SignerProvider, uintsId: string) {
-  return await waitTxConfirmed(
+  const deployResult = await waitTxConfirmed(
     CLAMM.deploy(signer, {
       initialFields: {
         uints: uintsId
       }
     })
   )
+  return CLAMM.at(deployResult.contractInstance.address)
 }
 
 export async function deployUints(signer: SignerProvider) {
-  return await waitTxConfirmed(Uints.deploy(signer, { initialFields: {} }))
+  const deployResult = await waitTxConfirmed(Uints.deploy(signer, { initialFields: {} }))
+  return Uints.at(deployResult.contractInstance.address)
 }
 
 export async function deployTokenFaucet(
@@ -86,35 +85,6 @@ export async function deployTokenFaucet(
       issueTokenAmount: supply
     })
   )
-}
-
-export async function expectError(script: Promise<any>) {
-  let isError = false
-
-  try {
-    await script
-  } catch (e) {
-    isError = true
-  }
-
-  expect(isError).toBe(true)
-}
-
-export async function expectErrorCode(errorCode: bigint, script: Promise<any>) {
-  let thrownErrorCode: string = ''
-
-  try {
-    await script
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      const regex = new RegExp('Error Code: ([0-9]+)')
-      const regexResult = regex.exec(e.message)
-
-      thrownErrorCode = regexResult ? regexResult[1] : ''
-    }
-  }
-
-  expect(thrownErrorCode).toBe(errorCode.toString())
 }
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
@@ -185,17 +155,3 @@ export function hexToBytes(hex: string): Uint8Array {
 export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
 }
-
-export const ArithmeticError = {
-  CastOverflow: 100001n,
-  AddOverflow: 100002n,
-  SubOverflow: 100003n,
-  MulOverflow: 100004n,
-  DivNotPositiveDivisor: 100005n,
-  DivNotPositiveDenominator: 100006n,
-  MulNotPositiveDenominator: 100007n
-}
-
-export const MaxU256 =
-  115792089237316195423570985008687907853269984665640564039457584007913129639935n
-export const MaxTick = 221818n
