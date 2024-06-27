@@ -1,5 +1,6 @@
 struct Tick {
     mut sign: Bool,
+    mut index: I256,
     mut liquidityChange: U256,
     mut liquidityGross: U256,
     mut sqrtPrice: U256,

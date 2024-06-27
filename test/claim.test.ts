@@ -2,8 +2,8 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { ClaimFee } from '../artifacts/ts'
-import { balanceOf, deployInvariant, expectError } from '../src/utils'
-import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { balanceOf, deployInvariant } from '../src/utils'
+import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
   initPool,
@@ -12,7 +12,8 @@ import {
   initTokensXY,
   withdrawTokens,
   initSwap,
-  getPosition
+  getPosition,
+  expectError
 } from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -186,44 +187,44 @@ describe('invariant tests', () => {
       slippageLimit
     )
 
-    {
-      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const swapAmount = 1000n
-      await withdrawTokens(swapper, [tokenX, swapAmount], [tokenY, swapAmount])
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    const swapAmount = 1000n
+    await withdrawTokens(swapper, [tokenX, swapAmount], [tokenY, swapAmount])
 
-      const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
-      const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
-      const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
+    const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
+    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
+    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
 
-      expect(swapperTokenXBalanceBefore).toBe(swapAmount)
-      expect(invariantTokenXBalanceBefore).toBe(500n)
-      expect(invariantTokenYBalanceBefore).toBe(1000n)
+    expect(swapperTokenXBalanceBefore).toBe(swapAmount)
+    expect(invariantTokenXBalanceBefore).toBe(500n)
+    expect(invariantTokenYBalanceBefore).toBe(1000n)
 
-      await initSwap(
-        invariant,
-        swapper,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
-        true,
-        swapAmount,
-        true,
-        MinSqrtPrice
-      )
+    await initSwap(
+      invariant,
+      swapper,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      true,
+      swapAmount,
+      true,
+      MinSqrtPrice
+    )
 
-      const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractId, swapper.address)
-      expect(swapperTokenXBalanceAfter).toBe(0n)
+    const swapperTokenXBalanceAfter = await balanceOf(tokenX.contractId, swapper.address)
+    expect(swapperTokenXBalanceAfter).toBe(0n)
 
-      expectError(
-        ClaimFee.execute(swapper, {
-          initialFields: {
-            invariant: invariant.contractId,
-            index: 1n
-          },
-          attoAlphAmount: DUST_AMOUNT
-        })
-      )
-    }
+    expectError(
+      InvariantError.PositionDoesNotExist,
+      invariant,
+      ClaimFee.execute(swapper, {
+        initialFields: {
+          invariant: invariant.contractId,
+          index: 1n
+        },
+        attoAlphAmount: DUST_AMOUNT
+      })
+    )
   })
 })

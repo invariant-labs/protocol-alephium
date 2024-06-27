@@ -1,7 +1,8 @@
-Abstract Contract Tickmap() extends Decimal() {
+Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     const ChunkSize = 256
     const HalfChunkSize = 128
     const SearchRange = 256i
+    const ChunksPerBatch = 94
 
     pub fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
         assert!(tick >= GlobalMinTick && tick <= GlobalMaxTick, InvariantError.InvalidTickIndex)
@@ -204,13 +205,13 @@ Abstract Contract Tickmap() extends Decimal() {
     }
 
     fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
-        let key = poolKey ++ toByteVec!(chunk)
+        let key = poolKey ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(key)
 
         if (!exists) {
             return 0
         } else {
-            return bitmap[key]
+            return extractChunk(key, chunk)
         }
     }
 
@@ -225,24 +226,37 @@ Abstract Contract Tickmap() extends Decimal() {
         let (chunkIndex, bit) = tickToPosition(tick, tickSpacing)
         let chunk = getChunk(chunkIndex, poolKey)
         let isInitialized = getBitAtPosition(chunk, bit)
-
-        let key = poolKey ++ toByteVec!(chunkIndex)
+        let key = poolKey ++ toByteVec!(getKey(chunkIndex))
 
         assert!(bitmap.contains!(key), InvariantError.ChunkNotFound)
         
 
         assert!(value && !isInitialized || !value && isInitialized, InvariantError.TickInitialized)
     
-        bitmap[key] = flipBitAtPosition(bitmap[key], bit)
+        let flipped = flipBitAtPosition(extractChunk(key, chunkIndex), bit)
+        rewriteChunk(key, chunkIndex, flipped)
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(originalCaller: Address, poolKey: ByteVec, chunk: U256) -> () {
-        let id = poolKey ++ toByteVec!(chunk)
+        let id = poolKey ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(id)
-
         if(!exists) {
-            bitmap.insert!(originalCaller, id, 0)
+            let batch = TickmapBatch {
+                chunks: [
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0
+                ] 
+            }
+            bitmap.insert!(originalCaller, id, batch)
         }
     }
 

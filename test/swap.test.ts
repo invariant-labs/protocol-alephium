@@ -31,7 +31,6 @@ describe('swap tests', () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test('', () => {})
   test('swap x to y', async () => {
     const liquidityDelta = 1000000n * 10n ** 5n
     const lowerTickIndex = -20n
