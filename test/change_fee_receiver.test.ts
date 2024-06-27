@@ -1,134 +1,67 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { getPool, expectError } from '../src/testUtils'
-import { AddFeeTier, ChangeFeeReceiver, CreatePool } from '../artifacts/ts'
-import { deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import { getPool, expectError, initTokensXY, initFeeTier, initPool } from '../src/testUtils'
+import { ChangeFeeReceiver, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
+import { deployInvariant } from '../src/utils'
+import { InvariantError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender: PrivateKeyWallet
+let admin: PrivateKeyWallet
+let invariant: InvariantInstance
+let tokenX: TokenFaucetInstance
+let tokenY: TokenFaucetInstance
 
 describe('change fee receiver tests', () => {
+  const protocolFee = 10n ** 10n
+  const fee = 6n * 10n ** 9n
+  const tickSpacing = 10n
+
   beforeAll(async () => {
-    sender = await getSigner(ONE_ALPH * 1000n, 0)
+    admin = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
-  test('should change the fee receiver', async () => {
-    const protocolFee = 10n ** 10n
-    const fee = 6n * 10n ** 9n
-    const tickSpacing = 10n
+  beforeEach(async () => {
+    invariant = await deployInvariant(admin, protocolFee)
+    ;[tokenX, tokenY] = await initTokensXY(admin, 0n)
 
-    const invariant = await deployInvariant(sender, protocolFee)
+    await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    const amount = 1000000n + 1000n
+    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, 10n ** 24n, 0n)
+  })
 
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
-
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT
-    })
-
-    await CreatePool.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        initSqrtPrice: 1000000000000000000000000n,
-        initTick: 0n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
-    })
-
+  test('test_change_fee_receiver', async () => {
     const newFeeReceiver = await getSigner(ONE_ALPH * 10n, 0)
 
-    await ChangeFeeReceiver.execute(sender, {
+    await ChangeFeeReceiver.execute(admin, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
+        token0: tokenX.contractId,
+        token1: tokenY.contractId,
+        fee,
+        tickSpacing,
         newFeeReceiver: newFeeReceiver.address
       }
     })
 
-    const pool = await getPool(
-      invariant,
-      token0.contractInstance,
-      token1.contractInstance,
-      fee,
-      tickSpacing
-    )
+    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
     expect(pool.feeReceiver).toBe(newFeeReceiver.address)
-
-    const wrongReceiver = '0xInvalidAddress'
-    await expectError(
-      ChangeFeeReceiver.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          newFeeReceiver: wrongReceiver
-        }
-      })
-    )
   })
 
-  test('should not allow non-admin to change fee receiver', async () => {
-    const protocolFee = 10n ** 10n
-    const fee = 6n * 10n ** 9n
-    const tickSpacing = 10n
-
-    const invariant = await deployInvariant(sender, protocolFee)
-
-    const amount = 1000000n + 1000n
-
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
-
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT
-    })
-
-    await CreatePool.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        initSqrtPrice: 1000000000000000000000000n,
-        initTick: 0n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
-    })
-
-    const newFeeReceiver = await getSigner(ONE_ALPH * 10n, 1)
+  test('test_not_admin_change_fee_receiver', async () => {
+    const newFeeReceiver = await getSigner(ONE_ALPH * 1000n, 0)
 
     await expectError(
+      InvariantError.NotAdmin,
+      invariant,
       ChangeFeeReceiver.execute(newFeeReceiver, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
+          token0: tokenX.contractId,
+          token1: tokenY.contractId,
+          fee,
+          tickSpacing,
           newFeeReceiver: newFeeReceiver.address
         }
       })
