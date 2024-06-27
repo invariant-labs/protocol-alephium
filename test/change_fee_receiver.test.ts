@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getPool } from '../src/testUtils'
 import { AddFeeTier, ChangeFeeReceiver, CreatePool } from '../artifacts/ts'
-import { expectError, deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT } from '../src/utils'
+import { deployInvariant, deployTokenFaucet, MAP_ENTRY_DEPOSIT, expectError } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
