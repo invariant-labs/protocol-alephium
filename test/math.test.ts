@@ -1,5 +1,5 @@
 import { web3 } from '@alephium/web3'
-import { calculateSqrtPrice, getLiquidityByX, getLiquidityByY } from '../src/math'
+import { calculateSqrtPrice, getLiquidity, getLiquidityByX, getLiquidityByY } from '../src/math'
 import { expectError } from '../src/testUtils'
 import { CLAMMError } from '../src/consts'
 
@@ -95,6 +95,99 @@ describe('math spec', () => {
         CLAMMError.CurrentLTLowerSqrtPrice,
         getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
       )
+    }
+  })
+  test('get liquidity', async () => {
+    const y = 47600000000n
+    const currentSqrtPrice = await calculateSqrtPrice(-20000n)
+    // Below current tick
+    {
+      const expectedL = 278905227910392327n
+      const expectedX = 0n
+      const lowerTick = -22000n
+      const upperTick = -21000n
+      const expectedResult = { l: expectedL, x: expectedX, y }
+
+      const resultUp = await getLiquidity(
+        expectedX,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+      const resultDown = await getLiquidity(
+        expectedX,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        false
+      )
+
+      expect(resultUp).toMatchObject(expectedResult)
+      expect(resultDown).toMatchObject(expectedResult)
+    }
+    // In current tick
+    {
+      const expectedXUp = 77539808126n
+      const expectedXDown = 77539808125n
+      const expectedLUp = 58494529055434693n
+      const expectedLDown = 58494529055291192n
+      const lowerTick = -25000n
+      const upperTick = -19000n
+      const expectedResultUp = { l: expectedLUp, x: expectedXUp }
+      const expectedResultDown = { l: expectedLDown, x: expectedXDown }
+
+      const resultUp = await getLiquidity(
+        expectedXUp,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+      const resultDown = await getLiquidity(
+        expectedXDown,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        false
+      )
+
+      expect(resultUp).toMatchObject(expectedResultUp)
+      expect(resultDown).toMatchObject(expectedResultDown)
+    }
+    // Above current Tick
+    {
+      const lowerTick = 150n
+      const upperTick = 800n
+
+      const x = 430000000n
+      const expectedY = 0n
+      const expectedResult = { l: 1354882631162385n, y: expectedY }
+
+      const resultUp = await getLiquidity(
+        x,
+        expectedY,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+
+      const resultDown = await getLiquidity(
+        x,
+        expectedY,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        false
+      )
+
+      expect(resultUp).toMatchObject(expectedResult)
+      expect(resultDown).toMatchObject(expectedResult)
     }
   })
 })

@@ -21,19 +21,6 @@ export const calculateSqrtPrice = async (tickIndex: bigint) => {
   ).returns
 }
 
-export const calculateAmountDelta = async (pool: Pool, position: Position, sign: boolean) => {
-  return await CLAMM.tests.calculateAmountDelta({
-    testArgs: {
-      currentTickIndex: pool.currentTickIndex,
-      currentSqrtPrice: pool.sqrtPrice,
-      liquidityDelta: position.liquidity,
-      liquiditySign: sign,
-      upperTick: position.upperTickIndex,
-      lowerTick: position.lowerTickIndex
-    }
-  })
-}
-
 export const getLiquidityByX = async (
   x: bigint,
   lowerTick: bigint,
@@ -64,6 +51,28 @@ export const getLiquidityByY = async (
   return (
     await CLAMM.tests.getLiquidityByY({
       testArgs: {
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        roundingUp
+      }
+    })
+  ).returns
+}
+
+export const getLiquidity = async (
+  x: bigint,
+  y: bigint,
+  lowerTick: bigint,
+  upperTick: bigint,
+  currentSqrtPrice: bigint,
+  roundingUp: boolean
+) => {
+  return (
+    await CLAMM.tests.getLiquidity({
+      testArgs: {
+        x,
         y,
         lowerTick,
         upperTick,

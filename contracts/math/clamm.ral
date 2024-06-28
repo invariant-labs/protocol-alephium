@@ -1,6 +1,12 @@
 struct SingleTokenLiquidity {
-    l: U256,
-    amount: U256
+    mut l: U256,
+    mut amount: U256
+}
+
+struct LiquidityResult {
+    x: U256,
+    y: U256,
+    l: U256
 }
 
 Contract CLAMM() extends Uints(), Log(){ 
@@ -424,6 +430,34 @@ Contract CLAMM() extends Uints(), Log(){
         } else {
             return toU256(bigDiv(common, one(LiquidityScale), 1))
         }
-        
+    }
+
+    pub fn getLiquidity(x: U256, y: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: U256, roundingUp: Bool) -> LiquidityResult {
+        assert!(lowerTick >= GlobalMinTick && upperTick <= GlobalMaxTick, CLAMMError.InvalidTickIndex)
+        let lowerSqrtPrice = calculateSqrtPrice(lowerTick)
+        let upperSqrtPrice = calculateSqrtPrice(upperTick)
+
+        let mut resultByX = SingleTokenLiquidity { l: 0, amount: 0}
+        let mut resultByY = SingleTokenLiquidity { l: 0, amount: 0}
+
+        if (upperSqrtPrice < currentSqrtPrice) {
+            resultByY = getLiquidityByYSqrtPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+            return LiquidityResult { x: resultByY.amount, y: y, l: resultByY.l } 
+        } else if (currentSqrtPrice < lowerSqrtPrice) {
+            resultByX = getLiquidityByXSqrtPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+            return LiquidityResult { x: x, y: resultByX.amount, l: resultByX.l }
+        } else {
+            // do nothing
+        }
+
+        resultByY = getLiquidityByYSqrtPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+        resultByX = getLiquidityByXSqrtPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+
+        if(resultByY.l < resultByX.l) {
+            return LiquidityResult { x: resultByY.amount, y: resultByX.amount, l: resultByY.l }
+        } else {
+            return LiquidityResult { x: resultByY.amount, y: resultByX.amount, l: resultByX.l }
+        }
+     
     }
 }

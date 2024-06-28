@@ -15,6 +15,7 @@ import {
   withdrawTokens
 } from '../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
+import { calculateSqrtPrice, getLiquidity } from '../src/math'
 
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
@@ -26,8 +27,10 @@ let tokenY: TokenFaucetInstance
 describe('multiple swap tests', () => {
   const fee = 10n ** (PercentageScale - 3n)
   const tickSpacing = 1n
-  // TODO: use get_liquidity(...) when it's available
-  const liquidity = 214913786n
+  const initTick = 0n
+  const [lowerTick, upperTick] = [-953n, 953n]
+  const approvedAmount = 100n
+
   const mintSwapper = 100n
 
   beforeAll(async () => {
@@ -49,10 +52,8 @@ describe('multiple swap tests', () => {
     {
       const [exists] = await feeTierExists(invariant, { fee, tickSpacing })
       expect(exists).toBeTruthy()
+      const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-      const initTick = 0n
-      // TODO: use calculate_sqrt_price(0) when it's available
-      const initSqrtPrice = 10n ** 24n
       await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
     }
 
@@ -60,10 +61,16 @@ describe('multiple swap tests', () => {
     {
       await withdrawTokens(positionOwner, [tokenX, mintPosition], [tokenY, mintPosition])
 
-      const [lowerTick, upperTick] = [-953n, 953n]
-      const approvedAmount = 100n
-
       const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+
+      const { l: liquidity } = await getLiquidity(
+        approvedAmount,
+        approvedAmount,
+        lowerTick,
+        upperTick,
+        pool.sqrtPrice,
+        true
+      )
 
       await initPositionWithLiquidity(
         invariant,
@@ -131,6 +138,16 @@ describe('multiple swap tests', () => {
       expect(swapperAmount).toStrictEqual({ tokenX: 0n, tokenY: 80n })
 
       const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+
+      const { l: liquidity } = await getLiquidity(
+        approvedAmount,
+        approvedAmount,
+        lowerTick,
+        upperTick,
+        await calculateSqrtPrice(initTick),
+        true
+      )
+
       expect(pool).toMatchObject({
         feeGrowthGlobalX: 0n,
         feeGrowthGlobalY: 0n,
@@ -191,6 +208,16 @@ describe('multiple swap tests', () => {
       expect(swapperAmount).toStrictEqual({ tokenX: 80n, tokenY: 0n })
 
       let pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+
+      const { l: liquidity } = await getLiquidity(
+        approvedAmount,
+        approvedAmount,
+        lowerTick,
+        upperTick,
+        await calculateSqrtPrice(initTick),
+        true
+      )
+
       expect(pool).toMatchObject({
         feeGrowthGlobalX: 0n,
         feeGrowthGlobalY: 0n,
