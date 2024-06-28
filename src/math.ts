@@ -1,21 +1,8 @@
-import { ZERO_ADDRESS } from '@alephium/web3'
-import { CLAMM, Invariant } from '../artifacts/ts'
-import { Pool, Position } from '../artifacts/ts/types'
-
-const DEFAULT_INVT_INITIAL_FIELDS = {
-  config: {
-    admin: ZERO_ADDRESS,
-    protocolFee: 0n
-  },
-  clamm: ZERO_ADDRESS,
-  feeTierCount: 0n,
-  poolKeyCount: 0n
-}
+import { CLAMM } from '../artifacts/ts'
 
 export const calculateSqrtPrice = async (tickIndex: bigint) => {
   return (
-    await Invariant.tests.calculateSqrtPrice({
-      initialFields: DEFAULT_INVT_INITIAL_FIELDS,
+    await CLAMM.tests.calculateSqrtPrice({
       testArgs: { tickIndex }
     })
   ).returns
