@@ -26,18 +26,6 @@ import { expectAssertionError } from '@alephium/web3-test'
 
 type TokenInstance = TokenFaucetInstance
 
-export const objectEquals = (
-  object: { [key: string]: any },
-  expectedObject: { [key: string]: any },
-  keys: string[]
-) => {
-  for (const key in object) {
-    if (!keys.includes(key)) {
-      expect(object[key]).toEqual(expectedObject[key])
-    }
-  }
-}
-
 export async function expectError(
   errorCode: bigint,
   contract: ContractInstance,
