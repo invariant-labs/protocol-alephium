@@ -1,7 +1,7 @@
 import { web3 } from '@alephium/web3'
 import { calculateSqrtPrice, getLiquidity, getLiquidityByX, getLiquidityByY } from '../src/math'
 import { expectError } from '../src/testUtils'
-import { CLAMMError } from '../src/consts'
+import { UtilsError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -19,11 +19,11 @@ describe('math spec', () => {
       const lowerTick = -50n
       const upperTick = 10n
       await expectError(
-        CLAMMError.UpperLTCurrentSqrtPrice,
+        UtilsError.UpperLTCurrentSqrtPrice,
         getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
       )
       await expectError(
-        CLAMMError.UpperLTCurrentSqrtPrice,
+        UtilsError.UpperLTCurrentSqrtPrice,
         getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
       )
     }
@@ -88,11 +88,11 @@ describe('math spec', () => {
       const upperTick = 0n
 
       await expectError(
-        CLAMMError.CurrentLTLowerSqrtPrice,
+        UtilsError.CurrentLTLowerSqrtPrice,
         getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
       )
       await expectError(
-        CLAMMError.CurrentLTLowerSqrtPrice,
+        UtilsError.CurrentLTLowerSqrtPrice,
         getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
       )
     }

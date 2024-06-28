@@ -1,4 +1,4 @@
-import { CLAMM, Invariant } from '../artifacts/ts'
+import { CLAMM, Invariant, Utils } from '../artifacts/ts'
 
 export const {
   SqrtPriceScale,
@@ -17,6 +17,7 @@ export const {
 } = Invariant.consts
 
 export const { CLAMMError, DecimalError, WordSize, ArithmeticError } = CLAMM.consts
+export const { UtilsError } = Utils.consts
 
 export const MaxU256 =
   115792089237316195423570985008687907853269984665640564039457584007913129639935n
