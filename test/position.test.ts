@@ -14,7 +14,6 @@ import {
   initSwap,
   initTokensXY,
   isTickInitialized,
-  objectEquals,
   removePosition,
   withdrawTokens
 } from '../src/testUtils'
@@ -88,7 +87,7 @@ describe('position tests', () => {
     }
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
     expect(pool.liquidity).toBe(0n)
-    objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+    expect(position).toMatchObject(expectedPosition)
   })
   test('Create position with equal lower and upper tick', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -200,7 +199,7 @@ describe('position tests', () => {
       }
       const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
       expect(pool.liquidity).toBe(liquidityDelta)
-      objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+      expect(position).toMatchObject(expectedPosition)
     }
     {
       const liquidityDelta = 1000000n * (1000000n * 10n ** LiquidityScale)
@@ -242,7 +241,7 @@ describe('position tests', () => {
       }
       const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
       expect(pool.liquidity).toBe(liquidityDelta + 1000000n * 10n ** LiquidityScale)
-      objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+      expect(position).toMatchObject(expectedPosition)
     }
 
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
@@ -281,7 +280,7 @@ describe('position tests', () => {
       feeProtocolTokenY: 0n,
       feeReceiver: admin.address
     }
-    objectEquals(poolAfter, expectedPool, ['sqrtPrice', 'startTimestamp', 'lastTimestamp'])
+    expect(poolAfter).toMatchObject(expectedPool)
 
     const swapperX = await balanceOf(tokenX.contractId, swapper.address)
     const swapperY = await balanceOf(tokenY.contractId, swapper.address)
@@ -427,7 +426,7 @@ describe('position tests', () => {
       owner: positionOwner.address
     }
 
-    objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+    expect(position).toMatchObject(expectedPosition)
 
     expect(ownerX).toBe(initialBalance - dexX)
     expect(ownerY).toBe(initialBalance - dexY)
@@ -549,7 +548,7 @@ describe('position tests', () => {
       owner: positionOwner.address
     }
 
-    objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+    expect(position).toMatchObject(expectedPosition)
 
     expect(ownerX).toBe(initialBalance - dexX)
     expect(ownerY).toBe(initialBalance - dexY)
@@ -653,7 +652,7 @@ describe('position tests', () => {
       owner: positionOwner.address
     }
 
-    objectEquals(position, expectedPosition, ['poolKey', 'lastBlockNumber'])
+    expect(position).toMatchObject(expectedPosition)
 
     expect(ownerX).toBe(initialBalance - dexX)
     expect(ownerY).toBe(initialBalance - dexY)

@@ -13,7 +13,6 @@ import {
   initPositionWithLiquidity,
   initSwap,
   initTokensXY,
-  objectEquals,
   quote,
   withdrawTokens
 } from '../src/testUtils'
@@ -85,7 +84,6 @@ describe('liquidity gap tests', () => {
 
     const { targetSqrtPrice } = await quote(
       invariant,
-      swapper,
       tokenX,
       tokenY,
       fee,
@@ -174,7 +172,6 @@ describe('liquidity gap tests', () => {
 
     const { targetSqrtPrice } = await quote(
       invariant,
-      swapper,
       tokenX,
       tokenY,
       fee,
@@ -228,8 +225,8 @@ describe('liquidity gap tests', () => {
       tokensOwedY: 0n,
       owner: positionOwner.address
     }
-    objectEquals(firstPosition, expectedFirstPosition, ['lastBlockNumber', 'poolKey'])
-    objectEquals(secondPosition, expectedSecondPosition, ['lastBlockNumber', 'poolKey'])
+    expect(firstPosition).toMatchObject(expectedFirstPosition)
+    expect(secondPosition).toMatchObject(expectedSecondPosition)
 
     expect(lowerInMap).toBeTruthy()
     expect(currentInMap).toBeFalsy()
@@ -256,8 +253,8 @@ describe('liquidity gap tests', () => {
       feeGrowthOutsideY: 0n
     }
 
-    objectEquals(lowerTick, expectedLowerTick, ['secondsOutside'])
-    objectEquals(upperTick, expectedUpperTick, ['secondsOutside'])
+    expect(lowerTick).toMatchObject(expectedLowerTick)
+    expect(upperTick).toMatchObject(expectedUpperTick)
 
     const expectedPool = {
       exist: true,
@@ -273,6 +270,6 @@ describe('liquidity gap tests', () => {
       feeProtocolTokenY: 0n,
       feeReceiver: deployer.address
     }
-    objectEquals(pool, expectedPool, ['startTimestamp', 'lastTimestamp', 'sqrtPrice'])
+    expect(pool).toMatchObject(expectedPool)
   })
 })
