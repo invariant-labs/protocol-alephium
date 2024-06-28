@@ -293,7 +293,6 @@ export async function initPositionWithLiquidity(
 
 export const quote = async (
   invariant: InvariantInstance,
-  signer: SignerProvider,
   token0: TokenInstance,
   token1: TokenInstance,
   fee: bigint,

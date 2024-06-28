@@ -24,6 +24,8 @@ describe('protocol fee tests', () => {
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
+  })
+  beforeEach(async () => {
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
 
     await initFeeTier(invariant, admin, fee, tickSpacing)

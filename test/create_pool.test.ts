@@ -3,14 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant } from '../src/utils'
 import { CLAMMError, InvariantError, PercentageScale } from '../src/consts'
-import {
-  getPool,
-  initPool,
-  initFeeTier,
-  initTokensXY,
-  objectEquals,
-  expectError
-} from '../src/testUtils'
+import { getPool, initPool, initFeeTier, initTokensXY, expectError } from '../src/testUtils'
 import { CLAMM, Invariant } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')

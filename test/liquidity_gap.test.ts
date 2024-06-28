@@ -85,7 +85,6 @@ describe('liquidity gap tests', () => {
 
     const { targetSqrtPrice } = await quote(
       invariant,
-      swapper,
       tokenX,
       tokenY,
       fee,
@@ -174,7 +173,6 @@ describe('liquidity gap tests', () => {
 
     const { targetSqrtPrice } = await quote(
       invariant,
-      swapper,
       tokenX,
       tokenY,
       fee,
