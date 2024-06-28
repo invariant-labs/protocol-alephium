@@ -1,8 +1,8 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { CLAMMInstance, UintsInstance } from '../artifacts/ts'
-import { deployCLAMM, deployUints } from '../src/utils'
+import { CLAMMInstance } from '../artifacts/ts'
+import { deployCLAMM } from '../src/utils'
 import { expectError, expectVMError } from '../src/testUtils'
 import { ArithmeticError, CLAMMError, GlobalMaxTick, GlobalMinTick, MaxU256 } from '../src/consts'
 
@@ -16,8 +16,7 @@ describe('math tests', () => {
   })
 
   test('fee growth from fee', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       const liquidity = 10n ** 5n
       const amount = 1n
@@ -48,8 +47,7 @@ describe('math tests', () => {
     }
   })
   test('fee growth from fee - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
 
     const liquidityDenominator = 10n ** 5n
     const sqrtPriceDenominator = 10n ** 24n
@@ -96,10 +94,10 @@ describe('math tests', () => {
 
       await expectError(
         ArithmeticError.CastOverflow,
-        uints,
         clamm.methods.feeGrowthFromFee({
           args: { liquidity, fee }
-        })
+        }),
+        clamm
       )
     }
     // amount = 0
@@ -115,14 +113,13 @@ describe('math tests', () => {
       const fee = 1100n
       await expectError(
         ArithmeticError.MulNotPositiveDenominator,
-        uints,
-        clamm.methods.feeGrowthFromFee({ args: { liquidity, fee } })
+        clamm.methods.feeGrowthFromFee({ args: { liquidity, fee } }),
+        clamm
       )
     }
   })
   test('fee growth to fee', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     // Equal
     {
       const amount = 100n
@@ -161,8 +158,7 @@ describe('math tests', () => {
     }
   })
   test('fee growth to fee - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     // overflowing mul
     {
       const amount = 600000000000000000n
@@ -189,8 +185,8 @@ describe('math tests', () => {
       const feeGrowth = (1n << 256n) - 1n
       await expectError(
         ArithmeticError.CastOverflow,
-        uints,
-        clamm.methods.toFee({ args: { liquidity, feeGrowth } })
+        clamm.methods.toFee({ args: { liquidity, feeGrowth } }),
+        clamm
       )
     }
     // FeeGrowth = 0
@@ -209,8 +205,7 @@ describe('math tests', () => {
     }
   })
   test('tick from sqrt price', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       const sqrtPrice = 999006987054867461743028n
       const result = (
@@ -222,8 +217,7 @@ describe('math tests', () => {
     }
   })
   test('align tick to tickspacing', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       const accurateTick = 0n
       const tickSpacing = 3n
@@ -286,8 +280,7 @@ describe('math tests', () => {
     }
   })
   test('log spacing over 1', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
         const sqrtPriceDecimal = (
@@ -326,8 +319,7 @@ describe('math tests', () => {
     }
   })
   test('log', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       for (let i = 0n; i < 100n; i++) {
         const sqrtPriceDecimal = (
@@ -360,8 +352,7 @@ describe('math tests', () => {
     let clamm: CLAMMInstance
 
     beforeAll(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
     test('zero at zero liquidity', async () => {
       const sqrtPriceA = 1n * 10n ** 24n
@@ -436,8 +427,7 @@ describe('math tests', () => {
     const minLiquidity = 1n
 
     beforeAll(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
     test('maximalize delta sqrt price and liquidity', async () => {
       const params = {
@@ -563,11 +553,9 @@ describe('math tests', () => {
 
   describe('get delta y', () => {
     let clamm: CLAMMInstance
-    let uints: UintsInstance
 
     beforeEach(async () => {
-      uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('zero at zero liquidity', async () => {
@@ -627,8 +615,8 @@ describe('math tests', () => {
 
       const paramsUp = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: true } }
       const paramsDown = { args: { sqrtPriceA, sqrtPriceB, liquidity, roundingUp: false } }
-      await expectError(ArithmeticError.CastOverflow, uints, clamm.methods.getDeltaY(paramsUp))
-      await expectError(ArithmeticError.CastOverflow, uints, clamm.methods.getDeltaY(paramsDown))
+      await expectError(ArithmeticError.CastOverflow, clamm.methods.getDeltaY(paramsUp), clamm)
+      await expectError(ArithmeticError.CastOverflow, clamm.methods.getDeltaY(paramsDown), clamm)
     })
 
     test('huge liquidity', async () => {
@@ -658,8 +646,7 @@ describe('math tests', () => {
     const maxLiquidity = 2n ** 256n - 1n
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     it('maximize delta sqrt price and liquidity', async () => {
@@ -734,8 +721,7 @@ describe('math tests', () => {
   })
 
   test('get next sqrt price y down - base samples', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
 
     const sqrtPriceDenominator = 10n ** 24n
     const liquidityDenominator = 10n ** 5n
@@ -797,8 +783,7 @@ describe('math tests', () => {
     }
   })
   test('get next sqrt price y down - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
 
     const minY = 1n
     const maxY = (1n << 256n) - 1n
@@ -883,8 +868,8 @@ describe('math tests', () => {
         }
         await expectError(
           ArithmeticError.CastOverflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
+          clamm.methods.getNextSqrtPriceYDown(params),
+          clamm
         )
       }
       {
@@ -898,8 +883,8 @@ describe('math tests', () => {
         }
         await expectError(
           ArithmeticError.CastOverflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
+          clamm.methods.getNextSqrtPriceYDown(params),
+          clamm
         )
       }
     }
@@ -945,8 +930,8 @@ describe('math tests', () => {
         }
         await expectError(
           ArithmeticError.CastOverflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
+          clamm.methods.getNextSqrtPriceYDown(params),
+          clamm
         )
       }
       {
@@ -960,8 +945,8 @@ describe('math tests', () => {
         }
         await expectError(
           ArithmeticError.CastOverflow,
-          uints,
-          clamm.methods.getNextSqrtPriceYDown(params)
+          clamm.methods.getNextSqrtPriceYDown(params),
+          clamm
         )
       }
     }
@@ -990,8 +975,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.DivNotPositiveDivisor,
-        uints,
-        clamm.methods.getNextSqrtPriceYDown(params)
+        clamm.methods.getNextSqrtPriceYDown(params),
+        clamm
       )
     }
     // TokenAmount is zero
@@ -1010,8 +995,7 @@ describe('math tests', () => {
   })
 
   test('calculate max liquidity per tick - tick spacing 1, max liquidity / 443637', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const params = { args: { tickSpacing: 1n } }
     const maxLiquidity = (await clamm.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(
@@ -1020,8 +1004,7 @@ describe('math tests', () => {
   })
 
   test('calculate max liquidity per tick - tick spacing 2, max liquidity / 221819', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const params = { args: { tickSpacing: 2n } }
     const maxLiquidity = (await clamm.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(
@@ -1030,8 +1013,7 @@ describe('math tests', () => {
   })
 
   test('calculate max liquidity per tick - tick spacing 5, max liquidity / 88727', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const params = { args: { tickSpacing: 5n } }
     const maxLiquidity = (await clamm.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(
@@ -1040,8 +1022,7 @@ describe('math tests', () => {
   })
 
   test('calculate max liquidity per tick - tick spacing 100, max liquidity / 4436', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const params = { args: { tickSpacing: 100n } }
     const maxLiquidity = (await clamm.methods.calculateMaxLiquidityPerTick(params)).returns
     expect(maxLiquidity).toEqual(
@@ -1050,8 +1031,7 @@ describe('math tests', () => {
   })
 
   test('calculate min amount out', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     // 0% fee
     {
       const expectedAmountOut = 100n
@@ -1135,8 +1115,7 @@ describe('math tests', () => {
   })
 
   test('calculate min amount out - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const minAmount = 0n
     const maxAmount = (1n << 256n) - 1n
     const minFee = 0n
@@ -1168,8 +1147,7 @@ describe('math tests', () => {
   })
 
   test('is enough amount to change price - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     const zeroLiquidity = 0n
     const maxFee = 10n ** 12n
     const maxAmount = (1n << 256n) - 1n
@@ -1191,8 +1169,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.SubUnderflow,
-        uints,
-        clamm.methods.isEnoughAmountToChangePrice(params)
+        clamm.methods.isEnoughAmountToChangePrice(params),
+        clamm
       )
     }
     // L = 0
@@ -1224,8 +1202,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.SubUnderflow,
-        uints,
-        clamm.methods.isEnoughAmountToChangePrice(params)
+        clamm.methods.isEnoughAmountToChangePrice(params),
+        clamm
       )
     }
     // Max amount
@@ -1241,8 +1219,8 @@ describe('math tests', () => {
     }
     await expectError(
       ArithmeticError.SubUnderflow,
-      uints,
-      clamm.methods.isEnoughAmountToChangePrice(params)
+      clamm.methods.isEnoughAmountToChangePrice(params),
+      clamm
     )
   })
 
@@ -1260,8 +1238,7 @@ describe('math tests', () => {
     const tickUpperFeeGrowthOutsideY = 0n
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('sqrt price between ticks', async () => {
@@ -1464,8 +1441,7 @@ describe('math tests', () => {
     const tickUpperFeeGrowthOutsideY = 15_0000000000000000000000000000n
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('max fee growth', async () => {
@@ -1489,8 +1465,7 @@ describe('math tests', () => {
   })
 
   test('calculate sqrt price', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
     {
       const params = { args: { tickIndex: 30n } }
       const sqrtPrice = (await clamm.methods.calculateSqrtPrice(params)).returns
@@ -1560,8 +1535,7 @@ describe('math tests', () => {
     let clamm: CLAMMInstance
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('current tick between lower tick and upper tick', async () => {
@@ -1656,11 +1630,9 @@ describe('math tests', () => {
   describe('calculate amount delta - domain', () => {
     let clamm: CLAMMInstance
     let maxLiquidity = MaxU256
-    let uints: UintsInstance
 
     beforeEach(async () => {
-      uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('max x', async () => {
@@ -1755,8 +1727,8 @@ describe('math tests', () => {
       }
       await expectError(
         CLAMMError.InvalidTickIndex,
-        clamm,
-        clamm.methods.calculateAmountDelta(params)
+        clamm.methods.calculateAmountDelta(params),
+        clamm
       )
     })
 
@@ -1786,8 +1758,7 @@ describe('math tests', () => {
     let clamm: CLAMMInstance
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('add 1', async () => {
@@ -1875,7 +1846,6 @@ describe('math tests', () => {
   })
 
   describe('get next sqrt price x up - domain', () => {
-    let uints: UintsInstance
     let clamm: CLAMMInstance
     const maxLiquidity = MaxU256
     const minLiquidity = 1n
@@ -1887,8 +1857,7 @@ describe('math tests', () => {
     const almostMaxSqrtPrice = 65535383934512646999999999999n
 
     beforeEach(async () => {
-      uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('min value inside domain / increases min sqrt price', async () => {
@@ -1962,8 +1931,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.SubUnderflow,
-        uints,
-        clamm.methods.getNextSqrtPriceXUp(params)
+        clamm.methods.getNextSqrtPriceXUp(params),
+        clamm
       )
     })
 
@@ -1993,7 +1962,6 @@ describe('math tests', () => {
   })
 
   describe('next sqrt price from input - domain', () => {
-    let uints: UintsInstance
     let clamm: CLAMMInstance
     const maxLiquidity = MaxU256
     const minLiquidity = 1n
@@ -2004,8 +1972,7 @@ describe('math tests', () => {
     const almostMinSqrtPrice = minSqrtPrice + 1n
 
     beforeEach(async () => {
-      uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('max result, increase sqrt_price case', async () => {
@@ -2061,14 +2028,13 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.CastOverflow,
-        uints,
-        clamm.methods.getNextSqrtPriceFromInput(params)
+        clamm.methods.getNextSqrtPriceFromInput(params),
+        clamm
       )
     })
   })
 
   describe('next sqrt price from output - domain', () => {
-    let uints: UintsInstance
     let clamm: CLAMMInstance
     const maxLiquidity = MaxU256
     const minLiquidity = 1n
@@ -2079,8 +2045,7 @@ describe('math tests', () => {
     const almostMinSqrtPrice = minSqrtPrice + 1n
 
     beforeEach(async () => {
-      uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('max result, increase sqrt_price case', async () => {
@@ -2123,8 +2088,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.DivNotPositiveDivisor,
-        uints,
-        clamm.methods.getNextSqrtPriceFromOutput(params)
+        clamm.methods.getNextSqrtPriceFromOutput(params),
+        clamm
       )
     })
 
@@ -2139,8 +2104,8 @@ describe('math tests', () => {
       }
       await expectError(
         ArithmeticError.SubUnderflow,
-        uints,
-        clamm.methods.getNextSqrtPriceFromOutput(params)
+        clamm.methods.getNextSqrtPriceFromOutput(params),
+        clamm
       )
     })
   })
@@ -2149,8 +2114,7 @@ describe('math tests', () => {
     let clamm: CLAMMInstance
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('one token by amount in', async () => {
@@ -2444,8 +2408,7 @@ describe('math tests', () => {
     const minFee = 0n
 
     beforeEach(async () => {
-      const uints = await deployUints(sender)
-      clamm = await deployCLAMM(sender, uints.contractId)
+      clamm = await deployCLAMM(sender)
     })
 
     test('100% fee | max amount', async () => {

@@ -82,14 +82,14 @@ describe('invariant tests', () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
     expectError(
       InvariantError.PositionDoesNotExist,
-      invariant,
       ClaimFee.execute(notOwner, {
         initialFields: {
           invariant: invariant.contractId,
           index: 1n
         },
         attoAlphAmount: DUST_AMOUNT
-      })
+      }),
+      invariant
     )
   })
 })

@@ -92,8 +92,8 @@ describe('invariant tests', () => {
 
     await expectError(
       InvariantError.PoolKeyAlreadyExist,
-      invariant,
-      initPool(invariant, poolCreator, tokenY, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenY, tokenX, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
   })
   test('create pool with same tokens', async () => {
@@ -112,8 +112,8 @@ describe('invariant tests', () => {
 
     await expectError(
       InvariantError.TokensAreSame,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenX, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenX, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
   })
   test('create pool fee tier not added', async () => {
@@ -131,8 +131,8 @@ describe('invariant tests', () => {
 
     await expectError(
       InvariantError.FeeTierNotFound,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
   })
   test('create pool init tick not divided by tick spacing', async () => {
@@ -156,8 +156,8 @@ describe('invariant tests', () => {
     )
     await expectError(
       CLAMMError.InvalidTickSpacing,
-      clamm,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      clamm
     )
   })
   test('create pool init sqrt price minimal diffrence from tick', async () => {
@@ -203,8 +203,8 @@ describe('invariant tests', () => {
     const initSqrtPrice = 1000175003749000000000000n
     await expectError(
       InvariantError.TickAndSqrtPriceMismatch,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
 
     const correctInitTick = 3n
@@ -237,8 +237,8 @@ describe('invariant tests', () => {
     const initSqrtPrice = 1000225003749000000000000n
     await expectError(
       InvariantError.TickAndSqrtPriceMismatch,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
 
     const correctInitTick = 3n

@@ -2,7 +2,7 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../artifacts/ts'
-import { deployCLAMM, deployUints } from '../src/utils'
+import { deployCLAMM } from '../src/utils'
 import { expectError } from '../src/testUtils'
 import { DecimalError, GlobalMaxTick, GlobalMinTick } from '../src/consts'
 
@@ -12,8 +12,7 @@ describe('log tests', () => {
 
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 100000n, 0)
-    const uints = await deployUints(sender)
-    clamm = await deployCLAMM(sender, uints.contractId)
+    clamm = await deployCLAMM(sender)
   })
 
   describe('sqrt price to x32', () => {
@@ -609,18 +608,17 @@ describe('log tests', () => {
   })
 
   test('calculate sqrt price - domain', async () => {
-    const uints = await deployUints(sender)
-    const clamm = await deployCLAMM(sender, uints.contractId)
+    const clamm = await deployCLAMM(sender)
 
     await expectError(
       DecimalError.TickOverBounds,
-      clamm,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } })
+      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } }),
+      clamm
     )
     await expectError(
       DecimalError.TickOverBounds,
-      clamm,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } })
+      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } }),
+      clamm
     )
   })
 

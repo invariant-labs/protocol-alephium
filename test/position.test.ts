@@ -118,7 +118,6 @@ describe('position tests', () => {
 
     await expectError(
       CLAMMError.InvalidTickIndex,
-      clamm,
       initPositionWithLiquidity(
         invariant,
         positionOwner,
@@ -134,7 +133,8 @@ describe('position tests', () => {
         1n,
         0n,
         MaxSqrtPrice
-      )
+      ),
+      clamm
     )
   })
   test('remove position', async () => {

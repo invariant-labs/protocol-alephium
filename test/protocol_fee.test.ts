@@ -58,8 +58,8 @@ describe('protocol fee tests', () => {
 
     expectError(
       InvariantError.NotFeeReceiver,
-      invariant,
-      withdrawProtocolFee(invariant, notAdmin, tokenX, tokenY, fee, tickSpacing)
+      withdrawProtocolFee(invariant, notAdmin, tokenX, tokenY, fee, tickSpacing),
+      invariant
     )
   })
 
@@ -79,8 +79,8 @@ describe('protocol fee tests', () => {
     })
     await expectError(
       InvariantError.NotFeeReceiver,
-      invariant,
-      withdrawProtocolFee(invariant, admin, tokenX, tokenY, fee, tickSpacing)
+      withdrawProtocolFee(invariant, admin, tokenX, tokenY, fee, tickSpacing),
+      invariant
     )
 
     await withdrawProtocolFee(invariant, newFeeReceiver, tokenX, tokenY, fee, tickSpacing)

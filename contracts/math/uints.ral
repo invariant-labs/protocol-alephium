@@ -3,7 +3,7 @@ struct U512 {
     mut lower: U256
 }
 
-Contract Uints () {
+Abstract Contract Uints () {
     const MaxU256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
     const WordSize = 256
 
@@ -364,10 +364,6 @@ Contract Uints () {
         }
 
         return lower, 0
-    }
-
-    pub fn wrappingAdd(a: U256, b: U256) -> U256 {
-        return a |+| b
     }
 
     pub fn low128(a: U256) -> U256 {

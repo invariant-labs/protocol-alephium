@@ -1,5 +1,5 @@
 import { NodeProvider, ONE_ALPH, SignerProvider, node, web3 } from '@alephium/web3'
-import { CLAMM, Invariant, InvariantInstance, Uints } from '../artifacts/ts'
+import { CLAMM, Invariant, InvariantInstance } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { Pool, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
@@ -31,11 +31,12 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(signer: SignerProvider, protocolFee: bigint): Promise<InvariantInstance> {
+export async function deployInvariant(
+  signer: SignerProvider,
+  protocolFee: bigint
+): Promise<InvariantInstance> {
   const account = await signer.getSelectedAccount()
-
-  const uints = await deployUints(signer)
-  const clamm = await deployCLAMM(signer, uints.contractId)
+  const clamm = await deployCLAMM(signer)
 
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
@@ -50,20 +51,13 @@ export async function deployInvariant(signer: SignerProvider, protocolFee: bigin
   return Invariant.at(deployResult.contractInstance.address)
 }
 
-export async function deployCLAMM(signer: SignerProvider, uintsId: string) {
+export async function deployCLAMM(signer: SignerProvider) {
   const deployResult = await waitTxConfirmed(
     CLAMM.deploy(signer, {
-      initialFields: {
-        uints: uintsId
-      }
+      initialFields: {}
     })
   )
   return CLAMM.at(deployResult.contractInstance.address)
-}
-
-export async function deployUints(signer: SignerProvider) {
-  const deployResult = await waitTxConfirmed(Uints.deploy(signer, { initialFields: {} }))
-  return Uints.at(deployResult.contractInstance.address)
 }
 
 export async function deployTokenFaucet(

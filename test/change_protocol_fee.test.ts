@@ -28,8 +28,8 @@ describe('change protocol fee tests', () => {
     const newFee = 1n
     await expectError(
       InvariantError.NotAdmin,
-      invariant,
-      changeProtocolFee(invariant, unauthorizedUser, newFee)
+      changeProtocolFee(invariant, unauthorizedUser, newFee),
+      invariant
     )
   })
 })
