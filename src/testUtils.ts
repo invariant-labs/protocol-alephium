@@ -5,14 +5,15 @@ import {
   CreatePool,
   IncreasePositionLiquidity,
   InitializeEmptyPosition,
-  Invariant,
   InvariantInstance,
   RemoveFeeTier,
   RemovePosition,
   Swap,
-  Withdraw
+  Withdraw,
+  TokenFaucet,
+  TokenFaucetInstance,
+  WithdrawProtocolFee
 } from '../artifacts/ts'
-import { TokenFaucet, TokenFaucetInstance } from '../artifacts/ts/TokenFaucet'
 import {
   MAP_ENTRY_DEPOSIT,
   decodePool,
@@ -141,6 +142,26 @@ export async function initPool(
       initTick
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
+  })
+}
+
+export const withdrawProtocolFee = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  token0: TokenInstance,
+  token1: TokenInstance,
+  fee: bigint,
+  tickSpacing: bigint
+) => {
+  return await WithdrawProtocolFee.execute(signer, {
+    initialFields: {
+      invariant: invariant.address,
+      token0: token0.address,
+      token1: token1.address,
+      fee,
+      tickSpacing
+    },
+    attoAlphAmount: DUST_AMOUNT
   })
 }
 
@@ -323,6 +344,7 @@ export async function initSwap(
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ) {
+  const id = xToY ? token0.contractId : token1.contractId
   return await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
@@ -335,10 +357,7 @@ export async function initSwap(
       byAmountIn,
       sqrtPriceLimit
     },
-    tokens: [
-      { id: token0.contractId, amount },
-      { id: token1.contractId, amount }
-    ]
+    tokens: [{ id, amount }]
   })
 }
 
