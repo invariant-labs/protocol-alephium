@@ -50,19 +50,19 @@ describe('change fee receiver tests', () => {
   })
 
   test('test_not_admin_change_fee_receiver', async () => {
-    const newFeeReceiver = await getSigner(ONE_ALPH * 1000n, 0)
+    const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
     await expectError(
       InvariantError.NotAdmin,
       invariant,
-      ChangeFeeReceiver.execute(newFeeReceiver, {
+      ChangeFeeReceiver.execute(notAdmin, {
         initialFields: {
           invariant: invariant.contractId,
           token0: tokenX.contractId,
           token1: tokenY.contractId,
           fee,
           tickSpacing,
-          newFeeReceiver: newFeeReceiver.address
+          newFeeReceiver: notAdmin.address
         }
       })
     )
