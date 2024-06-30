@@ -85,8 +85,8 @@ describe('interaction with pool on removed fee tiers tests', () => {
   test('try to create same pool again', async () => {
     await expectError(
       InvariantError.FeeTierNotFound,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
   })
   test('init position', async () => {
@@ -271,8 +271,8 @@ describe('interaction with pool on removed fee tiers tests', () => {
 
     await expectError(
       InvariantError.PoolKeyAlreadyExist,
-      invariant,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      invariant
     )
   })
 })

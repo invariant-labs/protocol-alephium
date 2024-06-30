@@ -1,4 +1,4 @@
-Contract CLAMM(uints: Uints) extends Log(uints){ 
+Contract CLAMM() extends Uints(), Log(){ 
     enum CLAMMError {
         InvalidTickIndex = 800
         InvalidTickSpacing = 801
@@ -28,7 +28,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let mut amountOut = 0
 
         if (byAmountIn) {
-            let amountAfterFee = uints.toU256(uints.bigMulDiv256(amount, (one(PercentageScale) - fee), one(PercentageScale)))
+            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), one(PercentageScale)))
 
             if (xToY) {
                 amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
@@ -82,7 +82,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         if (byAmountIn && nextSqrtPrice != targetSqrtPrice) {
             feeAmount = amount - amountIn
         } else {
-            feeAmount = uints.toU256(uints.bigMulDivUp256(amountIn, fee, one(PercentageScale)))
+            feeAmount = toU256(bigMulDivUp256(amountIn, fee, one(PercentageScale)))
         }
 
         return SwapResult { 
@@ -106,14 +106,14 @@ Contract CLAMM(uints: Uints) extends Log(uints){
             deltaSqrtPrice = sqrtPriceB - sqrtPriceA
         }
 
-        let nominator = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+        let nominator = bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
 
         if (roundingUp) {
             let denominator = mul(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
-            return uints.bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
+            return bigDivToTokenUp(nominator, denominator, one(SqrtPriceScale))
         } else {
             let denominatorUp = mulUp(sqrtPriceA, sqrtPriceB, one(SqrtPriceScale))
-            return uints.bigDivToToken(nominator, denominatorUp, one(SqrtPriceScale))
+            return bigDivToToken(nominator, denominatorUp, one(SqrtPriceScale))
         }
     }
 
@@ -133,16 +133,16 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         let mut result = U512 { higher: 0, lower: 0 }
 
         if (roundingUp) {
-            result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
-            result = uints.bigAdd(result, almostOne(SqrtPriceScale))
-            result = uints.bigDiv(result, one(SqrtPriceScale), 1)
+            result = bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+            result = bigAdd(result, almostOne(SqrtPriceScale))
+            result = bigDiv(result, one(SqrtPriceScale), 1)
 
-            return uints.toU256(result)
+            return toU256(result)
         } else {
-            result = uints.bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
-            result = uints.bigDiv(result, one(SqrtPriceScale), 1)
+            result = bigMulDiv256(deltaSqrtPrice, liquidity, one(LiquidityScale))
+            result = bigDiv(result, one(SqrtPriceScale), 1)
 
-            return uints.toU256(result)
+            return toU256(result)
         }
     }
 
@@ -182,22 +182,22 @@ Contract CLAMM(uints: Uints) extends Log(uints){
             return startingSqrtPrice
         }
 
-        let deltaSqrtPrice = uints.bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
+        let deltaSqrtPrice = bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
 
         let mut denominator = U512 { higher: 0, lower: 0 }
         if (addX) {
-            denominator = uints.bigAdd512(deltaSqrtPrice, uints.bigMulDiv256(startingSqrtPrice, x, one(TokenAmountScale)))
+            denominator = bigAdd512(deltaSqrtPrice, bigMulDiv256(startingSqrtPrice, x, one(TokenAmountScale)))
         } else {
-            denominator = uints.bigSub512(deltaSqrtPrice, uints.bigMulDiv256(startingSqrtPrice, x, one(TokenAmountScale)))
+            denominator = bigSub512(deltaSqrtPrice, bigMulDiv256(startingSqrtPrice, x, one(TokenAmountScale)))
         }
 
-        let nominator = uints.bigMulDivUp256(startingSqrtPrice, liquidity, one(LiquidityScale))
+        let nominator = bigMulDivUp256(startingSqrtPrice, liquidity, one(LiquidityScale))
 
-        let mut result = uints.bigMul(nominator, one(SqrtPriceScale))
-        result = uints.bigAdd512(result, uints.bigSub512(denominator, uints.toU512(1)))
-        result = uints.bigDiv512(result, denominator, 1)
+        let mut result = bigMul(nominator, one(SqrtPriceScale))
+        result = bigAdd512(result, bigSub512(denominator, toU512(1)))
+        result = bigDiv512(result, denominator, 1)
 
-        return uints.toU256(result)
+        return toU256(result)
     }
 
     pub fn getNextSqrtPriceYDown(
@@ -206,13 +206,13 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         y: U256,
         addY: Bool
     ) -> U256 {
-        let numerator = uints.bigRescale(y, TokenAmountScale, SqrtPriceScale)
-        let denominator = uints.bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
+        let numerator = bigRescale(y, TokenAmountScale, SqrtPriceScale)
+        let denominator = bigRescale(liquidity, LiquidityScale, SqrtPriceScale)
         
         if (addY) {
-            return startingSqrtPrice + uints.toU256(uints.bigDiv512(numerator, denominator, one(SqrtPriceScale)))
+            return startingSqrtPrice + toU256(bigDiv512(numerator, denominator, one(SqrtPriceScale)))
         } else {
-            return startingSqrtPrice - uints.toU256(uints.bigDivUp512(numerator, denominator, one(SqrtPriceScale)))
+            return startingSqrtPrice - toU256(bigDivUp512(numerator, denominator, one(SqrtPriceScale)))
         }
     }
 
@@ -277,7 +277,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
 
         let mut nextSqrtPrice = 0
         if (byAmountIn == true) {
-            let amountAfterFee = uints.toU256(uints.bigMulDiv256(amount, (one(PercentageScale) - fee), PercentageScale))
+            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), PercentageScale))
             nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
         } else {
             nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
@@ -313,7 +313,7 @@ Contract CLAMM(uints: Uints) extends Log(uints){
         expectedAmountOut: U256,
         slippage: U256
     ) -> U256 {
-        return uints.toU256(uints.bigMulDivUp256(expectedAmountOut, (one(PercentageScale) - slippage), one(PercentageScale)))
+        return toU256(bigMulDivUp256(expectedAmountOut, (one(PercentageScale) - slippage), one(PercentageScale)))
     }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: U256) -> Bool {
@@ -337,10 +337,11 @@ Contract CLAMM(uints: Uints) extends Log(uints){
     }
 
     pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
-        return uints.toU256(uints.bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
+        return toU256(bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
     }
 
     pub fn feeGrowthFromFee(liquidity: U256, fee: U256) -> U256 {
-        return uints.toU256(uints.bigMulDiv256(fee, one(LiquidityScale + FeeGrowthScale), liquidity))
+        return toU256(bigMulDiv256(fee, one(LiquidityScale + FeeGrowthScale), liquidity))
     }
+
 }

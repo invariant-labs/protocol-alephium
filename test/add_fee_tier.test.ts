@@ -1,9 +1,9 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant } from '../src/utils'
 import { InvariantError, PercentageScale } from '../src/consts'
 import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
+import { deployInvariant } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -78,8 +78,8 @@ describe('add fee tier tests', () => {
 
     expectError(
       InvariantError.FeeTierAlreadyExist,
-      invariant,
-      initFeeTier(invariant, admin, fee, tickSpacing)
+      initFeeTier(invariant, admin, fee, tickSpacing),
+      invariant
     )
   })
 
@@ -94,8 +94,8 @@ describe('add fee tier tests', () => {
 
     expectError(
       InvariantError.NotAdmin,
-      invariant,
-      initFeeTier(invariant, notAdmin, fee, tickSpacing)
+      initFeeTier(invariant, notAdmin, fee, tickSpacing),
+      invariant
     )
   })
 
@@ -115,8 +115,8 @@ describe('add fee tier tests', () => {
 
     expectError(
       InvariantError.InvalidTickSpacing,
-      invariant,
-      initFeeTier(invariant, admin, fee, tickSpacing)
+      initFeeTier(invariant, admin, fee, tickSpacing),
+      invariant
     )
   })
 
@@ -129,8 +129,9 @@ describe('add fee tier tests', () => {
 
     expectError(
       InvariantError.InvalidTickSpacing,
-      invariant,
-      initFeeTier(invariant, admin, fee, tickSpacing)
+
+      initFeeTier(invariant, admin, fee, tickSpacing),
+      invariant
     )
   })
 
@@ -143,8 +144,8 @@ describe('add fee tier tests', () => {
 
     expectError(
       InvariantError.InvalidFee,
-      invariant,
-      initFeeTier(invariant, admin, fee, tickSpacing)
+      initFeeTier(invariant, admin, fee, tickSpacing),
+      invariant
     )
   })
 })

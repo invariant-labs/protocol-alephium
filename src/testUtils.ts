@@ -28,10 +28,23 @@ type TokenInstance = TokenFaucetInstance
 
 export async function expectError(
   errorCode: bigint,
-  contract: ContractInstance,
-  script: Promise<any>
+  script: Promise<any>,
+  contract?: ContractInstance
 ) {
-  return await expectAssertionError(script, contract.address, Number(errorCode))
+  if (contract) {
+    return await expectAssertionError(script, contract.address, Number(errorCode))
+  } else {
+    try {
+      await script
+    } catch (e: any) {
+      const err = e.toString()
+      const regex = new RegExp(`${errorCode}$`)
+      if (!regex.test(err)) {
+        console.log(err)
+        throw new Error('Invalid Error message')
+      }
+    }
+  }
 }
 
 export async function expectVMError(error: string, script: Promise<any>) {

@@ -54,7 +54,7 @@ describe('change fee receiver tests', () => {
 
     await expectError(
       InvariantError.NotAdmin,
-      invariant,
+
       ChangeFeeReceiver.execute(notAdmin, {
         initialFields: {
           invariant: invariant.contractId,
@@ -64,7 +64,8 @@ describe('change fee receiver tests', () => {
           tickSpacing,
           newFeeReceiver: notAdmin.address
         }
-      })
+      }),
+      invariant
     )
   })
 })

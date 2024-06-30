@@ -47,8 +47,8 @@ describe('remove fee tier tests', () => {
 
     expectError(
       InvariantError.FeeTierNotFound,
-      invariant,
-      removeFeeTier(invariant, admin, fee, tickSpacings[1])
+      removeFeeTier(invariant, admin, fee, tickSpacings[1]),
+      invariant
     )
   })
 
@@ -62,8 +62,8 @@ describe('remove fee tier tests', () => {
 
     expectError(
       InvariantError.NotAdmin,
-      invariant,
-      removeFeeTier(invariant, notAdmin, fee, tickSpacings[0])
+      removeFeeTier(invariant, notAdmin, fee, tickSpacings[0]),
+      invariant
     )
   })
 })
