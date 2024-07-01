@@ -2,7 +2,7 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant } from '../src/utils'
-import { FeeGrowthScale, MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   feeTierExists,
   getPool,
@@ -125,17 +125,17 @@ describe('multiple swap tests', () => {
     }
     // final checks
     {
-      const dexAmount = {
+      const dexBalance = {
         tokenX: await balanceOf(tokenX.contractId, invariant.address),
         tokenY: await balanceOf(tokenY.contractId, invariant.address)
       }
-      expect(dexAmount).toStrictEqual({ tokenX: 200n, tokenY: 20n })
+      expect(dexBalance).toStrictEqual({ tokenX: 200n, tokenY: 20n })
 
-      const swapperAmount = {
+      const swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
         tokenY: await balanceOf(tokenY.contractId, swapper.address)
       }
-      expect(swapperAmount).toStrictEqual({ tokenX: 0n, tokenY: 80n })
+      expect(swapperBalance).toStrictEqual({ tokenX: 0n, tokenY: 80n })
 
       const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
@@ -195,17 +195,17 @@ describe('multiple swap tests', () => {
     }
     // final checks
     {
-      let dexAmount = {
+      let dexBalance = {
         tokenX: await balanceOf(tokenX.contractId, invariant.address),
         tokenY: await balanceOf(tokenY.contractId, invariant.address)
       }
-      expect(dexAmount).toStrictEqual({ tokenX: 20n, tokenY: 200n })
+      expect(dexBalance).toStrictEqual({ tokenX: 20n, tokenY: 200n })
 
-      let swapperAmount = {
+      let swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
         tokenY: await balanceOf(tokenY.contractId, swapper.address)
       }
-      expect(swapperAmount).toStrictEqual({ tokenX: 80n, tokenY: 0n })
+      expect(swapperBalance).toStrictEqual({ tokenX: 80n, tokenY: 0n })
 
       let pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
