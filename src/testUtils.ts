@@ -65,6 +65,22 @@ export async function expectVMError(error: string, script: Promise<any>) {
   expect(isError).toBeTruthy()
 }
 
+export async function expectOutOfGas(script: Promise<any>) {
+  let isError: boolean = false
+  try {
+    await script
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      const regex = new RegExp('OutOfGas')
+      const regexResult = regex.exec(e.message)
+
+      isError = regexResult ? true : false
+    }
+  }
+
+  expect(isError).toBeTruthy()
+}
+
 export async function initTokensXY(signer: SignerProvider, supply: bigint) {
   const token0 = TokenFaucet.at(
     (await deployTokenFaucet(signer, '', '', supply, supply)).contractInstance.address

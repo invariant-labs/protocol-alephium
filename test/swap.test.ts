@@ -11,6 +11,7 @@ import {
 } from '../src/snippets'
 import {
   expectError,
+  expectOutOfGas,
   getPool,
   getTick,
   initFeeTier,
@@ -135,10 +136,10 @@ describe('swap tests', () => {
 
       // check balances
       const dexDelta = {
-        tokenX: dexBalanceBefore.tokenX - (await balanceOf(tokenX.contractId, invariant.address)),
-        tokenY: dexBalanceBefore.tokenY - (await balanceOf(tokenY.contractId, invariant.address))
+        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
+        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
       }
-      expect(dexDelta).toMatchObject({ tokenX: -swapAmount, tokenY: swapAmount - 10n })
+      expect(dexDelta).toMatchObject({ tokenX: swapAmount, tokenY: 10n - swapAmount })
 
       const swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -272,10 +273,10 @@ describe('swap tests', () => {
 
       // check balances
       const dexDelta = {
-        tokenX: dexBalanceBefore.tokenX - (await balanceOf(tokenX.contractId, invariant.address)),
-        tokenY: dexBalanceBefore.tokenY - (await balanceOf(tokenY.contractId, invariant.address))
+        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
+        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
       }
-      expect(dexDelta).toMatchObject({ tokenX: swapAmount - 10n, tokenY: -swapAmount })
+      expect(dexDelta).toMatchObject({ tokenX: 10n - swapAmount, tokenY: swapAmount })
 
       const swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -376,18 +377,21 @@ describe('swap tests', () => {
         tokenY: await balanceOf(tokenY.contractId, invariant.address)
       }
       expect(dexBalance).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
-      // TODO: expectError - currently without it due to the bug in Alephium's error checking function giving us false positive
-      await initSwap(
-        invariant,
-        swapper,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
-        true,
-        swapAmount,
-        true,
-        MinSqrtPrice
+      // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
+      // in the particularly unlikely in the real world scenario of only uninitialized chunks
+      expectOutOfGas(
+        initSwap(
+          invariant,
+          swapper,
+          tokenX,
+          tokenY,
+          fee,
+          tickSpacing,
+          true,
+          swapAmount,
+          true,
+          MinSqrtPrice
+        )
       )
     }
   })
