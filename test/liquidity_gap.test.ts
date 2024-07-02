@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { balanceOf, deployInvariant } from '../src/utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
@@ -16,6 +16,7 @@ import {
   quote,
   withdrawTokens
 } from '../src/testUtils'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -27,6 +28,8 @@ describe('liquidity gap tests', () => {
   let invariant: InvariantInstance
   let tokenX: TokenFaucetInstance
   let tokenY: TokenFaucetInstance
+  let feeTier: FeeTier
+  let poolKey: PoolKey
   const fee = 6n * 10n ** (PercentageScale - 3n)
   const tickSpacing = 10n
   const initTick = 0n
@@ -40,8 +43,10 @@ describe('liquidity gap tests', () => {
     const protocolFee = 10n ** (PercentageScale - 2n)
     invariant = await deployInvariant(deployer, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, mintAmount)
-    await initFeeTier(invariant, deployer, fee, tickSpacing)
-    await initPool(invariant, deployer, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, deployer, feeTier)
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    await initPool(invariant, deployer, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
   })
   test('init position', async () => {
     const amount = 10n ** 6n
@@ -50,18 +55,15 @@ describe('liquidity gap tests', () => {
     const liquidityDelta = 20006000n * 10n ** LiquidityScale
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
 
     await initPosition(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       amount,
-      tokenY,
       amount,
-      fee,
-      tickSpacing,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -69,7 +71,7 @@ describe('liquidity gap tests', () => {
       slippageLimitUpper
     )
 
-    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolAfter = await getPool(invariant, poolKey)
     expect(poolAfter.liquidity).toEqual(liquidityDelta)
   })
   test('init swap', async () => {
@@ -81,32 +83,11 @@ describe('liquidity gap tests', () => {
 
     const slippage = MinSqrtPrice
 
-    const { targetSqrtPrice } = await quote(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      slippage
-    )
+    const { targetSqrtPrice } = await quote(invariant, poolKey, true, amount, true, slippage)
 
-    await initSwap(
-      invariant,
-      swapper,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      targetSqrtPrice
-    )
+    await initSwap(invariant, swapper, poolKey, true, amount, true, targetSqrtPrice)
 
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, poolKey)
     const expectedSqrtPrice = (
       await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } })
     ).returns
@@ -142,19 +123,16 @@ describe('liquidity gap tests', () => {
     const amount = 10n ** 6n
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
 
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
 
     await initPosition(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       amount,
-      tokenY,
       amount,
-      fee,
-      tickSpacing,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -168,52 +146,17 @@ describe('liquidity gap tests', () => {
 
     const slippage = MinSqrtPrice
 
-    const { targetSqrtPrice } = await quote(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      slippage
-    )
+    const { targetSqrtPrice } = await quote(invariant, poolKey, true, amount, true, slippage)
 
-    await initSwap(
-      invariant,
-      swapper,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      targetSqrtPrice
-    )
+    await initSwap(invariant, swapper, poolKey, true, amount, true, targetSqrtPrice)
 
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, poolKey)
     const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
     const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
 
-    const { exist: lowerInMap, ...lowerTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      -50n
-    )
-    const { exist: currentInMap } = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -60n)
-    const { exist: upperInMap, ...upperTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      -10n
-    )
+    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
+    const { exist: currentInMap } = await getTick(invariant, poolKey, -60n)
+    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
 
     const expectedFirstPosition = {
       exist: true,
@@ -270,10 +213,7 @@ describe('liquidity gap tests', () => {
 
     const expectedPool = {
       exist: true,
-      tokenX: tokenX.contractId,
-      tokenY: tokenY.contractId,
-      fee,
-      tickSpacing,
+      poolKey,
       liquidity: secondPosition.liquidity,
       currentTickIndex: -60n,
       feeGrowthGlobalX: 59979007497271010620043n,

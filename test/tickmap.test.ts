@@ -5,10 +5,11 @@ import { Flip, InitializeChunk } from '../artifacts/ts'
 
 import { deployInvariant } from '../src/utils'
 import { GlobalMinTick, GlobalMaxTick } from '../src/consts'
+import { PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
-const poolKey = ''
+
 const TICK_SEARCH_RANGE = 256n
 const protocolFee = 100n
 describe('invariant tests', () => {
@@ -27,6 +28,15 @@ describe('invariant tests', () => {
       { tickSpacing: 100n, tick: 20000n }
     ]
     for (const { tick, tickSpacing } of params) {
+      const poolKey = {
+        tokenX: '',
+        tokenY: '',
+        feeTier: {
+          fee: 0n,
+          tickSpacing
+        }
+      }
+
       const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
         .returns
 
@@ -43,7 +53,7 @@ describe('invariant tests', () => {
       expect(
         (
           await invariant.methods.getBit({
-            args: { tick, tickSpacing, poolKey }
+            args: { tick, poolKey }
           })
         ).returns
       ).toBe(false)
@@ -52,7 +62,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: true,
           tick,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -61,7 +70,7 @@ describe('invariant tests', () => {
       expect(
         (
           await invariant.methods.getBit({
-            args: { tick, tickSpacing, poolKey }
+            args: { tick, poolKey }
           })
         ).returns
       ).toBe(true)
@@ -71,7 +80,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: false,
           tick,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -80,7 +88,7 @@ describe('invariant tests', () => {
       expect(
         (
           await invariant.methods.getBit({
-            args: { tick, tickSpacing, poolKey }
+            args: { tick, poolKey }
           })
         ).returns
       ).toBe(false)
@@ -90,6 +98,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 5n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -109,7 +125,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -126,6 +141,14 @@ describe('invariant tests', () => {
     const tick50 = 50n
     const tick100 = 100n
     const tickSpacing = 10n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     {
       const [chunkIndex] = (
@@ -147,7 +170,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: true,
           tick: tick50,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -173,7 +195,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: true,
           tick: tick100,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -199,6 +220,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 10n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -218,7 +247,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -233,6 +261,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -252,7 +288,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -270,6 +305,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -289,7 +332,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -306,6 +348,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 10n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -325,7 +375,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -342,6 +391,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 22n
     const tickSpacing = 4n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [isSome, index] = (
       await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
@@ -352,6 +409,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 2n
     const tickSpacing = 4n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [isSome] = (
       await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
@@ -362,6 +427,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 255n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -381,7 +454,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -399,6 +471,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = -5n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -418,7 +498,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -435,6 +514,14 @@ describe('invariant tests', () => {
     const tick50 = -50n
     const tick100 = -100n
     const tickSpacing = 10n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     {
       const [chunkIndex] = (
@@ -456,7 +543,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: true,
           tick: tick50,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -482,7 +568,6 @@ describe('invariant tests', () => {
           invariant: invariant.contractId,
           value: true,
           tick: tick100,
-          tickSpacing,
           poolKey
         },
         attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -507,6 +592,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 10n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -526,7 +619,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -542,6 +634,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 10n
     const tickSpacing = 10n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -561,7 +661,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -576,6 +675,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -595,7 +702,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -614,6 +720,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -633,7 +747,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -650,6 +763,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick + 1n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -669,7 +790,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -686,6 +806,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick + 255n
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -705,7 +833,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -723,6 +850,14 @@ describe('invariant tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick
     const tickSpacing = 1n
+    const poolKey: PoolKey = {
+      tokenX: '',
+      tokenY: '',
+      feeTier: {
+        fee: 0n,
+        tickSpacing
+      }
+    }
 
     const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -742,7 +877,6 @@ describe('invariant tests', () => {
         invariant: invariant.contractId,
         value: true,
         tick,
-        tickSpacing,
         poolKey
       },
       attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -815,6 +949,14 @@ describe('invariant tests', () => {
   test('test next and prev intialized', async () => {
     // initialized edges
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
+      const poolKey: PoolKey = {
+        tokenX: '',
+        tokenY: '',
+        feeTier: {
+          fee: 0n,
+          tickSpacing
+        }
+      }
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
@@ -840,7 +982,6 @@ describe('invariant tests', () => {
             invariant: invariant.contractId,
             value: true,
             tick: maxIndex,
-            tickSpacing,
             poolKey
           },
           attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -866,7 +1007,6 @@ describe('invariant tests', () => {
             invariant: invariant.contractId,
             value: true,
             tick: minIndex,
-            tickSpacing,
             poolKey
           },
           attoAlphAmount: ONE_ALPH + DUST_AMOUNT * 2n
@@ -891,6 +1031,14 @@ describe('invariant tests', () => {
       }
     }
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
+      const poolKey: PoolKey = {
+        tokenX: '',
+        tokenY: '',
+        feeTier: {
+          fee: 0n,
+          tickSpacing
+        }
+      }
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)

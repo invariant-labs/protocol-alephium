@@ -1,44 +1,41 @@
-TxScript AddFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
-    invariant.addFeeTier{callerAddress!() -> ALPH: mapEntryDeposit!()}(fee, tickSpacing)
+TxScript AddFeeTier(invariant: Invariant, feeTier: FeeTier) {
+    invariant.addFeeTier{callerAddress!() -> ALPH: mapEntryDeposit!()}(feeTier)
 }
 
-TxScript RemoveFeeTier(invariant: Invariant, fee: U256, tickSpacing: U256) {
-    invariant.removeFeeTier(fee, tickSpacing)
+TxScript RemoveFeeTier(invariant: Invariant, feeTier: FeeTier) {
+    invariant.removeFeeTier(feeTier)
 }
 
-TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, initSqrtPrice: U256, initTick: I256){
+TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256){
     let mapEntry2Deposits = 2 * mapEntryDeposit!()
-    invariant.createPool{callerAddress!() -> ALPH: mapEntry2Deposits }(token0, token1, fee, tickSpacing, initSqrtPrice, initTick)
+    invariant.createPool{callerAddress!() -> ALPH: mapEntry2Deposits }(token0, token1, feeTier, initSqrtPrice, initTick)
 }
 
 TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
     invariant.changeProtocolFee(newFee)
 }
 
-TxScript ChangeFeeReceiver(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, newFeeReceiver: Address) {
-    invariant.changeFeeReceiver(token0, token1, fee, tickSpacing, newFeeReceiver)
+TxScript ChangeFeeReceiver(invariant: Invariant, poolKey: PoolKey, newFeeReceiver: Address) {
+    invariant.changeFeeReceiver(poolKey,newFeeReceiver)
 }
 
-TxScript WithdrawProtocolFee(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) {
-    invariant.withdrawProtocolFee(token0, token1, fee, tickSpacing)
+TxScript WithdrawProtocolFee(invariant: Invariant, poolKey: PoolKey) {
+    invariant.withdrawProtocolFee(poolKey)
 }
 
 TxScript CreatePosition(
     invariant: Invariant,
-    token0: ByteVec,
-    token1: ByteVec,
-    fee: U256,
-    tickSpacing: U256, 
+    poolKey: PoolKey,
     lowerTick: I256,
     upperTick: I256,
     liquidityDelta: U256,
-    approvedTokens0: U256,
-    approvedTokens1: U256,
+    approvedTokensX: U256,
+    approvedTokensY: U256,
     slippageLimitLower: U256,
     slippageLimitUpper: U256
 ) {
-    invariant.createPosition{callerAddress!() -> token0: approvedTokens0, token1: approvedTokens1, ALPH: mapEntryDeposit!() * 7}
-        (token0, token1, fee, tickSpacing, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
+    invariant.createPosition{callerAddress!() -> poolKey.tokenX: approvedTokensX, poolKey.tokenY: approvedTokensY, ALPH: mapEntryDeposit!() * 6}
+        (poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 
 TxScript RemovePosition(invariant: Invariant, index: U256) {
@@ -53,21 +50,19 @@ TxScript ClaimFee(invariant: Invariant, index: U256) {
     invariant.claimFee(index)
 }
 
-TxScript Swap(invariant: Invariant, token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
-    let poolKey = invariant.generatePoolKey(token0, token1, fee, tickSpacing)
-    let (tokenX, tokenY) = invariant.extractTokensFromPoolKey(poolKey)
+TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
     if(xToY) {
-        let _ = invariant.swap{callerAddress!() -> tokenX: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let _ = invariant.swap{callerAddress!() -> poolKey.tokenX: amount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
     } else {
-        let _ = invariant.swap{callerAddress!() -> tokenY: amount}(token0, token1, fee, tickSpacing, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let _ = invariant.swap{callerAddress!() -> poolKey.tokenY: amount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 }
 
-TxScript Flip(invariant: Invariant, value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) {
-    invariant.flip(value, tick, tickSpacing, poolKey)    
+TxScript Flip(invariant: Invariant, value: Bool, tick: I256, poolKey: PoolKey) {
+    invariant.flip(value, tick, poolKey)    
 }
 
-TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: ByteVec, chunk: U256) {
+TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: PoolKey, chunk: U256) {
     invariant.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
 }
 

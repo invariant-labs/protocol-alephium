@@ -9,11 +9,17 @@ struct LiquidityResult {
     l: U256
 }
 
-Contract Utils() extends Uints(), Decimal(), Log() {
+Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelper() {
     enum UtilsError {
         InvalidTickIndex = 900
         UpperLTCurrentSqrtPrice = 901
         CurrentLTLowerSqrtPrice = 902
+    }
+
+    enum InvariantError {
+        InvalidTickSpacing = 2
+        InvalidFee = 3
+        TokensAreSame = 5
     }
 
     pub fn getLiquidityByX(x: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: U256, roundingUp: Bool) -> SingleTokenLiquidity {

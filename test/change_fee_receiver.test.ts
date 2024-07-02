@@ -3,8 +3,9 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getPool, expectError, initTokensXY, initFeeTier, initPool } from '../src/testUtils'
 import { ChangeFeeReceiver, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { deployInvariant } from '../src/utils'
+import { deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantError } from '../src/consts'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -16,6 +17,8 @@ describe('change fee receiver tests', () => {
   const protocolFee = 10n ** 10n
   const fee = 6n * 10n ** 9n
   const tickSpacing = 10n
+  let feeTier: FeeTier
+  let poolKey: PoolKey
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
@@ -24,10 +27,11 @@ describe('change fee receiver tests', () => {
   beforeEach(async () => {
     invariant = await deployInvariant(admin, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(admin, 0n)
+    feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, 10n ** 24n, 0n)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, 10n ** 24n, 0n)
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   })
 
   test('test_change_fee_receiver', async () => {
@@ -36,15 +40,12 @@ describe('change fee receiver tests', () => {
     await ChangeFeeReceiver.execute(admin, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: tokenX.contractId,
-        token1: tokenY.contractId,
-        fee,
-        tickSpacing,
+        poolKey,
         newFeeReceiver: newFeeReceiver.address
       }
     })
 
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, poolKey)
 
     expect(pool.feeReceiver).toBe(newFeeReceiver.address)
   })
@@ -58,10 +59,7 @@ describe('change fee receiver tests', () => {
       ChangeFeeReceiver.execute(notAdmin, {
         initialFields: {
           invariant: invariant.contractId,
-          token0: tokenX.contractId,
-          token1: tokenY.contractId,
-          fee,
-          tickSpacing,
+          poolKey,
           newFeeReceiver: notAdmin.address
         }
       }),

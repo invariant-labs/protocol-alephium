@@ -1,7 +1,7 @@
-import { NodeProvider, ONE_ALPH, SignerProvider, node, web3 } from '@alephium/web3'
-import { CLAMM, Invariant, InvariantInstance } from '../artifacts/ts'
+import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
+import { CLAMM, Invariant, InvariantInstance, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { Pool, Position, Tick } from '../artifacts/ts/types'
+import { FeeTier, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
@@ -148,4 +148,31 @@ export function hexToBytes(hex: string): Uint8Array {
 
 export function decodeU256(string: string): bigint {
   return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
+}
+
+export const newPoolKey = async (
+  token0: string,
+  token1: string,
+  feeTier: FeeTier
+): Promise<PoolKey> => {
+  return (
+    await Utils.tests.newPoolKey({
+      testArgs: {
+        token0,
+        token1,
+        feeTier
+      }
+    })
+  ).returns
+}
+
+export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeTier> => {
+  return (
+    await Utils.tests.newFeeTier({
+      testArgs: {
+        fee,
+        tickSpacing
+      }
+    })
+  ).returns
 }

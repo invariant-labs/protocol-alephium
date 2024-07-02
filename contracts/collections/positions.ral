@@ -2,7 +2,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     @using(preapprovedAssets = true)
     fn wrappedAddPosition(
         caller: Address,
-        poolKey: ByteVec,
+        poolKey: PoolKey,
         liquidity: U256,
         lowerTickIndex: I256,
         upperTickIndex: I256,
@@ -51,7 +51,14 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         } else {   
             return false,
             Position {
-                poolKey: #,
+                poolKey: PoolKey {
+                    tokenX: addressToContractId!(nullContractAddress!()),
+                    tokenY: addressToContractId!(nullContractAddress!()),
+                    feeTier: FeeTier {
+                        fee: 0,
+                        tickSpacing: 0
+                    }
+                },
                 liquidity: 0,
                 lowerTickIndex: 0i,
                 upperTickIndex: 0i,
@@ -98,20 +105,19 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     fn wrappedModifyPosition(
         originalCaller: Address,
         index: U256,
-        poolKey: ByteVec,
+        poolKey: PoolKey,
         upperTick: I256,
         lowerTick: I256,
         liquidityDelta: U256,
         add: Bool,
-        currentTimestamp: U256,
-        tickSpacing: U256
+        currentTimestamp: U256
     ) -> (U256, U256) {
         let (exists, position) = wrappedGetPosition(originalCaller, index)
         assert!(exists, InvariantError.PositionNotFound)
 
         setLastTimestamp(poolKey, currentTimestamp)
         let (_, pool) = wrappedGetPool(poolKey)
-        let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(tickSpacing)
+        let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(poolKey.feeTier.tickSpacing)
 
         wrappedUpdateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
         wrappedUpdateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)

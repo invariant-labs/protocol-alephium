@@ -25,6 +25,7 @@ import {
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -79,29 +80,24 @@ export async function initTokensXY(signer: SignerProvider, supply: bigint) {
 export async function initFeeTier(
   invariant: InvariantInstance,
   signer: SignerProvider,
-  fee: bigint,
-  tickSpacing: bigint
+  feeTier: FeeTier
 ) {
   return await AddFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      fee,
-      tickSpacing
+      feeTier
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT
   })
 }
 
-export async function feeTierExists(
-  invariant: InvariantInstance,
-  ...feeTiers: { fee: bigint; tickSpacing: bigint }[]
-) {
+export async function feeTierExists(invariant: InvariantInstance, ...feeTiers: FeeTier[]) {
   let tierStatus: Array<boolean> = []
   for (const feeTier of feeTiers) {
     tierStatus.push(
       (
         await invariant.methods.feeTierExist({
-          args: { fee: feeTier.fee, tickSpacing: feeTier.tickSpacing }
+          args: { feeTier }
         })
       ).returns
     )
@@ -112,14 +108,12 @@ export async function feeTierExists(
 export const removeFeeTier = async (
   invariant: InvariantInstance,
   signer: SignerProvider,
-  fee: bigint,
-  tickSpacing: bigint
+  feeTier: FeeTier
 ) => {
   return await RemoveFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      fee,
-      tickSpacing
+      feeTier
     }
   })
 }
@@ -129,8 +123,7 @@ export async function initPool(
   signer: SignerProvider,
   token0: TokenInstance,
   token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint,
+  feeTier: FeeTier,
   initSqrtPrice: bigint,
   initTick: bigint
 ) {
@@ -139,8 +132,7 @@ export async function initPool(
       invariant: invariant.contractId,
       token0: token0.contractId,
       token1: token1.contractId,
-      fee,
-      tickSpacing,
+      feeTier,
       initSqrtPrice,
       initTick
     },
@@ -151,18 +143,12 @@ export async function initPool(
 export const withdrawProtocolFee = async (
   invariant: InvariantInstance,
   signer: SignerProvider,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint
+  poolKey: PoolKey
 ) => {
   return await WithdrawProtocolFee.execute(signer, {
     initialFields: {
       invariant: invariant.address,
-      token0: token0.address,
-      token1: token1.address,
-      fee,
-      tickSpacing
+      poolKey
     },
     attoAlphAmount: DUST_AMOUNT
   })
@@ -187,21 +173,12 @@ export async function getFeeTiers(invariant: InvariantInstance) {
   return decodeFeeTiers((await invariant.methods.getFeeTiers()).returns)
 }
 
-export async function getPool(
-  invariant: InvariantInstance,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint
-) {
+export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
   return decodePool(
     (
       await invariant.methods.getPool({
         args: {
-          token0: token0.contractId,
-          token1: token1.contractId,
-          fee,
-          tickSpacing
+          poolKey
         }
       })
     ).returns
@@ -245,12 +222,9 @@ export const getProtocolFee = async (invariant: InvariantInstance) => {
 export async function initPosition(
   invariant: InvariantInstance,
   signer: PrivateKeyWallet,
-  token0: TokenInstance,
-  token0Amount: bigint,
-  token1: TokenInstance,
-  token1Amount: bigint,
-  fee: bigint,
-  tickSpacing: bigint,
+  poolKey: PoolKey,
+  approvedTokensX: bigint,
+  approvedTokensY: bigint,
   lowerTick: bigint,
   upperTick: bigint,
   liquidityDelta: bigint,
@@ -260,32 +234,26 @@ export async function initPosition(
   return await CreatePosition.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      token0: token0.contractId,
-      token1: token1.contractId,
-      fee,
-      tickSpacing,
+      poolKey,
       lowerTick,
       upperTick,
       liquidityDelta,
-      approvedTokens0: token0Amount,
-      approvedTokens1: token1Amount,
+      approvedTokensX,
+      approvedTokensY,
       slippageLimitLower,
       slippageLimitUpper
     },
     tokens: [
-      { id: token0.contractId, amount: token0Amount },
-      { id: token1.contractId, amount: token1Amount }
+      { id: poolKey.tokenX, amount: approvedTokensX },
+      { id: poolKey.tokenY, amount: approvedTokensY }
     ],
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 7n
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
   })
 }
 
 export const quote = async (
   invariant: InvariantInstance,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint,
+  poolKey: PoolKey,
   xToY: boolean,
   amount: bigint,
   byAmountIn: boolean,
@@ -294,10 +262,7 @@ export const quote = async (
   return (
     await invariant.methods.quote({
       args: {
-        token0: token0.contractId,
-        token1: token1.contractId,
-        fee,
-        tickSpacing,
+        poolKey,
         xToY,
         amount,
         byAmountIn,
@@ -323,23 +288,17 @@ export const removePosition = async (
 export async function initSwap(
   invariant: InvariantInstance,
   signer: SignerProvider,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint,
+  poolKey: PoolKey,
   xToY: boolean,
   amount: bigint,
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ) {
-  const id = xToY ? token0.contractId : token1.contractId
+  const id = xToY ? poolKey.tokenX : poolKey.tokenY
   return await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      token0: token0.contractId,
-      token1: token1.contractId,
-      fee,
-      tickSpacing,
+      poolKey,
       xToY,
       amount,
       byAmountIn,
@@ -349,22 +308,12 @@ export async function initSwap(
   })
 }
 
-export const getTick = async (
-  invariant: InvariantInstance,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint,
-  index: bigint
-) => {
+export const getTick = async (invariant: InvariantInstance, poolKey: PoolKey, index: bigint) => {
   return decodeTick(
     (
       await invariant.methods.getTick({
         args: {
-          token0: token0.contractId,
-          token1: token1.contractId,
-          fee,
-          tickSpacing,
+          poolKey,
           index
         }
       })
@@ -374,19 +323,13 @@ export const getTick = async (
 
 export const isTickInitialized = async (
   invariant: InvariantInstance,
-  token0: TokenInstance,
-  token1: TokenInstance,
-  fee: bigint,
-  tickSpacing: bigint,
+  poolKey: PoolKey,
   index: bigint
 ) => {
   return (
     await invariant.view.isTickInitialized({
       args: {
-        token0: token0.contractId,
-        token1: token1.contractId,
-        fee,
-        tickSpacing,
+        poolKey,
         index
       }
     })

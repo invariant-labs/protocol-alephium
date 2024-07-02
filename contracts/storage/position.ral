@@ -1,5 +1,5 @@
 struct Position {
-    mut poolKey: ByteVec,
+    mut poolKey: PoolKey,
     mut liquidity: U256,
     mut lowerTickIndex: I256,
     mut upperTickIndex: I256,

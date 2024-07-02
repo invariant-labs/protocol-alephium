@@ -9,7 +9,7 @@ import {
   initTokensXY,
   withdrawTokens
 } from './testUtils'
-import { balanceOf, deployInvariant } from './utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 
 type TokenInstance = TokenFaucetInstance
@@ -41,9 +41,11 @@ export const initBasicPool = async (
   tokenY: TokenInstance
 ) => {
   const initSqrtPrice = 10n ** 24n
-  await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, 0n)
-  const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-  expect(pool).toMatchObject({ fee, tickSpacing, sqrtPrice: initSqrtPrice, exist: true })
+  const feeTier = await newFeeTier(fee, tickSpacing)
+  await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
+  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  const pool = await getPool(invariant, poolKey)
+  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exist: true })
 }
 
 /**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */
@@ -56,26 +58,26 @@ export const initBasicPosition = async (
   const withdrawAmount = 1000n
   await withdrawTokens(positionOwner, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
 
-  const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+  const feeTier = await newFeeTier(fee, tickSpacing)
+  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+  const poolBefore = await getPool(invariant, poolKey)
   const liquidityDelta = 1000000n * 10n ** LiquidityScale
   const slippageLimit = poolBefore.sqrtPrice
   const [lowerTick, upperTick] = [-20n, 10n]
   await initPosition(
     invariant,
     positionOwner,
-    tokenX,
+    poolKey,
     withdrawAmount,
-    tokenY,
     withdrawAmount,
-    fee,
-    tickSpacing,
     lowerTick,
     upperTick,
     liquidityDelta,
     slippageLimit,
     slippageLimit
   )
-  const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+  const poolAfter = await getPool(invariant, poolKey)
   expect(poolAfter.liquidity).toBe(liquidityDelta)
 }
 
@@ -86,7 +88,10 @@ export const initBasicSwap = async (
   tokenX: TokenInstance,
   tokenY: TokenInstance
 ) => {
-  const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+  const feeTier = await newFeeTier(fee, tickSpacing)
+  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+  const poolBefore = await getPool(invariant, poolKey)
 
   const swapAmount = 1000n
   await withdrawTokens(swapper, [tokenX, swapAmount])
@@ -100,18 +105,7 @@ export const initBasicSwap = async (
   }
   expect(invariantBeforeBalance).toMatchObject({ tokenX: 500n, tokenY: 1000n })
 
-  await initSwap(
-    invariant,
-    swapper,
-    tokenX,
-    tokenY,
-    fee,
-    tickSpacing,
-    true,
-    swapAmount,
-    true,
-    MinSqrtPrice
-  )
+  await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
 
   const swapperAfterBalance = {
     tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -125,7 +119,7 @@ export const initBasicSwap = async (
   }
   expect(invariantAfterBalance).toMatchObject({ tokenX: 1500n, tokenY: 7n })
 
-  const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+  const poolAfter = await getPool(invariant, poolKey)
   const poolExpected = {
     liquidity: poolBefore.liquidity,
     sqrtPrice: 999006987054867461743028n,

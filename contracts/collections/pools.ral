@@ -2,11 +2,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
     @using(preapprovedAssets = true)
     fn addPool(
         originalCaller: Address,
-        poolKey: ByteVec,
-        tokenX: ByteVec,
-        tokenY: ByteVec,
-        fee: U256,
-        tickSpacing: U256,
+        poolKey: PoolKey,
         initSqrtPrice: U256,
         initTick: I256,
         currentTimestamp: U256,
@@ -15,10 +11,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
         let state = Pool {
-            tokenX: tokenX,
-            tokenY: tokenY,
-            fee: fee,
-            tickSpacing: tickSpacing,
+            poolKey: poolKey,
             liquidity: 0,
             sqrtPrice: initSqrtPrice,
             currentTickIndex: initTick,
@@ -30,35 +23,44 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
             lastTimestamp: currentTimestamp,
             feeReceiver: feeReceiver
         }
-        pools.insert!(originalCaller, poolKey, state)
+        let key = poolKeyBytes(poolKey)
+        pools.insert!(originalCaller, key, state)
     }
 
-    fn containsPool(poolKey: ByteVec) -> Bool {
-        return pools.contains!(poolKey)
+    fn containsPool(poolKey: PoolKey) -> Bool {
+        let key = poolKeyBytes(poolKey)
+        return pools.contains!(key)
     }
 
-    fn setLastTimestamp(poolKey: ByteVec, timestamp: U256) -> () {
-        let mut state = pools[poolKey]
+    fn setLastTimestamp(poolKey: PoolKey, timestamp: U256) -> () {
+        let key = poolKeyBytes(poolKey)
+        let mut state = pools[key]
         state.lastTimestamp = timestamp
-        pools[poolKey] = state
+        pools[key] = state
     }
     
-    fn setFeeReceiver(poolKey: ByteVec, newReceiver: Address) -> () {
-        let mut state = pools[poolKey]
+    fn setFeeReceiver(poolKey: PoolKey, newReceiver: Address) -> () {
+        let key = poolKeyBytes(poolKey)
+        let mut state = pools[key]
         state.feeReceiver = newReceiver
-        pools[poolKey] = state
+        pools[key] = state
     }
 
-    fn wrappedGetPool(poolKey: ByteVec) -> (Bool, Pool) {
+    fn wrappedGetPool(poolKey: PoolKey) -> (Bool, Pool) {
+        let key = poolKeyBytes(poolKey)
         if(containsPool(poolKey)) {
-            return true, pools[poolKey]
+            return true, pools[key]
         } else {   
             return false,
             Pool {
-                tokenX: #,
-                tokenY: #,
-                fee: 0,
-                tickSpacing: 0,
+                poolKey: PoolKey {
+                    tokenX: addressToContractId!(nullContractAddress!()),
+                    tokenY: addressToContractId!(nullContractAddress!()),
+                    feeTier: FeeTier {
+                        fee: 0,
+                        tickSpacing: 0
+                    }
+                },
                 liquidity: 0,
                 sqrtPrice: 0,
                 currentTickIndex: 0i,
@@ -73,15 +75,17 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         } 
     }
 
-    fn wrappedUpdateLiquidity(poolKey: ByteVec, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
-        let (x, y, pool) = updateLiquidity(pools[poolKey], liquidityDelta, liquiditySign, upperTick, lowerTick)
-        pools[poolKey] = pool
+    fn wrappedUpdateLiquidity(poolKey: PoolKey, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
+        let key = poolKeyBytes(poolKey)
+        let (x, y, pool) = updateLiquidity(pools[key], liquidityDelta, liquiditySign, upperTick, lowerTick)
+        pools[key] = pool
         return x, y
     }
 
-    fn wrappedGetProtocolFee(poolKey: ByteVec) -> (U256, U256) {
-        let (feeProtocolTokenX, feeProtocolTokenY, pool) = getAndUpdateProtocolFee(pools[poolKey])
-        pools[poolKey] = pool
+    fn wrappedGetProtocolFee(poolKey: PoolKey) -> (U256, U256) {
+        let key = poolKeyBytes(poolKey)
+        let (feeProtocolTokenX, feeProtocolTokenY, pool) = getAndUpdateProtocolFee(pools[key])
+        pools[key] = pool
         return feeProtocolTokenX, feeProtocolTokenY
     }
 }
