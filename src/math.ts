@@ -1,4 +1,4 @@
-import { Utils } from '../artifacts/ts'
+import { CLAMM, Utils } from '../artifacts/ts'
 
 export const calculateSqrtPrice = async (tickIndex: bigint) => {
   return (
@@ -65,6 +65,34 @@ export const getLiquidity = async (
         upperTick,
         currentSqrtPrice,
         roundingUp
+      }
+    })
+  ).returns
+}
+
+export const getDeltaY = async (
+  sqrtPriceA: bigint,
+  sqrtPriceB: bigint,
+  liquidity: bigint,
+  roundingUp: boolean
+) => {
+  return (
+    await CLAMM.tests.getDeltaY({
+      testArgs: {
+        sqrtPriceA,
+        sqrtPriceB,
+        liquidity,
+        roundingUp
+      }
+    })
+  ).returns
+}
+
+export const getMaxTick = async (tickSpacing: bigint) => {
+  return (
+    await Utils.tests.getMaxTick({
+      testArgs: {
+        tickSpacing
       }
     })
   ).returns
