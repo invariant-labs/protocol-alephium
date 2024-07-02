@@ -24,13 +24,13 @@ export const getBasicFeeTickSpacing = (): [bigint, bigint] => {
 
 /**  Tokens are already ordered. */
 export const initDexAndTokens = async (
-  admin: SignerProvider
+  admin: SignerProvider,
+  supply = 1000000n
 ): Promise<[InvariantInstance, TokenFaucetInstance, TokenFaucetInstance]> => {
   // 1%
   const protocolFee = 10n ** (PercentageScale - 2n)
   const invariant = await deployInvariant(admin, protocolFee)
-  const amount = 1000000n
-  const [tokenX, tokenY] = await initTokensXY(admin, amount)
+  const [tokenX, tokenY] = await initTokensXY(admin, supply)
   return [invariant, tokenX, tokenY]
 }
 

@@ -1,10 +1,4 @@
-import {
-  Address,
-  ContractInstance,
-  DUST_AMOUNT,
-  SignerProvider,
-  ZERO_ADDRESS
-} from '@alephium/web3'
+import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import {
   AddFeeTier,
   ChangeProtocolFee,

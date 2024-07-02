@@ -305,8 +305,8 @@ Contract CLAMM() extends Uints(), Log(){
         let minTick = getMinTick(tickSpacing)
         let maxTick = getMaxTick(tickSpacing)
         assert!(tickIndex % toI256!(tickSpacing) == 0i, CLAMMError.InvalidTickSpacing)
-        assert!(tickIndex < maxTick, CLAMMError.InvalidTickIndex)
-        assert!(tickIndex > minTick, CLAMMError.InvalidTickIndex)
+        assert!(tickIndex <= maxTick, CLAMMError.InvalidTickIndex)
+        assert!(tickIndex >= minTick, CLAMMError.InvalidTickIndex)
     }
     
     pub fn calculateMinAmountOut(

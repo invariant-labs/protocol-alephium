@@ -58,7 +58,7 @@ Contract Invariant(
         InvalidProtocolFee = 12
         NotOwner = 13
         ZeroAmount = 14
-        WrongLimit = 15
+        WrongPriceLimit = 15
         NoGainSwap = 16
         PositionDoesNotExist = 17
         FeeTierAlreadyExist = 18
@@ -344,9 +344,9 @@ Contract Invariant(
         let tickSpacing = poolKey.feeTier.tickSpacing
 
         if (xToY) {
-            assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, InvariantError.WrongLimit)             
+            assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, InvariantError.WrongPriceLimit)             
         } else {
-            assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, InvariantError.WrongLimit)
+            assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, InvariantError.WrongPriceLimit)
         }
 
         let tickLimit = if (xToY) getMinTick(tickSpacing) else getMaxTick(tickSpacing)
