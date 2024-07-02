@@ -194,7 +194,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
             let index = getSearchLimit(currentTick, tickSpacing, !xToY)
             let sqrtPriceNotExist = calculateSqrtPrice(index)
 
-            assert!(currentTick != index, InvariantError.LimitReached)
+            assert!(currentTick != index, InvariantError.TickLimitReached)
 
             if ((xToY && sqrtPriceNotExist > sqrtPriceLimit) || (!xToY && sqrtPriceNotExist < sqrtPriceLimit)) {
                 return sqrtPriceNotExist, true, index, false

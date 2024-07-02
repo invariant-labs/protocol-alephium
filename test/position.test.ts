@@ -290,8 +290,22 @@ describe('position tests', () => {
     await removePosition(invariant, positionOwner, 1n)
 
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const [lowerInMap] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, lowerTickIndex)
-    const [upperInMap] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, upperTickIndex)
+    const { exist: lowerInMap } = await getTick(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      lowerTickIndex
+    )
+    const { exist: upperInMap } = await getTick(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      upperTickIndex
+    )
     const lowerBit = await isTickInitialized(
       invariant,
       tokenX,
@@ -371,7 +385,7 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const [lowerInMap, lowerTick] = await getTick(
+    const { exist: lowerInMap, ...lowerTick } = await getTick(
       invariant,
       tokenX,
       tokenY,
@@ -379,7 +393,7 @@ describe('position tests', () => {
       tickSpacing,
       lowerTickIndex
     )
-    const [upperInMap, upperTick] = await getTick(
+    const { exist: upperInMap, ...upperTick } = await getTick(
       invariant,
       tokenX,
       tokenY,
@@ -474,7 +488,7 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const [lowerInMap, lowerTick] = await getTick(
+    const { exist: lowerInMap, ...lowerTick } = await getTick(
       invariant,
       tokenX,
       tokenY,
@@ -482,7 +496,7 @@ describe('position tests', () => {
       tickSpacing,
       lowerTickIndex
     )
-    const [upperInMap, upperTick] = await getTick(
+    const { exist: upperInMap, ...upperTick } = await getTick(
       invariant,
       tokenX,
       tokenY,
@@ -595,7 +609,7 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const [lowerInMap, lowerTick] = await getTick(
+    const { exist: lowerInMap, ...lowerTick } = await getTick(
       invariant,
       tokenX,
       tokenY,
@@ -603,7 +617,7 @@ describe('position tests', () => {
       tickSpacing,
       lowerTickIndex
     )
-    const [upperInMap, upperTick] = await getTick(
+    const { exist: upperInMap, ...upperTick } = await getTick(
       invariant,
       tokenX,
       tokenY,

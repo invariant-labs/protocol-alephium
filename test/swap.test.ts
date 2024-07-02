@@ -1,984 +1,480 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { balanceOf, deployInvariant } from '../src/utils'
 import {
-  AddFeeTier,
-  CreatePool,
-  IncreasePositionLiquidity,
-  InitializeEmptyPosition,
-  Swap,
-  Withdraw
-} from '../artifacts/ts'
+  getBasicFeeTickSpacing,
+  initBasicPool,
+  initBasicPosition,
+  initBasicSwap,
+  initDexAndTokens
+} from '../src/snippets'
 import {
-  balanceOf,
-  decodePool,
-  decodePosition,
-  decodeTick,
-  deployInvariant,
-  deployTokenFaucet,
-  MAP_ENTRY_DEPOSIT
-} from '../src/utils'
+  expectError,
+  expectVMError,
+  getPool,
+  getTick,
+  initFeeTier,
+  initPosition,
+  initSwap,
+  initTokensXY,
+  quote,
+  withdrawTokens
+} from '../src/testUtils'
+import {
+  InvariantError,
+  LiquidityScale,
+  MaxSqrtPrice,
+  MinSqrtPrice,
+  PercentageScale,
+  VMError
+} from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
-let sender: PrivateKeyWallet
+let admin: PrivateKeyWallet
 
 describe('swap tests', () => {
-  const protocolFee = 10n ** 10n
-  const fee = 6n * 10n ** 9n
-  const tickSpacing = 10n
-
   beforeAll(async () => {
-    sender = await getSigner(ONE_ALPH * 1000n, 0)
+    admin = await getSigner(ONE_ALPH * 1000n, 0)
+  })
+
+  test('swap', async () => {
+    const [fee, tickSpacing] = getBasicFeeTickSpacing()
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin)
+    await initFeeTier(invariant, admin, fee, tickSpacing)
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+    const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+    await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    await initBasicSwap(invariant, swapper, tokenX, tokenY)
   })
 
   test('swap x to y', async () => {
-    const liquidityDelta = 1000000n * 10n ** 5n
-    const lowerTickIndex = -20n
-    const upperTickIndex = 10n
+    // 6% fee
+    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
-    const amount = 1000000n + 1000n
+    const positionsAmount = 2n * 10n ** 10n
+    const swapAmount = 1000n
+    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
+    const [fee, tickSpacing] = getBasicFeeTickSpacing()
+    await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    const [tokenX, tokenY] =
-      token0.contractInstance.contractId < token1.contractInstance.contractId
-        ? [token0, token1]
-        : [token1, token0]
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+    // positions
+    const [lowerTickIndex, middleTickIndex, upperTickIndex] = [-20n, -10n, 10n]
+    {
+      const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+      await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token0.contractInstance.contractId,
-        amount: 1000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token1.contractInstance.contractId,
-        amount: 1000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const slippageLimit = poolBefore.sqrtPrice
+      const liquidity = 1000000n * 10n ** LiquidityScale
 
-    const invariant = await deployInvariant(sender, protocolFee)
+      const positionAmount = positionsAmount / 2n
 
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT
-    })
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex,
+        upperTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
 
-    await CreatePool.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        initSqrtPrice: 1000000000000000000000000n,
-        initTick: 0n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
-    })
-    await InitializeEmptyPosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-    })
-    await IncreasePositionLiquidity.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        approvedTokens0: 1000000n,
-        approvedTokens1: 1000000n,
-        index: 1n,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex,
-        liquidityDelta: liquidityDelta,
-        slippageLimitLower: 1000000000000000000000000n,
-        slippageLimitUpper: 1000000000000000000000000n
-      },
-      tokens: [
-        { id: token0.contractInstance.contractId, amount: 1000000n },
-        { id: token1.contractInstance.contractId, amount: 1000000n }
-      ]
-    })
-    const position = await invariant.methods.getPosition({
-      args: { owner: sender.address, index: 1n }
-    })
-    const parsedPosition = decodePosition(position.returns)
-    expect(parsedPosition.exist).toBe(true)
-    expect(parsedPosition.liquidity).toBe(liquidityDelta)
-    expect(parsedPosition.lowerTickIndex).toBe(lowerTickIndex)
-    expect(parsedPosition.upperTickIndex).toBe(upperTickIndex)
-    expect(parsedPosition.feeGrowthInsideX).toBe(0n)
-    expect(parsedPosition.feeGrowthInsideY).toBe(0n)
-    expect(parsedPosition.lastBlockNumber).toBeGreaterThan(0n)
-    expect(parsedPosition.tokensOwedX).toBe(0n)
-    expect(parsedPosition.tokensOwedY).toBe(0n)
-    const lowerTick = await invariant.methods.getTick({
-      args: {
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        index: lowerTickIndex
-      }
-    })
-    const parsedLowerTick = decodeTick(lowerTick.returns)
-    expect(parsedLowerTick.exist).toBe(true)
-    expect(parsedLowerTick.sign).toBe(true)
-    expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
-    expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
-    expect(parsedLowerTick.sqrtPrice).toBe(999000549780000000000000n)
-    expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
-    expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
-    expect(parsedLowerTick.secondsOutside).toBe(0n)
-    const upperTick = await invariant.methods.getTick({
-      args: {
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        index: upperTickIndex
-      }
-    })
-    const parsedUpperTick = decodeTick(upperTick.returns)
-    expect(parsedUpperTick.exist).toBe(true)
-    expect(parsedUpperTick.sign).toBe(false)
-    expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
-    expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
-    expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
-    expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
-    expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
-    expect(parsedUpperTick.secondsOutside).toBe(0n)
-
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex - 20n,
+        middleTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+    // swap + check balance
     {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const swapAmount = 1000n
+      await withdrawTokens(swapper, [tokenX, swapAmount])
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenX.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
+      const dexBalanceBefore = {
+        tokenX: await balanceOf(tokenX.contractId, invariant.address),
+        tokenY: await balanceOf(tokenY.contractId, invariant.address)
+      }
+      expect(dexBalanceBefore).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenY.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
-      const swapperTokenXBalanceBefore = await balanceOf(
-        tokenX.contractInstance.contractId,
-        swapper.address
-      )
-      const invariantTokenXBalanceBefore = await balanceOf(
-        tokenX.contractInstance.contractId,
-        invariant.address
-      )
-      const invariantTokenYBalanceBefore = await balanceOf(
-        tokenY.contractInstance.contractId,
-        invariant.address
+      const slippage = MinSqrtPrice
+      await initSwap(
+        invariant,
+        swapper,
+        tokenX,
+        tokenY,
+        fee,
+        tickSpacing,
+        true,
+        swapAmount,
+        true,
+        slippage
       )
 
-      expect(swapperTokenXBalanceBefore).toBe(swapAmount)
-      expect(invariantTokenXBalanceBefore).toBe(500n)
-      expect(invariantTokenYBalanceBefore).toBe(1000n)
+      // check balances
+      const dexDelta = {
+        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
+        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
+      }
+      expect(dexDelta).toMatchObject({ tokenX: swapAmount, tokenY: 10n - swapAmount })
 
-      const poolBefore = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
-      )
+      const swapperBalance = {
+        tokenX: await balanceOf(tokenX.contractId, swapper.address),
+        tokenY: await balanceOf(tokenY.contractId, swapper.address)
+      }
+      expect(swapperBalance).toMatchObject({ tokenX: 0n, tokenY: swapAmount - 10n })
 
-      const slippage = 15258932000000000000n
+      // check pool
+      const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolExpected = {
+        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        currentTickIndex: -20n,
+        feeGrowthGlobalX: 4n * 10n ** 22n,
+        feeGrowthGlobalY: 0n,
+        feeProtocolTokenX: 2n,
+        feeProtocolTokenY: 0n
+      }
+      expect(poolAfter).toMatchObject(poolExpected)
+      expect(poolAfter.liquidity).not.toBe(poolBefore.liquidity)
 
-      const { amountIn, amountOut, targetSqrtPrice } = (
-        await invariant.methods.quote({
-          args: {
-            token0: tokenX.contractInstance.contractId,
-            token1: tokenY.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            xToY: true,
-            amount: swapAmount,
-            byAmountIn: true,
-            sqrtPriceLimit: slippage
-          }
-        })
-      ).returns
+      // check ticks
+      const lowerTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, lowerTickIndex)
+      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
 
-      expect(amountIn).toBe(swapAmount)
-      expect(amountOut).toBe(993n)
-      expect(targetSqrtPrice).toBe(999006987054867461743028n)
+      const middleTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, middleTickIndex)
+      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideX: 3n * 10n ** 22n })
 
-      await Swap.execute(swapper, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: tokenX.contractInstance.contractId,
-          token1: tokenY.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          xToY: true,
-          amount: swapAmount,
-          byAmountIn: true,
-          sqrtPriceLimit: slippage
-        },
-        tokens: [
-          { id: tokenX.contractInstance.contractId, amount: swapAmount },
-          { id: tokenY.contractInstance.contractId, amount: swapAmount }
-        ]
-      })
-
-      const swapperTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        swapper.address
-      )
-      const swapperTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        swapper.address
-      )
-      const invariantTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        invariant.address
-      )
-      const invariantTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        invariant.address
-      )
-
-      expect(swapperTokenXBalanceAfter).toBe(0n)
-      expect(swapperTokenYBalanceAfter).toBe(1993n)
-      expect(invariantTokenXBalanceAfter).toBe(1500n)
-      expect(invariantTokenYBalanceAfter).toBe(7n)
-
-      const poolAfter = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
-      )
-
-      expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
-      expect(poolAfter.currentTickIndex).toBe(-20n)
-      expect(poolAfter.sqrtPrice).toBe(999006987054867461743028n)
-      expect(poolAfter.feeGrowthGlobalX).toBe(50000000000000000000000n)
-      expect(poolAfter.feeGrowthGlobalY).toBe(0n)
-      expect(poolAfter.feeProtocolTokenX).toBe(1n)
-      expect(poolAfter.feeProtocolTokenY).toBe(0n)
+      const upperTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, upperTickIndex)
+      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
     }
   })
 
   test('swap y to x', async () => {
-    const liquidityDelta = 1000000n * 10n ** 5n
-    const lowerTickIndex = -10n
-    const middleTickIndex = 10n
-    const upperTickIndex = 20n
+    // 6% fee
+    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
-    const amount = 20000000000000n
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token0.contractInstance.contractId,
-        amount: 10000000000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token1.contractInstance.contractId,
-        amount: 10000000000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
+    const positionsAmount = 2n * 10n ** 10n
+    const swapAmount = 1000n
+    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
-    const [tokenX, tokenY] =
-      token0.contractInstance.contractId < token1.contractInstance.contractId
-        ? [token0, token1]
-        : [token1, token0]
+    const [fee, tickSpacing] = getBasicFeeTickSpacing()
+    await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    const invariant = await deployInvariant(sender, protocolFee)
-
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT
-    })
-
-    await CreatePool.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        initSqrtPrice: 1000000000000000000000000n,
-        initTick: 0n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
-    })
-    await InitializeEmptyPosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: lowerTickIndex,
-        upperTick: upperTickIndex
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-    })
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+    // positions
+    const [lowerTickIndex, middleTickIndex, upperTickIndex] = [-10n, 10n, 20n]
     {
-      const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
-      const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+      const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+      await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      await IncreasePositionLiquidity.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          approvedTokens0: senderBalance0,
-          approvedTokens1: senderBalance1,
-          index: 1n,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: lowerTickIndex,
-          upperTick: upperTickIndex,
-          liquidityDelta: liquidityDelta,
-          slippageLimitLower: 1000000000000000000000000n,
-          slippageLimitUpper: 1000000000000000000000000n
-        },
-        tokens: [
-          { id: token0.contractInstance.contractId, amount: senderBalance0 },
-          { id: token1.contractInstance.contractId, amount: senderBalance1 }
-        ]
-      })
-    }
-    await InitializeEmptyPosition.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        lowerTick: middleTickIndex,
-        upperTick: upperTickIndex + 20n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-    })
-    {
-      const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
-      const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const slippageLimit = poolBefore.sqrtPrice
+      const liquidity = 1000000n * 10n ** LiquidityScale
 
-      await IncreasePositionLiquidity.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          approvedTokens0: senderBalance0,
-          approvedTokens1: senderBalance1,
-          index: 2n,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: middleTickIndex,
-          upperTick: upperTickIndex + 20n,
-          liquidityDelta: liquidityDelta,
-          slippageLimitLower: 1000000000000000000000000n,
-          slippageLimitUpper: 1000000000000000000000000n
-        },
-        tokens: [
-          { id: token0.contractInstance.contractId, amount: senderBalance0 },
-          { id: token1.contractInstance.contractId, amount: senderBalance1 }
-        ]
-      })
+      const positionAmount = positionsAmount / 2n
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex,
+        upperTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        middleTickIndex,
+        upperTickIndex + 20n,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
     }
+
+    // swap + check results
     {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const swapAmount = 1000n
+      await withdrawTokens(swapper, [tokenY, swapAmount])
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenX.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
+      const dexBalanceBefore = {
+        tokenX: await balanceOf(tokenX.contractId, invariant.address),
+        tokenY: await balanceOf(tokenY.contractId, invariant.address)
+      }
+      expect(dexBalanceBefore).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenY.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
-      const poolBefore = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
+      const { targetSqrtPrice: slippage } = await quote(
+        invariant,
+        tokenX,
+        tokenY,
+        fee,
+        tickSpacing,
+        false,
+        swapAmount,
+        true,
+        MaxSqrtPrice
+      )
+      await initSwap(
+        invariant,
+        swapper,
+        tokenX,
+        tokenY,
+        fee,
+        tickSpacing,
+        false,
+        swapAmount,
+        true,
+        slippage
       )
 
-      const slippage = 65535383934512647000000000000n
+      // check balances
+      const dexDelta = {
+        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
+        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
+      }
+      expect(dexDelta).toMatchObject({ tokenX: 10n - swapAmount, tokenY: swapAmount })
 
-      const { amountIn, amountOut, targetSqrtPrice } = (
-        await invariant.methods.quote({
-          args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            xToY: false,
-            amount: swapAmount,
-            byAmountIn: true,
-            sqrtPriceLimit: slippage
-          }
-        })
-      ).returns
+      const swapperBalance = {
+        tokenX: await balanceOf(tokenX.contractId, swapper.address),
+        tokenY: await balanceOf(tokenY.contractId, swapper.address)
+      }
+      expect(swapperBalance).toMatchObject({ tokenX: swapAmount - 10n, tokenY: 0n })
 
-      expect(amountIn).toBe(swapAmount)
-      expect(amountOut).toBe(990n)
-      expect(targetSqrtPrice).toBe(1000746100010000000000000n)
+      // check pool
+      const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolExpected = {
+        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        currentTickIndex: 10n,
+        feeGrowthGlobalX: 0n,
+        feeGrowthGlobalY: 4n * 10n ** 22n,
+        feeProtocolTokenX: 0n,
+        feeProtocolTokenY: 2n
+      }
+      expect(poolAfter).toMatchObject(poolExpected)
+      expect(poolAfter.liquidity).not.toBe(poolBefore.liquidity)
 
-      await Swap.execute(swapper, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          xToY: false,
-          amount: swapAmount,
-          byAmountIn: true,
-          sqrtPriceLimit: slippage
-        },
-        tokens: [
-          { id: tokenX.contractInstance.contractId, amount: swapAmount },
-          { id: tokenY.contractInstance.contractId, amount: swapAmount }
-        ]
-      })
+      // check ticks
+      const lowerTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, lowerTickIndex)
+      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
 
-      const swapperTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        swapper.address
+      const middleTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, middleTickIndex)
+      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideY: 3n * 10n ** 22n })
+
+      const upperTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, upperTickIndex)
+      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
+    }
+  })
+  test('swap not enough liquidity token x', async () => {
+    // 6% fee
+    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
+    const invariant = await deployInvariant(admin, protocolFee)
+
+    const positionsAmount = 2n * 10n ** 10n
+    const swapAmount = 1000n
+    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
+
+    const [fee, tickSpacing] = getBasicFeeTickSpacing()
+    await initFeeTier(invariant, admin, fee, tickSpacing)
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+
+    // positions
+    const [lowerTickIndex, middleTickIndex, upperTickIndex] = [-10n, 10n, 20n]
+    {
+      const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+      await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
+
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const slippageLimit = poolBefore.sqrtPrice
+      const liquidity = 1000000n * 10n ** LiquidityScale
+
+      const positionAmount = positionsAmount / 2n
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex,
+        upperTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
       )
-      const swapperTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        swapper.address
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        middleTickIndex,
+        upperTickIndex + 20n,
+        liquidity,
+        slippageLimit,
+        slippageLimit
       )
-      const invariantTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        invariant.address
+    }
+    // swap + check balance
+    {
+      const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+      await withdrawTokens(swapper, [tokenX, swapAmount])
+
+      const dexBalance = {
+        tokenX: await balanceOf(tokenX.contractId, invariant.address),
+        tokenY: await balanceOf(tokenY.contractId, invariant.address)
+      }
+      expect(dexBalance).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
+      // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
+      // in the particularly unlikely in the real world scenario of only uninitialized chunks
+      expectVMError(
+        VMError.OutOfGas,
+        initSwap(
+          invariant,
+          swapper,
+          tokenX,
+          tokenY,
+          fee,
+          tickSpacing,
+          true,
+          swapAmount,
+          true,
+          MinSqrtPrice
+        )
       )
-      const invariantTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        invariant.address
-      )
-
-      expect(swapperTokenXBalanceAfter).toBe(1990n)
-      expect(swapperTokenYBalanceAfter).toBe(0n)
-      expect(invariantTokenXBalanceAfter).toBe(1509n)
-      expect(invariantTokenYBalanceAfter).toBe(1500n)
-
-      const poolAfter = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
-      )
-      expect(poolAfter.liquidity - liquidityDelta).toBe(poolBefore.liquidity)
-      expect(poolAfter.currentTickIndex).toBe(10n)
-      expect(poolAfter.sqrtPrice).toBe(1000746100010000000000000n)
-      expect(poolAfter.feeGrowthGlobalX).toBe(0n)
-      expect(poolAfter.feeGrowthGlobalY).toBe(40000000000000000000000n)
-      expect(poolAfter.feeProtocolTokenX).toBe(0n)
-      expect(poolAfter.feeProtocolTokenY).toBe(2n)
-
-      const lowerTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: lowerTickIndex
-        }
-      })
-      const parsedLowerTick = decodeTick(lowerTick.returns)
-      expect(parsedLowerTick.exist).toBe(true)
-      expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
-      const middleTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: middleTickIndex
-        }
-      })
-      const parsedMiddleTick = decodeTick(middleTick.returns)
-      expect(parsedMiddleTick.exist).toBe(true)
-      expect(parsedMiddleTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedMiddleTick.feeGrowthOutsideY).toBe(30000000000000000000000n)
-
-      const upperTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: upperTickIndex
-        }
-      })
-      const parsedUpperTick = decodeTick(upperTick.returns)
-      expect(parsedUpperTick.exist).toBe(true)
-      expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
-
-      const isLowerTickInitialized = (
-        await invariant.methods.isTickInitialized({
-          args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            index: lowerTickIndex
-          }
-        })
-      ).returns
-      expect(isLowerTickInitialized).toBe(true)
-
-      const isMiddleTickInitialized = (
-        await invariant.methods.isTickInitialized({
-          args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            index: middleTickIndex
-          }
-        })
-      ).returns
-      expect(isMiddleTickInitialized).toBe(true)
-
-      const isUpperTickInitialized = (
-        await invariant.methods.isTickInitialized({
-          args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            index: upperTickIndex
-          }
-        })
-      ).returns
-      expect(isUpperTickInitialized).toBe(true)
     }
   })
 
-  test('crossing tick swap x to y', async () => {
-    const amount = 1000000n + 1000n
-    const token0 = await deployTokenFaucet(sender, '', '', amount, amount)
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token0.contractInstance.contractId,
-        amount: 1000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
-    const token1 = await deployTokenFaucet(sender, '', '', amount, amount)
-    await Withdraw.execute(sender, {
-      initialFields: {
-        token: token1.contractInstance.contractId,
-        amount: 1000000n
-      },
-      attoAlphAmount: DUST_AMOUNT * 2n
-    })
+  test('swap not enough liquidity token y', async () => {
+    // 6% fee
+    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
+    const invariant = await deployInvariant(admin, protocolFee)
 
-    const [tokenX, tokenY] =
-      token0.contractInstance.contractId < token1.contractInstance.contractId
-        ? [token0, token1]
-        : [token1, token0]
+    const positionsAmount = 2n * 10n ** 10n
+    const swapAmount = 1000n
+    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
-    const invariant = await deployInvariant(sender, protocolFee)
+    const [fee, tickSpacing] = getBasicFeeTickSpacing()
+    await initFeeTier(invariant, admin, fee, tickSpacing)
 
-    await AddFeeTier.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT
-    })
-
-    await CreatePool.execute(sender, {
-      initialFields: {
-        invariant: invariant.contractId,
-        token0: token0.contractInstance.contractId,
-        token1: token1.contractInstance.contractId,
-        fee: fee,
-        tickSpacing: tickSpacing,
-        initSqrtPrice: 1000000000000000000000000n,
-        initTick: 0n
-      },
-      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
-    })
-
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+    // positions
+    const [lowerTickIndex, middleTickIndex, upperTickIndex] = [-20n, -10n, 10n]
     {
-      const liquidityDelta = 1000000n * 10n ** 5n
-      const lowerTickIndex = -20n
-      const upperTickIndex = 10n
+      const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+      await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      await InitializeEmptyPosition.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: lowerTickIndex,
-          upperTick: upperTickIndex
-        },
-        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-      })
-      {
-        const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
-        const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
+      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const slippageLimit = poolBefore.sqrtPrice
+      const liquidity = 1000000n * 10n ** LiquidityScale
 
-        await IncreasePositionLiquidity.execute(sender, {
-          initialFields: {
-            invariant: invariant.contractId,
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            approvedTokens0: senderBalance0,
-            approvedTokens1: senderBalance1,
-            index: 1n,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            lowerTick: lowerTickIndex,
-            upperTick: upperTickIndex,
-            liquidityDelta: liquidityDelta,
-            slippageLimitLower: 1000000000000000000000000n,
-            slippageLimitUpper: 1000000000000000000000000n
-          },
-          tokens: [
-            { id: token0.contractInstance.contractId, amount: senderBalance0 },
-            { id: token1.contractInstance.contractId, amount: senderBalance1 }
-          ]
-        })
-      }
-      const position = await invariant.methods.getPosition({
-        args: { owner: sender.address, index: 1n }
-      })
-      const parsedPosition = decodePosition(position.returns)
-      expect(parsedPosition.exist).toBe(true)
-      expect(parsedPosition.liquidity).toBe(liquidityDelta)
-      expect(parsedPosition.lowerTickIndex).toBe(lowerTickIndex)
-      expect(parsedPosition.upperTickIndex).toBe(upperTickIndex)
-      expect(parsedPosition.feeGrowthInsideX).toBe(0n)
-      expect(parsedPosition.feeGrowthInsideY).toBe(0n)
-      expect(parsedPosition.lastBlockNumber).toBeGreaterThan(0n)
-      expect(parsedPosition.tokensOwedX).toBe(0n)
-      expect(parsedPosition.tokensOwedY).toBe(0n)
-      const lowerTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: lowerTickIndex
-        }
-      })
-      const parsedLowerTick = decodeTick(lowerTick.returns)
-      expect(parsedLowerTick.exist).toBe(true)
-      expect(parsedLowerTick.sign).toBe(true)
-      expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
-      expect(parsedLowerTick.sqrtPrice).toBe(999000549780000000000000n)
-      expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
-      expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
-      expect(parsedLowerTick.secondsOutside).toBe(0n)
-      const upperTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: upperTickIndex
-        }
-      })
-      const parsedUpperTick = decodeTick(upperTick.returns)
-      expect(parsedUpperTick.exist).toBe(true)
-      expect(parsedUpperTick.sign).toBe(false)
-      expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
-      expect(parsedUpperTick.sqrtPrice).toBe(1000500100010000000000000n)
-      expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
-      expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
-      expect(parsedUpperTick.secondsOutside).toBe(0n)
+      const positionAmount = positionsAmount / 2n
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex,
+        upperTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
+
+      await initPosition(
+        invariant,
+        positionOwner,
+        tokenX,
+        positionAmount,
+        tokenY,
+        positionAmount,
+        fee,
+        tickSpacing,
+        lowerTickIndex - 20n,
+        middleTickIndex,
+        liquidity,
+        slippageLimit,
+        slippageLimit
+      )
     }
 
-    {
-      const liquidityDelta = 1000000n * 10n ** 5n
-      const lowerTickIndex = -40n
-      const upperTickIndex = -10n
-      const index = 2n
-
-      await InitializeEmptyPosition.execute(sender, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          lowerTick: lowerTickIndex,
-          upperTick: upperTickIndex
-        },
-        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-      })
-      {
-        const senderBalance0 = await balanceOf(token0.contractInstance.contractId, sender.address)
-        const senderBalance1 = await balanceOf(token1.contractInstance.contractId, sender.address)
-
-        await IncreasePositionLiquidity.execute(sender, {
-          initialFields: {
-            invariant: invariant.contractId,
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            approvedTokens0: senderBalance0,
-            approvedTokens1: senderBalance1,
-            index,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            lowerTick: lowerTickIndex,
-            upperTick: upperTickIndex,
-            liquidityDelta: liquidityDelta,
-            slippageLimitLower: 1000000000000000000000000n,
-            slippageLimitUpper: 1000000000000000000000000n
-          },
-          tokens: [
-            { id: token0.contractInstance.contractId, amount: senderBalance0 },
-            { id: token1.contractInstance.contractId, amount: senderBalance1 }
-          ]
-        })
-      }
-      const position = await invariant.methods.getPosition({
-        args: { owner: sender.address, index: 2n }
-      })
-      const parsedPosition = decodePosition(position.returns)
-      expect(parsedPosition.exist).toBe(true)
-      expect(parsedPosition.liquidity).toBe(liquidityDelta)
-      expect(parsedPosition.lowerTickIndex).toBe(lowerTickIndex)
-      expect(parsedPosition.upperTickIndex).toBe(upperTickIndex)
-      expect(parsedPosition.feeGrowthInsideX).toBe(0n)
-      expect(parsedPosition.feeGrowthInsideY).toBe(0n)
-      expect(parsedPosition.lastBlockNumber).toBeGreaterThan(0n)
-      expect(parsedPosition.tokensOwedX).toBe(0n)
-      expect(parsedPosition.tokensOwedY).toBe(0n)
-
-      const lowerTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: lowerTickIndex
-        }
-      })
-
-      const parsedLowerTick = decodeTick(lowerTick.returns)
-      expect(parsedLowerTick.exist).toBe(true)
-      expect(parsedLowerTick.sign).toBe(true)
-      expect(parsedLowerTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedLowerTick.liquidityGross).toBe(liquidityDelta)
-      expect(parsedLowerTick.sqrtPrice).toBe(998002098461000000000000n)
-      expect(parsedLowerTick.feeGrowthOutsideX).toBe(0n)
-      expect(parsedLowerTick.feeGrowthOutsideY).toBe(0n)
-      expect(parsedLowerTick.secondsOutside).toBe(0n)
-      const upperTick = await invariant.methods.getTick({
-        args: {
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          index: upperTickIndex
-        }
-      })
-      const parsedUpperTick = decodeTick(upperTick.returns)
-      expect(parsedUpperTick.exist).toBe(true)
-      expect(parsedUpperTick.sign).toBe(false)
-      expect(parsedUpperTick.liquidityChange).toBe(liquidityDelta)
-      expect(parsedUpperTick.liquidityGross).toBe(liquidityDelta)
-      expect(parsedUpperTick.sqrtPrice).toBe(999500149965000000000000n)
-      expect(parsedUpperTick.feeGrowthOutsideX).toBe(0n)
-      expect(parsedUpperTick.feeGrowthOutsideY).toBe(0n)
-      expect(parsedUpperTick.secondsOutside).toBe(0n)
-    }
-
+    // swap + check results
     {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const swapAmount = 1000n
+      await withdrawTokens(swapper, [tokenY, swapAmount])
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenX.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
+      const dexBalance = {
+        tokenX: await balanceOf(tokenX.contractId, invariant.address),
+        tokenY: await balanceOf(tokenY.contractId, invariant.address)
+      }
+      expect(dexBalance).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
 
-      await Withdraw.execute(swapper, {
-        initialFields: {
-          token: tokenY.contractInstance.contractId,
-          amount: swapAmount
-        },
-        attoAlphAmount: DUST_AMOUNT * 2n
-      })
-
-      const poolBefore = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
+      expectError(
+        InvariantError.TickLimitReached,
+        initSwap(
+          invariant,
+          swapper,
+          tokenX,
+          tokenY,
+          fee,
+          tickSpacing,
+          false,
+          swapAmount,
+          true,
+          MaxSqrtPrice
+        ),
+        invariant
       )
-
-      const slippage = 15258932000000000000n
-
-      const { amountIn, amountOut, targetSqrtPrice } = (
-        await invariant.methods.quote({
-          args: {
-            token0: token0.contractInstance.contractId,
-            token1: token1.contractInstance.contractId,
-            fee: fee,
-            tickSpacing: tickSpacing,
-            xToY: true,
-            amount: swapAmount,
-            byAmountIn: true,
-            sqrtPriceLimit: slippage
-          }
-        })
-      ).returns
-
-      expect(amountIn).toBe(swapAmount)
-      expect(amountOut).toBe(990n)
-      expect(targetSqrtPrice).toBe(999254456240199142700995n)
-
-      await Swap.execute(swapper, {
-        initialFields: {
-          invariant: invariant.contractId,
-          token0: token0.contractInstance.contractId,
-          token1: token1.contractInstance.contractId,
-          fee: fee,
-          tickSpacing: tickSpacing,
-          xToY: true,
-          amount: swapAmount,
-          byAmountIn: true,
-          sqrtPriceLimit: slippage
-        },
-        tokens: [
-          { id: tokenX.contractInstance.contractId, amount: swapAmount },
-          { id: tokenY.contractInstance.contractId, amount: swapAmount }
-        ]
-      })
-
-      const swapperTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        swapper.address
-      )
-      const swapperTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        swapper.address
-      )
-      const invariantTokenXBalanceAfter = await balanceOf(
-        tokenX.contractInstance.contractId,
-        invariant.address
-      )
-      const invariantTokenYBalanceAfter = await balanceOf(
-        tokenY.contractInstance.contractId,
-        invariant.address
-      )
-
-      expect(swapperTokenXBalanceAfter).toBe(0n)
-      expect(swapperTokenYBalanceAfter).toBe(1990n)
-      expect(invariantTokenXBalanceAfter).toBe(1500n)
-      expect(invariantTokenYBalanceAfter).toBe(1509n)
-
-      const poolAfter = decodePool(
-        (
-          await invariant.methods.getPool({
-            args: {
-              token0: token0.contractInstance.contractId,
-              token1: token1.contractInstance.contractId,
-              fee: fee,
-              tickSpacing: tickSpacing
-            }
-          })
-        ).returns
-      )
-
-      const positionLiquidity = 1000000n * 10n ** 5n
-      expect(poolAfter.liquidity - positionLiquidity).toBe(poolBefore.liquidity)
-      expect(poolAfter.currentTickIndex).toBe(-20n)
-      expect(poolAfter.sqrtPrice).toBe(999254456240199142700995n)
-      expect(poolAfter.feeGrowthGlobalX).toBe(40000000000000000000000n)
-      expect(poolAfter.feeGrowthGlobalY).toBe(0n)
-      expect(poolAfter.feeProtocolTokenX).toBe(2n)
-      expect(poolAfter.feeProtocolTokenY).toBe(0n)
     }
   })
 })

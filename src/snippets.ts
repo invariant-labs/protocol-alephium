@@ -14,7 +14,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 
 type TokenInstance = TokenFaucetInstance
 
-// 6% fee
+// 0.6% fee
 const fee = 6n * 10n ** (PercentageScale - 3n)
 const tickSpacing = 10n
 
@@ -22,6 +22,7 @@ export const getBasicFeeTickSpacing = (): [bigint, bigint] => {
   return [fee, tickSpacing]
 }
 
+/**  Tokens are already ordered. */
 export const initDexAndTokens = async (
   admin: SignerProvider
 ): Promise<[InvariantInstance, TokenFaucetInstance, TokenFaucetInstance]> => {
@@ -45,10 +46,10 @@ export const initBasicPool = async (
   expect(pool).toMatchObject({ fee, tickSpacing, sqrtPrice: initSqrtPrice, exist: true })
 }
 
-// requires TokenX and Y faucets to have at least 1000
+/**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */
 export const initBasicPosition = async (
   invariant: InvariantInstance,
-  positionOwner: SignerProvider,
+  positionOwner: PrivateKeyWallet,
   tokenX: TokenInstance,
   tokenY: TokenInstance
 ) => {
@@ -78,7 +79,7 @@ export const initBasicPosition = async (
   expect(poolAfter.liquidity).toBe(liquidityDelta)
 }
 
-// requires TokenX and Y faucets to have at least 1000
+/**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */
 export const initBasicSwap = async (
   invariant: InvariantInstance,
   swapper: PrivateKeyWallet,
