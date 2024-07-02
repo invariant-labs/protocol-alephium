@@ -1,4 +1,10 @@
-import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import {
+  Address,
+  ContractInstance,
+  DUST_AMOUNT,
+  SignerProvider,
+  ZERO_ADDRESS
+} from '@alephium/web3'
 import {
   AddFeeTier,
   ChangeProtocolFee,
@@ -11,7 +17,8 @@ import {
   TokenFaucet,
   TokenFaucetInstance,
   WithdrawProtocolFee,
-  CreatePosition
+  CreatePosition,
+  Invariant
 } from '../artifacts/ts'
 import {
   MAP_ENTRY_DEPOSIT,
@@ -25,6 +32,7 @@ import {
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
+import { PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
 

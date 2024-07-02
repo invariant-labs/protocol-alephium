@@ -223,7 +223,6 @@ Contract Invariant(
 
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn createPosition(
-        // poolKey: PoolKey,
         token0: ByteVec,
         token1: ByteVec,
         fee: U256,
