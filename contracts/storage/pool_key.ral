@@ -33,7 +33,7 @@ Abstract Contract PoolKeyHelper() {
         }
     }
 
-    pub fn toBytes(poolKey: PoolKey) -> ByteVec {
+    pub fn poolKeyBytes(poolKey: PoolKey) -> ByteVec {
         return poolKey.tokenX ++ poolKey.tokenY ++ toByteVec!(poolKey.feeTier.fee) ++ toByteVec!(poolKey.feeTier.tickSpacing)
     }
 }

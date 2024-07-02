@@ -205,7 +205,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     }
 
     fn getChunk(chunk: U256, poolKey: PoolKey) -> U256 {
-        let key = toBytes(poolKey )++ toByteVec!(getKey(chunk))
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(key)
 
         if (!exists) {
@@ -227,7 +227,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         let (chunkIndex, bit) = tickToPosition(tick, tickSpacing)
         let chunk = getChunk(chunkIndex, poolKey)
         let isInitialized = getBitAtPosition(chunk, bit)
-        let key = toBytes(poolKey) ++ toByteVec!(getKey(chunkIndex))
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunkIndex))
 
         assert!(bitmap.contains!(key), InvariantError.ChunkNotFound)
         
@@ -240,7 +240,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(originalCaller: Address, poolKey: PoolKey, chunk: U256) -> () {
-        let id = toBytes(poolKey) ++ toByteVec!(getKey(chunk))
+        let id = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(id)
         if(!exists) {
             let batch = TickmapBatch {

@@ -405,7 +405,7 @@ Contract Invariant(
         }
 
         pool.lastTimestamp = blockTimeStamp!()
-        let key = toBytes(poolKey)
+        let key = poolKeyBytes(poolKey)
         pools[key] = pool
 
         assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
