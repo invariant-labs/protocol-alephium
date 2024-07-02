@@ -2,13 +2,13 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant } from '../src/utils'
-import { FeeGrowthScale, MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   feeTierExists,
   getPool,
   initFeeTier,
   initPool,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   initTokensXY,
   quote,
@@ -72,7 +72,7 @@ describe('multiple swap tests', () => {
         true
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         tokenX,
@@ -84,7 +84,6 @@ describe('multiple swap tests', () => {
         lowerTick,
         upperTick,
         liquidity,
-        1n,
         pool.sqrtPrice,
         pool.sqrtPrice
       )
