@@ -1,33 +1,39 @@
 struct PoolKey {
-    tokenX: ByteVec,
-    tokenY: ByteVec,
-    fee: U256,
-    tickSpacing: U256
+    mut tokenX: ByteVec,
+    mut tokenY: ByteVec,
+    mut feeTier: FeeTier
 }
 
 Abstract Contract PoolKeyHelper() {
-    const TokenAddressBytes = 32
-
-    pub fn generatePoolKey(token0: ByteVec, token1: ByteVec, fee: U256, tickSpacing: U256) -> ByteVec {
+    pub fn newPoolKey(token0: ByteVec, token1: ByteVec, feeTier: FeeTier) -> PoolKey {
         assert!(token0 != token1, InvariantError.TokensAreSame)
-        assert!(fee <= 10 ** 12, InvariantError.InvalidFee)
 
         for (let mut i = 0; i <= size!(token0); i = i + 1) {
             if (u256From1Byte!(byteVecSlice!(token0, i, i + 1)) < u256From1Byte!(byteVecSlice!(token1, i, i + 1))) {
-                return token0 ++ token1 ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+                return PoolKey {
+                    tokenX: token0,
+                    tokenY: token1,
+                    feeTier: feeTier
+                }
             }
 
             if (u256From1Byte!(byteVecSlice!(token0, i , i + 1)) > u256From1Byte!(byteVecSlice!(token1, i , i + 1))) {
-                return token1 ++ token0 ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+                return PoolKey {
+                    tokenX: token1,
+                    tokenY: token0,
+                    feeTier: feeTier
+                }
             }
         }
 
-        return token0 ++ token1 ++ toByteVec!(fee) ++ toByteVec!(tickSpacing)
+        return PoolKey {
+            tokenX: token0,
+            tokenY: token1,
+            feeTier: feeTier
+        }
     }
 
-    pub fn extractTokensFromPoolKey(poolKey: ByteVec) -> (ByteVec, ByteVec) {
-        let tokenX = byteVecSlice!(poolKey, 0, TokenAddressBytes)
-        let tokenY = byteVecSlice!(poolKey, TokenAddressBytes, TokenAddressBytes * 2)
-        return tokenX, tokenY
+    pub fn toBytes(poolKey: PoolKey) -> ByteVec {
+        return poolKey.tokenX ++ poolKey.tokenY ++ toByteVec!(poolKey.feeTier.fee) ++ toByteVec!(poolKey.feeTier.tickSpacing)
     }
 }

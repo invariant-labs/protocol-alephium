@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant } from '../src/utils'
+import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
@@ -26,6 +26,7 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -49,6 +50,8 @@ describe('interaction with pool on removed fee tiers tests', () => {
   const upperTickIndex = 10n
   const mint = 10n ** 10n
   const liquidityDelta = 1000000n * 10n ** LiquidityScale
+  let feeTier: FeeTier
+  let poolKey: PoolKey
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
@@ -61,48 +64,38 @@ describe('interaction with pool on removed fee tiers tests', () => {
   test('create pool', async () => {
     invariant = await deployInvariant(admin, protocolFee)
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
     ;[tokenX, tokenY] = await initTokensXY(admin, supply)
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    await initPool(
-      invariant,
-      poolCreator,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      initSqrtPrice,
-      initTick
-    )
+    await initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
-    await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    await getPool(invariant, poolKey)
   })
   test('remove fee tier', async () => {
-    await removeFeeTier(invariant, admin, fee, tickSpacing)
-    const [exists] = await feeTierExists(invariant, { fee, tickSpacing })
+    await removeFeeTier(invariant, admin, feeTier)
+    const [exists] = await feeTierExists(invariant, feeTier)
     expect(exists).toBeFalsy()
   })
   test('try to create same pool again', async () => {
     await expectError(
       InvariantError.FeeTierNotFound,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick),
       invariant
     )
   })
   test('init position', async () => {
     await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       mint,
-      tokenY,
       mint,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -111,7 +104,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
       slippageLimitUpper
     )
 
-    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolAfter = await getPool(invariant, poolKey)
 
     expect(poolAfter.liquidity).toBe(liquidityDelta)
   })
@@ -123,21 +116,10 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(invariantTokenXBalanceBefore).toBe(500n)
     expect(invariantTokenYBalanceBefore).toBe(1000n)
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const slippage = MinSqrtPrice
-    await initSwap(
-      invariant,
-      swapper,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      slippage
-    )
-    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    await initSwap(invariant, swapper, poolKey, true, amount, true, slippage)
+    const poolAfter = await getPool(invariant, poolKey)
     expect(poolAfter.liquidity).toBe(poolBefore.liquidity)
     expect(poolAfter.currentTickIndex).toBe(lowerTickIndex)
     expect(poolAfter.sqrtPrice).toBeLessThan(poolBefore.sqrtPrice)
@@ -178,14 +160,11 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await ChangeFeeReceiver.execute(admin, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: tokenX.contractId,
-        token1: tokenY.contractId,
-        fee,
-        tickSpacing,
+        poolKey,
         newFeeReceiver: feeReceiver.address
       }
     })
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, poolKey)
     expect(pool.feeReceiver).toBe(feeReceiver.address)
   })
   test('withdraw protocol fee', async () => {
@@ -195,10 +174,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await WithdrawProtocolFee.execute(feeReceiver, {
       initialFields: {
         invariant: invariant.contractId,
-        token0: tokenX.contractId,
-        token1: tokenY.contractId,
-        fee,
-        tickSpacing
+        poolKey
       },
       attoAlphAmount: DUST_AMOUNT
     })
@@ -211,7 +187,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await removePosition(invariant, positionOwner, 1n)
   })
   test('get pool', async () => {
-    await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    await getPool(invariant, poolKey)
   })
   test('get pools', async () => {
     const pools = await getPools(invariant)
@@ -222,7 +198,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
 
     await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
 
     const xBalance = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -231,12 +207,9 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       xBalance,
-      tokenY,
       yBalance,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -267,11 +240,11 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(transferedPosition.owner).toBe(recipient.address)
   })
   test('readd fee tier and try to create same pool', async () => {
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
 
     await expectError(
       InvariantError.PoolKeyAlreadyExist,
-      initPool(invariant, poolCreator, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick),
+      initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick),
       invariant
     )
   })

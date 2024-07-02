@@ -52,7 +52,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         return limit * toI256!(tickSpacing)
     }
 
-    pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: PoolKey) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, true)
 
         if (tick + toI256!(tickSpacing) > GlobalMaxTick) {
@@ -87,7 +87,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         return false, 0i
     }
 
-    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> (Bool, I256) {
+    pub fn prevInitialized(tick: I256, tickSpacing: U256, poolKey: PoolKey) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, false)
         let (mut chunk, mut bit) = tickToPosition(tick, tickSpacing)
         let (limitingChunk, limitingBit) = tickToPosition(limit, tickSpacing)
@@ -168,7 +168,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     }
 
     @using(checkExternalCaller = false)
-    pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: ByteVec) -> (U256, Bool, I256, Bool) {
+    pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: PoolKey) -> (U256, Bool, I256, Bool) {
         let mut closesTickBool = false
         let mut closesTickIndex = 0i
         
@@ -204,8 +204,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         }
     }
 
-    fn getChunk(chunk: U256, poolKey: ByteVec) -> U256 {
-        let key = poolKey ++ toByteVec!(getKey(chunk))
+    fn getChunk(chunk: U256, poolKey: PoolKey) -> U256 {
+        let key = toBytes(poolKey )++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(key)
 
         if (!exists) {
@@ -215,18 +215,19 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         }
     }
 
-    pub fn getBit(tick: I256, tickSpacing: U256, poolKey: ByteVec) -> Bool {
-        let (chunk, bit) = tickToPosition(tick, tickSpacing)
+    pub fn getBit(tick: I256, poolKey: PoolKey) -> Bool {
+        let (chunk, bit) = tickToPosition(tick, poolKey.feeTier.tickSpacing)
 
         return getBitAtPosition(getChunk(chunk, poolKey), bit)
     }
 
     @using(preapprovedAssets = false, checkExternalCaller = false)
-    pub fn flip(value: Bool, tick: I256, tickSpacing: U256, poolKey: ByteVec) -> () {
+    pub fn flip(value: Bool, tick: I256, poolKey: PoolKey) -> () {
+        let tickSpacing = poolKey.feeTier.tickSpacing
         let (chunkIndex, bit) = tickToPosition(tick, tickSpacing)
         let chunk = getChunk(chunkIndex, poolKey)
         let isInitialized = getBitAtPosition(chunk, bit)
-        let key = poolKey ++ toByteVec!(getKey(chunkIndex))
+        let key = toBytes(poolKey) ++ toByteVec!(getKey(chunkIndex))
 
         assert!(bitmap.contains!(key), InvariantError.ChunkNotFound)
         
@@ -238,8 +239,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn initializeChunk(originalCaller: Address, poolKey: ByteVec, chunk: U256) -> () {
-        let id = poolKey ++ toByteVec!(getKey(chunk))
+    pub fn initializeChunk(originalCaller: Address, poolKey: PoolKey, chunk: U256) -> () {
+        let id = toBytes(poolKey) ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(id)
         if(!exists) {
             let batch = TickmapBatch {

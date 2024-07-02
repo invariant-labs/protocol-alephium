@@ -1,7 +1,7 @@
 import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { balanceOf, deployInvariant } from '../src/utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   feeTierExists,
@@ -16,6 +16,7 @@ import {
 } from '../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { calculateSqrtPrice, getLiquidity } from '../src/math'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
@@ -30,6 +31,8 @@ describe('multiple swap tests', () => {
   const initTick = 0n
   const [lowerTick, upperTick] = [-953n, 953n]
   const approvedAmount = 100n
+  let feeTier: FeeTier
+  let poolKey: PoolKey
 
   const mintSwapper = 100n
 
@@ -46,22 +49,24 @@ describe('multiple swap tests', () => {
     const mintPosition = 10n ** 10n
     ;[tokenX, tokenY] = await initTokensXY(admin, mintPosition + mintSwapper)
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     // pool, fee 0.1%
     {
-      const [exists] = await feeTierExists(invariant, { fee, tickSpacing })
+      const [exists] = await feeTierExists(invariant, feeTier)
       expect(exists).toBeTruthy()
       const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-      await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+      await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
     }
 
     // position w/ liquidity
     {
       await withdrawTokens(positionOwner, [tokenX, mintPosition], [tokenY, mintPosition])
 
-      const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const pool = await getPool(invariant, poolKey)
 
       const { l: liquidity } = await getLiquidity(
         approvedAmount,
@@ -75,12 +80,9 @@ describe('multiple swap tests', () => {
       await initPositionWithLiquidity(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         approvedAmount,
-        tokenY,
         approvedAmount,
-        fee,
-        tickSpacing,
         lowerTick,
         upperTick,
         liquidity,
@@ -100,27 +102,13 @@ describe('multiple swap tests', () => {
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(
           invariant,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
+          poolKey,
           true,
           swapAmount,
           true,
           sqrtPriceLimit
         )
-        await initSwap(
-          invariant,
-          swapper,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
-          true,
-          swapAmount,
-          true,
-          targetSqrtPrice
-        )
+        await initSwap(invariant, swapper, poolKey, true, swapAmount, true, targetSqrtPrice)
       }
     }
     // final checks
@@ -137,7 +125,7 @@ describe('multiple swap tests', () => {
       }
       expect(swapperBalance).toStrictEqual({ tokenX: 0n, tokenY: 80n })
 
-      const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const pool = await getPool(invariant, poolKey)
 
       const { l: liquidity } = await getLiquidity(
         approvedAmount,
@@ -169,28 +157,14 @@ describe('multiple swap tests', () => {
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(
           invariant,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
+          poolKey,
           false,
           swapAmount,
           true,
           sqrtPriceLimit
         )
 
-        await initSwap(
-          invariant,
-          swapper,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
-          false,
-          swapAmount,
-          true,
-          targetSqrtPrice
-        )
+        await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
       }
     }
     // final checks
@@ -207,7 +181,7 @@ describe('multiple swap tests', () => {
       }
       expect(swapperBalance).toStrictEqual({ tokenX: 80n, tokenY: 0n })
 
-      let pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      let pool = await getPool(invariant, poolKey)
 
       const { l: liquidity } = await getLiquidity(
         approvedAmount,

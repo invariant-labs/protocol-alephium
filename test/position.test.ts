@@ -2,7 +2,7 @@ import { ONE_ALPH, addressFromContractId, fetchContractState, web3 } from '@alep
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMM, Invariant } from '../artifacts/ts'
-import { balanceOf, deployInvariant } from '../src/utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import {
   expectError,
   getPool,
@@ -24,6 +24,7 @@ import {
   MinSqrtPrice,
   PercentageScale
 } from '../src/consts'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -42,6 +43,10 @@ describe('position tests', () => {
 
     const invariant = await deployInvariant(admin, 0n)
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
+
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
     const initTick = 10n
@@ -49,8 +54,8 @@ describe('position tests', () => {
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const lowerTickIndex = -10n
     const upperTickIndex = 10n
@@ -59,12 +64,9 @@ describe('position tests', () => {
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       supply,
-      tokenY,
       supply,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -85,7 +87,7 @@ describe('position tests', () => {
       tokensOwedY: 0n,
       owner: positionOwner.address
     }
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const pool = await getPool(invariant, poolKey)
     expect(pool.liquidity).toBe(0n)
     expect(position).toMatchObject(expectedPosition)
   })
@@ -99,13 +101,16 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     const initTick = 10n
     const initSqrtPrice = (
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const tickIndex = 10n
 
@@ -120,12 +125,9 @@ describe('position tests', () => {
       initPositionWithLiquidity(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         supply,
-        tokenY,
         supply,
-        fee,
-        tickSpacing,
         tickIndex,
         tickIndex,
         liquidityDelta,
@@ -148,13 +150,16 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
 
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     const initTick = 0n
     const initSqrtPrice = (
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const lowerTickIndex = -20n
     const upperTickIndex = 10n
@@ -163,7 +168,7 @@ describe('position tests', () => {
 
     {
       const liquidityDelta = 1000000n * 10n ** LiquidityScale
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
       const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
       const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
@@ -171,12 +176,9 @@ describe('position tests', () => {
       await initPositionWithLiquidity(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         ownerX,
-        tokenY,
         ownerY,
-        fee,
-        tickSpacing,
         lowerTickIndex,
         upperTickIndex,
         liquidityDelta,
@@ -197,13 +199,13 @@ describe('position tests', () => {
         tokensOwedY: 0n,
         owner: positionOwner.address
       }
-      const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const pool = await getPool(invariant, poolKey)
       expect(pool.liquidity).toBe(liquidityDelta)
       expect(position).toMatchObject(expectedPosition)
     }
     {
       const liquidityDelta = 1000000n * (1000000n * 10n ** LiquidityScale)
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
       const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
       const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -213,12 +215,9 @@ describe('position tests', () => {
       await initPositionWithLiquidity(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         ownerX,
-        tokenY,
         ownerY,
-        fee,
-        tickSpacing,
         incorrectLowerTickIndex,
         incorrectUpperTickIndex,
         liquidityDelta,
@@ -239,7 +238,7 @@ describe('position tests', () => {
         tokensOwedY: 0n,
         owner: positionOwner.address
       }
-      const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const pool = await getPool(invariant, poolKey)
       expect(pool.liquidity).toBe(liquidityDelta + 1000000n * 10n ** LiquidityScale)
       expect(position).toMatchObject(expectedPosition)
     }
@@ -248,30 +247,16 @@ describe('position tests', () => {
     const amount = 1000n
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const slippage = MinSqrtPrice
 
-    await initSwap(
-      invariant,
-      swapper,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      true,
-      amount,
-      true,
-      slippage
-    )
+    await initSwap(invariant, swapper, poolKey, true, amount, true, slippage)
 
-    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolAfter = await getPool(invariant, poolKey)
 
     const expectedPool = {
       exist: true,
-      tokenX: tokenX.contractId,
-      tokenY: tokenY.contractId,
-      fee,
-      tickSpacing,
+      poolKey,
       liquidity: poolBefore.liquidity,
       currentTickIndex: -10n,
       feeGrowthGlobalX: 49999950000049999n,
@@ -292,39 +277,11 @@ describe('position tests', () => {
 
     await removePosition(invariant, positionOwner, 1n)
 
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const { exist: lowerInMap } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const { exist: upperInMap } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
-    const lowerBit = await isTickInitialized(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const upperBit = await isTickInitialized(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
+    const pool = await getPool(invariant, poolKey)
+    const { exist: lowerInMap } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exist: upperInMap } = await getTick(invariant, poolKey, upperTickIndex)
+    const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
+    const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
 
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
     const dexY = await balanceOf(tokenY.contractId, invariant.address)
@@ -356,30 +313,30 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     const initSqrtPrice = (
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const lowerTickIndex = minTick + 10n
     const upperTickIndex = maxTick - 10n
 
     const liquidityDelta = 100n * 10n ** LiquidityScale
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
 
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       initialBalance,
-      tokenY,
       initialBalance,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -389,23 +346,9 @@ describe('position tests', () => {
     )
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const { exist: upperInMap, ...upperTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
+    const pool = await getPool(invariant, poolKey)
+    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
@@ -460,30 +403,30 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     const initSqrtPrice = (
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const lowerTickIndex = -46080n
     const upperTickIndex = -23040n
 
     const liquidityDelta = 10000n * 10n ** LiquidityScale
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
 
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       initialBalance,
-      tokenY,
       initialBalance,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -493,39 +436,11 @@ describe('position tests', () => {
     )
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const { exist: upperInMap, ...upperTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
-    const lowerBit = await isTickInitialized(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const upperBit = await isTickInitialized(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
+    const pool = await getPool(invariant, poolKey)
+    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
+    const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
@@ -582,30 +497,30 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
     const initSqrtPrice = (
       await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
-    await initPool(invariant, admin, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initFeeTier(invariant, admin, feeTier)
+    await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const lowerTickIndex = -22980n
     const upperTickIndex = 0n
 
     const liquidityDelta = 10000n * 10n ** LiquidityScale
 
-    const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
 
     await initPositionWithLiquidity(
       invariant,
       positionOwner,
-      tokenX,
+      poolKey,
       initialBalance,
-      tokenY,
       initialBalance,
-      fee,
-      tickSpacing,
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
@@ -615,23 +530,9 @@ describe('position tests', () => {
     )
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
-    const pool = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      lowerTickIndex
-    )
-    const { exist: upperInMap, ...upperTick } = await getTick(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing,
-      upperTickIndex
-    )
+    const pool = await getPool(invariant, poolKey)
+    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
