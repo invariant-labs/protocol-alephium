@@ -10,7 +10,6 @@ Abstract Contract PoolKeys() {
     }
 
     fn containsPoolKey(poolKey: PoolKey) -> Bool {
-        // Iterations seems redudant
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let state = poolKeys[i]
 
