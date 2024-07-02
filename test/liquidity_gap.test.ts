@@ -10,7 +10,7 @@ import {
   getTick,
   initFeeTier,
   initPool,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   initTokensXY,
   quote,
@@ -53,7 +53,7 @@ describe('liquidity gap tests', () => {
     const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
 
-    await initPositionWithLiquidity(
+    await initPosition(
       invariant,
       positionOwner,
       tokenX,
@@ -65,7 +65,6 @@ describe('liquidity gap tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      1n,
       slippageLimitLower,
       slippageLimitUpper
     )
@@ -147,7 +146,7 @@ describe('liquidity gap tests', () => {
 
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
 
-    await initPositionWithLiquidity(
+    await initPosition(
       invariant,
       positionOwner,
       tokenX,
@@ -159,7 +158,6 @@ describe('liquidity gap tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      2n,
       slippageLimitLower,
       slippageLimitUpper
     )

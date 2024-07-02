@@ -4,7 +4,7 @@ import { LiquidityScale, MinSqrtPrice, PercentageScale } from './consts'
 import {
   getPool,
   initPool,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   initTokensXY,
   withdrawTokens
@@ -60,7 +60,7 @@ export const initBasicPosition = async (
   const liquidityDelta = 1000000n * 10n ** LiquidityScale
   const slippageLimit = poolBefore.sqrtPrice
   const [lowerTick, upperTick] = [-20n, 10n]
-  await initPositionWithLiquidity(
+  await initPosition(
     invariant,
     positionOwner,
     tokenX,
@@ -72,7 +72,6 @@ export const initBasicPosition = async (
     lowerTick,
     upperTick,
     liquidityDelta,
-    1n,
     slippageLimit,
     slippageLimit
   )

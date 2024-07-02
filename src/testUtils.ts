@@ -1,10 +1,14 @@
-import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import {
+  Address,
+  ContractInstance,
+  DUST_AMOUNT,
+  SignerProvider,
+  ZERO_ADDRESS
+} from '@alephium/web3'
 import {
   AddFeeTier,
   ChangeProtocolFee,
   CreatePool,
-  IncreasePositionLiquidity,
-  InitializeEmptyPosition,
   InvariantInstance,
   RemoveFeeTier,
   RemovePosition,
@@ -12,7 +16,9 @@ import {
   Withdraw,
   TokenFaucet,
   TokenFaucetInstance,
-  WithdrawProtocolFee
+  WithdrawProtocolFee,
+  CreatePosition,
+  Invariant
 } from '../artifacts/ts'
 import {
   MAP_ENTRY_DEPOSIT,
@@ -26,6 +32,7 @@ import {
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
+import { PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -243,7 +250,7 @@ export const getProtocolFee = async (invariant: InvariantInstance) => {
   return (await invariant.methods.getProtocolFee()).returns
 }
 
-export async function initPositionWithLiquidity(
+export async function initPosition(
   invariant: InvariantInstance,
   signer: PrivateKeyWallet,
   token0: TokenInstance,
@@ -254,14 +261,11 @@ export async function initPositionWithLiquidity(
   tickSpacing: bigint,
   lowerTick: bigint,
   upperTick: bigint,
-  liquidity: bigint,
-  index: bigint,
+  liquidityDelta: bigint,
   slippageLimitLower: bigint,
   slippageLimitUpper: bigint
 ) {
-  expect((await getPosition(invariant, signer.address, index)).exist).toBeFalsy()
-
-  await InitializeEmptyPosition.execute(signer, {
+  return await CreatePosition.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       token0: token0.contractId,
@@ -269,31 +273,18 @@ export async function initPositionWithLiquidity(
       fee,
       tickSpacing,
       lowerTick,
-      upperTick
-    },
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-  })
-
-  return await IncreasePositionLiquidity.execute(signer, {
-    initialFields: {
-      invariant: invariant.contractId,
-      token0: token0.contractId,
-      token1: token1.contractId,
+      upperTick,
+      liquidityDelta,
       approvedTokens0: token0Amount,
       approvedTokens1: token1Amount,
-      index,
-      fee,
-      tickSpacing,
-      lowerTick: lowerTick,
-      upperTick: upperTick,
-      liquidityDelta: liquidity,
       slippageLimitLower,
       slippageLimitUpper
     },
     tokens: [
       { id: token0.contractId, amount: token0Amount },
       { id: token1.contractId, amount: token1Amount }
-    ]
+    ],
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 7n
   })
 }
 
