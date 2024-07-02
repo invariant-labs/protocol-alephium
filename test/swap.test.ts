@@ -11,7 +11,7 @@ import {
 } from '../src/snippets'
 import {
   expectError,
-  expectOutOfGas,
+  expectVMError,
   getPool,
   getTick,
   initFeeTier,
@@ -26,7 +26,8 @@ import {
   LiquidityScale,
   MaxSqrtPrice,
   MinSqrtPrice,
-  PercentageScale
+  PercentageScale,
+  VMError
 } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -379,7 +380,8 @@ describe('swap tests', () => {
       expect(dexBalance).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
       // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
-      expectOutOfGas(
+      expectVMError(
+        VMError.OutOfGas,
         initSwap(
           invariant,
           swapper,

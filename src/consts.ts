@@ -24,3 +24,8 @@ export const MaxU256 =
 
 export const MaxSqrtPrice = 65535383934512647000000000000n
 export const MinSqrtPrice = 15258932000000000000n
+
+export enum VMError {
+  ArithmeticError = 'ArithmeticError',
+  OutOfGas = 'OutOfGas'
+}

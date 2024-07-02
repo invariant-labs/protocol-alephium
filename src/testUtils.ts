@@ -25,6 +25,7 @@ import {
 } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { VMError } from './consts'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -49,29 +50,13 @@ export async function expectError(
   }
 }
 
-export async function expectVMError(error: string, script: Promise<any>) {
+export async function expectVMError(error: VMError, script: Promise<any>) {
   let isError: boolean = false
   try {
     await script
   } catch (e: unknown) {
     if (e instanceof Error) {
-      const regex = new RegExp('VM execution error: ' + error)
-      const regexResult = regex.exec(e.message)
-
-      isError = regexResult ? true : false
-    }
-  }
-
-  expect(isError).toBeTruthy()
-}
-
-export async function expectOutOfGas(script: Promise<any>) {
-  let isError: boolean = false
-  try {
-    await script
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      const regex = new RegExp('OutOfGas')
+      const regex = new RegExp(error)
       const regexResult = regex.exec(e.message)
 
       isError = regexResult ? true : false
