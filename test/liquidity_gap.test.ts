@@ -199,9 +199,23 @@ describe('liquidity gap tests', () => {
     const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
     const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
 
-    const [lowerInMap, lowerTick] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -50n)
-    const [currentInMap] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -60n)
-    const [upperInMap, upperTick] = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -10n)
+    const { exist: lowerInMap, ...lowerTick } = await getTick(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      -50n
+    )
+    const { exist: currentInMap } = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, -60n)
+    const { exist: upperInMap, ...upperTick } = await getTick(
+      invariant,
+      tokenX,
+      tokenY,
+      fee,
+      tickSpacing,
+      -10n
+    )
 
     const expectedFirstPosition = {
       exist: true,

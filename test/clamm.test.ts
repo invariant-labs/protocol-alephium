@@ -4,7 +4,14 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../artifacts/ts'
 import { deployCLAMM } from '../src/utils'
 import { expectError, expectVMError } from '../src/testUtils'
-import { ArithmeticError, CLAMMError, GlobalMaxTick, GlobalMinTick, MaxU256 } from '../src/consts'
+import {
+  ArithmeticError,
+  CLAMMError,
+  GlobalMaxTick,
+  GlobalMinTick,
+  MaxU256,
+  VMError
+} from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -900,7 +907,7 @@ describe('math tests', () => {
           }
         }
 
-        await expectVMError('ArithmeticError', clamm.methods.getNextSqrtPriceYDown(params))
+        await expectVMError(VMError.ArithmeticError, clamm.methods.getNextSqrtPriceYDown(params))
       }
       {
         const params = {
@@ -911,7 +918,7 @@ describe('math tests', () => {
             addY: false
           }
         }
-        await expectVMError('ArithmeticError', clamm.methods.getNextSqrtPriceYDown(params))
+        await expectVMError(VMError.ArithmeticError, clamm.methods.getNextSqrtPriceYDown(params))
       }
     }
     // Quotient overflow
@@ -1750,7 +1757,7 @@ describe('math tests', () => {
           lowerTick
         }
       }
-      await expectVMError('ArithmeticError', clamm.methods.calculateAmountDelta(params))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.calculateAmountDelta(params))
     })
   })
 

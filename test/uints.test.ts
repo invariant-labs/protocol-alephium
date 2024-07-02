@@ -1,7 +1,7 @@
 import { ONE_ALPH, SignerProvider, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { expectError, expectVMError } from '../src/testUtils'
-import { ArithmeticError, MaxU256 } from '../src/consts'
+import { ArithmeticError, MaxU256, VMError } from '../src/consts'
 import { CLAMMInstance } from '../artifacts/ts'
 import { deployCLAMM } from '../src/utils'
 
@@ -350,7 +350,7 @@ describe('clamm tests', () => {
     {
       const a = { higher: 0n, lower: 1n }
       const b = { higher: 1n, lower: 0n }
-      await expectVMError('ArithmeticError', clamm.methods.newBigSub512({ args: { a, b } }))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.newBigSub512({ args: { a, b } }))
     }
     {
       const a = { higher: 1n, lower: 0n }
@@ -379,7 +379,7 @@ describe('clamm tests', () => {
     {
       const a = { higher: 1n, lower: 0n }
       const b = { higher: 1n, lower: 1n }
-      await expectVMError('ArithmeticError', clamm.methods.newBigSub512({ args: { a, b } }))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.newBigSub512({ args: { a, b } }))
     }
   })
 
@@ -544,7 +544,7 @@ describe('clamm tests', () => {
         higher: 0n,
         lower: 1n
       }
-      await expectVMError('ArithmeticError', clamm.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.newBigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -555,7 +555,7 @@ describe('clamm tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectVMError('ArithmeticError', clamm.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.newBigAdd512({ args: { a, b } }))
     }
     {
       const a = {
@@ -566,7 +566,7 @@ describe('clamm tests', () => {
         higher: MaxU256,
         lower: 0n
       }
-      await expectVMError('ArithmeticError', clamm.methods.newBigAdd512({ args: { a, b } }))
+      await expectVMError(VMError.ArithmeticError, clamm.methods.newBigAdd512({ args: { a, b } }))
     }
   })
 
@@ -956,7 +956,7 @@ describe('clamm tests', () => {
       const b = MaxU256
       const bDenominator = 1n
       await expectVMError(
-        'ArithmeticError',
+        VMError.ArithmeticError,
         clamm.methods.newBigDivUp({ args: { a, b, bDenominator } })
       )
     }
@@ -1040,7 +1040,7 @@ describe('clamm tests', () => {
       const b = 0n
       const bDenominator = 1n
       await expectVMError(
-        'ArithmeticError',
+        VMError.ArithmeticError,
         clamm.methods.newBigDivUp({ args: { a, b, bDenominator } })
       )
     }
