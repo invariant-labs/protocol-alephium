@@ -253,7 +253,7 @@ export async function initPosition(
       { id: poolKey.tokenX, amount: approvedTokensX },
       { id: poolKey.tokenY, amount: approvedTokensY }
     ],
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 7n
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
   })
 }
 

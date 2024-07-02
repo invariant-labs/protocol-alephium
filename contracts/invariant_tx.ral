@@ -34,7 +34,7 @@ TxScript CreatePosition(
     slippageLimitLower: U256,
     slippageLimitUpper: U256
 ) {
-    invariant.createPosition{callerAddress!() -> poolKey.tokenX: approvedTokensX, poolKey.tokenY: approvedTokensY, ALPH: mapEntryDeposit!() * 7}
+    invariant.createPosition{callerAddress!() -> poolKey.tokenX: approvedTokensX, poolKey.tokenY: approvedTokensY, ALPH: mapEntryDeposit!() * 6}
         (poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 
