@@ -246,19 +246,17 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
 
-      const slippage = (
-        await quote(
-          invariant,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
-          false,
-          swapAmount,
-          true,
-          MaxSqrtPrice
-        )
-      ).targetSqrtPrice
+      const { targetSqrtPrice: slippage } = await quote(
+        invariant,
+        tokenX,
+        tokenY,
+        fee,
+        tickSpacing,
+        false,
+        swapAmount,
+        true,
+        MaxSqrtPrice
+      )
       await initSwap(
         invariant,
         swapper,
@@ -470,7 +468,7 @@ describe('swap tests', () => {
       expect(dexBalance).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
 
       expectError(
-        InvariantError.LimitReached,
+        InvariantError.TickLimitReached,
         initSwap(
           invariant,
           swapper,
