@@ -1,10 +1,14 @@
-import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import {
+  Address,
+  ContractInstance,
+  DUST_AMOUNT,
+  SignerProvider,
+  ZERO_ADDRESS
+} from '@alephium/web3'
 import {
   AddFeeTier,
   ChangeProtocolFee,
   CreatePool,
-  IncreasePositionLiquidity,
-  InitializeEmptyPosition,
   InvariantInstance,
   RemoveFeeTier,
   RemovePosition,
@@ -12,7 +16,8 @@ import {
   Withdraw,
   TokenFaucet,
   TokenFaucetInstance,
-  WithdrawProtocolFee
+  WithdrawProtocolFee,
+  CreatePosition
 } from '../artifacts/ts'
 import {
   MAP_ENTRY_DEPOSIT,
@@ -220,48 +225,35 @@ export const getProtocolFee = async (invariant: InvariantInstance) => {
   return (await invariant.methods.getProtocolFee()).returns
 }
 
-export async function initPositionWithLiquidity(
+export async function initPosition(
   invariant: InvariantInstance,
   signer: PrivateKeyWallet,
   poolKey: PoolKey,
-  token0Amount: bigint,
-  token1Amount: bigint,
+  approvedTokensX: bigint,
+  approvedTokensY: bigint,
   lowerTick: bigint,
   upperTick: bigint,
-  liquidity: bigint,
-  index: bigint,
+  liquidityDelta: bigint,
   slippageLimitLower: bigint,
   slippageLimitUpper: bigint
 ) {
-  expect((await getPosition(invariant, signer.address, index)).exist).toBeFalsy()
-
-  await InitializeEmptyPosition.execute(signer, {
+  return await CreatePosition.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       poolKey,
       lowerTick,
-      upperTick
-    },
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n
-  })
-
-  return await IncreasePositionLiquidity.execute(signer, {
-    initialFields: {
-      invariant: invariant.contractId,
-      poolKey,
-      approvedTokens0: token0Amount,
-      approvedTokens1: token1Amount,
-      index,
-      lowerTick: lowerTick,
-      upperTick: upperTick,
-      liquidityDelta: liquidity,
+      upperTick,
+      liquidityDelta,
+      approvedTokensX,
+      approvedTokensY,
       slippageLimitLower,
       slippageLimitUpper
     },
     tokens: [
-      { id: poolKey.tokenX, amount: token0Amount },
-      { id: poolKey.tokenY, amount: token1Amount }
-    ]
+      { id: poolKey.tokenX, amount: approvedTokensX },
+      { id: poolKey.tokenY, amount: approvedTokensY }
+    ],
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 7n
   })
 }
 

@@ -11,7 +11,7 @@ import {
   removeFeeTier,
   feeTierExists,
   withdrawTokens,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   removePosition,
   getPools,
@@ -90,7 +90,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
 
     const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, poolBefore.sqrtPrice]
-    await initPositionWithLiquidity(
+    await initPosition(
       invariant,
       positionOwner,
       poolKey,
@@ -99,7 +99,6 @@ describe('interaction with pool on removed fee tiers tests', () => {
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
-      1n,
       slippageLimitLower,
       slippageLimitUpper
     )
@@ -204,7 +203,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     const xBalance = await balanceOf(tokenX.contractId, positionOwner.address)
     const yBalance = await balanceOf(tokenY.contractId, positionOwner.address)
 
-    await initPositionWithLiquidity(
+    await initPosition(
       invariant,
       positionOwner,
       poolKey,
@@ -213,7 +212,6 @@ describe('interaction with pool on removed fee tiers tests', () => {
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
-      1n,
       slippageLimitLower,
       slippageLimitUpper
     )

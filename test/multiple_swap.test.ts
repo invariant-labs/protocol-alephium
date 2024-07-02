@@ -8,7 +8,7 @@ import {
   getPool,
   initFeeTier,
   initPool,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   initTokensXY,
   quote,
@@ -77,7 +77,7 @@ describe('multiple swap tests', () => {
         true
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -86,7 +86,6 @@ describe('multiple swap tests', () => {
         lowerTick,
         upperTick,
         liquidity,
-        1n,
         pool.sqrtPrice,
         pool.sqrtPrice
       )

@@ -23,25 +23,19 @@ TxScript WithdrawProtocolFee(invariant: Invariant, poolKey: PoolKey) {
     invariant.withdrawProtocolFee(poolKey)
 }
 
-TxScript InitializeEmptyPosition(invariant: Invariant, poolKey: PoolKey, lowerTick: I256, upperTick: I256) {
-    let mapEntry6Deposits = mapEntryDeposit!() * 6
-    invariant.initializeEmptyPosition{callerAddress!() -> ALPH: mapEntry6Deposits}(poolKey, lowerTick, upperTick)
-}
-
-TxScript IncreasePositionLiquidity(
+TxScript CreatePosition(
     invariant: Invariant,
     poolKey: PoolKey,
-    approvedTokens0: U256,
-    approvedTokens1: U256,
-    index: U256,
     lowerTick: I256,
     upperTick: I256,
     liquidityDelta: U256,
+    approvedTokensX: U256,
+    approvedTokensY: U256,
     slippageLimitLower: U256,
     slippageLimitUpper: U256
 ) {
-    invariant.increasePositionLiquidity{callerAddress!() -> poolKey.tokenX: approvedTokens0, poolKey.tokenY: approvedTokens1}
-        (index, poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
+    invariant.createPosition{callerAddress!() -> poolKey.tokenX: approvedTokensX, poolKey.tokenY: approvedTokensY, ALPH: mapEntryDeposit!() * 7}
+        (poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
 }
 
 TxScript RemovePosition(invariant: Invariant, index: U256) {
@@ -71,3 +65,4 @@ TxScript Flip(invariant: Invariant, value: Bool, tick: I256, poolKey: PoolKey) {
 TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: PoolKey, chunk: U256) {
     invariant.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
 }
+

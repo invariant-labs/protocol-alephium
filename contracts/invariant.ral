@@ -42,7 +42,6 @@ Contract Invariant(
     // Key: owner
     mapping[Address, U256] positionsCounter
     
-
     enum InvariantError {
         NotAdmin = 0
         InsufficientLiquidity = 1
@@ -216,47 +215,8 @@ Contract Invariant(
         )
     }
 
-    @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn initializeEmptyPosition(
-        poolKey: PoolKey,
-        lowerTick: I256,
-        upperTick: I256
-    ) -> () {
-        let (exist, pool) = wrappedGetPool(poolKey)
-        assert!(exist, InvariantError.PoolDoesNotExist)
-
-        let currentTickindex = pool.currentTickIndex
-        let feeGrowthGlobalX = pool.feeGrowthGlobalX
-        let feeGrowthGlobalY = pool.feeGrowthGlobalY
-        let startTimestamp = pool.startTimestamp
-
-        let caller = callerAddress!()
-
-        let (lowerChunk, upperChunk) = getChunks(lowerTick, upperTick, poolKey.feeTier.tickSpacing)
-
-        let mapEntryDeposit = mapEntryDeposit!()
-        if (lowerChunk == upperChunk) {
-            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
-        } else {
-            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
-            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
-        }
-        
-        let mapEntry2Deposits = mapEntryDeposit * 2
-        if (!containsTick(poolKey, lowerTick)) {
-            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, lowerTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
-        }
-
-        if (!containsTick(poolKey, upperTick)) {
-            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, upperTick, currentTickindex, feeGrowthGlobalX, feeGrowthGlobalY, startTimestamp)
-        }
-
-        wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0, caller)
-    }
-
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
-    pub fn increasePositionLiquidity(
-        index: U256,
+    pub fn createPosition(
         poolKey: PoolKey,
         lowerTick: I256,
         upperTick: I256,
@@ -264,25 +224,38 @@ Contract Invariant(
         slippageLimitLower: U256,
         slippageLimitUpper: U256
     ) -> () {
-        let currentTimestamp = blockTimeStamp!()
-
-        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
-
         let (exist, pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolDoesNotExist)
+        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
+        assert!(lowerTick != upperTick, InvariantError.InvalidTickIndex)
 
-        if (isTickInitialized(poolKey, lowerTick) == false) {
+        let currentTimestamp = blockTimeStamp!()
+        let mapEntryDeposit = mapEntryDeposit!()
+        let caller = callerAddress!()
+
+        let (lowerChunk, upperChunk) = getChunks(lowerTick, upperTick, poolKey.feeTier.tickSpacing)
+
+        if (lowerChunk == upperChunk) {
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
+        } else {
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
+            initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
+        }
+        let mapEntry2Deposits = mapEntryDeposit * 2
+        if (!containsTick(poolKey, lowerTick)) {
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, lowerTick, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
             flip(true, lowerTick, poolKey)
         }
-        
-        if (isTickInitialized(poolKey, upperTick) == false) {
+
+        if (!containsTick(poolKey, upperTick)) {
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, upperTick, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
             flip(true, upperTick, poolKey)
         }
 
-        let poolSqrtPrice = pool.sqrtPrice
+        assert!(pool.sqrtPrice >= slippageLimitLower && pool.sqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        assert!(poolSqrtPrice >= slippageLimitLower && poolSqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
-
+        wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0, caller)
+        let index = countPositions(caller)
         let (x, y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp)
 
         transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenX, x)

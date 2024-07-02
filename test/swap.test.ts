@@ -15,7 +15,7 @@ import {
   getPool,
   getTick,
   initFeeTier,
-  initPositionWithLiquidity,
+  initPosition,
   initSwap,
   initTokensXY,
   quote,
@@ -79,7 +79,7 @@ describe('swap tests', () => {
 
       const positionAmount = positionsAmount / 2n
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -88,12 +88,11 @@ describe('swap tests', () => {
         lowerTickIndex,
         upperTickIndex,
         liquidity,
-        1n,
         slippageLimit,
         slippageLimit
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -102,7 +101,6 @@ describe('swap tests', () => {
         lowerTickIndex - 20n,
         middleTickIndex,
         liquidity,
-        2n,
         slippageLimit,
         slippageLimit
       )
@@ -190,7 +188,7 @@ describe('swap tests', () => {
 
       const positionAmount = positionsAmount / 2n
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -199,12 +197,11 @@ describe('swap tests', () => {
         lowerTickIndex,
         upperTickIndex,
         liquidity,
-        1n,
         slippageLimit,
         slippageLimit
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -213,7 +210,6 @@ describe('swap tests', () => {
         middleTickIndex,
         upperTickIndex + 20n,
         liquidity,
-        2n,
         slippageLimit,
         slippageLimit
       )
@@ -308,7 +304,7 @@ describe('swap tests', () => {
 
       const positionAmount = positionsAmount / 2n
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -317,12 +313,11 @@ describe('swap tests', () => {
         lowerTickIndex,
         upperTickIndex,
         liquidity,
-        1n,
         slippageLimit,
         slippageLimit
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -331,7 +326,6 @@ describe('swap tests', () => {
         middleTickIndex,
         upperTickIndex + 20n,
         liquidity,
-        2n,
         slippageLimit,
         slippageLimit
       )
@@ -383,7 +377,7 @@ describe('swap tests', () => {
 
       const positionAmount = positionsAmount / 2n
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -392,12 +386,11 @@ describe('swap tests', () => {
         lowerTickIndex,
         upperTickIndex,
         liquidity,
-        1n,
         slippageLimit,
         slippageLimit
       )
 
-      await initPositionWithLiquidity(
+      await initPosition(
         invariant,
         positionOwner,
         poolKey,
@@ -406,7 +399,6 @@ describe('swap tests', () => {
         lowerTickIndex - 20n,
         middleTickIndex,
         liquidity,
-        2n,
         slippageLimit,
         slippageLimit
       )
