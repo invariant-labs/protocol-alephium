@@ -25,7 +25,7 @@ import {
   getLiquidityByY,
   getMaxTick
 } from '../src/math'
-import { balanceOf } from '../src/utils'
+import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -52,15 +52,17 @@ describe('limits tests', () => {
     const limitAmount = 95780971304118053647396689196894323976171195136475136n
     // 0.6% fee
     const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    await initFeeTier(invariant, admin, feeTier)
 
     const initTick = 0n
     const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-    await initPool(invariant, user, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
-    const { sqrtPrice } = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const { sqrtPrice } = await getPool(invariant, poolKey)
 
     const { l: liquidityDelta } = await getLiquidityByX(
       limitAmount,
@@ -75,12 +77,9 @@ describe('limits tests', () => {
     await initPosition(
       invariant,
       user,
-      tokenX,
+      poolKey,
       MaxU256,
-      tokenY,
       MaxU256,
-      fee,
-      tickSpacing,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -117,20 +116,16 @@ describe('limits tests', () => {
     const limitAmount = 110427941548649020598956093796432407239217743554726184882600387580788736n
     // 0.6% fee
     const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    await initFeeTier(invariant, admin, feeTier)
 
     const initTick = await getMaxTick(tickSpacing)
     const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-    await initPool(invariant, user, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
-    const { currentTickIndex, sqrtPrice } = await getPool(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing
-    )
+    const { currentTickIndex, sqrtPrice } = await getPool(invariant, poolKey)
     expect(currentTickIndex).toBe(initTick)
     expect(sqrtPrice).toBe(initSqrtPrice)
 
@@ -148,12 +143,9 @@ describe('limits tests', () => {
     await initPosition(
       invariant,
       user,
-      tokenX,
+      poolKey,
       MaxU256,
-      tokenY,
       MaxU256,
-      fee,
-      tickSpacing,
       0n,
       GlobalMaxTick,
       liquidityDelta,
@@ -172,15 +164,17 @@ describe('limits tests', () => {
     const limitAmount = 191561942608236107294793378393788647952342390272950272n
     // 0.6% fee
     const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    await initFeeTier(invariant, admin, feeTier)
 
     const initTick = 0n
     const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-    await initPool(invariant, user, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+    await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
-    const { sqrtPrice } = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const { sqrtPrice } = await getPool(invariant, poolKey)
 
     const posAmount = limitAmount / 2n
     const { l: liquidityDelta } = await getLiquidityByX(
@@ -197,12 +191,9 @@ describe('limits tests', () => {
     await initPosition(
       invariant,
       user,
-      tokenX,
+      poolKey,
       MaxU256,
-      tokenY,
       MaxU256,
-      fee,
-      tickSpacing,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -237,10 +228,7 @@ describe('limits tests', () => {
       await initSwap(
         invariant,
         user,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
+        poolKey,
         n % 2 === 0,
         swapAmount,
         true,
@@ -259,19 +247,15 @@ describe('limits tests', () => {
       220855883097298041197912187592864814478435487109452369765200775161577472n
     // 0.6% fee
     const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    await initFeeTier(invariant, admin, feeTier)
 
     const initTick = await getMaxTick(tickSpacing)
     const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-    await initPool(invariant, user, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
-    const { currentTickIndex, sqrtPrice } = await getPool(
-      invariant,
-      tokenX,
-      tokenY,
-      fee,
-      tickSpacing
-    )
+    await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
+    const { currentTickIndex, sqrtPrice } = await getPool(invariant, poolKey)
     expect(currentTickIndex).toBe(initTick)
     expect(sqrtPrice).toBe(initSqrtPrice)
 
@@ -281,12 +265,9 @@ describe('limits tests', () => {
     await initPosition(
       invariant,
       user,
-      tokenX,
+      poolKey,
       MaxU256,
-      tokenY,
       MaxU256,
-      fee,
-      tickSpacing,
       GlobalMinTick,
       GlobalMaxTick,
       liquidityDelta,
@@ -316,15 +297,17 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
   const limitAmount = 102844034832575377634685573909834406561420991602098741459288064n
   // 0.6% fee
   const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
-  await initFeeTier(invariant, admin, fee, tickSpacing)
+  const feeTier = await newFeeTier(fee, tickSpacing)
+  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  await initFeeTier(invariant, admin, feeTier)
 
   const initTick = 0n
   const initSqrtPrice = await calculateSqrtPrice(initTick)
 
-  await initPool(invariant, user, tokenX, tokenY, fee, tickSpacing, initSqrtPrice, initTick)
+  await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
   const [lowerTick, upperTick] = xToY ? [-tickSpacing, 0n] : [0n, tickSpacing]
-  const { sqrtPrice } = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+  const { sqrtPrice } = await getPool(invariant, poolKey)
 
   const { l: liquidityDelta } = xToY
     ? await getLiquidityByY(limitAmount, lowerTick, upperTick, sqrtPrice, true)
@@ -334,12 +317,9 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
   await initPosition(
     invariant,
     user,
-    tokenX,
+    poolKey,
     MaxU256,
-    tokenY,
     MaxU256,
-    fee,
-    tickSpacing,
     lowerTick,
     upperTick,
     liquidityDelta,
@@ -368,10 +348,7 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
   await initSwap(
     invariant,
     user,
-    tokenX,
-    tokenY,
-    fee,
-    tickSpacing,
+    poolKey,
     xToY,
     limitAmount,
     true,

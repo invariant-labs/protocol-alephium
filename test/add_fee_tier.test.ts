@@ -3,7 +3,8 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantError, PercentageScale } from '../src/consts'
 import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
-import { deployInvariant } from '../src/utils'
+import { deployInvariant, newFeeTier } from '../src/utils'
+import { FeeTier } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -33,7 +34,10 @@ describe('add fee tier tests', () => {
       expect(tiersExist).toStrictEqual([false, false, false])
     }
 
-    await initFeeTier(invariant, admin, fee, tickSpacing1)
+    {
+      const feeTier = await newFeeTier(fee, tickSpacing1)
+      await initFeeTier(invariant, admin, feeTier)
+    }
 
     {
       const tiersExist = await feeTierExists(
@@ -45,7 +49,10 @@ describe('add fee tier tests', () => {
       expect(tiersExist).toStrictEqual([true, false, false])
     }
 
-    await initFeeTier(invariant, admin, fee, tickSpacing2)
+    {
+      const feeTier = await newFeeTier(fee, tickSpacing2)
+      await initFeeTier(invariant, admin, feeTier)
+    }
 
     {
       const tiersExist = await feeTierExists(
@@ -57,7 +64,12 @@ describe('add fee tier tests', () => {
       expect(tiersExist).toStrictEqual([true, true, false])
     }
 
-    await initFeeTier(invariant, admin, fee, tickSpacing3)
+    {
+      {
+        const feeTier = await newFeeTier(fee, tickSpacing3)
+        await initFeeTier(invariant, admin, feeTier)
+      }
+    }
 
     const feeTiers = await getFeeTiers(invariant)
 
@@ -73,12 +85,13 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 1n
+    const feeTier = await newFeeTier(fee, tickSpacing)
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
 
     expectError(
       InvariantError.FeeTierAlreadyExist,
-      initFeeTier(invariant, admin, fee, tickSpacing),
+      initFeeTier(invariant, admin, feeTier),
       invariant
     )
   })
@@ -89,21 +102,20 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 1n
+    const feeTier = await newFeeTier(fee, tickSpacing)
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
-    expectError(
-      InvariantError.NotAdmin,
-      initFeeTier(invariant, notAdmin, fee, tickSpacing),
-      invariant
-    )
+    expectError(InvariantError.NotAdmin, initFeeTier(invariant, notAdmin, feeTier), invariant)
   })
 
   test('add fee tier zero fee', async () => {
     const invariant = await deployInvariant(admin, 0n)
 
     const fee = 0n
-    await initFeeTier(invariant, admin, fee, 10n)
+    const tickSpacing = 10n
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
   })
 
   test('add fee tier tick spacing zero', async () => {
@@ -112,10 +124,10 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 0n
-
+    const feeTier: FeeTier = { fee, tickSpacing }
     expectError(
       InvariantError.InvalidTickSpacing,
-      initFeeTier(invariant, admin, fee, tickSpacing),
+      initFeeTier(invariant, admin, feeTier),
       invariant
     )
   })
@@ -126,11 +138,10 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = 2n * 10n ** (PercentageScale - 4n)
     const tickSpacing = 101n
-
+    const feeTier: FeeTier = { fee, tickSpacing }
     expectError(
       InvariantError.InvalidTickSpacing,
-
-      initFeeTier(invariant, admin, fee, tickSpacing),
+      initFeeTier(invariant, admin, feeTier),
       invariant
     )
   })
@@ -141,11 +152,7 @@ describe('add fee tier tests', () => {
     // 100%
     const fee = 10n ** PercentageScale
     const tickSpacing = 10n
-
-    expectError(
-      InvariantError.InvalidFee,
-      initFeeTier(invariant, admin, fee, tickSpacing),
-      invariant
-    )
+    const feeTier: FeeTier = { fee, tickSpacing }
+    expectError(InvariantError.InvalidFee, initFeeTier(invariant, admin, feeTier), invariant)
   })
 })

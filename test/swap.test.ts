@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { balanceOf, deployInvariant } from '../src/utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import {
   getBasicFeeTickSpacing,
   initBasicPool,
@@ -29,6 +29,7 @@ import {
   PercentageScale,
   VMError
 } from '../src/consts'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -41,7 +42,8 @@ describe('swap tests', () => {
   test('swap', async () => {
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
     const [invariant, tokenX, tokenY] = await initDexAndTokens(admin)
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
@@ -59,7 +61,10 @@ describe('swap tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+    await initFeeTier(invariant, admin, feeTier)
 
     await initBasicPool(invariant, admin, tokenX, tokenY)
     // positions
@@ -68,7 +73,7 @@ describe('swap tests', () => {
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
       const liquidity = 1000000n * 10n ** LiquidityScale
 
@@ -77,12 +82,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex,
         upperTickIndex,
         liquidity,
@@ -93,12 +95,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex - 20n,
         middleTickIndex,
         liquidity,
@@ -117,21 +116,10 @@ describe('swap tests', () => {
       }
       expect(dexBalanceBefore).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
 
       const slippage = MinSqrtPrice
-      await initSwap(
-        invariant,
-        swapper,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
-        true,
-        swapAmount,
-        true,
-        slippage
-      )
+      await initSwap(invariant, swapper, poolKey, true, swapAmount, true, slippage)
 
       // check balances
       const dexDelta = {
@@ -147,7 +135,7 @@ describe('swap tests', () => {
       expect(swapperBalance).toMatchObject({ tokenX: 0n, tokenY: swapAmount - 10n })
 
       // check pool
-      const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
         liquidity: 2n * 1000000n * 10n ** LiquidityScale,
         currentTickIndex: -20n,
@@ -160,13 +148,13 @@ describe('swap tests', () => {
       expect(poolAfter.liquidity).not.toBe(poolBefore.liquidity)
 
       // check ticks
-      const lowerTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, lowerTickIndex)
+      const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
       expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
 
-      const middleTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, middleTickIndex)
+      const middleTick = await getTick(invariant, poolKey, middleTickIndex)
       expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideX: 3n * 10n ** 22n })
 
-      const upperTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, upperTickIndex)
+      const upperTick = await getTick(invariant, poolKey, upperTickIndex)
       expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
     }
   })
@@ -181,7 +169,11 @@ describe('swap tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+    await initFeeTier(invariant, admin, feeTier)
 
     await initBasicPool(invariant, admin, tokenX, tokenY)
     // positions
@@ -190,7 +182,7 @@ describe('swap tests', () => {
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
       const liquidity = 1000000n * 10n ** LiquidityScale
 
@@ -199,12 +191,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex,
         upperTickIndex,
         liquidity,
@@ -215,12 +204,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         middleTickIndex,
         upperTickIndex + 20n,
         liquidity,
@@ -240,31 +226,17 @@ describe('swap tests', () => {
       }
       expect(dexBalanceBefore).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
 
       const { targetSqrtPrice: slippage } = await quote(
         invariant,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
+        poolKey,
         false,
         swapAmount,
         true,
         MaxSqrtPrice
       )
-      await initSwap(
-        invariant,
-        swapper,
-        tokenX,
-        tokenY,
-        fee,
-        tickSpacing,
-        false,
-        swapAmount,
-        true,
-        slippage
-      )
+      await initSwap(invariant, swapper, poolKey, false, swapAmount, true, slippage)
 
       // check balances
       const dexDelta = {
@@ -280,7 +252,7 @@ describe('swap tests', () => {
       expect(swapperBalance).toMatchObject({ tokenX: swapAmount - 10n, tokenY: 0n })
 
       // check pool
-      const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
         liquidity: 2n * 1000000n * 10n ** LiquidityScale,
         currentTickIndex: 10n,
@@ -293,13 +265,13 @@ describe('swap tests', () => {
       expect(poolAfter.liquidity).not.toBe(poolBefore.liquidity)
 
       // check ticks
-      const lowerTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, lowerTickIndex)
+      const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
       expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
 
-      const middleTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, middleTickIndex)
+      const middleTick = await getTick(invariant, poolKey, middleTickIndex)
       expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideY: 3n * 10n ** 22n })
 
-      const upperTick = await getTick(invariant, tokenX, tokenY, fee, tickSpacing, upperTickIndex)
+      const upperTick = await getTick(invariant, poolKey, upperTickIndex)
       expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
     }
   })
@@ -313,7 +285,11 @@ describe('swap tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+    await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
 
     // positions
@@ -322,7 +298,7 @@ describe('swap tests', () => {
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
       const liquidity = 1000000n * 10n ** LiquidityScale
 
@@ -331,12 +307,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex,
         upperTickIndex,
         liquidity,
@@ -347,12 +320,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         middleTickIndex,
         upperTickIndex + 20n,
         liquidity,
@@ -374,18 +344,7 @@ describe('swap tests', () => {
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
       expectVMError(
         VMError.OutOfGas,
-        initSwap(
-          invariant,
-          swapper,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
-          true,
-          swapAmount,
-          true,
-          MinSqrtPrice
-        )
+        initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
       )
     }
   })
@@ -400,7 +359,10 @@ describe('swap tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+    await initFeeTier(invariant, admin, feeTier)
 
     await initBasicPool(invariant, admin, tokenX, tokenY)
     // positions
@@ -409,7 +371,7 @@ describe('swap tests', () => {
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(positionOwner, [tokenX, positionsAmount], [tokenY, positionsAmount])
 
-      const poolBefore = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+      const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
       const liquidity = 1000000n * 10n ** LiquidityScale
 
@@ -418,12 +380,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex,
         upperTickIndex,
         liquidity,
@@ -434,12 +393,9 @@ describe('swap tests', () => {
       await initPosition(
         invariant,
         positionOwner,
-        tokenX,
+        poolKey,
         positionAmount,
-        tokenY,
         positionAmount,
-        fee,
-        tickSpacing,
         lowerTickIndex - 20n,
         middleTickIndex,
         liquidity,
@@ -461,18 +417,7 @@ describe('swap tests', () => {
 
       expectError(
         InvariantError.TickLimitReached,
-        initSwap(
-          invariant,
-          swapper,
-          tokenX,
-          tokenY,
-          fee,
-          tickSpacing,
-          false,
-          swapAmount,
-          true,
-          MaxSqrtPrice
-        ),
+        initSwap(invariant, swapper, poolKey, false, swapAmount, true, MaxSqrtPrice),
         invariant
       )
     }

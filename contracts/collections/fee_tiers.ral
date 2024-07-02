@@ -1,18 +1,18 @@
 Abstract Contract FeeTiers() {
     @using(updateFields = true, preapprovedAssets = true)
-    fn wrappedAddFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
-        let exists = containsFeeTier(fee, tickSpacing)
+    fn wrappedAddFeeTier(originalCaller: Address, feeTier: FeeTier) -> () {
+        let exists = containsFeeTier(feeTier)
         assert!(!exists, InvariantError.FeeTierAlreadyExist)    
 
         feeTierCount = feeTierCount + 1
-        feeTiers.insert!(originalCaller, feeTierCount, FeeTier { fee: fee, tickSpacing: tickSpacing })
+        feeTiers.insert!(originalCaller, feeTierCount, feeTier)
     }
 
     @using(updateFields = true)
-    fn wrappedRemoveFeeTier(originalCaller: Address, fee: U256, tickSpacing: U256) -> () {
+    fn wrappedRemoveFeeTier(originalCaller: Address, feeTier: FeeTier) -> () {
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let state = feeTiers[i]
-            if (fee == state.fee && tickSpacing == state.tickSpacing) {
+            if (feeTier.fee == state.fee && feeTier.tickSpacing == state.tickSpacing) {
                 // FeeTier is last in the list
                 if (i == feeTierCount) {
                     feeTiers.remove!(originalCaller, i)
@@ -29,11 +29,11 @@ Abstract Contract FeeTiers() {
         assert!(false, InvariantError.FeeTierNotFound)
     }
 
-    pub fn containsFeeTier(fee: U256, tickSpacing: U256) -> Bool {
+    pub fn containsFeeTier(feeTier: FeeTier) -> Bool {
         for (let mut i = 1; i <= feeTierCount; i = i + 1) {
             let state = feeTiers[i]
         
-            if (fee == state.fee && tickSpacing == state.tickSpacing) {
+            if (feeTier.fee == state.fee && feeTier.tickSpacing == state.tickSpacing) {
                 return true
             }
         }

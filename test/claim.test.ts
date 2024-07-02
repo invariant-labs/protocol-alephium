@@ -2,7 +2,7 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { ClaimFee, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { balanceOf } from '../src/utils'
+import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantError } from '../src/consts'
 import { getPool, initFeeTier, getPosition, expectError } from '../src/testUtils'
 import {
@@ -12,6 +12,7 @@ import {
   initBasicSwap,
   initDexAndTokens
 } from '../src/snippets'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -22,13 +23,17 @@ let tokenY: TokenFaucetInstance
 
 describe('invariant tests', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-
+  let feeTier: FeeTier
+  let poolKey: PoolKey
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
 
-    await initFeeTier(invariant, admin, fee, tickSpacing)
+    feeTier = await newFeeTier(fee, tickSpacing)
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+
+    await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
     await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
@@ -70,7 +75,7 @@ describe('invariant tests', () => {
     expect(tokenXChange).toMatchObject({ invariant: -5n, positionOwner: 5n })
     expect(tokenYAfterBalance).toMatchObject(tokenYBeforeBalance)
 
-    const poolAfter = await getPool(invariant, tokenX, tokenY, fee, tickSpacing)
+    const poolAfter = await getPool(invariant, poolKey)
     const positionAfter = await getPosition(invariant, positionOwner.address, 1n)
     expect(positionAfter).toMatchObject({
       feeGrowthInsideX: poolAfter.feeGrowthGlobalX,

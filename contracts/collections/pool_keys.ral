@@ -1,19 +1,19 @@
 Abstract Contract PoolKeys() {
     @using(preapprovedAssets = true, updateFields = true)
-    fn addPoolKey(originalCaller: Address, tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> () {
-        let exists = containsPoolKey(tokenX, tokenY, fee, tickSpacing)
+    fn addPoolKey(originalCaller: Address, poolKey: PoolKey) -> () {
+        let exists = containsPoolKey(poolKey)
         assert!(!exists, InvariantError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
 
-        poolKeys.insert!(originalCaller, poolKeyCount, PoolKey { tokenX: tokenX, tokenY: tokenY, fee: fee, tickSpacing: tickSpacing })
+        poolKeys.insert!(originalCaller, poolKeyCount, poolKey)
     }
 
-    fn containsPoolKey(tokenX: ByteVec, tokenY: ByteVec, fee: U256, tickSpacing: U256) -> Bool {
+    fn containsPoolKey(poolKey: PoolKey) -> Bool {
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let state = poolKeys[i]
 
-            if (tokenX == state.tokenX && tokenY == state.tokenY && fee == state.fee && tickSpacing == state.tickSpacing) {
+            if (poolKey.tokenX == state.tokenX && poolKey.tokenY == state.tokenY && poolKey.feeTier.fee == state.feeTier.fee && poolKey.feeTier.tickSpacing == state.feeTier.tickSpacing) {
                 return true
             }
         }
@@ -26,7 +26,7 @@ Abstract Contract PoolKeys() {
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
             let state = poolKeys[i]
-            poolKeysBytes = poolKeysBytes ++ state.tokenX ++ b`break` ++ state.tokenY ++ b`break` ++ toByteVec!(state.fee) ++ b`break` ++ toByteVec!(state.tickSpacing) ++ b`break`
+            poolKeysBytes = poolKeysBytes ++ state.tokenX ++ b`break` ++ state.tokenY ++ b`break` ++ toByteVec!(state.feeTier.fee) ++ b`break` ++ toByteVec!(state.feeTier.tickSpacing) ++ b`break`
         }
 
         return poolKeysBytes
