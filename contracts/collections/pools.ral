@@ -32,20 +32,6 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         return pools.contains!(key)
     }
 
-    fn setLastTimestamp(poolKey: PoolKey, timestamp: U256) -> () {
-        let key = poolKeyBytes(poolKey)
-        let mut state = pools[key]
-        state.lastTimestamp = timestamp
-        pools[key] = state
-    }
-    
-    fn setFeeReceiver(poolKey: PoolKey, newReceiver: Address) -> () {
-        let key = poolKeyBytes(poolKey)
-        let mut state = pools[key]
-        state.feeReceiver = newReceiver
-        pools[key] = state
-    }
-
     fn wrappedGetPool(poolKey: PoolKey) -> (Bool, Pool) {
         let key = poolKeyBytes(poolKey)
         if(containsPool(poolKey)) {
@@ -73,19 +59,5 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 feeReceiver: nullContractAddress!()
             }
         } 
-    }
-
-    fn wrappedUpdateLiquidity(poolKey: PoolKey, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256) {
-        let key = poolKeyBytes(poolKey)
-        let (x, y, pool) = updateLiquidity(pools[key], liquidityDelta, liquiditySign, upperTick, lowerTick)
-        pools[key] = pool
-        return x, y
-    }
-
-    fn wrappedGetProtocolFee(poolKey: PoolKey) -> (U256, U256) {
-        let key = poolKeyBytes(poolKey)
-        let (feeProtocolTokenX, feeProtocolTokenY, pool) = getAndUpdateProtocolFee(pools[key])
-        pools[key] = pool
-        return feeProtocolTokenX, feeProtocolTokenY
     }
 }

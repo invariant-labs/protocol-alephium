@@ -14,33 +14,41 @@ struct Position {
 Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
     @using(updateFields = false)
     fn modify(
-        position: Position,
-        upperTick: I256,
-        upperTickFeeGrowthOutsideX: U256,
-        upperTickFeeGrowthOutsideY: U256,
-        lowerTick: I256,
-        lowerTickFeeGrowthOutsideX: U256,
-        lowerTickFeeGrowthOutsideY: U256,
-        poolCurrentTickIndex: I256,
-        poolFeeGrowthGlobalX: U256,
-        poolFeeGrowthGlobalY: U256,
+        mut position: Position,
+        mut pool: Pool,
+        lowerTick: Tick,
+        upperTick: Tick,
         liquidityDelta: U256,
-        add: Bool
-    ) -> Position {
+        add: Bool,
+        currentTimestamp: U256
+    ) -> (U256, U256, Position, Bool, Bool) {
+        pool.lastTimestamp = currentTimestamp
+
+        let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(pool.poolKey.feeTier.tickSpacing)
+
+        // Might add returning if tick is empty for deinitialization
+        let isLowerEmpty = updateTick(pool.poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        let isUpperEmpty = updateTick(pool.poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+
         let (feeGrowthInsideX, feeGrowthInsideY) = clamm.calculateFeeGrowthInside(
-            lowerTick,
-            lowerTickFeeGrowthOutsideX,
-            lowerTickFeeGrowthOutsideY,
-            upperTick,
-            upperTickFeeGrowthOutsideX,
-            upperTickFeeGrowthOutsideY,
-            poolCurrentTickIndex,
-            poolFeeGrowthGlobalX,
-            poolFeeGrowthGlobalY
+            lowerTick.index,
+            lowerTick.feeGrowthOutsideX,
+            lowerTick.feeGrowthOutsideY,
+            upperTick.index,
+            upperTick.feeGrowthOutsideX,
+            upperTick.feeGrowthOutsideY,
+            pool.currentTickIndex,
+            pool.feeGrowthGlobalX,
+            pool.feeGrowthGlobalY
         )
         
         
-        return update(position, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+        position = update(position, add, liquidityDelta, feeGrowthInsideX, feeGrowthInsideY)
+
+        let (x, y, uPool) = updatePoolLiquidity(pool, liquidityDelta, add, upperTick.index, lowerTick.index)
+        rewritePool(uPool)
+        
+        return x, y, position, isLowerEmpty, isUpperEmpty
     }
 
     fn update(
