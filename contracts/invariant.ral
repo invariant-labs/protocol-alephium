@@ -267,7 +267,7 @@ Contract Invariant(
         let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
         let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
 
-        let cleanPosition = Position {
+        let emptyPosition = Position {
           poolKey: poolKey,
           liquidity: 0,
           lowerTickIndex: lowerTickIndex,
@@ -280,7 +280,7 @@ Contract Invariant(
           owner: caller
         } 
 
-        let (x, y, mPosition) = modify(cleanPosition, pool, lowerTick, upperTick, liquidityDelta, true, currentTimestamp)
+        let (x, y, mPosition, _, _) = modify(emptyPosition, pool, lowerTick, upperTick, liquidityDelta, true, currentTimestamp)
         wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, caller, mPosition)
 
         transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenX, x)
@@ -302,20 +302,16 @@ Contract Invariant(
 
         let (_, pool) = wrappedGetPool(poolKey)
 
-        let (mut x, mut y, mPosition) = modify(position, pool, lowerTick, upperTick, position.liquidity, false, blockTimeStamp!())
-
+        let (mut x, mut y, mPosition, isLowerEmpty, isUpperEmpty) = modify(position, pool, lowerTick, upperTick, position.liquidity, false, blockTimeStamp!())
         
         x = x + mPosition.tokensOwedX
         y = y + mPosition.tokensOwedY
 
-        let (_, uUpperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
-        let (_, uLowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
-
-        if (uLowerTick.liquidityGross == 0) {
+        if (isLowerEmpty) {
             removeTick(caller, poolKey, position.lowerTickIndex)
             flip(false, position.lowerTickIndex, poolKey)
         }
-        if (uUpperTick.liquidityGross == 0) {
+        if (isUpperEmpty) {
             removeTick(caller, poolKey, position.upperTickIndex)
             flip(false, position.upperTickIndex, poolKey)
         } 
@@ -481,7 +477,7 @@ Contract Invariant(
         let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
         let (_, lowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
-        let (_, _, mut mPosition) = modify(position, pool, lowerTick, upperTick, 0, false, blockTimeStamp!())
+        let (_, _, mut mPosition, _, _) = modify(position, pool, lowerTick, upperTick, 0, false, blockTimeStamp!())
         
         let tokensOwedX = mPosition.tokensOwedX
         let tokensOwedY = mPosition.tokensOwedY

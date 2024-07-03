@@ -21,14 +21,14 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         liquidityDelta: U256,
         add: Bool,
         currentTimestamp: U256
-    ) -> (U256, U256, Position) {
+    ) -> (U256, U256, Position, Bool, Bool) {
         pool.lastTimestamp = currentTimestamp
 
         let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(pool.poolKey.feeTier.tickSpacing)
 
         // Might add returning if tick is empty for deinitialization
-        updateTick(pool.poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
-        updateTick(pool.poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
+        let isLowerEmpty = updateTick(pool.poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
+        let isUpperEmpty = updateTick(pool.poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
 
         let (feeGrowthInsideX, feeGrowthInsideY) = clamm.calculateFeeGrowthInside(
             lowerTick.index,
@@ -48,7 +48,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         let (x, y, uPool) = updatePoolLiquidity(pool, liquidityDelta, add, upperTick.index, lowerTick.index)
         rewritePool(uPool)
         
-        return x, y, position
+        return x, y, position, isLowerEmpty, isUpperEmpty
     }
 
     fn update(

@@ -10,11 +10,12 @@ struct Tick {
 }
 
 Abstract Contract TickHelper() extends Decimal() {
-    fn updateTick(poolKey: PoolKey, mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
+    fn updateTick(poolKey: PoolKey, mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> Bool {
         tick.liquidityGross = calculateNewLiquidityGross(tick, isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
         let updatedTick = updateLiquidityChange(tick, liquidityDelta, updateLiquiditySign)
         rewriteTick(poolKey, updatedTick)
+        return updatedTick.liquidityGross == 0
     }
 
     fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
