@@ -10,19 +10,22 @@ struct Tick {
 }
 
 Abstract Contract TickHelper() extends Decimal() {
-    fn updateTick(mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> Tick {
+    fn updateTick(poolKey: PoolKey, mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> () {
         tick.liquidityGross = calculateNewLiquidityGross(tick, isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
-        return updateLiquidityChange(tick, liquidityDelta, updateLiquiditySign)
+        let updatedTick = updateLiquidityChange(tick, liquidityDelta, updateLiquiditySign)
+        rewriteTick(poolKey, updatedTick)
     }
 
-    fn cross(mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256, index: I256) -> (Bool, Tick) {
+    fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
         tick.feeGrowthOutsideX = wrappingSub(feeGrowthGlobalX, tick.feeGrowthOutsideX)
         tick.feeGrowthOutsideY = wrappingSub(feeGrowthGlobalY, tick.feeGrowthOutsideY)
 
-        let isBelowCurrent = currentTick >= index
+        let isBelowCurrent = currentTick >= tick.index
 
-        return (isBelowCurrent && !tick.sign || !isBelowCurrent && tick.sign), tick
+        rewriteTick(poolKey, tick)
+
+        return (isBelowCurrent && !tick.sign || !isBelowCurrent && tick.sign), tick.liquidityChange
     }
 
     fn updateLiquidityChange(mut tick: Tick, liquidityDelta: U256, add: Bool) -> Tick {

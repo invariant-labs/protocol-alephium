@@ -35,7 +35,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return pool
     }
     
-    pub fn updateLiquidity(mut pool: Pool, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256, Pool) {
+    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256, Pool) {
         let (x, y, updateLiq) = clamm.calculateAmountDelta(pool.currentTickIndex, pool.sqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y, pool
@@ -75,7 +75,9 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         
         if (hasLimitingTick && isLimitingTickInitialized) {
             if (!xToY || isEnoughAmountToCross) {
-                let (add, liquidityDelta) = wrappedCross(pool.poolKey, limitingTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.currentTickIndex)
+                let tickKey = poolKeyBytes(pool.poolKey) ++ toByteVec!(limitingTickIndex)
+                let tick = ticks[tickKey]
+                let (add, liquidityDelta) = cross(pool.poolKey, tick, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.currentTickIndex)
                 pool = crossLiquidityUpdate(pool, add, liquidityDelta)
                 hasCrossed = true
             } else if (remainingAmount != 0) {
@@ -109,12 +111,8 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return pool
     }
 
-    pub fn getAndUpdateProtocolFee(mut pool: Pool) -> (U256, U256, Pool) {
-        let x = pool.feeProtocolTokenX
-        let y = pool.feeProtocolTokenY
-        pool.feeProtocolTokenX = 0
-        pool.feeProtocolTokenY = 0
-        
-        return x, y, pool
+    fn rewritePool(pool: Pool) -> () {
+        let key = poolKeyBytes(pool.poolKey)
+        pools[key] = pool
     }
 }

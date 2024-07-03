@@ -88,17 +88,22 @@ Contract Invariant(
     @using(assetsInContract = true)
     pub fn withdrawProtocolFee(poolKey: PoolKey) -> () {
         let caller = callerAddress!()
-        let (exist, pool) = wrappedGetPool(poolKey)
+        let (exist, mut pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolDoesNotExist)
 
         let feeReceiver = pool.feeReceiver
 
         checkCaller!(feeReceiver == caller, InvariantError.NotFeeReceiver)
 
-        let (feeProtocolTokenX, feeProtocolTokenY) = wrappedGetProtocolFee(poolKey)
+        let x = pool.feeProtocolTokenX
+        let y = pool.feeProtocolTokenY
+        pool.feeProtocolTokenX = 0
+        pool.feeProtocolTokenY = 0
 
-        transferTokenFromSelf!(caller, pool.poolKey.tokenX, feeProtocolTokenX)
-        transferTokenFromSelf!(caller, pool.poolKey.tokenY, feeProtocolTokenY)
+        rewritePool(pool)
+
+        transferTokenFromSelf!(caller, pool.poolKey.tokenX, x)
+        transferTokenFromSelf!(caller, pool.poolKey.tokenY, y)
     }
 
     pub fn changeFeeReceiver(poolKey: PoolKey, newFeeReceiver: Address) -> () {
@@ -106,7 +111,11 @@ Contract Invariant(
 
         checkCaller!(config.admin == caller, InvariantError.NotAdmin)
 
-        setFeeReceiver(poolKey, newFeeReceiver)
+        let key = poolKeyBytes(poolKey)
+        let mut pool = pools[key]
+
+        pool.feeReceiver = newFeeReceiver
+        pools[key] = pool
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
@@ -218,8 +227,8 @@ Contract Invariant(
     @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
     pub fn createPosition(
         poolKey: PoolKey,
-        lowerTick: I256,
-        upperTick: I256,
+        lowerTickIndex: I256,
+        upperTickIndex: I256,
         liquidityDelta: U256,
         slippageLimitLower: U256,
         slippageLimitUpper: U256
@@ -227,13 +236,14 @@ Contract Invariant(
         let (exist, pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolDoesNotExist)
         assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
-        assert!(lowerTick != upperTick, InvariantError.InvalidTickIndex)
+        assert!(lowerTickIndex != upperTickIndex, InvariantError.InvalidTickIndex)
 
         let currentTimestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
+        let mapEntry2Deposits = mapEntryDeposit * 2
         let caller = callerAddress!()
 
-        let (lowerChunk, upperChunk) = getChunks(lowerTick, upperTick, poolKey.feeTier.tickSpacing)
+        let (lowerChunk, upperChunk) = getChunks(lowerTickIndex, upperTickIndex, poolKey.feeTier.tickSpacing)
 
         if (lowerChunk == upperChunk) {
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
@@ -241,22 +251,37 @@ Contract Invariant(
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, upperChunk)
         }
-        let mapEntry2Deposits = mapEntryDeposit * 2
-        if (!containsTick(poolKey, lowerTick)) {
-            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, lowerTick, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
-            flip(true, lowerTick, poolKey)
+        
+        if (!containsTick(poolKey, lowerTickIndex)) {
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, lowerTickIndex, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
+            flip(true, lowerTickIndex, poolKey)
         }
 
-        if (!containsTick(poolKey, upperTick)) {
-            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, upperTick, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
-            flip(true, upperTick, poolKey)
+        if (!containsTick(poolKey, upperTickIndex)) {
+            createTick{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, upperTickIndex, pool.currentTickIndex, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.startTimestamp)
+            flip(true, upperTickIndex, poolKey)
         }
 
         assert!(pool.sqrtPrice >= slippageLimitLower && pool.sqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
 
-        wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, poolKey, 0, lowerTick, upperTick, 0, 0, blockTimeStamp!(), 0, 0, caller)
-        let index = countPositions(caller)
-        let (x, y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTick, lowerTick, liquidityDelta, true, currentTimestamp)
+        let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
+        let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
+
+        let cleanPosition = Position {
+          poolKey: poolKey,
+          liquidity: 0,
+          lowerTickIndex: lowerTickIndex,
+          upperTickIndex: upperTickIndex,
+          feeGrowthInsideX: 0,
+          feeGrowthInsideY: 0,
+          lastBlockNumber: currentTimestamp,
+          tokensOwedX: 0,
+          tokensOwedY: 0,
+          owner: caller
+        } 
+
+        let (x, y, mPosition) = modify(cleanPosition, pool, lowerTick, upperTick, liquidityDelta, true, currentTimestamp)
+        wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, caller, mPosition)
 
         transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenX, x)
         transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenY, y)
@@ -272,29 +297,27 @@ Contract Invariant(
         checkCaller!(caller == position.owner, InvariantError.NotOwner)
 
         let poolKey = position.poolKey
-        let upperTickIndex = position.upperTickIndex
-        let lowerTickIndex = position.lowerTickIndex
-        let liquidity = position.liquidity
+        let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
+        let (_, lowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
         let (_, pool) = wrappedGetPool(poolKey)
 
-        let (mut x, mut y) = wrappedModifyPosition(callerAddress!(), index, poolKey, upperTickIndex, lowerTickIndex, liquidity, false, blockTimeStamp!())
+        let (mut x, mut y, mPosition) = modify(position, pool, lowerTick, upperTick, position.liquidity, false, blockTimeStamp!())
 
-        let (_, updatedPosition) = wrappedGetPosition(caller, index)
         
-        x = x + updatedPosition.tokensOwedX
-        y = y + updatedPosition.tokensOwedY
+        x = x + mPosition.tokensOwedX
+        y = y + mPosition.tokensOwedY
 
-        let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
-        let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
+        let (_, uUpperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
+        let (_, uLowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
-        if (lowerTick.liquidityGross == 0) {
-            removeTick(caller, poolKey, lowerTickIndex)
-            flip(false, lowerTickIndex, poolKey)
+        if (uLowerTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, position.lowerTickIndex)
+            flip(false, position.lowerTickIndex, poolKey)
         }
-        if (upperTick.liquidityGross == 0) {
-            removeTick(caller, poolKey, upperTickIndex)
-            flip(false, upperTickIndex, poolKey)
+        if (uUpperTick.liquidityGross == 0) {
+            removeTick(caller, poolKey, position.upperTickIndex)
+            flip(false, position.upperTickIndex, poolKey)
         } 
 
         transferTokenFromSelf!(caller, pool.poolKey.tokenX, x)
@@ -455,16 +478,18 @@ Contract Invariant(
     
         let poolKey = position.poolKey
         let (_, pool) = wrappedGetPool(poolKey)
+        let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
+        let (_, lowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
-        let upperTick = position.upperTickIndex
-        let lowerTick = position.lowerTickIndex
-
-        let (_, _) = wrappedModifyPosition(caller, index, poolKey, upperTick, lowerTick, 0, false, blockTimeStamp!())
+        let (_, _, mut mPosition) = modify(position, pool, lowerTick, upperTick, 0, false, blockTimeStamp!())
         
-        let tokensOwedX = positions[key].tokensOwedX
-        let tokensOwedY = positions[key].tokensOwedY
+        let tokensOwedX = mPosition.tokensOwedX
+        let tokensOwedY = mPosition.tokensOwedY
 
-        setTokensOwed(caller, index, 0, 0)
+        mPosition.tokensOwedX = 0
+        mPosition.tokensOwedY = 0
+
+        positions[key] = mPosition
 
         transferTokenFromSelf!(caller, pool.poolKey.tokenX, tokensOwedX)
         transferTokenFromSelf!(caller, pool.poolKey.tokenY, tokensOwedY)

@@ -2,32 +2,13 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     @using(preapprovedAssets = true)
     fn wrappedAddPosition(
         caller: Address,
-        poolKey: PoolKey,
-        liquidity: U256,
-        lowerTickIndex: I256,
-        upperTickIndex: I256,
-        feeGrowthInsideX: U256,
-        feeGrowthInsideY: U256,
-        lastBlockNumber: U256,
-        tokensOwedX: U256,
-        tokensOwedY: U256,
-        payer: Address
+        payer: Address,
+        position: Position
     ) -> () {
         let length = countPositions(caller) + 1
         let key = toByteVec!(caller) ++ toByteVec!(length)
-        let state = Position {
-            poolKey: poolKey,
-            liquidity: liquidity,
-            lowerTickIndex: lowerTickIndex,
-            upperTickIndex: upperTickIndex,
-            feeGrowthInsideX: feeGrowthInsideX,
-            feeGrowthInsideY: feeGrowthInsideY,
-            lastBlockNumber: lastBlockNumber,
-            tokensOwedX: tokensOwedX,
-            tokensOwedY: tokensOwedY,
-            owner: caller
-        }
-        positions.insert!(payer, key, state)
+        
+        positions.insert!(payer, key, position)
 
         if (length == 1) {
             positionsCounter.insert!(payer, caller, length)
@@ -88,66 +69,10 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
     @using(preapprovedAssets = true)
     fn wrappedTransferPosition(caller: Address, index: U256, newOwner: Address) -> () {
         let key = toByteVec!(caller) ++ toByteVec!(index)
-        let position = positions[key]
-        wrappedRemovePosition(caller, index)
-        wrappedAddPosition{caller -> ALPH: mapEntryDeposit!() * 2}(newOwner, position.poolKey, position.liquidity, position.lowerTickIndex, position.upperTickIndex, position.feeGrowthInsideX, position.feeGrowthInsideY, position.lastBlockNumber, position.tokensOwedX, position.tokensOwedY, caller)
-    }
-
-    fn setTokensOwed(caller: Address, index: U256, x: U256, y: U256) -> () {
-        let key = toByteVec!(caller) ++ toByteVec!(index)
         let mut position = positions[key]
-        position.tokensOwedX = x
-        position.tokensOwedY = y
-        positions[key] = position
-        return
+        position.owner = newOwner
+        wrappedRemovePosition(caller, index)
+        wrappedAddPosition{caller -> ALPH: mapEntryDeposit!() * 2}(newOwner, caller, position)
     }
 
-    fn wrappedModifyPosition(
-        originalCaller: Address,
-        index: U256,
-        poolKey: PoolKey,
-        upperTick: I256,
-        lowerTick: I256,
-        liquidityDelta: U256,
-        add: Bool,
-        currentTimestamp: U256
-    ) -> (U256, U256) {
-        let (exists, position) = wrappedGetPosition(originalCaller, index)
-        assert!(exists, InvariantError.PositionNotFound)
-
-        setLastTimestamp(poolKey, currentTimestamp)
-        let (_, pool) = wrappedGetPool(poolKey)
-        let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(poolKey.feeTier.tickSpacing)
-
-        wrappedUpdateTick(poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
-        wrappedUpdateTick(poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
-
-        let (lowerTickFeeGrowthOutsideX, lowerTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, lowerTick)
-        let (upperTickFeeGrowthOutsideX, upperTickFeeGrowthOutsideY) = getTickFeeGrowthOutside(poolKey, upperTick)
-        
-        let poolCurrentTickIndex = pool.currentTickIndex
-        let poolFeeGrowthGlobalX = pool.feeGrowthGlobalX
-        let poolFeeGrowthGlobalY = pool.feeGrowthGlobalY
-
-        let updatedPosition = modify(
-            position,
-            upperTick,
-            upperTickFeeGrowthOutsideX,
-            upperTickFeeGrowthOutsideY,
-            lowerTick,
-            lowerTickFeeGrowthOutsideX,
-            lowerTickFeeGrowthOutsideY,
-            poolCurrentTickIndex,
-            poolFeeGrowthGlobalX,
-            poolFeeGrowthGlobalY,
-            liquidityDelta,
-            add
-        )
-
-        let key = toByteVec!(originalCaller) ++ toByteVec!(index)
-        positions[key] = updatedPosition
-
-        return wrappedUpdateLiquidity(poolKey, liquidityDelta, add, upperTick, lowerTick)
-    }
-    
 }
