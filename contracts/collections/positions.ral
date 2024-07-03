@@ -10,7 +10,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
         
         positions.insert!(payer, key, position)
 
-        if (length == 1) {
+        if (!positionsCounter.contains!(caller)) {
             positionsCounter.insert!(payer, caller, length)
         } else {
             positionsCounter[caller] = length
@@ -62,8 +62,9 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
             let lastKey = toByteVec!(caller) ++ toByteVec!(length)
             let lastPosition = positions[lastKey]
             positions[key] = lastPosition
-            positions.remove!(caller, key)
+            positions.remove!(caller, lastKey)
         }
+        positionsCounter[caller] = positionsCounter[caller] - 1
     }
 
     @using(preapprovedAssets = true)
