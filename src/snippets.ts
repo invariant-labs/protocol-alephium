@@ -1,12 +1,15 @@
-import { SignerProvider } from '@alephium/web3'
+import { Address, SignerProvider } from '@alephium/web3'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { LiquidityScale, MinSqrtPrice, PercentageScale } from './consts'
 import {
   getPool,
+  getPosition,
   initPool,
   initPosition,
   initSwap,
   initTokensXY,
+  transferPosition,
+  verifyPositionList,
   withdrawTokens
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
@@ -130,4 +133,34 @@ export const initBasicSwap = async (
     feeProtocolTokenY: 0n
   }
   expect(poolAfter).toMatchObject(poolExpected)
+}
+
+export const transferVerifyPosition = async (
+  invariant: InvariantInstance,
+  sender: PrivateKeyWallet,
+  senderListLength: bigint,
+  index: bigint,
+  recipient: Address,
+  recipientListLength: bigint
+) => {
+  expect(index).toBeLessThanOrEqual(senderListLength)
+  verifyPositionList(invariant, sender.address, senderListLength)
+  verifyPositionList(invariant, recipient, recipientListLength)
+
+  const { owner: previousOwner, ...toTransfer } = await getPosition(
+    invariant,
+    sender.address,
+    index
+  )
+  const senderLastPositionBefore = await getPosition(invariant, sender.address, senderListLength)
+  await transferPosition(invariant, sender, index, recipient)
+  const transferredPosition = await getPosition(invariant, recipient, recipientListLength + 1n)
+  const senderFirstPositionAfter = await getPosition(invariant, sender.address, index)
+
+  expect(transferredPosition).toStrictEqual({ owner: recipient, ...toTransfer })
+  if (index != senderListLength) {
+    expect(senderFirstPositionAfter).toStrictEqual(senderLastPositionBefore)
+  }
+  verifyPositionList(invariant, sender.address, senderListLength - 1n)
+  verifyPositionList(invariant, recipient, recipientListLength + 1n)
 }
