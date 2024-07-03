@@ -24,6 +24,7 @@ struct QuoteResult {
 Contract Invariant(
     mut config: InvariantConfig,
     clamm: CLAMM,
+    reserveTemplateId: ByteVec,
     mut feeTierCount: U256,
     mut poolKeyCount: U256
 ) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper() {
@@ -85,7 +86,6 @@ Contract Invariant(
         config.protocolFee = newProtocolFee
     }
 
-    @using(assetsInContract = true)
     pub fn withdrawProtocolFee(poolKey: PoolKey) -> () {
         let caller = callerAddress!()
         let (exist, mut pool) = wrappedGetPool(poolKey)
@@ -102,8 +102,7 @@ Contract Invariant(
 
         rewritePool(pool)
 
-        transferTokenFromSelf!(caller, pool.poolKey.tokenX, x)
-        transferTokenFromSelf!(caller, pool.poolKey.tokenY, y)
+        Reserve(pool.reserve).withdraw(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, x, y)
     }
 
     pub fn changeFeeReceiver(poolKey: PoolKey, newFeeReceiver: Address) -> () {
@@ -138,7 +137,7 @@ Contract Invariant(
         let timestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
         addPoolKey{caller -> ALPH: mapEntryDeposit}(caller, poolKey)
-        addPool{caller -> ALPH: mapEntryDeposit}(caller, poolKey, initSqrtPrice, initTick, timestamp, config.admin)
+        addPool{caller -> ALPH: mapEntryDeposit * 2}(caller, poolKey, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
     @using(preapprovedAssets = true)
@@ -224,7 +223,7 @@ Contract Invariant(
         )
     }
 
-    @using(preapprovedAssets = true, assetsInContract = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createPosition(
         poolKey: PoolKey,
         lowerTickIndex: I256,
@@ -283,11 +282,9 @@ Contract Invariant(
         let (x, y, mPosition, _, _) = modify(emptyPosition, pool, lowerTick, upperTick, liquidityDelta, true, currentTimestamp)
         wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, caller, mPosition)
 
-        transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenX, x)
-        transferTokenToSelf!(callerAddress!(), pool.poolKey.tokenY, y)
+        Reserve(pool.reserve).deposit{caller -> pool.poolKey.tokenX: x, pool.poolKey.tokenY: y}(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, x, y)
     }
 
-    @using(assetsInContract = true)
     pub fn removePosition(index: U256) -> () {
         let caller = callerAddress!()
 
@@ -316,8 +313,7 @@ Contract Invariant(
             flip(false, position.upperTickIndex, poolKey)
         } 
 
-        transferTokenFromSelf!(caller, pool.poolKey.tokenX, x)
-        transferTokenFromSelf!(caller, pool.poolKey.tokenY, y)
+        Reserve(pool.reserve).withdraw(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, x, y)
 
         wrappedRemovePosition(caller, index)
     }
@@ -438,7 +434,7 @@ Contract Invariant(
         }
     }
 
-    @using(assetsInContract = true, preapprovedAssets = true, checkExternalCaller = false)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn swap(
         poolKey: PoolKey,
         xToY: Bool,
@@ -454,18 +450,16 @@ Contract Invariant(
         let tokenY = pool.poolKey.tokenY
 
         if (xToY) {
-            transferTokenToSelf!(caller, tokenX, calculateSwapResult.amountIn)
-            transferTokenFromSelf!(caller, tokenY, calculateSwapResult.amountOut)
+            Reserve(pool.reserve).swap{caller -> tokenX: amount}(caller, tokenX, tokenY, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
         } else {
-            transferTokenFromSelf!(caller, tokenX, calculateSwapResult.amountOut)
-            transferTokenToSelf!(caller, tokenY, calculateSwapResult.amountIn)
+            Reserve(pool.reserve).swap{caller -> tokenY: amount}(caller, tokenY, tokenX, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
         }
 
         return calculateSwapResult
     }
     
     // caller is checked in `wrappedGetPosition`
-    @using(assetsInContract = true, checkExternalCaller = false)
+    @using(checkExternalCaller = false)
     pub fn claimFee(index: U256) -> () {
         let caller = callerAddress!()
         let key = toByteVec!(caller) ++ toByteVec!(index)
@@ -487,7 +481,6 @@ Contract Invariant(
 
         positions[key] = mPosition
 
-        transferTokenFromSelf!(caller, pool.poolKey.tokenX, tokensOwedX)
-        transferTokenFromSelf!(caller, pool.poolKey.tokenY, tokensOwedY)
+        Reserve(pool.reserve).withdraw(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, tokensOwedX, tokensOwedY)
     }
 }

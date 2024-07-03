@@ -3,6 +3,7 @@ import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { LiquidityScale, MinSqrtPrice, PercentageScale } from './consts'
 import {
   getPool,
+  getReserveBalances,
   initPool,
   initPosition,
   initSwap,
@@ -99,11 +100,8 @@ export const initBasicSwap = async (
   const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
   expect(swapperTokenXBalanceBefore).toBe(swapAmount)
 
-  const invariantBeforeBalance = {
-    tokenX: await balanceOf(tokenX.contractId, invariant.address),
-    tokenY: await balanceOf(tokenY.contractId, invariant.address)
-  }
-  expect(invariantBeforeBalance).toMatchObject({ tokenX: 500n, tokenY: 1000n })
+  const invariantBeforeBalance = await getReserveBalances(invariant, poolKey)
+  expect(invariantBeforeBalance).toMatchObject({ x: 500n, y: 1000n })
 
   await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
 
@@ -113,11 +111,8 @@ export const initBasicSwap = async (
   }
   expect(swapperAfterBalance).toMatchObject({ tokenX: 0n, tokenY: 993n })
 
-  const invariantAfterBalance = {
-    tokenX: await balanceOf(tokenX.contractId, invariant.address),
-    tokenY: await balanceOf(tokenY.contractId, invariant.address)
-  }
-  expect(invariantAfterBalance).toMatchObject({ tokenX: 1500n, tokenY: 7n })
+  const invariantAfterBalance = await getReserveBalances(invariant, poolKey)
+  expect(invariantAfterBalance).toMatchObject({ x: 1500n, y: 7n })
 
   const poolAfter = await getPool(invariant, poolKey)
   const poolExpected = {

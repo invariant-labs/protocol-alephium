@@ -7,7 +7,7 @@ TxScript RemoveFeeTier(invariant: Invariant, feeTier: FeeTier) {
 }
 
 TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256){
-    let mapEntry2Deposits = 2 * mapEntryDeposit!()
+    let mapEntry2Deposits = 3 * mapEntryDeposit!()
     invariant.createPool{callerAddress!() -> ALPH: mapEntry2Deposits }(token0, token1, feeTier, initSqrtPrice, initTick)
 }
 

@@ -1,4 +1,10 @@
-import { Address, ContractInstance, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import {
+  Address,
+  ContractInstance,
+  DUST_AMOUNT,
+  SignerProvider,
+  addressFromContractId
+} from '@alephium/web3'
 import {
   AddFeeTier,
   ChangeProtocolFee,
@@ -11,7 +17,8 @@ import {
   TokenFaucet,
   TokenFaucetInstance,
   WithdrawProtocolFee,
-  CreatePosition
+  CreatePosition,
+  Reserve
 } from '../artifacts/ts'
 import {
   MAP_ENTRY_DEPOSIT,
@@ -20,12 +27,13 @@ import {
   decodeFeeTiers,
   decodePosition,
   deployTokenFaucet,
-  decodeTick
+  decodeTick,
+  balanceOf
 } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { FeeTier, Pool, PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -136,7 +144,7 @@ export async function initPool(
       initSqrtPrice,
       initTick
     },
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 3n
   })
 }
 
@@ -304,7 +312,8 @@ export async function initSwap(
       byAmountIn,
       sqrtPriceLimit
     },
-    tokens: [{ id, amount }]
+    tokens: [{ id, amount }],
+    attoAlphAmount: DUST_AMOUNT
   })
 }
 
@@ -334,4 +343,16 @@ export const isTickInitialized = async (
       }
     })
   ).returns
+}
+
+export const getReserveAddress = (pool: Pool): Address => {
+  return addressFromContractId(pool.reserve)
+}
+
+export const getReserveBalances = async (invariant: InvariantInstance, poolKey: PoolKey) => {
+  const pool = await getPool(invariant, poolKey)
+  const reserveAddress = getReserveAddress(pool)
+  const x = await balanceOf(poolKey.tokenX, reserveAddress)
+  const y = await balanceOf(poolKey.tokenY, reserveAddress)
+  return { x, y }
 }

@@ -1,0 +1,29 @@
+Contract Reserve(invariant: Address) {
+    enum ReserveError {
+        InvalidCaller = 2001
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn deposit(from: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        transferTokenToSelf!(from, xId, x)
+        transferTokenToSelf!(from, yId, y)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdraw(to: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        transferTokenFromSelf!(to, xId, x)
+        transferTokenFromSelf!(to, yId, y)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn swap(swapper: Address, inId: ByteVec, outId: ByteVec, in: U256, out: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        transferTokenToSelf!(swapper, inId, in)
+        transferTokenFromSelf!(swapper, outId, out)
+    }
+}

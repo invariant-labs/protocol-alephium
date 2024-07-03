@@ -10,6 +10,8 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
     ) -> () {
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
+        let key = poolKeyBytes(poolKey)
+        let reserve = initReserve{originalCaller -> ALPH: mapEntryDeposit!()}(originalCaller, key)
         let state = Pool {
             poolKey: poolKey,
             liquidity: 0,
@@ -21,10 +23,12 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
             feeProtocolTokenY: 0,
             startTimestamp: currentTimestamp,
             lastTimestamp: currentTimestamp,
-            feeReceiver: feeReceiver
+            feeReceiver: feeReceiver,
+            reserve: reserve
         }
-        let key = poolKeyBytes(poolKey)
+        
         pools.insert!(originalCaller, key, state)
+        
     }
 
     fn containsPool(poolKey: PoolKey) -> Bool {
@@ -36,12 +40,13 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         let key = poolKeyBytes(poolKey)
         if(containsPool(poolKey)) {
             return true, pools[key]
-        } else {   
+        } else {
+            let nullId = addressToContractId!(nullContractAddress!())
             return false,
             Pool {
                 poolKey: PoolKey {
-                    tokenX: addressToContractId!(nullContractAddress!()),
-                    tokenY: addressToContractId!(nullContractAddress!()),
+                    tokenX: nullId,
+                    tokenY: nullId,
                     feeTier: FeeTier {
                         fee: 0,
                         tickSpacing: 0
@@ -56,8 +61,21 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 feeProtocolTokenY: 0,
                 startTimestamp: 0,
                 lastTimestamp: 0,
-                feeReceiver: nullContractAddress!()
+                feeReceiver: nullContractAddress!(),
+                reserve: nullId
             }
         } 
+    }
+    
+    @using(preapprovedAssets = true)
+    fn initReserve(caller: Address, key: ByteVec) -> ByteVec {
+        let (encodedImmFields, encodedMutFields) = Reserve.encodeFields!(selfAddress!())
+        let id = copyCreateSubContract!{caller -> ALPH: mapEntryDeposit!()}(
+            key,
+            reserveTemplateId,
+            encodedImmFields,
+            encodedMutFields
+        )
+        return id
     }
 }
