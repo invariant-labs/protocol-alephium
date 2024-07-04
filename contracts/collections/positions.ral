@@ -64,7 +64,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
             positions[key] = lastPosition
             positions.remove!(caller, lastKey)
         }
-        positionsCounter[caller] = positionsCounter[caller] - 1
+        positionsCounter[caller] = length - 1
     }
 
     @using(preapprovedAssets = true)

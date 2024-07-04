@@ -40,7 +40,7 @@ describe('position list tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, 0n)
     const withoutPositions = await getSigner(ONE_ALPH * 1000n, 0)
 
-    const [fee, _] = getBasicFeeTickSpacing()
+    const [fee] = getBasicFeeTickSpacing()
     const tickSpacing = 3n
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
