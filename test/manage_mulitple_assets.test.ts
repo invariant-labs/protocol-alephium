@@ -13,20 +13,27 @@ import {
 } from '../src/testUtils'
 import { InvariantInstance } from '../artifacts/ts'
 import { FeeTier } from '../artifacts/ts/types'
+import {
+  getBasicFeeTickSpacing,
+  initBasicPool,
+  initBasicPosition,
+  initBasicSwap
+} from '../src/snippets'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
+let swapper: PrivateKeyWallet
 let invariant: InvariantInstance
 describe('manage multiple tokens', () => {
   const protocolFee = 10n ** (PercentageScale - 2n)
-  const fee = 5n * 10n ** (PercentageScale - 1n)
-  const tickSpacing = 10n
+  const [fee, tickSpacing] = getBasicFeeTickSpacing()
   let feeTier: FeeTier
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+    swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
     invariant = await deployInvariant(admin, protocolFee)
     feeTier = await newFeeTier(fee, tickSpacing)
@@ -74,6 +81,53 @@ describe('manage multiple tokens', () => {
         0n,
         MaxSqrtPrice
       )
+    }
+  })
+  test('Handle pool where assets are stored in different reserves', async () => {
+    const supply = 1000000n
+    let firstReserveId: string = ''
+    // Perform operations on 2 pools - 4 Tokens in Reserve
+    for (let i = 0n; i < 2n; i++) {
+      const [tokenX, tokenY] = await initTokensXY(admin, supply)
+      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      await initBasicPool(invariant, admin, tokenX, tokenY)
+      await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+      await initBasicSwap(invariant, swapper, tokenX, tokenY)
+      const pool = await getPool(invariant, poolKey)
+      expect(pool.reserveX).toBe(pool.reserveY)
+      firstReserveId = pool.reserveX
+    }
+    {
+      const [tokenX, tokenY] = await initTokensXY(admin, supply)
+      const [tokenZ] = await initTokensXY(admin, supply)
+      // Init 3rd pool - 6 Tokens in Reserve
+      {
+        const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+        await initBasicPool(invariant, admin, tokenX, tokenY)
+        await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+        await initBasicSwap(invariant, swapper, tokenX, tokenY)
+        const pool = await getPool(invariant, poolKey)
+        expect(pool.reserveX).toBe(pool.reserveY)
+      }
+      // Init 4th pool - 7 tokens in Reserve
+      {
+        const poolKey = await newPoolKey(tokenX.contractId, tokenZ.contractId, feeTier)
+        await initBasicPool(invariant, admin, tokenX, tokenZ)
+        await initBasicPosition(invariant, positionOwner, tokenX, tokenZ)
+        const pool = await getPool(invariant, poolKey)
+        expect(pool.reserveX).toBe(pool.reserveY)
+      }
+    }
+    // Init 5h Pool where assets are stored in different reserves
+    {
+      const [tokenX, tokenY] = await initTokensXY(admin, supply)
+      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      await initBasicPool(invariant, admin, tokenX, tokenY)
+      await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+      await initBasicSwap(invariant, swapper, tokenX, tokenY)
+      const pool = await getPool(invariant, poolKey)
+      expect(pool.reserveX).not.toBe(pool.reserveY)
+      expect(pool.reserveX).toBe(firstReserveId)
     }
   })
 })
