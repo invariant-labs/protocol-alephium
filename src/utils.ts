@@ -38,12 +38,12 @@ export async function deployInvariant(
   const account = await signer.getSelectedAccount()
   const clamm = await deployCLAMM(signer)
   const reserve = await deployReserve(signer)
-
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
         config: { admin: account.address, protocolFee },
         reserveTemplateId: reserve.contractId,
+        lastReserveId: reserve.contractId,
         clamm: clamm.contractId,
         feeTierCount: 0n,
         poolKeyCount: 0n
@@ -57,7 +57,8 @@ export const deployReserve = async (signer: SignerProvider) => {
   const deployResult = await waitTxConfirmed(
     Reserve.deploy(signer, {
       initialFields: {
-        invariant: ZERO_ADDRESS
+        invariant: ZERO_ADDRESS,
+        assetsStored: 0n
       }
     })
   )

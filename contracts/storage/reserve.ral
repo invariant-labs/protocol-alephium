@@ -1,10 +1,34 @@
-Contract Reserve(invariant: Address) {
+Contract Reserve(invariant: Address, mut assetsStored: U256) {
+    const MaxAssetsStored = 8
+    
     enum ReserveError {
         InvalidCaller = 2001
+        InvalidValue = 2002
+    }
+
+    @using(updateFields = true)
+    pub fn setStoredAssets(v: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        assert!(v <= MaxAssetsStored, ReserveError.InvalidValue)
+        assetsStored = v
+    }
+
+    pub fn getAssetsCount() -> U256 {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        return assetsStored
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn deposit(from: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+    pub fn depositSingleAsset(from: Address, id: ByteVec, amount: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        transferTokenToSelf!(from, id, amount)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn depositTwoAssets(from: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.InvalidCaller)
         transferTokenToSelf!(from, xId, x)
@@ -12,7 +36,14 @@ Contract Reserve(invariant: Address) {
     }
 
     @using(assetsInContract = true)
-    pub fn withdraw(to: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+    pub fn withdrawSingleAsset(to: Address, id: ByteVec, amount: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.InvalidCaller)
+        transferTokenFromSelf!(to, id, amount)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdrawTwoAssets(to: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.InvalidCaller)
         transferTokenFromSelf!(to, xId, x)

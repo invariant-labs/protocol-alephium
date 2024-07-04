@@ -144,7 +144,7 @@ export async function initPool(
       initSqrtPrice,
       initTick
     },
-    attoAlphAmount: MAP_ENTRY_DEPOSIT * 3n
+    attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n
   })
 }
 
@@ -345,14 +345,14 @@ export const isTickInitialized = async (
   ).returns
 }
 
-export const getReserveAddress = (pool: Pool): Address => {
-  return addressFromContractId(pool.reserve)
+export const getReserveAddress = (pool: Pool): [Address, Address] => {
+  return [addressFromContractId(pool.reserveX), addressFromContractId(pool.reserveY)]
 }
 
 export const getReserveBalances = async (invariant: InvariantInstance, poolKey: PoolKey) => {
   const pool = await getPool(invariant, poolKey)
-  const reserveAddress = getReserveAddress(pool)
-  const x = await balanceOf(poolKey.tokenX, reserveAddress)
-  const y = await balanceOf(poolKey.tokenY, reserveAddress)
+  const [reserveX, reserveY] = getReserveAddress(pool)
+  const x = await balanceOf(poolKey.tokenX, reserveX)
+  const y = await balanceOf(poolKey.tokenY, reserveY)
   return { x, y }
 }

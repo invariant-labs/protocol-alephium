@@ -11,7 +11,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
         let key = poolKeyBytes(poolKey)
-        let reserve = initReserve{originalCaller -> ALPH: mapEntryDeposit!()}(originalCaller, key)
+        let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, key, poolKey.tokenX, poolKey.tokenY)
         let state = Pool {
             poolKey: poolKey,
             liquidity: 0,
@@ -24,11 +24,11 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
             startTimestamp: currentTimestamp,
             lastTimestamp: currentTimestamp,
             feeReceiver: feeReceiver,
-            reserve: reserve
+            reserveX: reserveX,
+            reserveY: reserveY
         }
         
         pools.insert!(originalCaller, key, state)
-        
     }
 
     fn containsPool(poolKey: PoolKey) -> Bool {
@@ -62,20 +62,9 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 startTimestamp: 0,
                 lastTimestamp: 0,
                 feeReceiver: nullContractAddress!(),
-                reserve: nullId
+                reserveX: nullId,
+                reserveY: nullId
             }
         } 
-    }
-    
-    @using(preapprovedAssets = true)
-    fn initReserve(caller: Address, key: ByteVec) -> ByteVec {
-        let (encodedImmFields, encodedMutFields) = Reserve.encodeFields!(selfAddress!())
-        let id = copyCreateSubContract!{caller -> ALPH: mapEntryDeposit!()}(
-            key,
-            reserveTemplateId,
-            encodedImmFields,
-            encodedMutFields
-        )
-        return id
     }
 }

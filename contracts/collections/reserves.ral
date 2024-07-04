@@ -1,0 +1,88 @@
+Abstract Contract Reserves() {
+    const MaxAssetsStored = 8
+
+    @using(updateFields = true, preapprovedAssets = true)
+    fn handleReserves(caller: Address, subPath: ByteVec, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec) {
+        let deposit = mapEntryDeposit!()
+        let mut xId = #
+        let mut yId = #
+        let mut initX = false
+        let mut initY = false
+
+        if (reserves.contains!(tokenX)) {
+            xId = reserves[tokenX]
+        } else {
+            initX = true
+        }
+
+        if (reserves.contains!(tokenY)) {
+            yId = reserves[tokenY]
+        } else {
+            initY = true
+        }
+
+        if (initX && initY && lastReserveId == reserveTemplateId) {
+            let firstReserve = initReserve{caller -> ALPH: deposit}(caller, subPath, 2)
+            reserves.insert!(caller, tokenX, firstReserve)
+            reserves.insert!(caller, tokenY, firstReserve)
+            lastReserveId = firstReserve
+            return firstReserve, firstReserve
+        }
+        
+        let lastReserve = Reserve(lastReserveId)
+        let canStoreTwoAssets = lastReserve.getAssetsCount() + 2 <= MaxAssetsStored
+        let canStoreSingleAsset = lastReserve.getAssetsCount() + 1 <= MaxAssetsStored
+
+        if (initX && initY) {
+            if(canStoreTwoAssets) {
+                xId = lastReserveId
+                yId = lastReserveId
+                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 2)
+            } else if(canStoreSingleAsset) {
+                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+                xId = lastReserveId
+                yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+            } else {
+                let id = initReserve{caller -> ALPH: deposit}(caller, subPath, 2)
+                xId = id
+                yId = id
+            }
+            reserves.insert!(caller, tokenX, xId)
+            reserves.insert!(caller, tokenY, yId)
+        } else if (initX) {
+            if(canStoreSingleAsset) {
+                xId = lastReserveId
+                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+            } else {
+                xId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+            }
+            reserves.insert!(caller, tokenX, xId)
+        } else if (initY) {
+            if(canStoreSingleAsset) {
+                yId = lastReserveId
+                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+            } else {
+                yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+            }
+            reserves.insert!(caller, tokenY, yId)
+        } else {
+            // unreachable: reserves are initialized or assigned
+        }
+
+        return xId, yId
+    }
+
+
+    @using(updateFields = true, preapprovedAssets = true)
+    fn initReserve(caller: Address, reservePath: ByteVec, assetsToStore: U256) -> ByteVec {
+        let (encodedImmFields, encodedMutFields) = Reserve.encodeFields!(selfAddress!(), assetsToStore)
+        let id = copyCreateSubContract!{caller -> ALPH: mapEntryDeposit!()}(
+            reservePath,
+            reserveTemplateId,
+            encodedImmFields,
+            encodedMutFields
+        )
+        lastReserveId = id
+        return id
+    }
+}

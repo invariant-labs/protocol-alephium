@@ -10,7 +10,8 @@ struct Pool {
     mut startTimestamp: U256,
     mut lastTimestamp: U256,
     mut feeReceiver: Address,
-    mut reserve: ByteVec
+    mut reserveX: ByteVec,
+    mut reserveY: ByteVec
 }
 
 Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
