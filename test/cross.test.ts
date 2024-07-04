@@ -9,7 +9,14 @@ import {
 } from '../src/snippets'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { LiquidityScale, MinSqrtPrice } from '../src/consts'
-import { getPool, initFeeTier, initPosition, initSwap, withdrawTokens } from '../src/testUtils'
+import {
+  getPool,
+  getTick,
+  initFeeTier,
+  initPosition,
+  initSwap,
+  withdrawTokens
+} from '../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -77,7 +84,7 @@ describe('cross tests', () => {
         liquidity: poolBefore.liquidity + liquidityDelta,
         currentTickIndex: -20n,
         sqrtPrice: 999254456240199142700995n,
-        feeGrowthGlobalX: 40000000000000000000000n,
+        feeGrowthGlobalX: 4n * 10n ** 22n,
         feeGrowthGlobalY: 0n,
         feeProtocolTokenX: 2n,
         feeProtocolTokenY: 0n
@@ -94,6 +101,18 @@ describe('cross tests', () => {
         tokenY: await balanceOf(tokenY.contractId, swapper.address)
       }
       expect(swapperBalance).toMatchObject({ tokenX: 0n, tokenY: 990n })
+
+      const liquidityChange = 1000000n * 10n ** LiquidityScale
+      const lowerTick = await getTick(invariant, poolKey, -20n)
+      const middleTick = await getTick(invariant, poolKey, -10n)
+      const upperTick = await getTick(invariant, poolKey, 10n)
+
+      expect(lowerTick).toMatchObject({ liquidityChange, feeGrowthOutsideX: 0n })
+      expect(middleTick).toMatchObject({
+        liquidityChange,
+        feeGrowthOutsideX: 3n * 10n ** 22n
+      })
+      expect(upperTick).toMatchObject({ liquidityChange, feeGrowthOutsideX: 0n })
     }
   })
 })
