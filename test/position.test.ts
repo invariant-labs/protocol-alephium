@@ -18,14 +18,12 @@ import {
   withdrawTokens
 } from '../src/testUtils'
 import {
-  CLAMMError,
   InvariantError,
   LiquidityScale,
   MaxSqrtPrice,
   MinSqrtPrice,
   PercentageScale
 } from '../src/consts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
