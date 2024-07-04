@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { getBasicFeeTickSpacing, transferVerifyPosition } from '../src/snippets'
+import { getBasicFeeTickSpacing, transferAndVerifyPosition } from '../src/snippets'
 import {
   expectError,
   getPool,
@@ -361,19 +361,54 @@ describe('position list tests', () => {
     const positionsRecipient = await getSigner(ONE_ALPH * 1000n, 0)
 
     // transfer position at the current first index
-    await transferVerifyPosition(invariant, positionsOwner, 4n, 1n, positionsRecipient.address, 0n)
+    await transferAndVerifyPosition(
+      invariant,
+      positionsOwner,
+      4n,
+      1n,
+      positionsRecipient.address,
+      0n
+    )
 
     // transfer position at the current middle index
-    await transferVerifyPosition(invariant, positionsOwner, 3n, 2n, positionsRecipient.address, 1n)
+    await transferAndVerifyPosition(
+      invariant,
+      positionsOwner,
+      3n,
+      2n,
+      positionsRecipient.address,
+      1n
+    )
 
     // transfer position at the current last index
-    await transferVerifyPosition(invariant, positionsOwner, 2n, 2n, positionsRecipient.address, 2n)
+    await transferAndVerifyPosition(
+      invariant,
+      positionsOwner,
+      2n,
+      2n,
+      positionsRecipient.address,
+      2n
+    )
 
     // transfer the last position of positionsOwner
-    await transferVerifyPosition(invariant, positionsOwner, 1n, 1n, positionsRecipient.address, 3n)
+    await transferAndVerifyPosition(
+      invariant,
+      positionsOwner,
+      1n,
+      1n,
+      positionsRecipient.address,
+      3n
+    )
 
     // get back the first position
-    await transferVerifyPosition(invariant, positionsRecipient, 4n, 1n, positionsOwner.address, 0n)
+    await transferAndVerifyPosition(
+      invariant,
+      positionsRecipient,
+      4n,
+      1n,
+      positionsOwner.address,
+      0n
+    )
   })
 
   test('only owner can transfer position', async () => {

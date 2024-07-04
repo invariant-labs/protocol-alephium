@@ -135,7 +135,7 @@ export const initBasicSwap = async (
   expect(poolAfter).toMatchObject(poolExpected)
 }
 
-export const transferVerifyPosition = async (
+export const transferAndVerifyPosition = async (
   invariant: InvariantInstance,
   owner: PrivateKeyWallet,
   ownerListLength: bigint,
