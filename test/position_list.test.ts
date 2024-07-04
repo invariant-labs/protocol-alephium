@@ -25,6 +25,10 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 let admin: PrivateKeyWallet
 
+const tokenSupply = 10n ** 10n
+// the value just has to be >= available tokens during every deposit
+const approvedTokens = tokenSupply / 4n
+
 describe('position list tests', () => {
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
@@ -32,7 +36,7 @@ describe('position list tests', () => {
 
   test('remove position from empty list', async () => {
     const invariant = await deployInvariant(admin, 0n)
-    const [tokenX, tokenY] = await initTokensXY(admin, 10n ** 10n)
+    const [tokenX, tokenY] = await initTokensXY(admin, 0n)
     const withoutPositions = await getSigner(ONE_ALPH * 1000n, 0)
 
     const [fee, _] = getBasicFeeTickSpacing()
@@ -60,9 +64,6 @@ describe('position list tests', () => {
 
   test('multiple positions on same tick', async () => {
     const invariant = await deployInvariant(admin, 0n)
-    const tokenSupply = 10n ** 10n
-    // the value just has to be >= available tokens at all cases
-    const approvedTokens = tokenSupply / 4n
     const [tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
     // 0.02%
@@ -138,15 +139,13 @@ describe('position list tests', () => {
     }
     // 3 more with different tick settings but overlapping
     {
-      const tickIndexes: Array<[bigint, [bigint, bigint]]> = [
+      const tickIndexes: Array<[bigint, bigint]> = [
         [-10n, 10n],
         [-20n, -10n],
         [10n, 20n]
-      ].map(([i1, i2], index) => {
-        return [BigInt(index + 1), [i1, i2]]
-      })
+      ]
 
-      for (const [index, [lowerTickIndex, upperTickIndex]] of tickIndexes) {
+      for (const [index, [lowerTickIndex, upperTickIndex]] of tickIndexes.entries()) {
         await initPosition(
           invariant,
           positionsOwner,
@@ -159,7 +158,11 @@ describe('position list tests', () => {
           slippageLimitLower,
           MaxSqrtPrice
         )
-        const newPosition = await getPosition(invariant, positionsOwner.address, 3n + index)
+        const newPosition = await getPosition(
+          invariant,
+          positionsOwner.address,
+          3n + BigInt(index + 1)
+        )
         expect(newPosition).toMatchObject({
           poolKey,
           liquidity: liquiditiyDelta,
@@ -211,8 +214,7 @@ describe('position list tests', () => {
 })
 
 describe('position list tests', () => {
-  const tokenSupply = 10n ** 10n
-  const tickIndexes = [-9780n, -42n, 0n, 9n, 276n, 32343n, -50001n]
+  const tickIndexes = [-9780n, -42n, 0n, 9n, 276n]
   const liquiditiyDelta = 10n * 10n ** LiquidityScale
 
   let invariant: InvariantInstance
@@ -254,16 +256,16 @@ describe('position list tests', () => {
       [0, 2],
       [1, 4]
     ]
-    for (let minMaxTick of minMaxTicks) {
-      const minTick = tickIndexes[minMaxTick[0]]
-      const maxTick = tickIndexes[minMaxTick[1]]
+    for (const [minIndex, maxIndex] of minMaxTicks) {
+      const minTick = tickIndexes[minIndex]
+      const maxTick = tickIndexes[maxIndex]
 
       await initPosition(
         invariant,
         positionsOwner,
         poolKey,
-        tokenSupply / 4n,
-        tokenSupply / 4n,
+        approvedTokens,
+        approvedTokens,
         minTick,
         maxTick,
         liquiditiyDelta,
@@ -291,8 +293,8 @@ describe('position list tests', () => {
         invariant,
         positionsOwner,
         poolKey,
-        tokenSupply / 4n,
-        tokenSupply / 4n,
+        approvedTokens,
+        approvedTokens,
         tickIndexes[1],
         tickIndexes[2],
         liquiditiyDelta,
@@ -323,8 +325,8 @@ describe('position list tests', () => {
         invariant,
         positionsOwner,
         poolKey,
-        tokenSupply / 4n,
-        tokenSupply / 4n,
+        approvedTokens,
+        approvedTokens,
         tickIndexes[0],
         tickIndexes[1],
         liquiditiyDelta,

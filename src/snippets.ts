@@ -137,30 +137,26 @@ export const initBasicSwap = async (
 
 export const transferVerifyPosition = async (
   invariant: InvariantInstance,
-  sender: PrivateKeyWallet,
-  senderListLength: bigint,
+  owner: PrivateKeyWallet,
+  ownerListLength: bigint,
   index: bigint,
   recipient: Address,
   recipientListLength: bigint
 ) => {
-  expect(index).toBeLessThanOrEqual(senderListLength)
-  verifyPositionList(invariant, sender.address, senderListLength)
+  expect(index).toBeLessThanOrEqual(ownerListLength)
+  verifyPositionList(invariant, owner.address, ownerListLength)
   verifyPositionList(invariant, recipient, recipientListLength)
 
-  const { owner: previousOwner, ...toTransfer } = await getPosition(
-    invariant,
-    sender.address,
-    index
-  )
-  const senderLastPositionBefore = await getPosition(invariant, sender.address, senderListLength)
-  await transferPosition(invariant, sender, index, recipient)
+  const { owner: previousOwner, ...toTransfer } = await getPosition(invariant, owner.address, index)
+  const ownerLastPositionBefore = await getPosition(invariant, owner.address, ownerListLength)
+  await transferPosition(invariant, owner, index, recipient)
   const transferredPosition = await getPosition(invariant, recipient, recipientListLength + 1n)
-  const senderFirstPositionAfter = await getPosition(invariant, sender.address, index)
+  const ownerAtIndexPositionAfter = await getPosition(invariant, owner.address, index)
 
   expect(transferredPosition).toStrictEqual({ owner: recipient, ...toTransfer })
-  if (index != senderListLength) {
-    expect(senderFirstPositionAfter).toStrictEqual(senderLastPositionBefore)
+  if (index != ownerListLength) {
+    expect(ownerAtIndexPositionAfter).toStrictEqual(ownerLastPositionBefore)
   }
-  verifyPositionList(invariant, sender.address, senderListLength - 1n)
+  verifyPositionList(invariant, owner.address, ownerListLength - 1n)
   verifyPositionList(invariant, recipient, recipientListLength + 1n)
 }
