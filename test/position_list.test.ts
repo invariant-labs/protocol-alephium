@@ -14,6 +14,7 @@ import {
   isTickInitialized,
   removePosition,
   transferPosition,
+  verifyPositionList,
   withdrawTokens
 } from '../src/testUtils'
 import { calculateSqrtPrice } from '../src/math'
@@ -209,6 +210,8 @@ describe('position list tests', () => {
         liquidity: 400n,
         currentTickIndex: initTick
       })
+
+      verifyPositionList(invariant, positionsOwner.address, 6n, true)
     }
   })
 })
@@ -273,8 +276,9 @@ describe('position list tests', () => {
         MaxSqrtPrice
       )
     }
+    verifyPositionList(invariant, positionsOwner.address, BigInt(minMaxTicks.length), true)
   })
-  test('add multiple positions', async () => {
+  test('add and remove multiple positions', async () => {
     const feeTier = await newFeeTier(getBasicFeeTickSpacing()[0], 3n)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     const { sqrtPrice: slippageLimitLower } = await getPool(invariant, poolKey)
@@ -286,6 +290,7 @@ describe('position list tests', () => {
       const replacedPosition = await getPosition(invariant, positionsOwner.address, 2n)
 
       expect(replacedPosition).toStrictEqual(lastPosition)
+      verifyPositionList(invariant, positionsOwner.address, 3n, true)
     }
     // add position in place of the removed one
     {
@@ -315,7 +320,7 @@ describe('position list tests', () => {
       for (let n = 3n; n > 0; --n) {
         await removePosition(invariant, positionsOwner, n)
         const { exist: positionExists } = await getPosition(invariant, positionsOwner.address, n)
-        expect(positionExists).toBeFalsy()
+        verifyPositionList(invariant, positionsOwner.address, n - 1n, true)
       }
     }
 
@@ -349,7 +354,6 @@ describe('position list tests', () => {
 
   test('only owner can modify position list', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
-
     expectError(InvariantError.PositionNotFound, removePosition(invariant, notOwner, 4n), invariant)
   })
 

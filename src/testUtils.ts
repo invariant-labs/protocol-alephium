@@ -306,11 +306,17 @@ export const transferPosition = async (
 export const verifyPositionList = async (
   invariant: InvariantInstance,
   owner: Address,
-  length: bigint
+  length: bigint,
+  isWhole = false
 ) => {
   for (let n = 1n; n <= length; ++n) {
     const { exist: positionExists } = await getPosition(invariant, owner, n)
     expect(positionExists).toBeTruthy()
+  }
+
+  if (isWhole) {
+    const { exist: positionExists } = await getPosition(invariant, owner, length + 1n)
+    expect(positionExists).toBeFalsy()
   }
 }
 
