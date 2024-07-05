@@ -18,7 +18,8 @@ import {
   TokenFaucetInstance,
   WithdrawProtocolFee,
   CreatePosition,
-  Reserve
+  Reserve,
+  TransferPosition
 } from '../artifacts/ts'
 import {
   MAP_ENTRY_DEPOSIT,
@@ -291,6 +292,40 @@ export const removePosition = async (
       index
     }
   })
+}
+
+export const transferPosition = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  index: bigint,
+  recipient: Address
+) => {
+  return await TransferPosition.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      index,
+      recipient
+    },
+    attoAlphAmount: 2n * MAP_ENTRY_DEPOSIT
+  })
+}
+
+// can be removed/replaced after we have GetAllPositions in the sdk
+export const verifyPositionList = async (
+  invariant: InvariantInstance,
+  owner: Address,
+  length: bigint,
+  isWhole = false
+) => {
+  for (let n = 1n; n <= length; ++n) {
+    const { exist: positionExists } = await getPosition(invariant, owner, n)
+    expect(positionExists).toBeTruthy()
+  }
+
+  if (isWhole) {
+    const { exist: positionExists } = await getPosition(invariant, owner, length + 1n)
+    expect(positionExists).toBeFalsy()
+  }
 }
 
 export async function initSwap(
