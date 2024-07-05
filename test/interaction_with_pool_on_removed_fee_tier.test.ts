@@ -2,7 +2,7 @@ import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { MAP_ENTRY_DEPOSIT, balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
-import { InvariantError, LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { InvariantError, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
   initPool,
@@ -16,7 +16,8 @@ import {
   removePosition,
   getPools,
   getPosition,
-  expectError
+  expectError,
+  liquidity
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
@@ -49,7 +50,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
   const mint = 10n ** 10n
-  const liquidityDelta = 1000000n * 10n ** LiquidityScale
+  const liquidityDelta = liquidity(1000000n)
   let feeTier: FeeTier
   let poolKey: PoolKey
 

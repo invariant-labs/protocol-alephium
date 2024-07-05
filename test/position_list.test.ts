@@ -12,13 +12,14 @@ import {
   initPosition,
   initTokensXY,
   isTickInitialized,
+  liquidity,
   removePosition,
   transferPosition,
   verifyPositionList,
   withdrawTokens
 } from '../src/testUtils'
 import { calculateSqrtPrice } from '../src/math'
-import { InvariantError, LiquidityScale, MaxSqrtPrice, PercentageScale } from '../src/consts'
+import { InvariantError, MaxSqrtPrice, PercentageScale } from '../src/consts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 
@@ -218,7 +219,7 @@ describe('position list tests', () => {
 
 describe('position list tests', () => {
   const tickIndexes = [-9780n, -42n, 0n, 9n, 276n]
-  const liquiditiyDelta = 10n * 10n ** LiquidityScale
+  const liquiditiyDelta = liquidity(10n)
 
   let invariant: InvariantInstance
   let tokenX: TokenFaucetInstance

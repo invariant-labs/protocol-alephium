@@ -10,10 +10,11 @@ import {
   initPool,
   initPosition,
   initTokensXY,
+  liquidity,
   withdrawTokens
 } from '../src/testUtils'
 import { calculateSqrtPrice } from '../src/math'
-import { InvariantError, LiquidityScale } from '../src/consts'
+import { InvariantError } from '../src/consts'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -27,7 +28,7 @@ let tokenY: TokenFaucetInstance
 describe('position slippage tests', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const approvedTokens = 10n ** 10n
-  const liquidityDelta = 1_000_000n * 10n ** LiquidityScale
+  const liquidityDelta = liquidity(1_000_000n)
   const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
 
   beforeAll(async () => {
@@ -50,7 +51,7 @@ describe('position slippage tests', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const [lowerTick, upperTick] = [-1000n, 1000n]
-    const liquidityDelta = 10_000_000_000n * 10n ** LiquidityScale
+    const liquidityDelta = liquidity(10_000_000_000n)
     const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
 
     await initPosition(

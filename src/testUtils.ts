@@ -25,7 +25,7 @@ import {
 } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { VMError } from './consts'
+import { LiquidityScale, VMError } from './consts'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
@@ -372,4 +372,8 @@ export const isTickInitialized = async (
       }
     })
   ).returns
+}
+
+export const liquidity = (value: bigint) => {
+  return value * 10n ** LiquidityScale
 }

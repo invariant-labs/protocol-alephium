@@ -18,18 +18,11 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
+  liquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
-import {
-  InvariantError,
-  LiquidityScale,
-  MaxSqrtPrice,
-  MinSqrtPrice,
-  PercentageScale,
-  VMError
-} from '../src/consts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { InvariantError, MaxSqrtPrice, MinSqrtPrice, PercentageScale, VMError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -75,7 +68,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = liquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -87,7 +80,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -100,7 +93,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex - 20n,
         middleTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -137,7 +130,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        liquidity: liquidity(2n * 1000000n),
         currentTickIndex: -20n,
         feeGrowthGlobalX: 4n * 10n ** 22n,
         feeGrowthGlobalY: 0n,
@@ -184,7 +177,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = liquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -196,7 +189,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -209,7 +202,7 @@ describe('swap tests', () => {
         positionAmount,
         middleTickIndex,
         upperTickIndex + 20n,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -254,7 +247,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        liquidity: liquidity(2n * 1000000n),
         currentTickIndex: 10n,
         feeGrowthGlobalX: 0n,
         feeGrowthGlobalY: 4n * 10n ** 22n,
@@ -300,7 +293,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = liquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -312,7 +305,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -325,7 +318,7 @@ describe('swap tests', () => {
         positionAmount,
         middleTickIndex,
         upperTickIndex + 20n,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -373,7 +366,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = liquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -385,7 +378,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -398,7 +391,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex - 20n,
         middleTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
