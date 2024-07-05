@@ -320,6 +320,7 @@ export const verifyPositionList = async (
   }
 }
 
+/**  When not using `byAmountIn` set approvedTokens manually via the last parameter. */
 export async function initSwap(
   invariant: InvariantInstance,
   signer: SignerProvider,
@@ -327,7 +328,8 @@ export async function initSwap(
   xToY: boolean,
   amount: bigint,
   byAmountIn: boolean,
-  sqrtPriceLimit: bigint
+  sqrtPriceLimit: bigint,
+  approvedAmount = amount
 ) {
   const id = xToY ? poolKey.tokenX : poolKey.tokenY
   return await Swap.execute(signer, {
@@ -337,9 +339,10 @@ export async function initSwap(
       xToY,
       amount,
       byAmountIn,
-      sqrtPriceLimit
+      sqrtPriceLimit,
+      approvedAmount
     },
-    tokens: [{ id, amount }]
+    tokens: [{ id, amount: approvedAmount }]
   })
 }
 
