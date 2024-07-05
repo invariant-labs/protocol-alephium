@@ -77,7 +77,7 @@ describe('position slippage tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const { sqrtPrice: knownPrice } = await getPool(invariant, poolKey)
+    const { sqrtPrice: knownSqrtPrice } = await getPool(invariant, poolKey)
     await initPosition(
       invariant,
       positionOwner,
@@ -87,8 +87,8 @@ describe('position slippage tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      knownPrice,
-      knownPrice
+      knownSqrtPrice,
+      knownSqrtPrice
     )
   })
   test('inside range', async () => {
@@ -117,7 +117,7 @@ describe('position slippage tests', () => {
     const slippageLimitLower = 1014432353584998786339859n
     const slippageLimitUpper = 1045335831204498605270797n
 
-    expectError(
+    await expectError(
       InvariantError.PriceLimitReached,
       initPosition(
         invariant,
@@ -142,7 +142,7 @@ describe('position slippage tests', () => {
     const slippageLimitLower = 955339206774222158009382n
     const slippageLimitUpper = 984442481813945288458906n
 
-    expectError(
+    await expectError(
       InvariantError.PriceLimitReached,
       initPosition(
         invariant,
