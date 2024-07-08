@@ -51,7 +51,7 @@ export const initBasicPool = async (
   await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   const pool = await getPool(invariant, poolKey)
-  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exist: true })
+  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exists: true })
 }
 
 /**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */

@@ -310,12 +310,12 @@ export const verifyPositionList = async (
   isWhole = false
 ) => {
   for (let n = 1n; n <= length; ++n) {
-    const { exist: positionExists } = await getPosition(invariant, owner, n)
+    const { exists: positionExists } = await getPosition(invariant, owner, n)
     expect(positionExists).toBeTruthy()
   }
 
   if (isWhole) {
-    const { exist: positionExists } = await getPosition(invariant, owner, length + 1n)
+    const { exists: positionExists } = await getPosition(invariant, owner, length + 1n)
     expect(positionExists).toBeFalsy()
   }
 }

@@ -121,25 +121,30 @@ export function decodePools(string: string) {
   return pools
 }
 
+function createEntityProxy<T>(entity: T, exists: boolean) {
+  return new Proxy(
+    { ...entity, exists },
+    {
+      get(target, prop, receiver) {
+        if (!exists && prop !== 'exists' && prop in target) {
+          throw new Error(`Entity does not exist, cannot access property "${String(prop)}"`)
+        }
+        return Reflect.get(target, prop, receiver)
+      }
+    }
+  )
+}
+
 export function decodePool(array: [boolean, Pool]) {
-  return {
-    exist: array[0],
-    ...array[1]
-  }
+  return createEntityProxy(array[1], array[0])
 }
 
 export function decodeTick(array: [boolean, Tick]) {
-  return {
-    exist: array[0],
-    ...array[1]
-  }
+  return createEntityProxy(array[1], array[0])
 }
 
 export function decodePosition(array: [boolean, Position]) {
-  return {
-    exist: array[0],
-    ...array[1]
-  }
+  return createEntityProxy(array[1], array[0])
 }
 
 export function hexToBytes(hex: string): Uint8Array {

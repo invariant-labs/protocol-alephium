@@ -155,12 +155,12 @@ describe('liquidity gap tests', () => {
     const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
     const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
 
-    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
-    const { exist: currentInMap } = await getTick(invariant, poolKey, -60n)
-    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
+    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
+    const { exists: currentInMap } = await getTick(invariant, poolKey, -60n)
+    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
 
     const expectedFirstPosition = {
-      exist: true,
+      exists: true,
       liquidity: 2000600000000n,
       lowerTickIndex: -10n,
       upperTickIndex: 10n,
@@ -171,7 +171,7 @@ describe('liquidity gap tests', () => {
       owner: positionOwner.address
     }
     const expectedSecondPosition = {
-      exist: true,
+      exists: true,
       liquidity: 2000800000000n,
       lowerTickIndex: -90n,
       upperTickIndex: -50n,
@@ -213,7 +213,7 @@ describe('liquidity gap tests', () => {
     expect(upperTick).toMatchObject(expectedUpperTick)
 
     const expectedPool = {
-      exist: true,
+      exists: true,
       poolKey,
       liquidity: secondPosition.liquidity,
       currentTickIndex: -60n,

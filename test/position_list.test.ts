@@ -307,20 +307,19 @@ describe('position list tests', () => {
         slippageLimitLower,
         MaxSqrtPrice
       )
-      const { exist: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
+      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
       expect(positionExists).toBeTruthy()
     }
     // remove last position
     {
       await removePosition(invariant, positionsOwner, 4n)
-      const { exist: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
+      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
       expect(positionExists).toBeFalsy()
     }
     // remove all positions
     {
       for (let n = 3n; n > 0; --n) {
         await removePosition(invariant, positionsOwner, n)
-        const { exist: positionExists } = await getPosition(invariant, positionsOwner.address, n)
         verifyPositionList(invariant, positionsOwner.address, n - 1n, true)
       }
     }
@@ -341,14 +340,14 @@ describe('position list tests', () => {
       )
       const position = await getPosition(invariant, positionsOwner.address, 1n)
       expect(position).toMatchObject({
-        exist: true,
+        exists: true,
         poolKey,
         lowerTickIndex: tickIndexes[0],
         upperTickIndex: tickIndexes[1],
         liquidity: liquiditiyDelta,
         owner: positionsOwner.address
       })
-      const { exist: secondExists } = await getPosition(invariant, positionsOwner.address, 2n)
+      const { exists: secondExists } = await getPosition(invariant, positionsOwner.address, 2n)
       expect(secondExists).toBeFalsy()
     }
   })

@@ -70,7 +70,7 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const expectedPosition = {
-      exist: true,
+      exists: true,
       liquidity: 10n,
       lowerTickIndex: -10n,
       upperTickIndex: 10n,
@@ -180,7 +180,7 @@ describe('position tests', () => {
 
       const position = await getPosition(invariant, positionOwner.address, 1n)
       const expectedPosition = {
-        exist: true,
+        exists: true,
         liquidity: liquidityDelta,
         lowerTickIndex,
         upperTickIndex,
@@ -218,7 +218,7 @@ describe('position tests', () => {
 
       const position = await getPosition(invariant, positionOwner.address, 2n)
       const expectedPosition = {
-        exist: true,
+        exists: true,
         liquidity: liquidityDelta,
         lowerTickIndex: incorrectLowerTickIndex,
         upperTickIndex: incorrectUpperTickIndex,
@@ -245,7 +245,7 @@ describe('position tests', () => {
     const poolAfter = await getPool(invariant, poolKey)
 
     const expectedPool = {
-      exist: true,
+      exists: true,
       poolKey,
       liquidity: poolBefore.liquidity,
       currentTickIndex: -10n,
@@ -268,8 +268,8 @@ describe('position tests', () => {
     await removePosition(invariant, positionOwner, 1n)
 
     const pool = await getPool(invariant, poolKey)
-    const { exist: lowerInMap } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exist: upperInMap } = await getTick(invariant, poolKey, upperTickIndex)
+    const { exists: lowerInMap } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exists: upperInMap } = await getTick(invariant, poolKey, upperTickIndex)
     const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
 
@@ -335,8 +335,8 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, poolKey)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
@@ -360,7 +360,7 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exist: true,
+      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,
@@ -424,8 +424,8 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, poolKey)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -453,7 +453,7 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exist: true,
+      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,
@@ -517,8 +517,8 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 1n)
     const pool = await getPool(invariant, poolKey)
-    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
+    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const dexX = await balanceOf(tokenX.contractId, invariant.address)
@@ -542,7 +542,7 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exist: true,
+      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,

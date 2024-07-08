@@ -101,7 +101,7 @@ describe('cross tests', () => {
 
     expect(await getPool(invariant, poolKey)).toMatchObject({
       currentTickIndex: -10n,
-      sqrtPrice: calculateSqrtPrice(-10n),
+      sqrtPrice: await calculateSqrtPrice(-10n),
       liquidity: beforeLiquidity
     })
   })

@@ -142,13 +142,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
+      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideX: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideX: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
+      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
     }
   })
 
@@ -259,13 +259,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
+      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideY: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideY: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
+      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
     }
   })
   test('swap not enough liquidity token x', async () => {
@@ -335,7 +335,7 @@ describe('swap tests', () => {
       expect(dexBalance).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
       // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
-      expectVMError(
+      await expectVMError(
         VMError.OutOfGas,
         initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
       )
@@ -408,7 +408,7 @@ describe('swap tests', () => {
       }
       expect(dexBalance).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
 
-      expectError(
+      await expectError(
         InvariantError.TickLimitReached,
         initSwap(invariant, swapper, poolKey, false, swapAmount, true, MaxSqrtPrice),
         invariant

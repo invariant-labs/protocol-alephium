@@ -227,7 +227,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     })
 
     const transferedPosition = await getPosition(invariant, recipient.address, 1n)
-    expect(transferedPosition.exist).toBe(true)
+    expect(transferedPosition.exists).toBe(true)
     expect(transferedPosition.liquidity).toBe(liquidityDelta)
     expect(transferedPosition.lowerTickIndex).toBe(lowerTickIndex)
     expect(transferedPosition.upperTickIndex).toBe(upperTickIndex)
