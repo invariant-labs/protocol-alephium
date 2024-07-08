@@ -46,10 +46,11 @@ export const initBasicPool = async (
 ) => {
   const initSqrtPrice = 10n ** 24n
   const feeTier = await newFeeTier(fee, tickSpacing)
-  await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
+  const tx = await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   const pool = await getPool(invariant, poolKey)
   expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exist: true })
+  return tx
 }
 
 /**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */
@@ -69,7 +70,7 @@ export const initBasicPosition = async (
   const liquidityDelta = 1000000n * 10n ** LiquidityScale
   const slippageLimit = poolBefore.sqrtPrice
   const [lowerTick, upperTick] = [-20n, 10n]
-  await initPosition(
+  const tx = await initPosition(
     invariant,
     positionOwner,
     poolKey,
@@ -83,6 +84,7 @@ export const initBasicPosition = async (
   )
   const poolAfter = await getPool(invariant, poolKey)
   expect(poolAfter.liquidity).toBe(liquidityDelta)
+  return tx
 }
 
 /**  Requires TokenX and TokenY faucets to have at least 1000 in supply. */
@@ -106,7 +108,7 @@ export const initBasicSwap = async (
   const invariantBeforeBalance = await getReserveBalances(invariant, poolKey)
   expect(invariantBeforeBalance).toMatchObject({ x: 500n, y: 1000n })
 
-  await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
+  const tx = await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
 
   const swapperAfterBalance = {
     tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -128,6 +130,7 @@ export const initBasicSwap = async (
     feeProtocolTokenY: 0n
   }
   expect(poolAfter).toMatchObject(poolExpected)
+  return tx
 }
 
 export const transferAndVerifyPosition = async (

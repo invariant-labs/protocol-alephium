@@ -118,7 +118,7 @@ describe('manage multiple tokens', () => {
         expect(pool.reserveX).toBe(pool.reserveY)
       }
     }
-    // Init 5h Pool where assets are stored in different reserves
+    // Init 5th Pool where assets are stored in different reserves
     {
       const [tokenX, tokenY] = await initTokensXY(admin, supply)
       const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
