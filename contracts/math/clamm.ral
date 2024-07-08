@@ -276,8 +276,8 @@ Contract CLAMM() extends Uints(), Log(){
         }
 
         let mut nextSqrtPrice = 0
-        if (byAmountIn == true) {
-            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), PercentageScale))
+        if (byAmountIn) {
+            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), one(PercentageScale)))
             nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
         } else {
             nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
