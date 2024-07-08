@@ -43,12 +43,12 @@ describe('max tick cross spec', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     const liquidityDelta = 10000000n * 10n ** LiquidityScale
 
-    const lastTick = -250n
+    const lastInitializedTick = -250n
     const amount = 40300n
     // 40.3k - 8
     // 40.4k - out of gas
 
-    for (let i = lastTick; i < 0n; i += 10n) {
+    for (let i = lastInitializedTick; i < 0n; i += 10n) {
       const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
       const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
       const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
