@@ -1,5 +1,5 @@
-TxScript SetStoredAssets(reserve: Reserve, v: U256) {
-    reserve.setStoredAssets(v)
+TxScript IncrementAssets(reserve: Reserve, by: U256) {
+    reserve.incrementAssets(by)
 }
 
 TxScript DepositSingleAsset(reserve: Reserve, id: ByteVec, amount: U256) {

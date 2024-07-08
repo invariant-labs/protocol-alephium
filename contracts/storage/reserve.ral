@@ -7,11 +7,11 @@ Contract Reserve(invariant: Address, mut assetsStored: U256) {
     }
 
     @using(updateFields = true)
-    pub fn setStoredAssets(v: U256) -> () {
+    pub fn incrementAssets(by: U256) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        assert!(v > assetsStored && v <= MaxAssetsStored, ReserveError.OverCapacity)
-        assetsStored = v
+        assert!(assetsStored + by <= MaxAssetsStored, ReserveError.OverCapacity)
+        assetsStored = assetsStored + by
     }
 
     pub fn getAssetsCount() -> U256 {

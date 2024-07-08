@@ -6,7 +6,7 @@ import {
   DepositTwoAssets,
   Reserve,
   ReserveInstance,
-  SetStoredAssets,
+  IncrementAssets,
   SwapAssets,
   TokenFaucetInstance,
   WithdrawSingleAsset,
@@ -237,23 +237,23 @@ describe('reserve', () => {
     const reserveOwner = await getSigner(ONE_ALPH * 1000n, 0)
     const reserve = await deployReserveWithAuthority(reserveOwner)
 
-    await setStoredAssets(reserve, reserveOwner, 8n)
+    await IncrementReserveAssets(reserve, reserveOwner, 8n)
     const storedAssets = await getStoredAssets(reserve)
     expect(storedAssets).toBe(8n)
 
-    await expectError(ReserveError.OverCapacity, setStoredAssets(reserve, reserveOwner, 9n))
+    await expectError(ReserveError.OverCapacity, IncrementReserveAssets(reserve, reserveOwner, 1n))
   })
 })
 
-const setStoredAssets = async (
+const IncrementReserveAssets = async (
   reserve: ReserveInstance,
   signer: PrivateKeyWallet,
-  storedAssets: bigint
+  by: bigint
 ) => {
-  return await SetStoredAssets.execute(signer, {
+  return await IncrementAssets.execute(signer, {
     initialFields: {
       reserve: reserve.contractId,
-      v: storedAssets
+      by
     }
   })
 }

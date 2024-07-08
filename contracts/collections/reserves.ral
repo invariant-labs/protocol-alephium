@@ -30,16 +30,17 @@ Abstract Contract Reserves() {
         }
         
         let lastReserve = Reserve(lastReserveId)
-        let canStoreTwoAssets = lastReserve.getAssetsCount() + 2 <= MaxAssetsStored
-        let canStoreSingleAsset = lastReserve.getAssetsCount() + 1 <= MaxAssetsStored
+        let lastReserveAssets = lastReserve.getAssetsCount()
+        let canStoreTwoAssets = lastReserveAssets + 2 <= MaxAssetsStored
+        let canStoreSingleAsset = lastReserveAssets + 1 <= MaxAssetsStored
 
         if (initX && initY) {
             if(canStoreTwoAssets) {
                 xId = lastReserveId
                 yId = lastReserveId
-                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 2)
+                lastReserve.incrementAssets(2)
             } else if(canStoreSingleAsset) {
-                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+                lastReserve.incrementAssets(1)
                 xId = lastReserveId
                 yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
             } else {
@@ -52,7 +53,7 @@ Abstract Contract Reserves() {
         } else if (initX) {
             if(canStoreSingleAsset) {
                 xId = lastReserveId
-                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+                lastReserve.incrementAssets(1)
             } else {
                 xId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
             }
@@ -60,7 +61,7 @@ Abstract Contract Reserves() {
         } else if (initY) {
             if(canStoreSingleAsset) {
                 yId = lastReserveId
-                lastReserve.setStoredAssets(lastReserve.getAssetsCount() + 1)
+                lastReserve.incrementAssets(1)
             } else {
                 yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
             }
