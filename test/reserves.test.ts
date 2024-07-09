@@ -62,7 +62,7 @@ describe('manage multiple tokens', () => {
         liquidity: 0n,
         poolKey,
         feeReceiver: admin.address,
-        exist: true
+        exists: true
       }
       expect(pool).toMatchObject(expectedPool)
       const lowerTickIndex = -10n

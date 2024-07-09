@@ -1,6 +1,6 @@
 import { Address, SignerProvider } from '@alephium/web3'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { LiquidityScale, MinSqrtPrice, PercentageScale } from './consts'
+import { MinSqrtPrice, PercentageScale } from './consts'
 import {
   getPool,
   getReserveBalances,
@@ -9,12 +9,14 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
+  toLiquidity,
   transferPosition,
   verifyPositionList,
   withdrawTokens
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { calculateSqrtPrice } from './math'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -44,12 +46,13 @@ export const initBasicPool = async (
   tokenX: TokenInstance,
   tokenY: TokenInstance
 ) => {
-  const initSqrtPrice = 10n ** 24n
+  const initTick = 0n
+  const initSqrtPrice = await calculateSqrtPrice(initTick)
   const feeTier = await newFeeTier(fee, tickSpacing)
   const tx = await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   const pool = await getPool(invariant, poolKey)
-  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exist: true })
+  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exists: true })
   return tx
 }
 
@@ -67,7 +70,7 @@ export const initBasicPosition = async (
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
   const poolBefore = await getPool(invariant, poolKey)
-  const liquidityDelta = 1000000n * 10n ** LiquidityScale
+  const liquidityDelta = toLiquidity(1000000n)
   const slippageLimit = poolBefore.sqrtPrice
   const [lowerTick, upperTick] = [-20n, 10n]
   const tx = await initPosition(
