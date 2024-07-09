@@ -12,7 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "moduleResolution": "node",
-    "declarationMap": true, // Add this if it's not already present
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true
@@ -21,7 +20,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    // "test/**/*.ts",
+    "test/**/*.ts",
     "scripts/**/*.ts",
     "alephium.config.ts",
     "artifacts/**/*.ts"
