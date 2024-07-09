@@ -1,0 +1,58 @@
+Contract Reserve(invariant: Address, mut assetsStored: U256) {
+    const MaxAssetsStored = 8
+    
+    enum ReserveError {
+        NotInvariant = 2001
+        OverCapacity = 2002
+    }
+
+    @using(updateFields = true)
+    pub fn incrementAssets(by: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        assert!(assetsStored + by <= MaxAssetsStored, ReserveError.OverCapacity)
+        assetsStored = assetsStored + by
+    }
+
+    pub fn getAssetsCount() -> U256 {
+        return assetsStored
+    }
+
+    @using(preapprovedAssets = true, payToContractOnly = true)
+    pub fn depositSingleAsset(from: Address, id: ByteVec, amount: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        transferTokenToSelf!(from, id, amount)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn depositTwoAssets(from: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        transferTokenToSelf!(from, xId, x)
+        transferTokenToSelf!(from, yId, y)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdrawSingleAsset(to: Address, id: ByteVec, amount: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        transferTokenFromSelf!(to, id, amount)
+    }
+
+    @using(assetsInContract = true)
+    pub fn withdrawTwoAssets(to: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        transferTokenFromSelf!(to, xId, x)
+        transferTokenFromSelf!(to, yId, y)
+    }
+
+    @using(preapprovedAssets = true, assetsInContract = true)
+    pub fn swap(swapper: Address, inId: ByteVec, outId: ByteVec, in: U256, out: U256) -> () {
+        let caller = callerAddress!()
+        checkCaller!(invariant == caller, ReserveError.NotInvariant)
+        transferTokenToSelf!(swapper, inId, in)
+        transferTokenFromSelf!(swapper, outId, out)
+    }
+}

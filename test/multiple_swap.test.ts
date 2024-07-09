@@ -6,6 +6,7 @@ import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   feeTierExists,
   getPool,
+  getReserveBalances,
   initFeeTier,
   initPool,
   initPosition,
@@ -112,11 +113,8 @@ describe('multiple swap tests', () => {
     }
     // final checks
     {
-      const dexBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalance).toStrictEqual({ tokenX: 200n, tokenY: 20n })
+      const dexBalance = await getReserveBalances(invariant, poolKey)
+      expect(dexBalance).toStrictEqual({ x: 200n, y: 20n })
 
       const swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -168,11 +166,8 @@ describe('multiple swap tests', () => {
     }
     // final checks
     {
-      let dexBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalance).toStrictEqual({ tokenX: 20n, tokenY: 200n })
+      const dexBalance = await getReserveBalances(invariant, poolKey)
+      expect(dexBalance).toStrictEqual({ x: 20n, y: 200n })
 
       let swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),

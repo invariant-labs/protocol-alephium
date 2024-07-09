@@ -10,6 +10,8 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
     ) -> () {
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
+        let key = poolKeyBytes(poolKey)
+        let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, key, poolKey.tokenX, poolKey.tokenY)
         let state = Pool {
             poolKey: poolKey,
             liquidity: 0,
@@ -21,9 +23,11 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
             feeProtocolTokenY: 0,
             startTimestamp: currentTimestamp,
             lastTimestamp: currentTimestamp,
-            feeReceiver: feeReceiver
+            feeReceiver: feeReceiver,
+            reserveX: reserveX,
+            reserveY: reserveY
         }
-        let key = poolKeyBytes(poolKey)
+        
         pools.insert!(originalCaller, key, state)
     }
 
@@ -36,12 +40,13 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         let key = poolKeyBytes(poolKey)
         if(containsPool(poolKey)) {
             return true, pools[key]
-        } else {   
+        } else {
+            let nullId = addressToContractId!(nullContractAddress!())
             return false,
             Pool {
                 poolKey: PoolKey {
-                    tokenX: addressToContractId!(nullContractAddress!()),
-                    tokenY: addressToContractId!(nullContractAddress!()),
+                    tokenX: nullId,
+                    tokenY: nullId,
                     feeTier: FeeTier {
                         fee: 0,
                         tickSpacing: 0
@@ -56,7 +61,9 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                 feeProtocolTokenY: 0,
                 startTimestamp: 0,
                 lastTimestamp: 0,
-                feeReceiver: nullContractAddress!()
+                feeReceiver: nullContractAddress!(),
+                reserveX: nullId,
+                reserveY: nullId
             }
         } 
     }

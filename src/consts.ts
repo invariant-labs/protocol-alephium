@@ -1,4 +1,4 @@
-import { CLAMM, Invariant, Utils } from '../artifacts/ts'
+import { CLAMM, Invariant, Reserve, Utils } from '../artifacts/ts'
 
 export const {
   SqrtPriceScale,
@@ -18,6 +18,7 @@ export const {
 
 export const { CLAMMError, DecimalError, WordSize, ArithmeticError } = CLAMM.consts
 export const { UtilsError } = Utils.consts
+export const { ReserveError } = Reserve.consts
 
 export const MaxU256 =
   115792089237316195423570985008687907853269984665640564039457584007913129639935n
@@ -27,5 +28,6 @@ export const MinSqrtPrice = 15258932000000000000n
 
 export enum VMError {
   ArithmeticError = 'ArithmeticError',
-  OutOfGas = 'OutOfGas'
+  OutOfGas = 'OutOfGas',
+  MaxStoredAssets = 'max token number is 8'
 }
