@@ -11,35 +11,48 @@ import {
   quote,
   withdrawTokens
 } from '../src/testUtils'
-import { LiquidityScale, MinSqrtPrice } from '../src/consts'
+import { LiquidityScale, MaxSqrtPrice, MinSqrtPrice } from '../src/consts'
+import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('max tick cross spec', () => {
-  test('max tick cross', async () => {
-    const admin = await getSigner(ONE_ALPH * 1000n, 0)
-    const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+  const [fee, tickSpacing] = getBasicFeeTickSpacing()
+  const txGasLimit = 500000n
+  const positionOwnerMint = 1n << 128n
+  const swapperMint = 1n << 30n
+  const supply = positionOwnerMint + swapperMint
+  const liquidityDelta = 10000000n * 10n ** LiquidityScale
+  let admin: PrivateKeyWallet
+  let positionOwner: PrivateKeyWallet
+  let swapper: PrivateKeyWallet
+  let feeTier: FeeTier
+  let poolKey: PoolKey
+  let invariant: InvariantInstance
+  let tokenX: TokenFaucetInstance
+  let tokenY: TokenFaucetInstance
 
-    const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    const positionOwnerMint = 1n << 128n
-    const swapperMint = 1n << 30n
-    const supply = positionOwnerMint + swapperMint
-
-    const invariant = await deployInvariant(admin, 0n)
-    const [tokenX, tokenY] = await initTokensXY(admin, supply)
+  beforeEach(async () => {
+    admin = await getSigner(ONE_ALPH * 1000n, 0)
+    positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
+    swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    invariant = await deployInvariant(admin, 0n)
+    ;[tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, positionOwnerMint], [tokenY, positionOwnerMint])
-
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
-    const liquidityDelta = 10000000n * 10n ** LiquidityScale
+    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  })
 
+  test('max tick cross swap xToY and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
     const amount = 40300n
-    // 40.3k - 8
-    // 40.4k - out of gas
+    const xToY = true
+    const slippage = MinSqrtPrice
+    const byAmountIn = true
 
     for (let i = lastInitializedTick; i < 0n; i += 10n) {
       const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -61,24 +74,156 @@ describe('max tick cross spec', () => {
 
     await withdrawTokens(swapper, [tokenX, amount])
 
-    const slippage = MinSqrtPrice
-
-    const { targetSqrtPrice } = await quote(invariant, poolKey, true, amount, true, slippage)
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
 
     const poolBefore = await getPool(invariant, poolKey)
     const { gasAmount } = await initSwap(
       invariant,
       swapper,
       poolKey,
-      true,
+      xToY,
       amount,
-      true,
+      byAmountIn,
       targetSqrtPrice
     )
     const poolAfter = await getPool(invariant, poolKey)
 
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(8n)
-    expect(gasAmount).toBeGreaterThan(500000n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
+  }, 100000)
+  test('max tick cross swap yToX and ByAmountIn, no liquidity gap between positions', async () => {
+    const lastInitializedTick = 120n
+    const amount = 45000n
+    const xToY = false
+    const slippage = MaxSqrtPrice
+    const byAmountIn = true
+
+    for (let i = 0n; i < lastInitializedTick; i += 10n) {
+      const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
+      const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+      await initPosition(
+        invariant,
+        positionOwner,
+        poolKey,
+        positionOwnerBalanceX,
+        positionOwnerBalanceY,
+        i,
+        i + 10n,
+        liquidityDelta,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+
+    await withdrawTokens(swapper, [tokenY, amount])
+
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
+
+    const poolBefore = await getPool(invariant, poolKey)
+    const { gasAmount } = await initSwap(
+      invariant,
+      swapper,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      targetSqrtPrice
+    )
+
+    const poolAfter = await getPool(invariant, poolKey)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
+    expect(crosses).toBe(8n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
+  }, 100000)
+  test('max tick cross swap xToY and ByAmountIn, liquidity gap between positions', async () => {
+    const lastInitializedTick = -250n
+    const amount = 35250n
+    const xToY = true
+    const slippage = MinSqrtPrice
+    const byAmountIn = true
+
+    for (let i = lastInitializedTick; i < 0n; i += 20n) {
+      const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
+      const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+      await initPosition(
+        invariant,
+        positionOwner,
+        poolKey,
+        positionOwnerBalanceX,
+        positionOwnerBalanceY,
+        i,
+        i + 10n,
+        liquidityDelta,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+
+    await withdrawTokens(swapper, [tokenX, amount])
+
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
+
+    const poolBefore = await getPool(invariant, poolKey)
+    const { gasAmount } = await initSwap(
+      invariant,
+      swapper,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      targetSqrtPrice
+    )
+    const poolAfter = await getPool(invariant, poolKey)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
+    expect(crosses).toBe(13n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
+  }, 100000)
+  test('max tick cross swap yToX and ByAmountIn, liquidity gap between positions', async () => {
+    const lastInitializedTick = 240n
+    const amount = 40000n
+    const xToY = false
+    const slippage = MaxSqrtPrice
+    const byAmountIn = true
+
+    for (let i = 0n; i < lastInitializedTick; i += 20n) {
+      const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
+      const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+      await initPosition(
+        invariant,
+        positionOwner,
+        poolKey,
+        positionOwnerBalanceX,
+        positionOwnerBalanceY,
+        i,
+        i + 10n,
+        liquidityDelta,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+
+    await withdrawTokens(swapper, [tokenY, amount])
+
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
+
+    const poolBefore = await getPool(invariant, poolKey)
+    const { gasAmount } = await initSwap(
+      invariant,
+      swapper,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      targetSqrtPrice
+    )
+
+    const poolAfter = await getPool(invariant, poolKey)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
+    expect(crosses).toBe(14n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
   }, 100000)
 })
