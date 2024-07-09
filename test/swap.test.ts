@@ -13,6 +13,7 @@ import {
   expectError,
   expectVMError,
   getPool,
+  getReserveBalances,
   getTick,
   initFeeTier,
   initPosition,
@@ -110,11 +111,8 @@ describe('swap tests', () => {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(swapper, [tokenX, swapAmount])
 
-      const dexBalanceBefore = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalanceBefore).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
+      const dexBalanceBefore = await getReserveBalances(invariant, poolKey)
+      expect(dexBalanceBefore).toStrictEqual({ x: 500n, y: 2499n })
 
       const poolBefore = await getPool(invariant, poolKey)
 
@@ -122,9 +120,10 @@ describe('swap tests', () => {
       await initSwap(invariant, swapper, poolKey, true, swapAmount, true, slippage)
 
       // check balances
+      const dex = await getReserveBalances(invariant, poolKey)
       const dexDelta = {
-        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
-        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
+        tokenX: dex.x - dexBalanceBefore.x,
+        tokenY: dex.y - dexBalanceBefore.y
       }
       expect(dexDelta).toMatchObject({ tokenX: swapAmount, tokenY: 10n - swapAmount })
 
@@ -220,11 +219,8 @@ describe('swap tests', () => {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(swapper, [tokenY, swapAmount])
 
-      const dexBalanceBefore = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalanceBefore).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
+      const dexBalanceBefore = await getReserveBalances(invariant, poolKey)
+      expect(dexBalanceBefore).toStrictEqual({ x: 2499n, y: 500n })
 
       const poolBefore = await getPool(invariant, poolKey)
 
@@ -239,9 +235,10 @@ describe('swap tests', () => {
       await initSwap(invariant, swapper, poolKey, false, swapAmount, true, slippage)
 
       // check balances
+      const dexBalance = await getReserveBalances(invariant, poolKey)
       const dexDelta = {
-        tokenX: (await balanceOf(tokenX.contractId, invariant.address)) - dexBalanceBefore.tokenX,
-        tokenY: (await balanceOf(tokenY.contractId, invariant.address)) - dexBalanceBefore.tokenY
+        tokenX: dexBalance.x - dexBalanceBefore.x,
+        tokenY: dexBalance.y - dexBalanceBefore.y
       }
       expect(dexDelta).toMatchObject({ tokenX: 10n - swapAmount, tokenY: swapAmount })
 
@@ -335,11 +332,8 @@ describe('swap tests', () => {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(swapper, [tokenX, swapAmount])
 
-      const dexBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalance).toStrictEqual({ tokenX: 2499n, tokenY: 500n })
+      const dexBalance = await getReserveBalances(invariant, poolKey)
+      expect(dexBalance).toStrictEqual({ x: 2499n, y: 500n })
       // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
       expectVMError(
@@ -409,11 +403,8 @@ describe('swap tests', () => {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await withdrawTokens(swapper, [tokenY, swapAmount])
 
-      const dexBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(dexBalance).toStrictEqual({ tokenX: 500n, tokenY: 2499n })
+      const dexBalance = await getReserveBalances(invariant, poolKey)
+      expect(dexBalance).toStrictEqual({ x: 500n, y: 2499n })
 
       expectError(
         InvariantError.TickLimitReached,

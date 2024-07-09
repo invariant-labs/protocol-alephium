@@ -12,6 +12,8 @@ import {
 } from '../src/consts'
 import {
   getPool,
+  getReserveAddress,
+  getReserveBalances,
   initFeeTier,
   initPool,
   initPosition,
@@ -96,14 +98,11 @@ describe('limits tests', () => {
       tokenY: MaxU256 - y
     })
 
-    const invariantBalance = {
-      tokenX: await balanceOf(tokenX.contractId, invariant.address),
-      tokenY: await balanceOf(tokenY.contractId, invariant.address)
-    }
+    const invariantBalance = await getReserveBalances(invariant, poolKey)
 
     expect(invariantBalance).toMatchObject({
-      tokenX: limitAmount,
-      tokenY: y
+      x: limitAmount,
+      y: y
     })
   })
   test('deposit limits at upper limit', async () => {
@@ -211,14 +210,11 @@ describe('limits tests', () => {
         tokenY: MaxU256 - y
       })
 
-      const invariantBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
+      const invariantBalance = await getReserveBalances(invariant, poolKey)
 
       expect(invariantBalance).toMatchObject({
-        tokenX: posAmount,
-        tokenY: y
+        x: posAmount,
+        y
       })
     }
 
@@ -275,14 +271,11 @@ describe('limits tests', () => {
       slippageLimit
     )
 
-    const invariantBalance = {
-      tokenX: await balanceOf(tokenX.contractId, invariant.address),
-      tokenY: await balanceOf(tokenY.contractId, invariant.address)
-    }
+    const invariantBalance = await getReserveBalances(invariant, poolKey)
 
     expect(invariantBalance).toMatchObject({
-      tokenX: 0n,
-      tokenY: 144738750896072444118518848476700723725861030905971328860187553943253568n
+      x: 0n,
+      y: 144738750896072444118518848476700723725861030905971328860187553943253568n
     })
   })
 })

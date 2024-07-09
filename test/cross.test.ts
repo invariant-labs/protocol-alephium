@@ -11,6 +11,7 @@ import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { LiquidityScale, MinSqrtPrice } from '../src/consts'
 import {
   getPool,
+  getReserveBalances,
   getTick,
   initFeeTier,
   initPosition,
@@ -70,11 +71,8 @@ describe('cross tests', () => {
       await withdrawTokens(swapper, [tokenX, approvedAmount])
 
       {
-        const invariantBalance = {
-          tokenX: await balanceOf(tokenX.contractId, invariant.address),
-          tokenY: await balanceOf(tokenY.contractId, invariant.address)
-        }
-        expect(invariantBalance).toMatchObject({ tokenX: 500n, tokenY: 2499n })
+        const invariantBalance = await getReserveBalances(invariant, poolKey)
+        expect(invariantBalance).toMatchObject({ x: 500n, y: 2499n })
       }
 
       const poolBefore = await getPool(invariant, poolKey)
@@ -90,11 +88,8 @@ describe('cross tests', () => {
         feeProtocolTokenY: 0n
       })
 
-      const invariantBalance = {
-        tokenX: await balanceOf(tokenX.contractId, invariant.address),
-        tokenY: await balanceOf(tokenY.contractId, invariant.address)
-      }
-      expect(invariantBalance).toMatchObject({ tokenX: 1500n, tokenY: 1509n })
+      const invariantBalance = await getReserveBalances(invariant, poolKey)
+      expect(invariantBalance).toMatchObject({ x: 1500n, y: 1509n })
 
       const swapperBalance = {
         tokenX: await balanceOf(tokenX.contractId, swapper.address),
