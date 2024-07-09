@@ -18,7 +18,7 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  liquidity,
+  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
@@ -68,7 +68,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidityDelta = liquidity(1000000n)
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -130,7 +130,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: liquidity(2n * 1000000n),
+        liquidity: toLiquidity(2n * 1000000n),
         currentTickIndex: -20n,
         feeGrowthGlobalX: 4n * 10n ** 22n,
         feeGrowthGlobalY: 0n,
@@ -177,7 +177,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidityDelta = liquidity(1000000n)
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -247,7 +247,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: liquidity(2n * 1000000n),
+        liquidity: toLiquidity(2n * 1000000n),
         currentTickIndex: 10n,
         feeGrowthGlobalX: 0n,
         feeGrowthGlobalY: 4n * 10n ** 22n,
@@ -293,7 +293,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidityDelta = liquidity(1000000n)
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -366,7 +366,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidityDelta = liquidity(1000000n)
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 

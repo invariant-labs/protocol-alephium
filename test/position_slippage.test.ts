@@ -10,7 +10,7 @@ import {
   initPool,
   initPosition,
   initTokensXY,
-  liquidity,
+  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
 import { calculateSqrtPrice } from '../src/math'
@@ -28,7 +28,7 @@ let tokenY: TokenFaucetInstance
 describe('position slippage tests', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const approvedTokens = 10n ** 10n
-  const liquidityDelta = liquidity(1_000_000n)
+  const liquidityDelta = toLiquidity(1_000_000n)
   const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
 
   beforeAll(async () => {
@@ -51,7 +51,7 @@ describe('position slippage tests', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const [lowerTick, upperTick] = [-1000n, 1000n]
-    const liquidityDelta = liquidity(10_000_000_000n)
+    const liquidityDelta = toLiquidity(10_000_000_000n)
     const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
 
     await initPosition(

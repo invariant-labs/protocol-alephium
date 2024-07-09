@@ -374,6 +374,6 @@ export const isTickInitialized = async (
   ).returns
 }
 
-export const liquidity = (value: bigint) => {
+export const toLiquidity = (value: bigint) => {
   return value * 10n ** LiquidityScale
 }

@@ -12,7 +12,7 @@ import {
   initPosition,
   initTokensXY,
   isTickInitialized,
-  liquidity,
+  toLiquidity,
   removePosition,
   transferPosition,
   verifyPositionList,
@@ -219,7 +219,7 @@ describe('position list tests', () => {
 
 describe('position list tests', () => {
   const tickIndexes = [-9780n, -42n, 0n, 9n, 276n]
-  const liquiditiyDelta = liquidity(10n)
+  const liquiditiyDelta = toLiquidity(10n)
 
   let invariant: InvariantInstance
   let tokenX: TokenFaucetInstance

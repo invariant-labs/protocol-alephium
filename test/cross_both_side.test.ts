@@ -10,7 +10,7 @@ import {
   initFeeTier,
   initPosition,
   initSwap,
-  liquidity,
+  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
 import { InvariantError, MaxSqrtPrice, MinSqrtPrice } from '../src/consts'
@@ -45,7 +45,7 @@ describe('cross tests', () => {
       const positionAmount = mintAmount / 2n
       await withdrawTokens(positionsOwner, [tokenX, mintAmount], [tokenY, mintAmount])
       const [lowerTick, middleTick, upperTick] = [-20n, -10n, 10n]
-      const liquidityDelta = liquidity(20006000n)
+      const liquidityDelta = toLiquidity(20006000n)
 
       const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
 
@@ -145,7 +145,7 @@ describe('cross tests', () => {
       await withdrawTokens(positionsOwner, [tokenX, mintAmount], [tokenY, mintAmount])
 
       const [lowerTick, upperTick] = [-20n, 0n]
-      const liquidityDelta = liquidity(19996000399699881985603n)
+      const liquidityDelta = toLiquidity(19996000399699881985603n)
       await initPosition(
         invariant,
         positionsOwner,
@@ -177,7 +177,7 @@ describe('cross tests', () => {
       )
       await initSwap(invariant, swapper, poolKey, false, yIn, true, MaxSqrtPrice)
 
-      const expectedLiquidity = liquidity(19996000399699901991603n)
+      const expectedLiquidity = toLiquidity(19996000399699901991603n)
       expect(await getPool(invariant, poolKey)).toMatchObject({
         currentTickIndex: -20n,
         feeGrowthGlobalX: 29991002699190242927121n,
@@ -189,7 +189,7 @@ describe('cross tests', () => {
       })
 
       expect(await getTick(invariant, poolKey, -20n)).toMatchObject({
-        liquidityChange: liquidity(19996000399699901991603n),
+        liquidityChange: toLiquidity(19996000399699901991603n),
         feeGrowthOutsideX: 0n,
         feeGrowthOutsideY: 0n
       })
@@ -201,7 +201,7 @@ describe('cross tests', () => {
       })
 
       expect(await getTick(invariant, poolKey, 10n)).toMatchObject({
-        liquidityChange: liquidity(20006000n),
+        liquidityChange: toLiquidity(20006000n),
         feeGrowthOutsideX: 0n,
         feeGrowthOutsideY: 0n
       })

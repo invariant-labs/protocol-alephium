@@ -13,7 +13,7 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  liquidity,
+  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
@@ -53,7 +53,7 @@ describe('liquidity gap tests', () => {
     const amount = 10n ** 6n
     const lowerTick = -10n
     const upperTick = 10n
-    const liquidityDelta = liquidity(20006000n)
+    const liquidityDelta = toLiquidity(20006000n)
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, poolKey)
@@ -93,7 +93,7 @@ describe('liquidity gap tests', () => {
       await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } })
     ).returns
     const expectedYAmountOut = 9999n
-    const liquidityDelta = liquidity(20006000n)
+    const liquidityDelta = toLiquidity(20006000n)
     const lowerTick = -10n
 
     expect(pool.sqrtPrice).toEqual(expectedSqrtPrice)
@@ -120,7 +120,7 @@ describe('liquidity gap tests', () => {
   test('Open second position non-adjacent to the previous one, consequently creating a gap in liquidity', async () => {
     const lowerTick = -90n
     const upperTick = -50n
-    const liquidityDelta = liquidity(20008000n)
+    const liquidityDelta = toLiquidity(20008000n)
     const amount = 10n ** 6n
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 

@@ -17,7 +17,7 @@ import {
   getPools,
   getPosition,
   expectError,
-  liquidity
+  toLiquidity
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
@@ -50,7 +50,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
   const mint = 10n ** 10n
-  const liquidityDelta = liquidity(1000000n)
+  const liquidityDelta = toLiquidity(1000000n)
   let feeTier: FeeTier
   let poolKey: PoolKey
 

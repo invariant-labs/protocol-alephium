@@ -8,7 +8,7 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  liquidity,
+  toLiquidity,
   transferPosition,
   verifyPositionList,
   withdrawTokens
@@ -68,7 +68,7 @@ export const initBasicPosition = async (
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
   const poolBefore = await getPool(invariant, poolKey)
-  const liquidityDelta = liquidity(1000000n)
+  const liquidityDelta = toLiquidity(1000000n)
   const slippageLimit = poolBefore.sqrtPrice
   const [lowerTick, upperTick] = [-20n, 10n]
   await initPosition(

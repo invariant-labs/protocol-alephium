@@ -14,7 +14,7 @@ import {
   initSwap,
   initTokensXY,
   isTickInitialized,
-  liquidity,
+  toLiquidity,
   removePosition,
   withdrawTokens
 } from '../src/testUtils'
@@ -159,7 +159,7 @@ describe('position tests', () => {
     const incorrectUpperTickIndex = upperTickIndex + 50n
 
     {
-      const liquidityDelta = liquidity(1000000n)
+      const liquidityDelta = toLiquidity(1000000n)
       const poolBefore = await getPool(invariant, poolKey)
       const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
       const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -195,7 +195,7 @@ describe('position tests', () => {
       expect(position).toMatchObject(expectedPosition)
     }
     {
-      const liquidityDelta = liquidity(1000000n * 1000000n)
+      const liquidityDelta = toLiquidity(1000000n * 1000000n)
       const poolBefore = await getPool(invariant, poolKey)
       await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
       const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -229,7 +229,7 @@ describe('position tests', () => {
         owner: positionOwner.address
       }
       const pool = await getPool(invariant, poolKey)
-      expect(pool.liquidity).toBe(liquidityDelta + liquidity(1000000n))
+      expect(pool.liquidity).toBe(liquidityDelta + toLiquidity(1000000n))
       expect(position).toMatchObject(expectedPosition)
     }
 
@@ -316,7 +316,7 @@ describe('position tests', () => {
     const lowerTickIndex = minTick + 10n
     const upperTickIndex = maxTick - 10n
 
-    const liquidityDelta = liquidity(100n)
+    const liquidityDelta = toLiquidity(100n)
 
     const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
@@ -404,7 +404,7 @@ describe('position tests', () => {
     const lowerTickIndex = -46080n
     const upperTickIndex = -23040n
 
-    const liquidityDelta = liquidity(10000n)
+    const liquidityDelta = toLiquidity(10000n)
 
     const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
@@ -497,7 +497,7 @@ describe('position tests', () => {
     const lowerTickIndex = -22980n
     const upperTickIndex = 0n
 
-    const liquidityDelta = liquidity(10000n)
+    const liquidityDelta = toLiquidity(10000n)
 
     const poolBefore = await getPool(invariant, poolKey)
     const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]

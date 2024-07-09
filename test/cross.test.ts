@@ -15,7 +15,7 @@ import {
   initFeeTier,
   initPosition,
   initSwap,
-  liquidity,
+  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
 
@@ -37,7 +37,7 @@ describe('cross tests', () => {
     await initBasicPosition(invariant, positionsOwner, tokenX, tokenY)
 
     // cross position
-    const liquidityDelta = liquidity(1_000_000n)
+    const liquidityDelta = toLiquidity(1_000_000n)
     {
       // definitely enough for the given liquidity/ticks
       const approvedAmount = liquidityDelta
@@ -103,7 +103,7 @@ describe('cross tests', () => {
       }
       expect(swapperBalance).toMatchObject({ tokenX: 0n, tokenY: 990n })
 
-      const liquidityChange = liquidity(1000000n)
+      const liquidityChange = toLiquidity(1000000n)
       const lowerTick = await getTick(invariant, poolKey, -20n)
       const middleTick = await getTick(invariant, poolKey, -10n)
       const upperTick = await getTick(invariant, poolKey, 10n)
