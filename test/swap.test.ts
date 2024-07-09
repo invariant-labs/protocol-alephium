@@ -19,18 +19,11 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
+  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
-import {
-  InvariantError,
-  LiquidityScale,
-  MaxSqrtPrice,
-  MinSqrtPrice,
-  PercentageScale,
-  VMError
-} from '../src/consts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { InvariantError, MaxSqrtPrice, MinSqrtPrice, PercentageScale, VMError } from '../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -76,7 +69,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -88,7 +81,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -101,7 +94,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex - 20n,
         middleTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -136,7 +129,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        liquidity: toLiquidity(2n * 1000000n),
         currentTickIndex: -20n,
         feeGrowthGlobalX: 4n * 10n ** 22n,
         feeGrowthGlobalY: 0n,
@@ -148,13 +141,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
+      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideX: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideX: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideX: 0n })
+      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
     }
   })
 
@@ -183,7 +176,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -195,7 +188,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -208,7 +201,7 @@ describe('swap tests', () => {
         positionAmount,
         middleTickIndex,
         upperTickIndex + 20n,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -251,7 +244,7 @@ describe('swap tests', () => {
       // check pool
       const poolAfter = await getPool(invariant, poolKey)
       const poolExpected = {
-        liquidity: 2n * 1000000n * 10n ** LiquidityScale,
+        liquidity: toLiquidity(2n * 1000000n),
         currentTickIndex: 10n,
         feeGrowthGlobalX: 0n,
         feeGrowthGlobalY: 4n * 10n ** 22n,
@@ -263,13 +256,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
+      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exist: true, feeGrowthOutsideY: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideY: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exist: true, feeGrowthOutsideY: 0n })
+      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
     }
   })
   test('swap not enough liquidity token x', async () => {
@@ -297,7 +290,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -309,7 +302,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -322,7 +315,7 @@ describe('swap tests', () => {
         positionAmount,
         middleTickIndex,
         upperTickIndex + 20n,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -336,7 +329,7 @@ describe('swap tests', () => {
       expect(dexBalance).toStrictEqual({ x: 2499n, y: 500n })
       // we run out of gas before completing the calculation, might be related to the performance of `prevInitialized`
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
-      expectVMError(
+      await expectVMError(
         VMError.OutOfGas,
         initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
       )
@@ -367,7 +360,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
       const slippageLimit = poolBefore.sqrtPrice
-      const liquidity = 1000000n * 10n ** LiquidityScale
+      const liquidityDelta = toLiquidity(1000000n)
 
       const positionAmount = positionsAmount / 2n
 
@@ -379,7 +372,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex,
         upperTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -392,7 +385,7 @@ describe('swap tests', () => {
         positionAmount,
         lowerTickIndex - 20n,
         middleTickIndex,
-        liquidity,
+        liquidityDelta,
         slippageLimit,
         slippageLimit
       )
@@ -406,7 +399,7 @@ describe('swap tests', () => {
       const dexBalance = await getReserveBalances(invariant, poolKey)
       expect(dexBalance).toStrictEqual({ x: 500n, y: 2499n })
 
-      expectError(
+      await expectError(
         InvariantError.TickLimitReached,
         initSwap(invariant, swapper, poolKey, false, swapAmount, true, MaxSqrtPrice),
         invariant

@@ -44,7 +44,7 @@ describe('invariant tests', () => {
       liquidity: 0n,
       poolKey,
       feeReceiver: admin.address,
-      exist: true
+      exists: true
     }
     expect(pool).toMatchObject(expectedPool)
   })

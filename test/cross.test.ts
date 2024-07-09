@@ -8,7 +8,7 @@ import {
   initDexAndTokens
 } from '../src/snippets'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
-import { LiquidityScale, MinSqrtPrice } from '../src/consts'
+import { MinSqrtPrice } from '../src/consts'
 import {
   getPool,
   getReserveBalances,
@@ -16,6 +16,7 @@ import {
   initFeeTier,
   initPosition,
   initSwap,
+  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
 
@@ -37,7 +38,7 @@ describe('cross tests', () => {
     await initBasicPosition(invariant, positionsOwner, tokenX, tokenY)
 
     // cross position
-    const liquidityDelta = 1_000_000n * 10n ** LiquidityScale
+    const liquidityDelta = toLiquidity(1_000_000n)
     {
       // definitely enough for the given liquidity/ticks
       const approvedAmount = liquidityDelta
@@ -97,7 +98,7 @@ describe('cross tests', () => {
       }
       expect(swapperBalance).toMatchObject({ tokenX: 0n, tokenY: 990n })
 
-      const liquidityChange = 1000000n * 10n ** LiquidityScale
+      const liquidityChange = toLiquidity(1000000n)
       const lowerTick = await getTick(invariant, poolKey, -20n)
       const middleTick = await getTick(invariant, poolKey, -10n)
       const upperTick = await getTick(invariant, poolKey, 10n)

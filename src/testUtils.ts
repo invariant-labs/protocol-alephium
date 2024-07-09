@@ -18,7 +18,6 @@ import {
   TokenFaucetInstance,
   WithdrawProtocolFee,
   CreatePosition,
-  Reserve,
   TransferPosition
 } from '../artifacts/ts'
 import {
@@ -33,7 +32,7 @@ import {
 } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { VMError } from './consts'
+import { LiquidityScale, VMError } from './consts'
 import { FeeTier, Pool, PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
@@ -318,16 +317,17 @@ export const verifyPositionList = async (
   isWhole = false
 ) => {
   for (let n = 1n; n <= length; ++n) {
-    const { exist: positionExists } = await getPosition(invariant, owner, n)
+    const { exists: positionExists } = await getPosition(invariant, owner, n)
     expect(positionExists).toBeTruthy()
   }
 
   if (isWhole) {
-    const { exist: positionExists } = await getPosition(invariant, owner, length + 1n)
+    const { exists: positionExists } = await getPosition(invariant, owner, length + 1n)
     expect(positionExists).toBeFalsy()
   }
 }
 
+/**  When not using `byAmountIn` set approvedTokens manually via the last parameter. */
 export async function initSwap(
   invariant: InvariantInstance,
   signer: SignerProvider,
@@ -335,7 +335,8 @@ export async function initSwap(
   xToY: boolean,
   amount: bigint,
   byAmountIn: boolean,
-  sqrtPriceLimit: bigint
+  sqrtPriceLimit: bigint,
+  approvedAmount = amount
 ) {
   const id = xToY ? poolKey.tokenX : poolKey.tokenY
   return await Swap.execute(signer, {
@@ -345,9 +346,10 @@ export async function initSwap(
       xToY,
       amount,
       byAmountIn,
-      sqrtPriceLimit
+      sqrtPriceLimit,
+      approvedAmount
     },
-    tokens: [{ id, amount }],
+    tokens: [{ id, amount: approvedAmount }],
     attoAlphAmount: DUST_AMOUNT
   })
 }
@@ -390,4 +392,8 @@ export const getReserveBalances = async (invariant: InvariantInstance, poolKey: 
   const x = await balanceOf(poolKey.tokenX, reserveX)
   const y = await balanceOf(poolKey.tokenY, reserveY)
   return { x, y }
+}
+
+export const toLiquidity = (value: bigint) => {
+  return value * 10n ** LiquidityScale
 }

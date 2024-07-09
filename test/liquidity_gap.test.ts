@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
-import { LiquidityScale, MinSqrtPrice, PercentageScale } from '../src/consts'
+import { MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
   getPosition,
@@ -14,6 +14,7 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
+  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
@@ -53,7 +54,7 @@ describe('liquidity gap tests', () => {
     const amount = 10n ** 6n
     const lowerTick = -10n
     const upperTick = 10n
-    const liquidityDelta = 20006000n * 10n ** LiquidityScale
+    const liquidityDelta = toLiquidity(20006000n)
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, poolKey)
@@ -92,7 +93,7 @@ describe('liquidity gap tests', () => {
       await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } })
     ).returns
     const expectedYAmountOut = 9999n
-    const liquidityDelta = 20006000n * 10n ** LiquidityScale
+    const liquidityDelta = toLiquidity(20006000n)
     const lowerTick = -10n
 
     expect(pool.sqrtPrice).toEqual(expectedSqrtPrice)
@@ -118,7 +119,7 @@ describe('liquidity gap tests', () => {
   test('Open second position non-adjacent to the previous one, consequently creating a gap in liquidity', async () => {
     const lowerTick = -90n
     const upperTick = -50n
-    const liquidityDelta = 20008000n * 10n ** LiquidityScale
+    const liquidityDelta = toLiquidity(20008000n)
     const amount = 10n ** 6n
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
@@ -153,12 +154,12 @@ describe('liquidity gap tests', () => {
     const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
     const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
 
-    const { exist: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
-    const { exist: currentInMap } = await getTick(invariant, poolKey, -60n)
-    const { exist: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
+    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
+    const { exists: currentInMap } = await getTick(invariant, poolKey, -60n)
+    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
 
     const expectedFirstPosition = {
-      exist: true,
+      exists: true,
       liquidity: 2000600000000n,
       lowerTickIndex: -10n,
       upperTickIndex: 10n,
@@ -169,7 +170,7 @@ describe('liquidity gap tests', () => {
       owner: positionOwner.address
     }
     const expectedSecondPosition = {
-      exist: true,
+      exists: true,
       liquidity: 2000800000000n,
       lowerTickIndex: -90n,
       upperTickIndex: -50n,
@@ -211,7 +212,7 @@ describe('liquidity gap tests', () => {
     expect(upperTick).toMatchObject(expectedUpperTick)
 
     const expectedPool = {
-      exist: true,
+      exists: true,
       poolKey,
       liquidity: secondPosition.liquidity,
       currentTickIndex: -60n,
