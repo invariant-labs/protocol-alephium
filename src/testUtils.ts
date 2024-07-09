@@ -350,7 +350,7 @@ export async function initSwap(
       approvedAmount
     },
     tokens: [{ id, amount: approvedAmount }],
-    attoAlphAmount: DUST_AMOUNT
+    attoAlphAmount: DUST_AMOUNT * 2n
   })
 }
 
