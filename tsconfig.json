@@ -2,16 +2,17 @@
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "react-jsx",
-    "target": "es2020",
+    "target": "ES2020",
+    "module": "commonjs",
     "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
     "declaration": true,
     "moduleResolution": "node",
+    "declarationMap": true, // Add this if it's not already present
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "noImplicitOverride": true
@@ -20,7 +21,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "test/**/*.ts",
+    // "test/**/*.ts",
     "scripts/**/*.ts",
     "alephium.config.ts",
     "artifacts/**/*.ts"
