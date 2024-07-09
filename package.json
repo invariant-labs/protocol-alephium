@@ -1,7 +1,27 @@
 {
-  "name": "invariant",
-  "version": "0.1.0",
+  "name": "@invariant-labs/alph-sdk",
+  "version": "0.0.1",
+  "collaborators": [
+    "Invariant Labs"
+  ],
+  "description": "",
+  "type": "commonjs",
+  "main": "dist/src/index.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "keywords": [
+    "Alephium",
+    "DEX",
+    "SDK",
+    "Ralph"
+  ],
   "license": "GPL",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/invariant-labs/protocol-alephium",
+    "directory": "sdk"
+  },
   "scripts": {
     "build": "npm run clean:windows && npm run clean:unix && npx --yes tsc --build .",
     "clean:unix": "node -e \"if (process.platform !== 'win32') process.exit(1)\" || rm -rf dist",

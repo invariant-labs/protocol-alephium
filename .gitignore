@@ -3,4 +3,5 @@ node_modules
 coverage
 artifacts
 .project.json
+dist
 .ralph-lsp
