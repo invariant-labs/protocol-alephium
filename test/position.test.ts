@@ -7,6 +7,7 @@ import {
   expectError,
   getPool,
   getPosition,
+  getReserveBalances,
   getTick,
   initFeeTier,
   initPool,
@@ -262,8 +263,7 @@ describe('position tests', () => {
     expect(swapperX).toBe(0n)
     expect(swapperY).toBe(1993n)
 
-    const dexXBefore = await balanceOf(tokenX.contractId, invariant.address)
-    const dexYBefore = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
 
     await removePosition(invariant, positionOwner, 1n)
 
@@ -273,8 +273,7 @@ describe('position tests', () => {
     const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
 
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedWithdrawnX = 499n
     const expectedWithdrawnY = 999n
     const expectedFeeX = 0n
@@ -339,8 +338,7 @@ describe('position tests', () => {
     const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedXIncrease = 317n
     const expectedYIncrease = 32n
 
@@ -430,8 +428,7 @@ describe('position tests', () => {
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedXIncrease = 0n
     const expectedYIncrease = 2162n
 
@@ -521,8 +518,7 @@ describe('position tests', () => {
     const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedXIncrease = 21549n
     const expectedYIncrease = 0n
 

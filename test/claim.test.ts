@@ -4,7 +4,13 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { ClaimFee, InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantError } from '../src/consts'
-import { getPool, initFeeTier, getPosition, expectError } from '../src/testUtils'
+import {
+  getPool,
+  initFeeTier,
+  getPosition,
+  expectError,
+  getReserveBalances
+} from '../src/testUtils'
 import {
   getBasicFeeTickSpacing,
   initBasicPool,
@@ -41,14 +47,8 @@ describe('invariant tests', () => {
   })
 
   test('claim', async () => {
-    const tokenXBeforeBalance = {
-      invariant: await balanceOf(tokenX.contractId, positionOwner.address),
-      positionOwner: await balanceOf(tokenX.contractId, invariant.address)
-    }
-    const tokenYBeforeBalance = {
-      invariant: await balanceOf(tokenY.contractId, positionOwner.address),
-      positionOwner: await balanceOf(tokenY.contractId, invariant.address)
-    }
+    const { x: dexXBefore } = await getReserveBalances(invariant, poolKey)
+    const ownerXBefore = await balanceOf(tokenX.contractId, positionOwner.address)
 
     await ClaimFee.execute(positionOwner, {
       initialFields: {
@@ -58,22 +58,12 @@ describe('invariant tests', () => {
       attoAlphAmount: DUST_AMOUNT
     })
 
-    const tokenXAfterBalance = {
-      invariant: await balanceOf(tokenX.contractId, positionOwner.address),
-      positionOwner: await balanceOf(tokenX.contractId, invariant.address)
-    }
-    const tokenYAfterBalance = {
-      invariant: await balanceOf(tokenY.contractId, positionOwner.address),
-      positionOwner: await balanceOf(tokenY.contractId, invariant.address)
-    }
+    const { x: dexXAfter } = await getReserveBalances(invariant, poolKey)
+    const ownerXAfter = await balanceOf(tokenX.contractId, positionOwner.address)
+    const expectedTokensClaimed = 5n
 
-    const tokenXChange = {
-      invariant: tokenXBeforeBalance.invariant - tokenXAfterBalance.invariant,
-      positionOwner: tokenXBeforeBalance.positionOwner - tokenXAfterBalance.positionOwner
-    }
-
-    expect(tokenXChange).toMatchObject({ invariant: -5n, positionOwner: 5n })
-    expect(tokenYAfterBalance).toMatchObject(tokenYBeforeBalance)
+    expect(ownerXAfter - expectedTokensClaimed).toBe(ownerXBefore)
+    expect(dexXAfter + expectedTokensClaimed).toBe(dexXBefore)
 
     const poolAfter = await getPool(invariant, poolKey)
     const positionAfter = await getPosition(invariant, positionOwner.address, 1n)

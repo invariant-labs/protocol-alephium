@@ -7,6 +7,7 @@ import { MinSqrtPrice, PercentageScale } from '../src/consts'
 import {
   getPool,
   getPosition,
+  getReserveBalances,
   getTick,
   initFeeTier,
   initPool,
@@ -79,8 +80,7 @@ describe('liquidity gap tests', () => {
     const amount = 10067n
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
-    const dexXBefore = await balanceOf(tokenX.contractId, invariant.address)
-    const dexYBefore = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
 
     const slippage = MinSqrtPrice
 
@@ -102,8 +102,7 @@ describe('liquidity gap tests', () => {
 
     const swapperX = await balanceOf(tokenX.contractId, swapper.address)
     const swapperY = await balanceOf(tokenY.contractId, swapper.address)
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
 
     const deltaDexX = dexX - dexXBefore
     const deltaDexY = dexYBefore - dexY

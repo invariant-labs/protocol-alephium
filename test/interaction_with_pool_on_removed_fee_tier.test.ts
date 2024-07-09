@@ -17,6 +17,7 @@ import {
   getPools,
   getPosition,
   expectError,
+  getReserveBalances,
   toLiquidity
 } from '../src/testUtils'
 import {
@@ -111,10 +112,10 @@ describe('interaction with pool on removed fee tiers tests', () => {
   test('init swap', async () => {
     const amount = 1000n
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
-    const invariantTokenXBalanceBefore = await balanceOf(tokenX.contractId, invariant.address)
-    const invariantTokenYBalanceBefore = await balanceOf(tokenY.contractId, invariant.address)
-    expect(invariantTokenXBalanceBefore).toBe(500n)
-    expect(invariantTokenYBalanceBefore).toBe(1000n)
+
+    const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
+    expect(dexXBefore).toBe(500n)
+    expect(dexYBefore).toBe(1000n)
 
     const poolBefore = await getPool(invariant, poolKey)
     const slippage = MinSqrtPrice
@@ -133,8 +134,8 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(swapperX).toBe(0n)
     expect(swapperY).toBe(1993n) // 1000 initial mint + 993 as a swap result
 
-    const dexX = await balanceOf(tokenX.contractId, invariant.address)
-    const dexY = await balanceOf(tokenY.contractId, invariant.address)
+    const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
+
     expect(dexX).toBe(1500n)
     expect(dexY).toBe(7n)
   })
