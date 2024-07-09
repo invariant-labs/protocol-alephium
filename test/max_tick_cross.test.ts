@@ -11,7 +11,7 @@ import {
   quote,
   withdrawTokens
 } from '../src/testUtils'
-import { LiquidityScale, MaxSqrtPrice, MinSqrtPrice } from '../src/consts'
+import { LiquidityScale, MaxSqrtPrice, MinSqrtPrice, SearchRange } from '../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
@@ -20,6 +20,7 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('max tick cross spec', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
+  const searchLimit = SearchRange * tickSpacing
   const txGasLimit = 500000n
   const positionOwnerMint = 1n << 128n
   const swapperMint = 1n << 30n
@@ -224,6 +225,95 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
     expect(crosses).toBe(14n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
+  }, 100000)
+  test('max tick cross swap xToY and ByAmountIn, positions between search limit range', async () => {
+    const lastInitializedTick = -35000n
+    const amount = 58100n
+    const xToY = true
+    const slippage = MinSqrtPrice
+    const byAmountIn = true
+
+    for (let i = lastInitializedTick; i < 0n; i += searchLimit) {
+      const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
+      const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+      await initPosition(
+        invariant,
+        positionOwner,
+        poolKey,
+        positionOwnerBalanceX,
+        positionOwnerBalanceY,
+        i,
+        i + 10n,
+        liquidityDelta,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+
+    await withdrawTokens(swapper, [tokenX, amount])
+
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
+
+    const poolBefore = await getPool(invariant, poolKey)
+    const { gasAmount } = await initSwap(
+      invariant,
+      swapper,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      targetSqrtPrice
+    )
+    const poolAfter = await getPool(invariant, poolKey)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
+    expect(crosses).toBe(1708n)
+    expect(gasAmount).toBeGreaterThan(txGasLimit)
+  }, 100000)
+  test('max tick cross swap yToX and ByAmountIn, positions between search limit range', async () => {
+    const lastInitializedTick = 25000n
+    const amount = 60000n
+    const xToY = false
+    const slippage = MaxSqrtPrice
+    const byAmountIn = true
+
+    for (let i = 0n; i < lastInitializedTick; i += searchLimit) {
+      const positionOwnerBalanceX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const positionOwnerBalanceY = await balanceOf(tokenY.contractId, positionOwner.address)
+      const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+      await initPosition(
+        invariant,
+        positionOwner,
+        poolKey,
+        positionOwnerBalanceX,
+        positionOwnerBalanceY,
+        i,
+        i + 10n,
+        liquidityDelta,
+        slippageLimit,
+        slippageLimit
+      )
+    }
+
+    await withdrawTokens(swapper, [tokenY, amount])
+
+    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
+
+    const poolBefore = await getPool(invariant, poolKey)
+    const { gasAmount } = await initSwap(
+      invariant,
+      swapper,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      targetSqrtPrice
+    )
+
+    const poolAfter = await getPool(invariant, poolKey)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
+    expect(crosses).toBe(1792n)
     expect(gasAmount).toBeGreaterThan(txGasLimit)
   }, 100000)
 })
