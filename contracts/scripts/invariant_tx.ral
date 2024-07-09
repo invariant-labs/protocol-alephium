@@ -49,11 +49,15 @@ TxScript ClaimFee(invariant: Invariant, index: U256) {
     invariant.claimFee(index)
 }
 
-TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
-    if(xToY) {
-        let _ = invariant.swap{callerAddress!() -> poolKey.tokenX: amount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
+TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256, approvedAmount: U256) {
+    let mut tokensApproved = amount
+    if (!byAmountIn) { 
+        tokensApproved = approvedAmount
+    }
+    if (xToY) {
+        let _ = invariant.swap{callerAddress!() -> poolKey.tokenX: tokensApproved}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
     } else {
-        let _ = invariant.swap{callerAddress!() -> poolKey.tokenY: amount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
+        let _ = invariant.swap{callerAddress!() -> poolKey.tokenY: tokensApproved}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
     }
 }
 

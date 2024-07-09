@@ -469,16 +469,16 @@ Contract Invariant(
 
         if (xToY) {
             if (pool.reserveX == pool.reserveY) {
-                Reserve(pool.reserveX).swap{caller -> tokenX: amount}(caller, tokenX, tokenY, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
+                Reserve(pool.reserveX).swap{caller -> tokenX: calculateSwapResult.amountIn}(caller, tokenX, tokenY, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
             } else {
-                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenX: amount}(caller, tokenX, calculateSwapResult.amountIn)
+                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenX: calculateSwapResult.amountIn}(caller, tokenX, calculateSwapResult.amountIn)
                 Reserve(pool.reserveY).withdrawSingleAsset(caller, tokenY, calculateSwapResult.amountOut)    
             }
         } else {
             if (pool.reserveX == pool.reserveY) {
-                Reserve(pool.reserveX).swap{caller -> tokenY: amount}(caller, tokenY, tokenX, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
+                Reserve(pool.reserveX).swap{caller -> tokenY: calculateSwapResult.amountIn}(caller, tokenY, tokenX, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
             } else {
-                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenY: amount}(caller, tokenY, calculateSwapResult.amountIn)
+                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenY: calculateSwapResult.amountIn}(caller, tokenY, calculateSwapResult.amountIn)
                 Reserve(pool.reserveY).withdrawSingleAsset(caller, tokenX, calculateSwapResult.amountOut)    
             }
         }
