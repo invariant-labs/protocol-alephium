@@ -21,7 +21,7 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 describe('max tick cross spec', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const searchLimit = SearchRange * tickSpacing
-  const txGasLimit = 500000n
+  const txGasLimit = 5000000n
   const positionOwnerMint = 1n << 128n
   const swapperMint = 1n << 30n
   const supply = positionOwnerMint + swapperMint
@@ -91,7 +91,7 @@ describe('max tick cross spec', () => {
 
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(8n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = 120n
@@ -136,7 +136,7 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
     expect(crosses).toBe(8n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountIn, liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
@@ -180,7 +180,7 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(13n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, liquidity gap between positions', async () => {
     const lastInitializedTick = 240n
@@ -225,11 +225,11 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
     expect(crosses).toBe(14n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = -35000n
-    const amount = 58100n
+    const amount = 13570000n
     const xToY = true
     const slippage = MinSqrtPrice
     const byAmountIn = true
@@ -245,7 +245,7 @@ describe('max tick cross spec', () => {
         positionOwnerBalanceX,
         positionOwnerBalanceY,
         i,
-        i + 10n,
+        i + searchLimit,
         liquidityDelta,
         slippageLimit,
         slippageLimit
@@ -269,11 +269,11 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(1708n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = 25000n
-    const amount = 60000n
+    const amount = 17947900n
     const xToY = false
     const slippage = MaxSqrtPrice
     const byAmountIn = true
@@ -289,7 +289,7 @@ describe('max tick cross spec', () => {
         positionOwnerBalanceX,
         positionOwnerBalanceY,
         i,
-        i + 10n,
+        i + searchLimit,
         liquidityDelta,
         slippageLimit,
         slippageLimit
@@ -313,8 +313,8 @@ describe('max tick cross spec', () => {
 
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
-    expect(crosses).toBe(1792n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(crosses).toBe(2047n)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, no liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
@@ -369,7 +369,7 @@ describe('max tick cross spec', () => {
 
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(9n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, no liquidity gap between positions', async () => {
     const lastInitializedTick = 120n
@@ -424,7 +424,7 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
     expect(crosses).toBe(7n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, liquidity gap between positions', async () => {
     const lastInitializedTick = -500n
@@ -479,7 +479,7 @@ describe('max tick cross spec', () => {
 
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
     expect(crosses).toBe(16n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, liquidity gap between positions', async () => {
     const lastInitializedTick = 360n
@@ -534,12 +534,12 @@ describe('max tick cross spec', () => {
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
     expect(crosses).toBe(14n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, positions between search limit range', async () => {
     const lastInitializedTick = -25000n
-    const mintAmount = 80000n
-    const swapAmount = 24000n
+    const mintAmount = 20000000n
+    const swapAmount = 6050000n
     const xToY = true
     const slippage = MinSqrtPrice
     const byAmountIn = false
@@ -555,7 +555,7 @@ describe('max tick cross spec', () => {
         positionOwnerBalanceX,
         positionOwnerBalanceY,
         i,
-        i + 10n,
+        i + searchLimit,
         liquidityDelta,
         slippageLimit,
         slippageLimit
@@ -586,15 +586,14 @@ describe('max tick cross spec', () => {
       mintAmount
     )
     const poolAfter = await getPool(invariant, poolKey)
-
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
-    expect(crosses).toBe(1988n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(crosses).toBe(1858n)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, positions between search limit range', async () => {
     const lastInitializedTick = 25000n
-    const mintAmount = 80000n
-    const swapAmount = 24500n
+    const mintAmount = 20000000n
+    const swapAmount = 6408000n
     const xToY = false
     const slippage = MaxSqrtPrice
     const byAmountIn = false
@@ -610,7 +609,7 @@ describe('max tick cross spec', () => {
         positionOwnerBalanceX,
         positionOwnerBalanceY,
         i,
-        i + 10n,
+        i + searchLimit,
         liquidityDelta,
         slippageLimit,
         slippageLimit
@@ -642,7 +641,7 @@ describe('max tick cross spec', () => {
 
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
-    expect(crosses).toBe(1536n)
-    expect(gasAmount).toBeGreaterThan(txGasLimit)
+    expect(crosses).toBe(2047n)
+    expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
 })
