@@ -1,8 +1,15 @@
-import { NodeProvider, ONE_ALPH, SignerProvider, ZERO_ADDRESS, node, web3 } from '@alephium/web3'
+import {
+  NodeProvider,
+  codec,
+  ONE_ALPH,
+  SignerProvider,
+  ZERO_ADDRESS,
+  node,
+  web3
+} from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
-import { compactUnsignedIntCodec } from './compact-int-codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
@@ -160,12 +167,12 @@ export function decodePosition(array: [boolean, Position]) {
   return createEntityProxy(array[1], array[0])
 }
 
-export function hexToBytes(hex: string): Uint8Array {
+function hexToBytes(hex: string): Uint8Array {
   return new Uint8Array(hex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || [])
 }
 
 export function decodeU256(string: string): bigint {
-  return BigInt(compactUnsignedIntCodec.decodeU256(Buffer.from(hexToBytes(string))))
+  return codec.compactUnsignedIntCodec.decodeU256(hexToBytes(string))
 }
 
 export const newPoolKey = async (
