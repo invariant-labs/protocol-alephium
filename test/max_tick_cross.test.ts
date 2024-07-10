@@ -267,8 +267,8 @@ describe('max tick cross spec', () => {
       targetSqrtPrice
     )
     const poolAfter = await getPool(invariant, poolKey)
-    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
-    expect(crosses).toBe(1708n)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -searchLimit
+    expect(crosses).toBe(6n)
     expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, positions between search limit range', async () => {
@@ -312,8 +312,8 @@ describe('max tick cross spec', () => {
     )
 
     const poolAfter = await getPool(invariant, poolKey)
-    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
-    expect(crosses).toBe(2047n)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / searchLimit
+    expect(crosses).toBe(7n)
     expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, no liquidity gap between positions', async () => {
@@ -586,8 +586,8 @@ describe('max tick cross spec', () => {
       mintAmount
     )
     const poolAfter = await getPool(invariant, poolKey)
-    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -10n
-    expect(crosses).toBe(1858n)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -searchLimit
+    expect(crosses).toBe(7n)
     expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, positions between search limit range', async () => {
@@ -640,8 +640,8 @@ describe('max tick cross spec', () => {
     )
 
     const poolAfter = await getPool(invariant, poolKey)
-    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / 10n
-    expect(crosses).toBe(2047n)
+    const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / searchLimit
+    expect(crosses).toBe(7n)
     expect(gasAmount).toBeLessThan(txGasLimit)
   }, 100000)
 })
