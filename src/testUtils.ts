@@ -338,8 +338,23 @@ export async function initSwap(
   sqrtPriceLimit: bigint,
   approvedAmount = amount
 ) {
+  console.log('Starting initSwap function')
+  console.log('Parameters:', {
+    invariant: invariant.contractId,
+    signer,
+    poolKey,
+    xToY,
+    amount,
+    byAmountIn,
+    sqrtPriceLimit,
+    approvedAmount
+  })
+
   const id = xToY ? poolKey.tokenX : poolKey.tokenY
-  return await Swap.execute(signer, {
+
+  console.log('Token ID:', id)
+
+  const result = await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
       poolKey,
@@ -349,9 +364,12 @@ export async function initSwap(
       sqrtPriceLimit,
       approvedAmount
     },
+
     tokens: [{ id, amount: approvedAmount }],
     attoAlphAmount: DUST_AMOUNT
   })
+  console.log('Swap executed, result:', result)
+  return result
 }
 
 export const getTick = async (invariant: InvariantInstance, poolKey: PoolKey, index: bigint) => {

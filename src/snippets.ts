@@ -1,6 +1,6 @@
 import { Address, SignerProvider } from '@alephium/web3'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { MinSqrtPrice, PercentageScale } from './consts'
+import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from './consts'
 import {
   getPool,
   getReserveBalances,
@@ -12,11 +12,13 @@ import {
   toLiquidity,
   transferPosition,
   verifyPositionList,
-  withdrawTokens
+  withdrawTokens,
+  quote
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { calculateSqrtPrice } from './math'
+import { PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -134,6 +136,23 @@ export const initBasicSwap = async (
   }
   expect(poolAfter).toMatchObject(poolExpected)
   return tx
+}
+
+export const swapExactLimit = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  poolKey: PoolKey,
+  xToY: boolean,
+  amount: bigint,
+  byAmountIn: boolean
+) => {
+  const sqrtPriceLimit: bigint = xToY ? MinSqrtPrice : MaxSqrtPrice
+
+  console.log(`Sqrt price limit: ${sqrtPriceLimit}`)
+
+  const quoteResult = await quote(invariant, poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
+
+  await initSwap(invariant, signer, poolKey, xToY, amount, byAmountIn, quoteResult.targetSqrtPrice)
 }
 
 export const transferAndVerifyPosition = async (
