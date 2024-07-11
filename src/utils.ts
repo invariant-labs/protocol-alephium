@@ -3,6 +3,7 @@ import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifact
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { compactUnsignedIntCodec } from './compact-int-codec'
+import { Network } from './network'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
