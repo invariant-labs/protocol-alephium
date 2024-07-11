@@ -93,7 +93,7 @@ describe('position list tests', () => {
     // all 3 exact same ticks
     {
       const [lowerTickIndex, upperTickIndex] = [-10n, 10n]
-      for (let n = 1n; n <= 3n; ++n) {
+      for (let n = 0n; n < 3n; ++n) {
         await initPosition(
           invariant,
           positionsOwner,
@@ -127,7 +127,7 @@ describe('position list tests', () => {
         sign: false
       })
 
-      for (let n = 1n; n <= 3n; ++n) {
+      for (let n = 0n; n < 3n; ++n) {
         const position = await getPosition(invariant, positionsOwner.address, n)
         expect(position).toMatchObject({
           poolKey,
@@ -163,7 +163,7 @@ describe('position list tests', () => {
         const newPosition = await getPosition(
           invariant,
           positionsOwner.address,
-          3n + BigInt(index + 1)
+          2n + BigInt(index + 1)
         )
         expect(newPosition).toMatchObject({
           poolKey,
@@ -286,9 +286,9 @@ describe('position list tests', () => {
 
     // remove middle position
     {
-      const lastPosition = await getPosition(invariant, positionsOwner.address, 4n)
-      await removePosition(invariant, positionsOwner, 2n)
-      const replacedPosition = await getPosition(invariant, positionsOwner.address, 2n)
+      const lastPosition = await getPosition(invariant, positionsOwner.address, 3n)
+      await removePosition(invariant, positionsOwner, 1n)
+      const replacedPosition = await getPosition(invariant, positionsOwner.address, 1n)
 
       expect(replacedPosition).toStrictEqual(lastPosition)
       verifyPositionList(invariant, positionsOwner.address, 3n, true)
@@ -307,20 +307,20 @@ describe('position list tests', () => {
         slippageLimitLower,
         MaxSqrtPrice
       )
-      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
+      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 3n)
       expect(positionExists).toBeTruthy()
     }
     // remove last position
     {
-      await removePosition(invariant, positionsOwner, 4n)
-      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 4n)
+      await removePosition(invariant, positionsOwner, 3n)
+      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 3n)
       expect(positionExists).toBeFalsy()
     }
     // remove all positions
     {
-      for (let n = 3n; n > 0; --n) {
+      for (let n = 2n; n >= 0; --n) {
         await removePosition(invariant, positionsOwner, n)
-        verifyPositionList(invariant, positionsOwner.address, n - 1n, true)
+        verifyPositionList(invariant, positionsOwner.address, n, true)
       }
     }
 
@@ -338,7 +338,7 @@ describe('position list tests', () => {
         slippageLimitLower,
         MaxSqrtPrice
       )
-      const position = await getPosition(invariant, positionsOwner.address, 1n)
+      const position = await getPosition(invariant, positionsOwner.address, 0n)
       expect(position).toMatchObject({
         exists: true,
         poolKey,
@@ -347,14 +347,14 @@ describe('position list tests', () => {
         liquidity: liquiditiyDelta,
         owner: positionsOwner.address
       })
-      const { exists: secondExists } = await getPosition(invariant, positionsOwner.address, 2n)
+      const { exists: secondExists } = await getPosition(invariant, positionsOwner.address, 1n)
       expect(secondExists).toBeFalsy()
     }
   })
 
   test('only owner can modify position list', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    expectError(InvariantError.PositionNotFound, removePosition(invariant, notOwner, 4n), invariant)
+    expectError(InvariantError.PositionNotFound, removePosition(invariant, notOwner, 3n), invariant)
   })
 
   test('transfer position ownership', async () => {
@@ -364,8 +364,8 @@ describe('position list tests', () => {
     await transferAndVerifyPosition(
       invariant,
       positionsOwner,
-      4n,
-      1n,
+      3n,
+      0n,
       positionsRecipient.address,
       0n
     )
@@ -374,8 +374,8 @@ describe('position list tests', () => {
     await transferAndVerifyPosition(
       invariant,
       positionsOwner,
-      3n,
       2n,
+      1n,
       positionsRecipient.address,
       1n
     )
@@ -384,8 +384,8 @@ describe('position list tests', () => {
     await transferAndVerifyPosition(
       invariant,
       positionsOwner,
-      2n,
-      2n,
+      1n,
+      0n,
       positionsRecipient.address,
       2n
     )
@@ -394,8 +394,8 @@ describe('position list tests', () => {
     await transferAndVerifyPosition(
       invariant,
       positionsOwner,
-      1n,
-      1n,
+      0n,
+      0n,
       positionsRecipient.address,
       3n
     )
@@ -404,8 +404,8 @@ describe('position list tests', () => {
     await transferAndVerifyPosition(
       invariant,
       positionsRecipient,
-      4n,
-      1n,
+      3n,
+      0n,
       positionsOwner.address,
       0n
     )

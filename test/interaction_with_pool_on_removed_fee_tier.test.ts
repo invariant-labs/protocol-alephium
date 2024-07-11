@@ -146,7 +146,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await ClaimFee.execute(positionOwner, {
       initialFields: {
         invariant: invariant.contractId,
-        index: 1n
+        index: 0n
       },
       attoAlphAmount: DUST_AMOUNT
     })
@@ -185,7 +185,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(yAfter - yBefore).toBe(0n)
   })
   test('close position', async () => {
-    await removePosition(invariant, positionOwner, 1n)
+    await removePosition(invariant, positionOwner, 0n)
   })
   test('get pool', async () => {
     await getPool(invariant, poolKey)
@@ -221,13 +221,13 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await TransferPosition.execute(positionOwner, {
       initialFields: {
         invariant: invariant.contractId,
-        index: 1n,
+        index: 0n,
         recipient: recipient.address
       },
       attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n + DUST_AMOUNT * 2n
     })
 
-    const transferedPosition = await getPosition(invariant, recipient.address, 1n)
+    const transferedPosition = await getPosition(invariant, recipient.address, 0n)
     expect(transferedPosition.exists).toBe(true)
     expect(transferedPosition.liquidity).toBe(liquidityDelta)
     expect(transferedPosition.lowerTickIndex).toBe(lowerTickIndex)

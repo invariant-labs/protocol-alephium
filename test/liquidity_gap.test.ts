@@ -151,8 +151,8 @@ describe('liquidity gap tests', () => {
     await initSwap(invariant, swapper, poolKey, true, amount, true, targetSqrtPrice)
 
     const pool = await getPool(invariant, poolKey)
-    const firstPosition = await getPosition(invariant, positionOwner.address, 1n)
-    const secondPosition = await getPosition(invariant, positionOwner.address, 2n)
+    const firstPosition = await getPosition(invariant, positionOwner.address, 0n)
+    const secondPosition = await getPosition(invariant, positionOwner.address, 1n)
 
     const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
     const { exists: currentInMap } = await getTick(invariant, poolKey, -60n)
