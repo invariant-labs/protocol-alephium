@@ -127,6 +127,7 @@ describe('math tests', () => {
   })
   test('fee growth to fee', async () => {
     const clamm = await deployCLAMM(sender)
+
     // Equal
     {
       const amount = 100n
