@@ -151,7 +151,7 @@ export const transferAndVerifyPosition = async (
   const { owner: previousOwner, ...toTransfer } = await getPosition(invariant, owner.address, index)
   const ownerLastPositionBefore = await getPosition(invariant, owner.address, ownerListLength)
   await transferPosition(invariant, owner, index, recipient)
-  const transferredPosition = await getPosition(invariant, recipient, recipientListLength + 1n)
+  const transferredPosition = await getPosition(invariant, recipient, recipientListLength)
   const ownerAtIndexPositionAfter = await getPosition(invariant, owner.address, index)
 
   expect(transferredPosition).toStrictEqual({ owner: recipient, ...toTransfer })
@@ -159,5 +159,5 @@ export const transferAndVerifyPosition = async (
     expect(ownerAtIndexPositionAfter).toStrictEqual(ownerLastPositionBefore)
   }
   verifyPositionList(invariant, owner.address, ownerListLength - 1n)
-  verifyPositionList(invariant, recipient, recipientListLength + 1n)
+  verifyPositionList(invariant, recipient, recipientListLength)
 }

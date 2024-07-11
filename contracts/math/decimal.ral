@@ -48,12 +48,14 @@ Abstract Contract Decimal() {
         return GlobalMinTick
     }
 
-    pub fn getMaxSqrtPrice() -> U256 {
-        return MaxSqrtPrice
+    pub fn getMaxSqrtPrice(tickSpacing: U256) -> U256 {
+        let maxTick = getMaxTick(tickSpacing)
+        return calculateSqrtPrice(maxTick)
     }
 
-    pub fn getMinSqrtPrice() -> U256 {
-        return MinSqrtPrice
+    pub fn getMinSqrtPrice(tickSpacing: U256) -> U256 {
+        let minTick = getMinTick(tickSpacing)
+        return calculateSqrtPrice(minTick)
     }
 
     pub fn getMaxTick(tickSpacing: U256) -> I256 {
@@ -208,7 +210,7 @@ Abstract Contract Decimal() {
         } else {
             return a - b
         }
-    }
+    }    
 
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,

@@ -53,7 +53,7 @@ describe('invariant tests', () => {
     await ClaimFee.execute(positionOwner, {
       initialFields: {
         invariant: invariant.contractId,
-        index: 1n
+        index: 0n
       },
       attoAlphAmount: DUST_AMOUNT
     })
@@ -66,7 +66,7 @@ describe('invariant tests', () => {
     expect(dexXAfter + expectedTokensClaimed).toBe(dexXBefore)
 
     const poolAfter = await getPool(invariant, poolKey)
-    const positionAfter = await getPosition(invariant, positionOwner.address, 1n)
+    const positionAfter = await getPosition(invariant, positionOwner.address, 0n)
     expect(positionAfter).toMatchObject({
       feeGrowthInsideX: poolAfter.feeGrowthGlobalX,
       tokensOwedX: 0n
@@ -80,7 +80,7 @@ describe('invariant tests', () => {
       ClaimFee.execute(notOwner, {
         initialFields: {
           invariant: invariant.contractId,
-          index: 1n
+          index: 0n
         },
         attoAlphAmount: DUST_AMOUNT
       }),

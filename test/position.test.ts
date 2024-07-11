@@ -69,7 +69,7 @@ describe('position tests', () => {
       MaxSqrtPrice
     )
 
-    const position = await getPosition(invariant, positionOwner.address, 1n)
+    const position = await getPosition(invariant, positionOwner.address, 0n)
     const expectedPosition = {
       exists: true,
       liquidity: 10n,
@@ -179,7 +179,7 @@ describe('position tests', () => {
         slippageLimitUpper
       )
 
-      const position = await getPosition(invariant, positionOwner.address, 1n)
+      const position = await getPosition(invariant, positionOwner.address, 0n)
       const expectedPosition = {
         exists: true,
         liquidity: liquidityDelta,
@@ -217,7 +217,7 @@ describe('position tests', () => {
         slippageLimitUpper
       )
 
-      const position = await getPosition(invariant, positionOwner.address, 2n)
+      const position = await getPosition(invariant, positionOwner.address, 1n)
       const expectedPosition = {
         exists: true,
         liquidity: liquidityDelta,
@@ -265,7 +265,7 @@ describe('position tests', () => {
 
     const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
 
-    await removePosition(invariant, positionOwner, 1n)
+    await removePosition(invariant, positionOwner, 0n)
 
     const pool = await getPool(invariant, poolKey)
     const { exists: lowerInMap } = await getTick(invariant, poolKey, lowerTickIndex)
@@ -332,7 +332,7 @@ describe('position tests', () => {
       slippageLimitUpper
     )
 
-    const position = await getPosition(invariant, positionOwner.address, 1n)
+    const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
     const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
     const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
@@ -420,7 +420,7 @@ describe('position tests', () => {
       slippageLimitUpper
     )
 
-    const position = await getPosition(invariant, positionOwner.address, 1n)
+    const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
     const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
     const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
@@ -512,7 +512,7 @@ describe('position tests', () => {
       slippageLimitUpper
     )
 
-    const position = await getPosition(invariant, positionOwner.address, 1n)
+    const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
     const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
     const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)

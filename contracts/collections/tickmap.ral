@@ -267,4 +267,12 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         let (upperChunk, _) = tickToPosition(upperTick, tickSpacing)
         return lowerChunk, upperChunk
     }
+
+    @using(checkExternalCaller = false)
+    pub fn getMaxChunk(tickSpacing: U256) -> (U256) {
+        let maxTick = getMaxTick(tickSpacing)
+        let maxBitmapIndex = maxTick + GlobalMaxTick / toI256!(tickSpacing)
+        let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
+        return maxChunkIndex
+    }
 }

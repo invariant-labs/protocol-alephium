@@ -316,13 +316,13 @@ export const verifyPositionList = async (
   length: bigint,
   isWhole = false
 ) => {
-  for (let n = 1n; n <= length; ++n) {
+  for (let n = 0n; n < length; ++n) {
     const { exists: positionExists } = await getPosition(invariant, owner, n)
     expect(positionExists).toBeTruthy()
   }
 
   if (isWhole) {
-    const { exists: positionExists } = await getPosition(invariant, owner, length + 1n)
+    const { exists: positionExists } = await getPosition(invariant, owner, length)
     expect(positionExists).toBeFalsy()
   }
 }
@@ -350,7 +350,7 @@ export async function initSwap(
       approvedAmount
     },
     tokens: [{ id, amount: approvedAmount }],
-    attoAlphAmount: DUST_AMOUNT
+    attoAlphAmount: DUST_AMOUNT * 2n
   })
 }
 
