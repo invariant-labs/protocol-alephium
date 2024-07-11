@@ -210,9 +210,7 @@ Abstract Contract Decimal() {
         } else {
             return a - b
         }
-    }
-
-    
+    }    
 
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,
