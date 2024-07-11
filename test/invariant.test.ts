@@ -7,6 +7,7 @@ import { deployInvariant, newFeeTier } from '../src/utils'
 import { FeeTier } from '../artifacts/ts/types'
 import { Invariant } from '../src/invariant'
 import { Network } from '../src/network'
+import { AddFeeTier } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -26,5 +27,8 @@ describe('init invariant test', () => {
     const loadedInvariant = await Invariant.load(invariant.address, Network.Local)
     const protocolFee = await loadedInvariant.getProtocolFee()
     expect(protocolFee).toBe(0n)
+  })
+  test(' test', async () => {
+    console.log(AddFeeTier.script)
   })
 })
