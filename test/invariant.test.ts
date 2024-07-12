@@ -28,7 +28,4 @@ describe('init invariant test', () => {
     const protocolFee = await loadedInvariant.getProtocolFee()
     expect(protocolFee).toBe(0n)
   })
-  test(' test', async () => {
-    console.log(AddFeeTier.script)
-  })
 })
