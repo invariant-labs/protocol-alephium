@@ -4,8 +4,6 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant } from '../src/utils'
 import { changeProtocolFee, expectError, getProtocolFee } from '../src/testUtils'
 import { InvariantError } from '../src/consts'
-import { Invariant } from '../src/invariant'
-import { Network } from '../src/network'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -18,20 +16,20 @@ describe('change protocol fee tests', () => {
   })
   it('change protocol fee', async () => {
     const protocolFee = 0n
-    const invariant = await Invariant.deploy(admin, Network.Local, protocolFee)
+    const invariant = await deployInvariant(admin, protocolFee)
     const newFee = 1n
-    await invariant.changeProtocolFee(admin, newFee)
-    const queriedFee = await invariant.getProtocolFee()
+    await changeProtocolFee(invariant, admin, newFee)
+    const queriedFee = await getProtocolFee(invariant)
     expect(queriedFee).toBe(newFee)
   })
   it('try to change protocol fee by unauthorized user', async () => {
     const protocolFee = 0n
-    const invariant = await Invariant.deploy(admin, Network.Local, protocolFee)
+    const invariant = await deployInvariant(admin, protocolFee)
     const newFee = 1n
     await expectError(
       InvariantError.NotAdmin,
-      invariant.changeProtocolFee(unauthorizedUser, newFee),
-      invariant.instance
+      changeProtocolFee(invariant, unauthorizedUser, newFee),
+      invariant
     )
   })
 })
