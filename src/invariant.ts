@@ -46,9 +46,11 @@ export class Invariant {
     network: Network,
     protocolFee: bigint = 0n
   ): Promise<Invariant> {
-    const account = await signer.getSelectedAccount()
-    const clamm = await deployCLAMM(signer)
-    const reserve = await deployReserve(signer)
+    const [account, clamm, reserve] = await Promise.all([
+      signer.getSelectedAccount(),
+      deployCLAMM(signer),
+      deployReserve(signer)
+    ])
     const deployResult = await waitTxConfirmed(
       InvariantFactory.deploy(signer, {
         initialFields: {
@@ -70,8 +72,6 @@ export class Invariant {
   }
 
   async addFeeTier(signer: SignerProvider, feeTier: FeeTier): Promise<string> {
-    this.instance.transact.addFeeTier
-
     const { txId } = await waitTxConfirmed(
       AddFeeTier.execute(signer, {
         initialFields: {
