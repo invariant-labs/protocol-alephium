@@ -1,13 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
-import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { InvariantError, PercentageScale } from '../src/consts'
-import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../src/testUtils'
-import { deployInvariant, newFeeTier } from '../src/utils'
-import { FeeTier } from '../artifacts/ts/types'
 import { Invariant } from '../src/invariant'
 import { Network } from '../src/network'
-import { AddFeeTier } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

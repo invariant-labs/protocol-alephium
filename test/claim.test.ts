@@ -76,7 +76,7 @@ describe('invariant tests', () => {
   test('claim_not_owner', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
     expectError(
-      InvariantError.PositionDoesNotExist,
+      InvariantError.PositionNotFound,
       ClaimFee.execute(notOwner, {
         initialFields: {
           invariant: invariant.contractId,

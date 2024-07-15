@@ -3,14 +3,12 @@ import {
   ChangeFeeReceiver,
   ChangeProtocolFee,
   ClaimFee,
-  CLAMM,
   CreatePool,
   CreatePosition,
   Invariant as InvariantFactory,
   InvariantInstance,
   RemoveFeeTier,
   RemovePosition,
-  Reserve,
   Swap,
   TransferPosition,
   WithdrawProtocolFee
@@ -30,7 +28,7 @@ import {
   MAP_ENTRY_DEPOSIT,
   waitTxConfirmed
 } from './utils'
-import { Address, DUST_AMOUNT, SignerProvider, ZERO_ADDRESS } from '@alephium/web3'
+import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 
 export class Invariant {
   instance: InvariantInstance
@@ -180,8 +178,6 @@ export class Invariant {
           lowerTick,
           upperTick,
           liquidityDelta,
-          approvedTokensX,
-          approvedTokensY,
           slippageLimitLower,
           slippageLimitUpper
         },
@@ -253,8 +249,7 @@ export class Invariant {
           xToY,
           amount,
           byAmountIn,
-          sqrtPriceLimit,
-          approvedAmount
+          sqrtPriceLimit
         },
         tokens: [{ id: tokenId, amount: approvedAmount }],
         attoAlphAmount: DUST_AMOUNT * 2n

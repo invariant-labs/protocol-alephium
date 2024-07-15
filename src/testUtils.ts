@@ -246,8 +246,6 @@ export async function initPosition(
       lowerTick,
       upperTick,
       liquidityDelta,
-      approvedTokensX,
-      approvedTokensY,
       slippageLimitLower,
       slippageLimitUpper
     },
@@ -346,8 +344,7 @@ export async function initSwap(
       xToY,
       amount,
       byAmountIn,
-      sqrtPriceLimit,
-      approvedAmount
+      sqrtPriceLimit
     },
     tokens: [{ id, amount: approvedAmount }],
     attoAlphAmount: DUST_AMOUNT * 2n

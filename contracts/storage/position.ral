@@ -58,8 +58,6 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> Position {
-        assert!(liquidityDelta != 0 || position.liquidity != 0, InvariantError.EmptyPositionPokes)
-
         let tokensOwedX = clamm.toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
         let tokensOwedY = clamm.toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
 
@@ -77,11 +75,10 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         sign: Bool,
         liquidityDelta: U256
     ) -> U256 {
-        assert!(sign || currentPositionLiquidity >= liquidityDelta, InvariantError.InsufficientLiquidity)
-
         if (sign) {
             return currentPositionLiquidity + liquidityDelta
         } else {
+            assert!(currentPositionLiquidity >= liquidityDelta, InvariantError.InsufficientLiquidity)
             return currentPositionLiquidity - liquidityDelta
         }
     }
