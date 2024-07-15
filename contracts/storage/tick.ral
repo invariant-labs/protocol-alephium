@@ -49,10 +49,11 @@ Abstract Contract TickHelper() extends Decimal() {
         if (sign) {
             newLiquidity = tick.liquidityGross + liquidityDelta
         } else {
+            assert!(tick.liquidityGross >= liquidityDelta, InvariantError.InvalidTickLiquidity)
             newLiquidity = tick.liquidityGross - liquidityDelta
-            assert!(tick.liquidityGross >= liquidityDelta && newLiquidity < maxLiquidityPerTick, InvariantError.InvalidTickLiquidity)
         }
 
+        assert!(newLiquidity <= maxLiquidityPerTick, InvariantError.InvalidTickLiquidity)
         return newLiquidity
     }
 }
