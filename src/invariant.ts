@@ -23,7 +23,7 @@ import {
   decodePool,
   decodePosition,
   decodeTick,
-  DEFAULT_FEE_TIERS,
+  EMPTY_FEE_TIERS,
   deployCLAMM,
   deployReserve,
   MAP_ENTRY_DEPOSIT,
@@ -55,10 +55,10 @@ export class Invariant {
         initialFields: {
           config: { admin: account.address, protocolFee },
           reserveTemplateId: reserve.contractId,
-          feeTiers: DEFAULT_FEE_TIERS,
+          feeTiers: EMPTY_FEE_TIERS,
           lastReserveId: reserve.contractId,
           clamm: clamm.contractId,
-          lastEmptyFeeTierSlot: 0n,
+          feeTierCount: 0n,
           poolKeyCount: 0n
         }
       })
@@ -265,7 +265,7 @@ export class Invariant {
 
   async getFeeTiers(): Promise<FeeTier[]> {
     const state = await this.instance.fetchState()
-    return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.lastEmptyFeeTierSlot))
+    return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
   }
 
   async getPool(poolKey: PoolKey): Promise<Pool> {

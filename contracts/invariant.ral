@@ -31,7 +31,7 @@ Contract Invariant(
     mut feeTiers: FeeTiers,
     reserveTemplateId: ByteVec,
     mut lastReserveId: ByteVec,
-    mut lastEmptyFeeTierSlot: U256,
+    mut feeTierCount: U256,
     mut poolKeyCount: U256
 ) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves() {
     // Key: poolKeyCount
@@ -49,7 +49,7 @@ Contract Invariant(
     // Key: TokenId, Value: ReserveId
     mapping[ByteVec, ByteVec] reserves
 
-    const FeeTierSlots = 32
+    const MaxFeeTiers = 32
     
     enum InvariantError {
         NotAdmin = 0
@@ -153,25 +153,25 @@ Contract Invariant(
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        assert!(lastEmptyFeeTierSlot != FeeTierSlots, InvariantError.FeeTierLimitReached)
+        assert!(feeTierCount != MaxFeeTiers, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(feeTier.fee < one(PercentageScale), InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
         
-        feeTiers.feeTiers[lastEmptyFeeTierSlot] = feeTier
-        lastEmptyFeeTierSlot = lastEmptyFeeTierSlot + 1
+        feeTiers.feeTiers[feeTierCount] = feeTier
+        feeTierCount = feeTierCount + 1
     }
 
     @using(updateFields = true)
     pub fn removeFeeTier(feeTier: FeeTier) -> () {
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
-        assert!(lastEmptyFeeTierSlot != 0, InvariantError.FeeTierNotFound)
-        for(let mut i = 0; i < FeeTierSlots; i = i + 1) {
+        assert!(feeTierCount != 0, InvariantError.FeeTierNotFound)
+        for(let mut i = 0; i < feeTierCount; i = i + 1) {
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
-                feeTiers.feeTiers[i] = feeTiers.feeTiers[lastEmptyFeeTierSlot - 1]
-                feeTiers.feeTiers[lastEmptyFeeTierSlot - 1] = FeeTier{fee: 0, tickSpacing: 0}
-                lastEmptyFeeTierSlot = lastEmptyFeeTierSlot - 1
+                feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
+                feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: 0, tickSpacing: 0}
+                feeTierCount = feeTierCount - 1
                 return
             }
         }
@@ -179,7 +179,7 @@ Contract Invariant(
     }
 
     pub fn feeTierExist(feeTier: FeeTier) -> Bool {
-        for(let mut i = 0; i < FeeTierSlots; i = i + 1) {
+        for(let mut i = 0; i < feeTierCount; i = i + 1) {
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 return true
             }

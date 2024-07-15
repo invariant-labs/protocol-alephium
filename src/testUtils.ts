@@ -179,7 +179,7 @@ export async function withdrawTokens(
 
 export async function getFeeTiers(invariant: InvariantInstance) {
   const state = await invariant.fetchState()
-  return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.lastEmptyFeeTierSlot))
+  return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
 }
 
 export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {

@@ -10,12 +10,12 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
-import { FeeTierSlots } from './consts'
+import { MaxFeeTiers } from './consts'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
-export const DEFAULT_FEE_TIERS: FeeTiers = {
-  feeTiers: new Array(Number(FeeTierSlots)).fill({
+export const EMPTY_FEE_TIERS: FeeTiers = {
+  feeTiers: new Array(Number(MaxFeeTiers)).fill({
     fee: 0n,
     tickSpacing: 0n
   })
@@ -59,10 +59,10 @@ export async function deployInvariant(
       initialFields: {
         config: { admin: account.address, protocolFee },
         reserveTemplateId: reserve.contractId,
-        feeTiers: DEFAULT_FEE_TIERS,
+        feeTiers: EMPTY_FEE_TIERS,
         lastReserveId: reserve.contractId,
         clamm: clamm.contractId,
-        lastEmptyFeeTierSlot: 0n,
+        feeTierCount: 0n,
         poolKeyCount: 0n
       }
     })
