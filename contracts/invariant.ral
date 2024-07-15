@@ -166,13 +166,16 @@ Contract Invariant(
     pub fn removeFeeTier(feeTier: FeeTier) -> () {
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
+        assert!(lastEmptyFeeTierSlot != 0, InvariantError.FeeTierNotFound)
         for(let mut i = 0; i < FeeTierSlots; i = i + 1) {
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[lastEmptyFeeTierSlot - 1]
                 feeTiers.feeTiers[lastEmptyFeeTierSlot - 1] = FeeTier{fee: 0, tickSpacing: 0}
                 lastEmptyFeeTierSlot = lastEmptyFeeTierSlot - 1
+                return
             }
         }
+        assert!(false, InvariantError.FeeTierNotFound)
     }
 
     pub fn feeTierExist(feeTier: FeeTier) -> Bool {
