@@ -153,7 +153,7 @@ Contract Invariant(
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        assert!(feeTierCount != MaxFeeTiers, InvariantError.FeeTierLimitReached)
+        assert!(feeTierCount < MaxFeeTiers, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(feeTier.fee < one(PercentageScale), InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
@@ -166,7 +166,7 @@ Contract Invariant(
     pub fn removeFeeTier(feeTier: FeeTier) -> () {
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
-        assert!(feeTierCount != 0, InvariantError.FeeTierNotFound)
+        
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
