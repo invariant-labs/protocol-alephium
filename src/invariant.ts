@@ -25,6 +25,7 @@ import {
   decodePool,
   decodePosition,
   decodeTick,
+  DEFAULT_FEE_TIERS,
   deployCLAMM,
   deployReserve,
   MAP_ENTRY_DEPOSIT,
@@ -51,15 +52,15 @@ export class Invariant {
     const account = await signer.getSelectedAccount()
     const clamm = await deployCLAMM(signer)
     const reserve = await deployReserve(signer)
-
     const deployResult = await waitTxConfirmed(
       InvariantFactory.deploy(signer, {
         initialFields: {
           config: { admin: account.address, protocolFee },
           reserveTemplateId: reserve.contractId,
+          feeTiers: DEFAULT_FEE_TIERS,
           lastReserveId: reserve.contractId,
           clamm: clamm.contractId,
-          feeTierCount: 0n,
+          lastEmptyFeeTierSlot: 0n,
           poolKeyCount: 0n
         }
       })
@@ -268,7 +269,8 @@ export class Invariant {
   }
 
   async getFeeTiers(): Promise<FeeTier[]> {
-    return decodeFeeTiers((await this.instance.view.getAllFeeTiers()).returns)
+    const state = await this.instance.fetchState()
+    return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.lastEmptyFeeTierSlot))
   }
 
   async getPool(poolKey: PoolKey): Promise<Pool> {

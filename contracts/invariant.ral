@@ -21,16 +21,21 @@ struct QuoteResult {
     targetSqrtPrice: U256
 }
 
+struct FeeTiers {
+    mut feeTiers: [FeeTier; 32]
+}
+
 Contract Invariant(
     mut config: InvariantConfig,
     clamm: CLAMM,
+    mut feeTiers: FeeTiers,
     reserveTemplateId: ByteVec,
     mut lastReserveId: ByteVec,
-    mut feeTierCount: U256,
+    mut lastEmptyFeeTierSlot: U256,
     mut poolKeyCount: U256
-) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves() {
-    // Key: feeTierCount
-    mapping[U256, FeeTier] feeTiers
+) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves() {
+    // // Key: feeTierCount
+    // mapping[U256, FeeTier] feeTiers
     // Key: poolKeyCount
     mapping[U256, PoolKey] poolKeys
     // Key: poolKey
@@ -45,6 +50,8 @@ Contract Invariant(
     mapping[Address, U256] positionsCounter
     // Key: TokenId, Value: ReserveId
     mapping[ByteVec, ByteVec] reserves
+
+    const FeeTierSlots = 32
     
     enum InvariantError {
         NotAdmin = 0
@@ -76,6 +83,7 @@ Contract Invariant(
         TickInitialized = 26
         PositionNotFound = 27
         EmptyPositionPokes = 28
+        FeeTierLimitReached = 29
     }
     
     pub fn getProtocolFee() -> U256 {
@@ -127,8 +135,7 @@ Contract Invariant(
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> () {
-        let feeTierExist = containsFeeTier(feeTier)
-        assert!(feeTierExist, InvariantError.FeeTierNotFound)
+        assert!(feeTierExist(feeTier), InvariantError.FeeTierNotFound)
 
         clamm.checkTick(initTick, feeTier.tickSpacing)
 
@@ -148,31 +155,40 @@ Contract Invariant(
         addPool{caller -> ALPH: mapEntryDeposit * 4}(caller, poolKey, initSqrtPrice, initTick, timestamp, config.admin)
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, updateFields = true)
     pub fn addFeeTier(feeTier: FeeTier) -> () {
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
+        assert!(lastEmptyFeeTierSlot != FeeTierSlots, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(feeTier.fee < one(PercentageScale), InvariantError.InvalidFee)
-
-        wrappedAddFeeTier{caller -> ALPH: mapEntryDeposit!()}(caller, feeTier)
+        assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
+        
+        feeTiers.feeTiers[lastEmptyFeeTierSlot] = feeTier
+        lastEmptyFeeTierSlot = lastEmptyFeeTierSlot + 1
     }
 
-    
+    @using(updateFields = true)
     pub fn removeFeeTier(feeTier: FeeTier) -> () {
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
-
-        wrappedRemoveFeeTier(caller, feeTier)
+        for(let mut i = 0; i < FeeTierSlots; i = i + 1) {
+            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+                feeTiers.feeTiers[i] = feeTiers.feeTiers[lastEmptyFeeTierSlot - 1]
+                feeTiers.feeTiers[lastEmptyFeeTierSlot - 1] = FeeTier{fee: 0, tickSpacing: 0}
+                lastEmptyFeeTierSlot = lastEmptyFeeTierSlot - 1
+            }
+        }
     }
 
     pub fn feeTierExist(feeTier: FeeTier) -> Bool {
-        return containsFeeTier(feeTier)
-    }
-
-    pub fn getFeeTiers() -> ByteVec {
-        return getAllFeeTiers()
+        for(let mut i = 0; i < FeeTierSlots; i = i + 1) {
+            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+                return true
+            }
+        }
+        return false
     }
 
     pub fn getPools() -> ByteVec {

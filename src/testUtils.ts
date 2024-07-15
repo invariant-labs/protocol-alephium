@@ -178,7 +178,10 @@ export async function withdrawTokens(
 }
 
 export async function getFeeTiers(invariant: InvariantInstance) {
-  return decodeFeeTiers((await invariant.methods.getFeeTiers()).returns)
+  const state = await invariant.fetchState()
+  const feeTiers = state.fields.feeTiers.feeTiers
+  const count = state.fields.lastEmptyFeeTierSlot
+  return feeTiers.slice(0, Number(count))
 }
 
 export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
