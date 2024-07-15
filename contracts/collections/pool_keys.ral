@@ -1,8 +1,7 @@
 Abstract Contract PoolKeys() {
     @using(preapprovedAssets = true, updateFields = true)
     fn addPoolKey(originalCaller: Address, poolKey: PoolKey) -> () {
-        let exists = containsPoolKey(poolKey)
-        assert!(!exists, InvariantError.PoolKeyAlreadyExist)
+        assert!(!containsPoolKey(poolKey), InvariantError.PoolKeyAlreadyExist)
     
         poolKeyCount = poolKeyCount + 1
 

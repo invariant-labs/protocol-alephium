@@ -232,7 +232,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         assert!(bitmap.contains!(key), InvariantError.ChunkNotFound)
         
 
-        assert!(value && !isInitialized || !value && isInitialized, InvariantError.TickInitialized)
+        assert!(value != isInitialized, InvariantError.InvalidTickmapBit)
     
         let flipped = flipBitAtPosition(extractChunk(key, chunkIndex), bit)
         rewriteChunk(key, chunkIndex, flipped)

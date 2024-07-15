@@ -179,9 +179,7 @@ export async function withdrawTokens(
 
 export async function getFeeTiers(invariant: InvariantInstance) {
   const state = await invariant.fetchState()
-  const feeTiers = state.fields.feeTiers.feeTiers
-  const count = state.fields.lastEmptyFeeTierSlot
-  return feeTiers.slice(0, Number(count))
+  return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.lastEmptyFeeTierSlot))
 }
 
 export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
@@ -249,8 +247,6 @@ export async function initPosition(
       lowerTick,
       upperTick,
       liquidityDelta,
-      approvedTokensX,
-      approvedTokensY,
       slippageLimitLower,
       slippageLimitUpper
     },
@@ -349,8 +345,7 @@ export async function initSwap(
       xToY,
       amount,
       byAmountIn,
-      sqrtPriceLimit,
-      approvedAmount
+      sqrtPriceLimit
     },
     tokens: [{ id, amount: approvedAmount }],
     attoAlphAmount: DUST_AMOUNT * 2n

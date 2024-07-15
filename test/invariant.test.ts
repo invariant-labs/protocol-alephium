@@ -11,7 +11,6 @@ describe('init invariant test', () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     const protocolFee = await invariant.getProtocolFee()
-    console.log(await invariant.instance.fetchState())
     expect(protocolFee).toBe(0n)
   })
   test('load invariant from address', async () => {

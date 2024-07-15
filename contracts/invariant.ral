@@ -34,8 +34,6 @@ Contract Invariant(
     mut lastEmptyFeeTierSlot: U256,
     mut poolKeyCount: U256
 ) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves() {
-    // // Key: feeTierCount
-    // mapping[U256, FeeTier] feeTiers
     // Key: poolKeyCount
     mapping[U256, PoolKey] poolKeys
     // Key: poolKey
@@ -67,23 +65,22 @@ Contract Invariant(
         ZeroLiquidity = 10
         PriceLimitReached = 11
         InvalidProtocolFee = 12
-        NotOwner = 13
+        // NotOwner = 13
         ZeroAmount = 14
         WrongPriceLimit = 15
         NoGainSwap = 16
-        PositionDoesNotExist = 17
+        // PositionDoesNotExist = 17
         FeeTierAlreadyExist = 18
-        PoolDoesNotExist = 19
+        PoolNotFound = 19
         PoolAlreadyExist = 20
         TickAlreadyExist = 21
         InvalidTickIndex = 22
         TickAndTickSpacingMismatch = 23
         TickLimitReached = 24
         ChunkNotFound = 25
-        TickInitialized = 26
+        InvalidTickmapBit = 26
         PositionNotFound = 27
-        EmptyPositionPokes = 28
-        FeeTierLimitReached = 29
+        FeeTierLimitReached = 28
     }
     
     pub fn getProtocolFee() -> U256 {
@@ -100,7 +97,7 @@ Contract Invariant(
     pub fn withdrawProtocolFee(poolKey: PoolKey) -> () {
         let caller = callerAddress!()
         let (exist, mut pool) = wrappedGetPool(poolKey)
-        assert!(exist, InvariantError.PoolDoesNotExist)
+        assert!(exist, InvariantError.PoolNotFound)
 
         let feeReceiver = pool.feeReceiver
 
@@ -141,16 +138,12 @@ Contract Invariant(
 
         assert!(token0 != token1, InvariantError.TokensAreSame)
 
-        let poolKey = newPoolKey(token0, token1, feeTier)
-        
-        let poolKeyExist = containsPoolKey(poolKey)
-        assert!(!poolKeyExist, InvariantError.PoolKeyAlreadyExist)
-
         assert!(clamm.checkTickToSqrtPriceRelationship(initTick, feeTier.tickSpacing, initSqrtPrice), InvariantError.TickAndSqrtPriceMismatch)
 
         let caller = callerAddress!()
         let timestamp = blockTimeStamp!()
         let mapEntryDeposit = mapEntryDeposit!()
+        let poolKey = newPoolKey(token0, token1, feeTier)
         addPoolKey{caller -> ALPH: mapEntryDeposit}(caller, poolKey)
         addPool{caller -> ALPH: mapEntryDeposit * 4}(caller, poolKey, initSqrtPrice, initTick, timestamp, config.admin)
     }
@@ -257,7 +250,7 @@ Contract Invariant(
         slippageLimitUpper: U256
     ) -> () {
         let (exist, pool) = wrappedGetPool(poolKey)
-        assert!(exist, InvariantError.PoolDoesNotExist)
+        assert!(exist, InvariantError.PoolNotFound)
         assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
         assert!(lowerTickIndex != upperTickIndex, InvariantError.InvalidTickIndex)
 
@@ -313,14 +306,12 @@ Contract Invariant(
             Reserve(pool.reserveY).depositSingleAsset{caller -> pool.poolKey.tokenY: y}(caller, pool.poolKey.tokenY, y)    
         }
     }
-
+    @using(checkExternalCaller = false)
     pub fn removePosition(index: U256) -> () {
         let caller = callerAddress!()
 
         let (exist, position) = wrappedGetPosition(caller, index)
-
         assert!(exist, InvariantError.PositionNotFound)
-        checkCaller!(caller == position.owner, InvariantError.NotOwner)
 
         let poolKey = position.poolKey
         let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
@@ -352,12 +343,11 @@ Contract Invariant(
         wrappedRemovePosition(caller, index)
     }
 
-    @using(preapprovedAssets = true)
+    @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn transferPosition(index: U256, newOwner: Address) -> () {
         let caller = callerAddress!()
-        let (exist, position) = wrappedGetPosition(caller, index)
-        assert!(exist, InvariantError.PositionNotFound)
-        checkCaller!(caller == position.owner, InvariantError.NotOwner)
+        assert!(index < positionCount(caller), InvariantError.PositionNotFound)
+
         wrappedTransferPosition{caller -> ALPH: 2 * mapEntryDeposit!()}(caller, index, newOwner)
     }
 
@@ -387,7 +377,7 @@ Contract Invariant(
     ) -> CalculateSwapResult {
         assert!(amount != 0, InvariantError.ZeroAmount)
         let (exist, mut pool) = wrappedGetPool(poolKey)
-        assert!(exist, InvariantError.PoolDoesNotExist)
+        assert!(exist, InvariantError.PoolNotFound)
         
         let mut sqrtPrice = pool.sqrtPrice
         let tickSpacing = poolKey.feeTier.tickSpacing
@@ -508,7 +498,7 @@ Contract Invariant(
         let caller = callerAddress!()
         let key = toByteVec!(caller) ++ toByteVec!(index)
         let (exist, position) = wrappedGetPosition(caller, index)
-        assert!(exist, InvariantError.PositionDoesNotExist)
+        assert!(exist, InvariantError.PositionNotFound)
     
         let poolKey = position.poolKey
         let (_, pool) = wrappedGetPool(poolKey)
