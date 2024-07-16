@@ -168,7 +168,6 @@ Contract Invariant(
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
         
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
-            assert!( 1 != 0, 210)
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
                 feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: 0, tickSpacing: 0}
@@ -551,5 +550,8 @@ Contract Invariant(
         }
 
         return matchingPools        
+    }
+    pub fn getAllPoolKeys() -> ByteVec {
+        return wrappedGetAllPoolKeys()
     }
 }

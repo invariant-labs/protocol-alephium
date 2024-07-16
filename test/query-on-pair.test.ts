@@ -49,5 +49,7 @@ describe('query on pair', () => {
     console.log('expectedPool1', expectedPool1)
     const query = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)
     console.log(query)
+    const allPoolKeys = await invariant.getAllPoolKeys()
+    console.log(allPoolKeys)
   })
 })

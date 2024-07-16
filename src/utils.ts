@@ -123,7 +123,7 @@ export async function balanceOf(tokenId: string, address: string): Promise<bigin
 }
 
 export function decodeFeeTiers(string: string) {
-  const parts = string.split('627265616b')
+  const parts = string.split(BREAK_BYTES)
   const feeTiers: any[] = []
 
   for (let i = 0; i < parts.length - 1; i += 2) {
@@ -170,13 +170,20 @@ export function decodePools(string: string) {
   return pools
 }
 
-export const decodePoolKey = (string: string) => {
+export const decodePoolKeys = (string: string) => {
   const parts = string.split(BREAK_BYTES)
-  return {
-    token0: addressFromContractId(parts[0]),
-    token1: addressFromContractId(parts[1]),
-    feeTier: decodeU256(parts[2])
+  const poolKeys: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 4) {
+    const poolKey = {
+      tokenX: parts[i],
+      tokenY: parts[i + 1],
+      feeTier: { fee: decodeU256(parts[i + 2]), tickSpacing: decodeU256(parts[i + 3]) }
+    }
+    poolKeys.push(poolKey)
   }
+
+  return poolKeys
 }
 
 function createEntityProxy<T>(entity: T, exists: boolean) {
