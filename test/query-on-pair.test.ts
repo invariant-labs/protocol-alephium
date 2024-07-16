@@ -9,15 +9,16 @@ import { newFeeTier, newPoolKey } from '../src/utils'
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('query on pair', () => {
+  const initialFee = 0n
+  const [fee] = getBasicFeeTickSpacing()
+  const initSqrtPrice = 10n ** 24n
+  const supply = 10n ** 10n
+
   test('query on pools works', async () => {
-    const initialFee = 0n
-    const [fee] = getBasicFeeTickSpacing()
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
-    const supply = 10n ** 10n
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    const initSqrtPrice = 10n ** 24n
     const feeTier10TS = await newFeeTier(fee, 10n)
     const feeTier20TS = await newFeeTier(fee, 20n)
 
@@ -50,5 +51,25 @@ describe('query on pair', () => {
     expect(queriedPools).toStrictEqual([expectedPool0, expectedPool1])
     const allPoolKeys = await invariant.getAllPoolKeys()
     expect(allPoolKeys.length).toBe(2)
+  })
+  test('query max pools', async () => {
+    const deployer = await getSigner(ONE_ALPH * 1000n, 0)
+    const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    const [tokenX, tokenY] = await initTokensXY(deployer, supply)
+
+    for (let tickSpacing = 1n; tickSpacing <= 32n; tickSpacing++) {
+      const feeTier10TS = await newFeeTier(fee, tickSpacing)
+      await invariant.addFeeTier(deployer, feeTier10TS)
+      await invariant.createPool(
+        deployer,
+        tokenX.contractId,
+        tokenY.contractId,
+        feeTier10TS,
+        initSqrtPrice
+      )
+    }
+
+    const queriedPools = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)
+    expect(queriedPools.length).toBe(32)
   })
 })
