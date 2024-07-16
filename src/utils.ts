@@ -6,9 +6,6 @@ import {
   ZERO_ADDRESS,
   node,
   web3,
-  Address,
-  addressFromContractId,
-  addressFromScript,
   bs58,
   hexToBinUnsafe
 } from '@alephium/web3'
@@ -16,10 +13,9 @@ import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifact
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { MaxFeeTiers } from './consts'
-import { ByteVecToAddress } from '@alephium/web3/dist/src/codec'
 
+const BREAK_BYTES = '627265616b'
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
-
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array(Number(MaxFeeTiers)).fill({
     fee: 0n,
@@ -27,7 +23,6 @@ export const EMPTY_FEE_TIERS: FeeTiers = {
   })
 } as FeeTiers
 
-const BREAK_BYTES = '627265616b'
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
@@ -144,7 +139,6 @@ export function decodePools(string: string) {
   const offset = 16
   const parts = string.split(BREAK_BYTES)
   const pools: any[] = []
-  AddressFromByteVec(parts[13])
   for (let i = 0; i < parts.length - 1; i += offset) {
     const pool = {
       poolKey: {
