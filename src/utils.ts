@@ -8,7 +8,9 @@ import {
   web3,
   Address,
   addressFromContractId,
-  addressFromScript
+  addressFromScript,
+  bs58,
+  hexToBinUnsafe
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
@@ -142,6 +144,7 @@ export function decodePools(string: string) {
   const offset = 16
   const parts = string.split(BREAK_BYTES)
   const pools: any[] = []
+  AddressFromByteVec(parts[13])
   for (let i = 0; i < parts.length - 1; i += offset) {
     const pool = {
       poolKey: {
@@ -161,9 +164,10 @@ export function decodePools(string: string) {
       feeProtocolTokenY: decodeU256(parts[i + 10]),
       startTimestamp: decodeU256(parts[i + 11]),
       lastTimestamp: decodeU256(parts[i + 12]),
-      feeReceiver: addressFromContractId(parts[i + 13]),
+      feeReceiver: AddressFromByteVec(parts[i + 13]),
       reserveX: parts[i + 14],
-      reserveY: parts[i + 15]
+      reserveY: parts[i + 15],
+      exists: true
     }
     pools.push(pool)
   }
@@ -186,6 +190,10 @@ export const decodePoolKeys = (string: string) => {
   return poolKeys
 }
 
+export const AddressFromByteVec = (string: string) => {
+  const address = bs58.encode(hexToBinUnsafe(string))
+  return address
+}
 function createEntityProxy<T>(entity: T, exists: boolean) {
   return new Proxy(
     { ...entity, exists },

@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../src/invariant'
 import { Network } from '../src/network'
-import { getPool, initTokensXY } from '../src/testUtils'
+import { initTokensXY } from '../src/testUtils'
 import { getBasicFeeTickSpacing } from '../src/snippets'
 import { newFeeTier, newPoolKey } from '../src/utils'
 
@@ -45,11 +45,10 @@ describe('query on pair', () => {
 
     const expectedPool0 = await invariant.getPool(poolKey0)
     const expectedPool1 = await invariant.getPool(poolKey1)
-    console.log('expectedPool0', expectedPool0)
-    console.log('expectedPool1', expectedPool1)
-    const query = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)
-    console.log(query)
+
+    const queriedPools = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)
+    expect(queriedPools).toStrictEqual([expectedPool0, expectedPool1])
     const allPoolKeys = await invariant.getAllPoolKeys()
-    console.log(allPoolKeys)
+    expect(allPoolKeys.length).toBe(2)
   })
 })
