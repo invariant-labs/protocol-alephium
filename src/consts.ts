@@ -12,6 +12,7 @@ export const {
   GlobalMinTick,
   // MaxSqrtPrice,
   // MinSqrtPrice,
+  MaxFeeTiers,
   SearchRange,
   InvariantError
 } = Invariant.consts

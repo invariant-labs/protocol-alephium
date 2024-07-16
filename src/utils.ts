@@ -9,10 +9,18 @@ import {
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { FeeTier, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
+import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
+import { MaxFeeTiers } from './consts'
 import { Network } from './network'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
+
+export const EMPTY_FEE_TIERS: FeeTiers = {
+  feeTiers: new Array(Number(MaxFeeTiers)).fill({
+    fee: 0n,
+    tickSpacing: 0n
+  })
+} as FeeTiers
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -55,11 +63,13 @@ export async function deployInvariant(
   const account = await signer.getSelectedAccount()
   const clamm = await deployCLAMM(signer)
   const reserve = await deployReserve(signer)
+
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
         config: { admin: account.address, protocolFee },
         reserveTemplateId: reserve.contractId,
+        feeTiers: EMPTY_FEE_TIERS,
         lastReserveId: reserve.contractId,
         clamm: clamm.contractId,
         feeTierCount: 0n,
