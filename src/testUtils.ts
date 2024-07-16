@@ -23,8 +23,6 @@ import {
 import {
   MAP_ENTRY_DEPOSIT,
   decodePool,
-  decodePools,
-  decodeFeeTiers,
   decodePosition,
   deployTokenFaucet,
   decodeTick,
@@ -192,10 +190,6 @@ export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
       })
     ).returns
   )
-}
-
-export const getPools = async (invariant: InvariantInstance) => {
-  return decodePools((await invariant.methods.getPools()).returns)
 }
 
 export async function getPosition(invariant: InvariantInstance, owner: Address, index: bigint) {

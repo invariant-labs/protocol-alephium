@@ -20,7 +20,7 @@ Abstract Contract PoolKeys() {
         return false
     }
 
-    fn getAllPoolKeys() -> ByteVec {
+    fn wrappedGetAllPoolKeys() -> ByteVec {
         let mut poolKeysBytes = b``
 
         for (let mut i = 1; i <= poolKeyCount; i = i + 1) {
