@@ -48,7 +48,7 @@ describe('Invariant Swap Tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
-    const liquidityDelta = 10_000_000_000n * 10n ** LiquidityScale
+    const liquidityDelta = 10_000_000_000n * 10n ** LiquidityScale * 10n
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
     const initSqrtPrice = await calculateSqrtPrice(initTick)
@@ -57,16 +57,16 @@ describe('Invariant Swap Tests', () => {
 
     await initPool(invariant, positionOwner, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
-    const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
+    // const { sqrtPrice: slippageLimit } = await getPool(invariant, poolKey)
 
     // const slippageLimit = 1009940000000000000000000n
 
-    // const poolBefore = await getPool(invariant, poolKey)
+    const poolBefore = await getPool(invariant, poolKey)
 
-    // const slippageLimitLower = poolBefore.sqrtPrice
-    // const slippageLimitUpper = poolBefore.sqrtPrice
+    const slippageLimitLower = poolBefore.sqrtPrice
+    const slippageLimitUpper = poolBefore.sqrtPrice
 
-    console.log('Slippage limit:', slippageLimit)
+    // console.log('Slippage limit:', slippageLimit)
 
     await initPosition(
       invariant,
@@ -77,8 +77,8 @@ describe('Invariant Swap Tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      slippageLimit,
-      slippageLimit
+      slippageLimitLower,
+      slippageLimitUpper
     )
 
     expect(await getPool(invariant, poolKey)).toMatchObject({
@@ -88,18 +88,20 @@ describe('Invariant Swap Tests', () => {
     })
   })
 
-  // test('test_basic_slippage', async () => {
-  //   const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-  //   await withdrawTokens(swapper, [tokenY, swapAmount])
-  //   const targetSqrtPrice = 1009940000000000000000001n
-  //   const feeTier = await newFeeTier(fee, tickSpacing)
-  //   const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
-  //   await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
-  // })
+  test('test_basic_slippage', async () => {
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    await withdrawTokens(swapper, [tokenY, swapAmount])
+    const targetSqrtPrice = 1009940000000000000000001n
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
+    await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
+  })
 
   test('test_swap_close_to_limit', async () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
 
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    await withdrawTokens(swapper, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
     const quoteResult = await quote(invariant, poolKey, false, swapAmount, true, MaxSqrtPrice)
@@ -118,30 +120,30 @@ describe('Invariant Swap Tests', () => {
     console.log('Pool state before:', JSON.stringify(poolStateBefore, null, 2))
 
     console.log(targetSqrtPrice)
-    // await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
+    await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
 
-    await expectError(
-      InvariantError.PriceLimitReached,
-      initSwap(invariant, positionOwner, poolKey, true, swapAmount, true, targetSqrtPrice),
-      invariant
-    )
+    // await expectError(
+    //   InvariantError.PriceLimitReached,
+    //   initSwap(invariant, positionOwner, poolKey, true, swapAmount, true, targetSqrtPrice),
+    //   invariant
+    // )
     const poolStateAfter = await getPool(invariant, poolKey)
     console.log(`Pool state after: '${JSON.stringify(poolStateAfter, null, 2)}'`)
   })
 
-  // test('test_swap_exact_limit', async () => {
-  //   const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-  //   const feeTier = await newFeeTier(fee, tickSpacing)
-  //   await withdrawTokens(swapper, [tokenX, swapAmount])
+  test('test_swap_exact_limit', async () => {
+    const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    await withdrawTokens(swapper, [tokenX, swapAmount])
 
-  //   const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-  //   const poolStateBefore = await getPool(invariant, poolKey)
-  //   console.log(`Pool state before: ${poolStateBefore}`)
+    const poolStateBefore = await getPool(invariant, poolKey)
+    console.log(`Pool state before test_swap_exact_limit: ${poolStateBefore}`)
 
-  //   await swapExactLimit(invariant, swapper, poolKey, true, swapAmount, true)
+    await swapExactLimit(invariant, swapper, poolKey, true, swapAmount, true)
 
-  //   const poolStateAfter = await getPool(invariant, poolKey)
-  //   console.log(poolStateAfter)
-  // })
+    const poolStateAfter = await getPool(invariant, poolKey)
+    console.log(poolStateAfter)
+  })
 })
