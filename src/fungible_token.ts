@@ -28,7 +28,7 @@ export class FungibleToken {
           name: Buffer.from(name, 'utf8').toString('hex'),
           symbol: Buffer.from(symbol, 'utf8').toString('hex'),
           decimals,
-          supply,
+          supply: MaxU256,
           balance: MaxU256
         },
         issueTokenAmount: MaxU256
@@ -82,7 +82,7 @@ export class FungibleToken {
   }
 
   async balanceOf(owner: string, tokenAddress: string): Promise<bigint> {
-    const tokenId = TokenFaucet.at(tokenAddress).contractId
+    const tokenId = this.getContractId(tokenAddress)
     return balanceOf(tokenId, owner)
   }
 
@@ -99,5 +99,9 @@ export class FungibleToken {
   async tokenDecimals(tokenAddress: string): Promise<bigint> {
     const token = TokenFaucet.at(tokenAddress)
     return (await token.view.getDecimals()).returns
+  }
+
+  getContractId(tokenAddress: string): string {
+    return TokenFaucet.at(tokenAddress).contractId
   }
 }
