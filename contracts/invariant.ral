@@ -168,6 +168,7 @@ Contract Invariant(
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
         
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
+            assert!( 1 != 0, 210)
             if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
                 feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: 0, tickSpacing: 0}
@@ -185,10 +186,6 @@ Contract Invariant(
             }
         }
         return false
-    }
-
-    pub fn getPools() -> ByteVec {
-        return getAllPoolKeys()
     }
 
     pub fn getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick) {
@@ -524,5 +521,35 @@ Contract Invariant(
             Reserve(pool.reserveX).withdrawSingleAsset(caller, pool.poolKey.tokenX, tokensOwedX)
             Reserve(pool.reserveY).withdrawSingleAsset(caller, pool.poolKey.tokenY, tokensOwedY)    
         }
+    }
+
+    pub fn getAllPoolsForPair(token0: ByteVec, token1: ByteVec) -> ByteVec {
+        let mut matchingPools = b``
+
+        for(let mut i = 0; i < feeTierCount; i = i + 1) {
+            let poolKey = newPoolKey(token0, token1, feeTiers.feeTiers[i])
+            let (exist, pool) = getPool(poolKey)
+            if(exist) {
+                matchingPools = matchingPools
+                ++ poolKey.tokenX ++ b`break`
+                ++ poolKey.tokenY ++ b`break`
+                ++ toByteVec!(poolKey.feeTier.fee) ++ b`break`
+                ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break` 
+                ++ toByteVec!(pool.liquidity) ++ b`break`
+                ++ toByteVec!(pool.sqrtPrice) ++ b`break`
+                ++ toByteVec!(pool.currentTickIndex) ++ b`break`
+                ++ toByteVec!(pool.feeGrowthGlobalX) ++ b`break`
+                ++ toByteVec!(pool.feeGrowthGlobalY) ++ b`break`
+                ++ toByteVec!(pool.feeProtocolTokenX) ++ b`break`
+                ++ toByteVec!(pool.feeProtocolTokenY) ++ b`break` 
+                ++ toByteVec!(pool.startTimestamp) ++ b`break`
+                ++ toByteVec!(pool.lastTimestamp) ++ b`break`
+                ++ toByteVec!(pool.feeReceiver) ++ b`break` 
+                ++ pool.reserveX ++ b`break` 
+                ++ pool.reserveY ++ b`break`
+            }
+        }
+
+        return matchingPools        
     }
 }

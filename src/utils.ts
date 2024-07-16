@@ -5,12 +5,16 @@ import {
   SignerProvider,
   ZERO_ADDRESS,
   node,
-  web3
+  web3,
+  Address,
+  addressFromContractId,
+  addressFromScript
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { MaxFeeTiers } from './consts'
+import { ByteVecToAddress } from '@alephium/web3/dist/src/codec'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
@@ -21,6 +25,7 @@ export const EMPTY_FEE_TIERS: FeeTiers = {
   })
 } as FeeTiers
 
+const BREAK_BYTES = '627265616b'
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
@@ -134,21 +139,44 @@ export function decodeFeeTiers(string: string) {
 }
 
 export function decodePools(string: string) {
-  const parts = string.split('627265616b')
+  const offset = 16
+  const parts = string.split(BREAK_BYTES)
   const pools: any[] = []
-
-  for (let i = 0; i < parts.length - 1; i += 4) {
+  for (let i = 0; i < parts.length - 1; i += offset) {
     const pool = {
-      tokenX: parts[i],
-      tokenY: parts[i + 1],
-      fee: decodeU256(parts[i + 2]),
-      tickSpacing: decodeU256(parts[i + 3])
+      poolKey: {
+        tokenX: parts[i],
+        tokenY: parts[i + 1],
+        feeTier: {
+          fee: decodeU256(parts[i + 2]),
+          tickSpacing: decodeU256(parts[i + 3])
+        }
+      },
+      liquidity: decodeU256(parts[i + 4]),
+      sqrtPrice: decodeU256(parts[i + 5]),
+      currentTickIndex: decodeI256(parts[i + 6]),
+      feeGrowthGlobalX: decodeU256(parts[i + 7]),
+      feeGrowthGlobalY: decodeU256(parts[i + 8]),
+      feeProtocolTokenX: decodeU256(parts[i + 9]),
+      feeProtocolTokenY: decodeU256(parts[i + 10]),
+      startTimestamp: decodeU256(parts[i + 11]),
+      lastTimestamp: decodeU256(parts[i + 12]),
+      feeReceiver: addressFromContractId(parts[i + 13]),
+      reserveX: parts[i + 14],
+      reserveY: parts[i + 15]
     }
-
     pools.push(pool)
   }
-
   return pools
+}
+
+export const decodePoolKey = (string: string) => {
+  const parts = string.split(BREAK_BYTES)
+  return {
+    token0: addressFromContractId(parts[0]),
+    token1: addressFromContractId(parts[1]),
+    feeTier: decodeU256(parts[2])
+  }
 }
 
 function createEntityProxy<T>(entity: T, exists: boolean) {
@@ -183,6 +211,10 @@ function hexToBytes(hex: string): Uint8Array {
 
 export function decodeU256(string: string): bigint {
   return codec.compactUnsignedIntCodec.decodeU256(hexToBytes(string))
+}
+
+const decodeI256 = (string: string): bigint => {
+  return codec.compactSignedIntCodec.decodeI256(hexToBytes(string))
 }
 
 export const newPoolKey = async (
