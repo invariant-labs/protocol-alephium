@@ -10,6 +10,7 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
+import { Network } from './network'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
@@ -36,6 +37,15 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   const result = await promise
   await _waitTxConfirmed(web3.getCurrentNodeProvider(), result.txId, 1)
   return result
+}
+
+export function getNodeUrl(network: Network) {
+  if (network === Network.Local || network === Network.Devnet) {
+    return 'http://127.0.0.1:22973'
+  } else {
+    // we don't have this yet
+    return 'http://127.0.0.1:22973'
+  }
 }
 
 export async function deployInvariant(

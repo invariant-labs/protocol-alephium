@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, SignerProvider, TransactionBuilder } from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
-import { balanceOf, waitTxConfirmed } from './utils'
+import { balanceOf, getNodeUrl, waitTxConfirmed } from './utils'
 import { MaxU256 } from './consts'
 
 export class FungibleToken {
@@ -11,13 +11,7 @@ export class FungibleToken {
 
   constructor(network: Network) {
     this.network = network
-
-    if (network === Network.Local || network === Network.Devnet) {
-      this.nodeUrl = 'http://127.0.0.1:22973'
-    } else {
-      // we don't have this yet
-      this.nodeUrl = 'http://127.0.0.1:22973'
-    }
+    this.nodeUrl = getNodeUrl(network)
     this.builder = TransactionBuilder.from(this.nodeUrl)
   }
 
@@ -82,9 +76,9 @@ export class FungibleToken {
   }
 
   async getAllBalances(tokens: string[], owner: string): Promise<Map<string, bigint>> {
-    const balancePromises = await Promise.all(tokens.map(token => this.balanceOf(owner, token)))
+    const balances = await Promise.all(tokens.map(token => this.balanceOf(owner, token)))
 
-    return new Map(tokens.map((token, i) => [token, balancePromises[i]]))
+    return new Map(tokens.map((token, i) => [token, balances[i]]))
   }
 
   async balanceOf(owner: string, tokenAddress: string): Promise<bigint> {
