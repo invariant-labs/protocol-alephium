@@ -1,3 +1,4 @@
+import { assert } from 'console'
 import {
   AddFeeTier,
   ChangeFeeReceiver,
@@ -14,7 +15,7 @@ import {
   WithdrawProtocolFee
 } from '../artifacts/ts'
 import { FeeTier, Pool, PoolKey, Position, QuoteResult, Tick } from '../artifacts/ts/types'
-import { calculateTick } from './math'
+import { calculateTick, getMaxTick, getMinTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -27,7 +28,8 @@ import {
   deployCLAMM,
   deployReserve,
   MAP_ENTRY_DEPOSIT,
-  waitTxConfirmed
+  waitTxConfirmed,
+  constructTickmap
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 
@@ -318,8 +320,13 @@ export class Invariant {
   // async getAllPoolKeys() {}
   // async swapWithSlippage() {}
   // async getPositionTicks() {}
-  // async getRawTickmap() {}
-  // async getFullTickmap() {}
+
+  async getFullTickmap(poolKey: PoolKey) {
+    const response = await this.instance.view.getFullTickmap({ args: { poolKey } })
+    console.log('Full tickmap gas used:', response.gasUsed)
+    console.log('Full tickmap:', response.returns)
+    constructTickmap(response.returns)
+  }
   // async getLiquidityTicks() {}
   // async getAllLiquidityTicks() {}
   // async getUserPositionAmount() {}

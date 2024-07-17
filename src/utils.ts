@@ -211,3 +211,19 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
     })
   ).returns
 }
+
+export const constructTickmap = async (string: string) => {
+  const parts = string.split('627265616b')
+  const chunks: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    const tick = {
+      chunk: decodeU256(parts[i]),
+      value: decodeU256(parts[i + 1])
+    }
+    chunks.push(tick)
+  }
+
+  console.table(chunks)
+  return chunks
+}
