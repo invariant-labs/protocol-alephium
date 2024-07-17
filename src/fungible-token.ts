@@ -1,7 +1,7 @@
 import { DUST_AMOUNT, hexToString, SignerProvider, TransactionBuilder } from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
-import { balanceOf, getNodeUrl, waitTxConfirmed } from './utils'
+import { balanceOf, getNodeUrl, signAndSend, waitTxConfirmed } from './utils'
 import { MaxU256 } from './consts'
 
 export type TokenMetadata = {
@@ -73,34 +73,30 @@ export class FungibleToken {
   }
 
   async mint(signer: SignerProvider, value: bigint, tokenAddress: string) {
-    const buildTxResult = await this.mintTx(signer, value, tokenAddress)
-    const signerAddress = (await signer.getSelectedAccount()).address
-    return await signer.signAndSubmitUnsignedTx({
-      signerAddress: signerAddress,
-      unsignedTx: buildTxResult.unsignedTx
-    })
+    const tx = await this.mintTx(signer, value, tokenAddress)
+    return await signAndSend(signer, tx)
   }
 
   async getAllBalances(tokens: string[], owner: string): Promise<Map<string, bigint>> {
-    const balances = await Promise.all(tokens.map(token => this.balanceOf(owner, token)))
+    const balances = await Promise.all(tokens.map(token => this.getBalanceOf(owner, token)))
 
     return new Map(tokens.map((token, i) => [token, balances[i]]))
   }
 
-  async balanceOf(owner: string, tokenAddress: string): Promise<bigint> {
+  async getBalanceOf(owner: string, tokenAddress: string): Promise<bigint> {
     const tokenId = this.getContractId(tokenAddress)
     return balanceOf(tokenId, owner)
   }
 
-  async tokenMetadataMulti(tokenAddresses: Array<string>): Promise<Map<string, TokenMetadata>> {
+  async getTokenMetadataMulti(tokenAddresses: Array<string>): Promise<Map<string, TokenMetadata>> {
     const metadata = await Promise.all(
-      tokenAddresses.map((tokenAddress, _) => this.tokenMetadata(tokenAddress))
+      tokenAddresses.map((tokenAddress, _) => this.getTokenMetadata(tokenAddress))
     )
 
     return new Map(tokenAddresses.map((tokenAddress, i) => [tokenAddress, metadata[i]]))
   }
 
-  async tokenMetadata(tokenAddress: string): Promise<TokenMetadata> {
+  async getTokenMetadata(tokenAddress: string): Promise<TokenMetadata> {
     const token = TokenFaucet.at(tokenAddress)
     const result = await token.multicall({ getSymbol: {}, getName: {}, getDecimals: {} })
     return {
@@ -110,17 +106,17 @@ export class FungibleToken {
     }
   }
 
-  async tokenName(tokenAddress: string): Promise<string> {
+  async getTokenName(tokenAddress: string): Promise<string> {
     const token = TokenFaucet.at(tokenAddress)
     return hexToString((await token.view.getName()).returns)
   }
 
-  async tokenSymbol(tokenAddress: string): Promise<string> {
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
     const token = TokenFaucet.at(tokenAddress)
     return hexToString((await token.view.getSymbol()).returns)
   }
 
-  async tokenDecimals(tokenAddress: string): Promise<bigint> {
+  async getTokenDecimals(tokenAddress: string): Promise<bigint> {
     const token = TokenFaucet.at(tokenAddress)
     return (await token.view.getDecimals()).returns
   }

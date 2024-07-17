@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Network } from '../src/network'
-import { FungibleToken } from '../src/fungible_token'
+import { FungibleToken } from '../src/fungible-token'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -17,19 +17,19 @@ describe('fungible token tests', () => {
   })
 
   test('should set metadata', async () => {
-    expect(await token.tokenName(token0Address)).toBe('Coin')
-    expect(await token.tokenSymbol(token0Address)).toBe('COIN')
-    expect(await token.tokenDecimals(token0Address)).toBe(12n)
+    expect(await token.getTokenName(token0Address)).toBe('Coin')
+    expect(await token.getTokenSymbol(token0Address)).toBe('COIN')
+    expect(await token.getTokenDecimals(token0Address)).toBe(12n)
   })
 
   test('should mint tokens', async () => {
     await token.mint(admin, 500n, token0Address)
-    expect(await token.balanceOf(admin.address, token0Address)).toBe(1500n)
+    expect(await token.getBalanceOf(admin.address, token0Address)).toBe(1500n)
   })
 
   test('should change instance', async () => {
     const secondTokenAddress = await FungibleToken.deploy(admin, 1000n, 'SecondCoin', 'SCOIN', 12n)
-    const tokenName = await token.tokenName(secondTokenAddress)
+    const tokenName = await token.getTokenName(secondTokenAddress)
     expect(tokenName).toBe('SecondCoin')
   })
 
@@ -63,7 +63,7 @@ describe('fungible token tests', () => {
       await FungibleToken.deploy(admin, 0n, 'CoinTHREE', 'COIN3', 14n),
       await FungibleToken.deploy(admin, 0n, 'CoinFOUR', 'COIN4', 15n)
     ]
-    const metadata = await token.tokenMetadataMulti(tokenAddresses)
+    const metadata = await token.getTokenMetadataMulti(tokenAddresses)
 
     expect(metadata.size).toBe(4)
     expect(metadata.get(tokenAddresses[0])).toMatchObject({

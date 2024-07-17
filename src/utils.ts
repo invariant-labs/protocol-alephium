@@ -5,7 +5,8 @@ import {
   SignerProvider,
   ZERO_ADDRESS,
   node,
-  web3
+  web3,
+  SignExecuteScriptTxResult
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
@@ -45,15 +46,6 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   const result = await promise
   await _waitTxConfirmed(web3.getCurrentNodeProvider(), result.txId, 1)
   return result
-}
-
-export function getNodeUrl(network: Network) {
-  if (network === Network.Local || network === Network.Devnet) {
-    return 'http://127.0.0.1:22973'
-  } else {
-    // we don't have this yet
-    return 'http://127.0.0.1:22973'
-  }
 }
 
 export async function deployInvariant(
@@ -220,4 +212,25 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
       }
     })
   ).returns
+}
+
+export function getNodeUrl(network: Network) {
+  if (network === Network.Local || network === Network.Devnet) {
+    return 'http://127.0.0.1:22973'
+  } else {
+    // we don't have this yet
+    return 'http://127.0.0.1:22973'
+  }
+}
+
+export const signAndSend = async (
+  signer: SignerProvider,
+  tx: Omit<SignExecuteScriptTxResult, 'signature'>
+): Promise<string> => {
+  const { address } = await signer.getSelectedAccount()
+  const { txId } = await signer.signAndSubmitUnsignedTx({
+    signerAddress: address,
+    unsignedTx: tx.unsignedTx
+  })
+  return txId
 }
