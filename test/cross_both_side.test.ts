@@ -10,11 +10,10 @@ import {
   initFeeTier,
   initPosition,
   initSwap,
-  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
 import { InvariantError, MaxSqrtPrice, MinSqrtPrice } from '../src/consts'
-import { calculateSqrtPrice } from '../src/math'
+import { calculateSqrtPrice, toLiquidity } from '../src/math'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')

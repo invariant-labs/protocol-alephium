@@ -14,7 +14,7 @@ import {
   WithdrawProtocolFee
 } from '../artifacts/ts'
 import { FeeTier, Pool, PoolKey, Position, QuoteResult, Tick } from '../artifacts/ts/types'
-import { calculateTick } from './math'
+import { calculateSqrtPriceAfterSlippage, calculateTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -36,7 +36,6 @@ import {
   Address,
   ALPH_TOKEN_ID,
   DUST_AMOUNT,
-  ONE_ALPH,
   SignerProvider,
   TransactionBuilder
 } from '@alephium/web3'
@@ -390,6 +389,52 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async swapWithSlippageTx(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    xToY: boolean,
+    amount: bigint,
+    byAmountIn: boolean,
+    estimatedSqrtPrice: bigint,
+    slippage: bigint
+  ) {
+    const sqrtPriceAfterSlippage = calculateSqrtPriceAfterSlippage(
+      estimatedSqrtPrice,
+      slippage,
+      !xToY
+    )
+
+    return this.swapTx(
+      signer,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n
+    )
+  }
+
+  async swapWithSlippage(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    xToY: boolean,
+    amount: bigint,
+    byAmountIn: boolean,
+    estimatedSqrtPrice: bigint,
+    slippage: bigint
+  ): Promise<string> {
+    const tx = await this.swapWithSlippageTx(
+      signer,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      estimatedSqrtPrice,
+      slippage
+    )
+    return await signAndSend(signer, tx)
+  }
+
   async feeTierExist(feeTier: FeeTier): Promise<boolean> {
     return (await this.instance.view.feeTierExist({ args: { feeTier } })).returns
   }
@@ -449,7 +494,7 @@ export class Invariant {
   async getAllPoolKeys() {
     return decodePoolKeys((await this.instance.view.getAllPoolKeys()).returns)
   }
-  // async swapWithSlippage() {}
+
   // async getPositionTicks() {}
   // async getRawTickmap() {}
   // async getFullTickmap() {}

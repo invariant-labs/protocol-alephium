@@ -10,10 +10,9 @@ import {
   initPool,
   initPosition,
   initTokensXY,
-  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
-import { calculateSqrtPrice } from '../src/math'
+import { calculateSqrtPrice, toLiquidity } from '../src/math'
 import { InvariantError } from '../src/consts'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 

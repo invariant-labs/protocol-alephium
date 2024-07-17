@@ -9,14 +9,13 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  toLiquidity,
   transferPosition,
   verifyPositionList,
   withdrawTokens
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { calculateSqrtPrice } from './math'
+import { calculateSqrtPrice, toLiquidity } from './math'
 
 type TokenInstance = TokenFaucetInstance
 
