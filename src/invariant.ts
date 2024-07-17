@@ -30,7 +30,7 @@ import {
   decodePools,
   decodePoolKeys
 } from './utils'
-import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import { Address, ALPH_TOKEN_ID, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 
 export class Invariant {
   instance: InvariantInstance
@@ -128,7 +128,8 @@ export class Invariant {
         initialFields: {
           invariant: this.instance.contractId,
           poolKey
-        }
+        },
+        attoAlphAmount: DUST_AMOUNT
       })
     )
     return txId
@@ -172,6 +173,15 @@ export class Invariant {
     slippageLimitLower: bigint,
     slippageLimitUpper: bigint
   ): Promise<string> {
+    let attoAlphAmount = MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
+    const tokens = [
+      { id: poolKey.tokenX, amount: approvedTokensX },
+      { id: poolKey.tokenY, amount: approvedTokensY }
+    ]
+    if (poolKey.tokenX === ALPH_TOKEN_ID) {
+      attoAlphAmount += approvedTokensX
+      tokens.shift()
+    }
     const { txId } = await waitTxConfirmed(
       CreatePosition.execute(signer, {
         initialFields: {
@@ -183,11 +193,8 @@ export class Invariant {
           slippageLimitLower,
           slippageLimitUpper
         },
-        tokens: [
-          { id: poolKey.tokenX, amount: approvedTokensX },
-          { id: poolKey.tokenY, amount: approvedTokensY }
-        ],
-        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
+        tokens,
+        attoAlphAmount
       })
     )
 
