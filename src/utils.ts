@@ -7,7 +7,8 @@ import {
   node,
   web3,
   bs58,
-  hexToBinUnsafe
+  hexToBinUnsafe,
+  ALPH_TOKEN_ID
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
@@ -115,6 +116,9 @@ export async function deployTokenFaucet(
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
+  if (tokenId == ALPH_TOKEN_ID) {
+    return BigInt(balances.balance)
+  }
   const balance = balances.tokenBalances?.find(t => t.id === tokenId)
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
