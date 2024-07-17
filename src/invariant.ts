@@ -332,7 +332,7 @@ export class Invariant {
       args: { poolKey, lowerTickIndex, upperTickIndex, xToY }
     })
 
-    console.log('Gas used for query:', response.gasUsed)
+    // console.log('Gas used for query:', response.gasUsed)
     return constructTickmap(response.returns)
   }
   async getFullTickmapLegacy(poolKey: PoolKey) {
@@ -362,36 +362,29 @@ export class Invariant {
       lowerTick = upperTick + tickSpacing
     }
 
-    console.log(promises.length)
     const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
-    // console.log(fullResult)
     const storedTickmap = new Map<bigint, bigint>(fullResult)
-    // console.log(storedTickmap)
     return { bitmap: storedTickmap }
   }
 
   async getFullTickmap(poolKey: PoolKey) {
     const promises: Promise<[bigint, bigint][]>[] = []
     const tickSpacing = poolKey.feeTier.tickSpacing
-    const mintTick = await getMinTick(tickSpacing)
+    const minTick = await getMinTick(tickSpacing)
     const maxTick = await getMaxTick(tickSpacing)
-    const maxBatch = (-mintTick + maxTick + 1n) / (ChunkSize * ChunksPerBatch)
+    const maxBatch = (-minTick + maxTick + 1n) / (ChunkSize * ChunksPerBatch)
 
     for (let i = 0n; i <= maxBatch; i++) {
       promises.push(this.getBatch(poolKey, i))
     }
 
-    console.log(promises.length)
     const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
     const storedTickmap = new Map<bigint, bigint>(fullResult)
-    console.log(storedTickmap)
     return { bitmap: storedTickmap }
   }
 
   async getBatch(poolKey: PoolKey, index: bigint): Promise<[bigint, bigint][]> {
     const response = await this.instance.view.getSingleBatch({ args: { poolKey, index } })
-    console.log('Gas Used:', response.gasUsed)
-    console.log(response.returns)
     const parts = response.returns.split('627265616b')
     const batches: any[] = []
 

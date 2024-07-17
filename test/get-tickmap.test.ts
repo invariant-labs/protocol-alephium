@@ -9,6 +9,8 @@ import { initTokensXY, toLiquidity, withdrawTokens } from '../src/testUtils'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { GlobalMaxTick, GlobalMinTick } from '../src'
+import { ChunkSize, ChunksPerBatch } from '../src/consts'
+import { before } from 'node:test'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -20,6 +22,7 @@ describe('init invariant test', () => {
   const supply = 10n ** 10n
   const lowerTickIndex = GlobalMinTick
   const upperTickIndex = GlobalMaxTick
+  const ticks = [-221818n, -221817n, -58n, 5n, 221817n, 221818n]
   let invariant: Invariant
   let deployer: PrivateKeyWallet
   let positionOwner: PrivateKeyWallet
@@ -28,7 +31,7 @@ describe('init invariant test', () => {
   let feeTier: FeeTier
   let poolKey: PoolKey
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
@@ -44,9 +47,25 @@ describe('init invariant test', () => {
       initSqrtPrice
     )
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
+    // const { sqrtPrice } = await invariant.getPool(poolKey)
+    // const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
+    // const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
+    // await invariant.createPosition(
+    //   positionOwner,
+    //   poolKey,
+    //   ticks[2],
+    //   ticks[3],
+    //   10n,
+    //   approveX,
+    //   approveY,
+    //   sqrtPrice,
+    //   sqrtPrice
+    // )
+  })
 
+  test('get tickmap slice', async () => {
     const liquidityDelta = toLiquidity(10n)
-    const pool = await invariant.getPool(poolKey)
+    const { sqrtPrice } = await invariant.getPool(poolKey)
     await invariant.createPosition(
       positionOwner,
       poolKey,
@@ -55,13 +74,10 @@ describe('init invariant test', () => {
       liquidityDelta,
       supply,
       supply,
-      pool.sqrtPrice,
-      pool.sqrtPrice
+      sqrtPrice,
+      sqrtPrice
     )
-  })
-
-  test('Initialize all batches', async () => {
-    const batchSize = 94n * 256n
+    const batchSize = ChunkSize * ChunksPerBatch
     const pool = await invariant.getPool(poolKey)
     for (let i = GlobalMinTick; i <= GlobalMaxTick; i += batchSize) {
       const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -78,15 +94,20 @@ describe('init invariant test', () => {
         pool.sqrtPrice
       )
     }
-  }, 10000000)
-  test('get tickmap slice', async () => {
+
+    {
+      await invariant.getFullTickmap(poolKey)
+    }
+    {
+      await invariant.getFullTickmapLegacy(poolKey)
+    }
+  }, 1000000)
+
+  test('get tickmap', async () => {
     const tickmap = await invariant.getFullTickmap(poolKey)
-    console.log(tickmap)
-  })
-  test('get single batch', async () => {
-    // for (let i = 0n; i <= 18n; i++) {
-    //   const batch = await invariant.getBatch(poolKey, i)
-    //   console.log(batch)
-    // }
+    console.log(tickmap.bitmap)
+    console.log(tickmap.bitmap.get(0n))
+    console.log(tickmap.bitmap.get(866n))
+    expect(tickmap.bitmap.get(0n)).toBe(3n)
   })
 })

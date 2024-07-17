@@ -547,56 +547,18 @@ Contract Invariant(
         let startBatch = startChunk / ChunksPerBatch
         let endBatch = endChunk / ChunksPerBatch
 
-        emit Debug(`START CHUNK ${startChunk} END CHUNK ${endChunk} START BATCH ${startBatch} END BATCH ${endBatch}`)
+        // emit Debug(`START CHUNK ${startChunk} END CHUNK ${endChunk} START BATCH ${startBatch} END BATCH ${endBatch}`)
 
         let mut slice = #
         if (xToY) {
             for(let mut batchIndex = startBatch; batchIndex < endBatch; batchIndex = batchIndex + 1) {
-                let mut key = poolKeyBytes(poolKey) ++ toByteVec!(batchIndex)
-                emit Debug(`IS BATCH IN TICKMAP ${batchIndex} ${bitmap.contains!(key)}`) 
-                if (bitmap.contains!(key)) {
-                    emit Debug(`${batchIndex} EXISTS`)
-                    let mut batch = bitmap[key]
-                    for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
-                        let mut offset = batchIndex * ChunksPerBatch + i
-                        slice = slice ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
-                    }
-                }
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
             }
         } else {
             for(batchIndex = endBatch; batchIndex > startBatch; batchIndex = batchIndex - 1) {
-                key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(batchIndex))
-                if (bitmap.contains!(key)) {
-                    batch = bitmap[key]
-                    for (i = 0; i < ChunksPerBatch; i = i + 1) {
-                        offset = batchIndex * ChunksPerBatch + i
-                        slice = slice ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
-                    }
-                }
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
             }
         }
         return slice
     }
-
-    pub fn getFullTickmap(poolKey: PoolKey) -> ByteVec {
-        let tickSpacing = poolKey.feeTier.tickSpacing
-        let maxBatches = getMaxChunk(tickSpacing) / ChunksPerBatch
-        emit Debug(`MAX Batchess ${maxBatches}`)
-        let keyBytes = poolKeyBytes(poolKey)
-        let mut tickmapVec = #
-        for(let mut chunkIndex = 0; chunkIndex < maxBatches; chunkIndex = chunkIndex + 1) {
-            emit Debug(`BATCH INDEX ${chunkIndex}`)
-            let key = keyBytes ++ toByteVec!(getKey(chunkIndex))
-            emit Debug(`IS BATCH IN TICKMAP ${bitmap.contains!(key)}`)
-            if (bitmap.contains!(key)) {
-                let batch = bitmap[key]
-                for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
-                    emit Debug(`CHUNK ${i}`)
-                    tickmapVec = tickmapVec ++ toByteVec!(i) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
-                }
-            }
-        }
-        return tickmapVec
-    }
-
 }
