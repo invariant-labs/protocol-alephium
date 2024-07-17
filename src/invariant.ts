@@ -32,7 +32,14 @@ import {
   getNodeUrl,
   signAndSend
 } from './utils'
-import { Address, DUST_AMOUNT, SignerProvider, TransactionBuilder } from '@alephium/web3'
+import {
+  Address,
+  ALPH_TOKEN_ID,
+  DUST_AMOUNT,
+  ONE_ALPH,
+  SignerProvider,
+  TransactionBuilder
+} from '@alephium/web3'
 
 export class Invariant {
   instance: InvariantInstance
@@ -226,15 +233,22 @@ export class Invariant {
       slippageLimitUpper
     })
     const { address, publicKey } = await signer.getSelectedAccount()
+    let attoAlphAmount = MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
+    const tokens = [
+      { id: poolKey.tokenX, amount: approvedTokensX },
+      { id: poolKey.tokenY, amount: approvedTokensY }
+    ]
+    if (poolKey.tokenX === ALPH_TOKEN_ID) {
+      attoAlphAmount += approvedTokensX + DUST_AMOUNT
+      tokens.shift()
+    }
+
     const tx = await this.builder.buildExecuteScriptTx(
       {
         signerAddress: address,
         bytecode: txBytecode,
-        attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n,
-        tokens: [
-          { id: poolKey.tokenX, amount: approvedTokensX },
-          { id: poolKey.tokenY, amount: approvedTokensY }
-        ]
+        attoAlphAmount,
+        tokens
       },
       publicKey
     )
@@ -310,7 +324,7 @@ export class Invariant {
     })
     const { address, publicKey } = await signer.getSelectedAccount()
     const tx = await this.builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
+      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n },
       publicKey
     )
     return tx
