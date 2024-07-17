@@ -83,4 +83,10 @@ describe('init invariant test', () => {
     const tickmap = await invariant.getFullTickmap(poolKey)
     console.log(tickmap)
   })
+  test('get single batch', async () => {
+    // for (let i = 0n; i <= 18n; i++) {
+    //   const batch = await invariant.getBatch(poolKey, i)
+    //   console.log(batch)
+    // }
+  })
 })

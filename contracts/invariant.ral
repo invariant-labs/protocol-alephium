@@ -526,6 +526,20 @@ Contract Invariant(
         }
     }
 
+    pub fn getSingleBatch(poolKey: PoolKey, index: U256) -> ByteVec {
+        let mut batch = #
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(index))
+        emit Debug(`Batch at Index ${index} is added: ${bitmap.contains!(key)}`)
+        if (bitmap.contains!(key)) {
+            let tickmapBatch = bitmap[key]
+            for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
+                let offset = index * ChunksPerBatch + i
+                batch = batch ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(tickmapBatch.chunks[i]) ++ b`break`
+            }
+        }
+        return batch
+    }
+
 
     pub fn getTickmapSlice(poolKey: PoolKey, lowerTickIndex: I256, upperTickIndex: I256, xToY: Bool) -> ByteVec {
         let tickSpacing = poolKey.feeTier.tickSpacing
@@ -539,12 +553,13 @@ Contract Invariant(
         if (xToY) {
             for(let mut batchIndex = startBatch; batchIndex < endBatch; batchIndex = batchIndex + 1) {
                 let mut key = poolKeyBytes(poolKey) ++ toByteVec!(batchIndex)
-                emit Debug(`IS BATCH IN TICKMAP ${bitmap.contains!(key)}`) 
+                emit Debug(`IS BATCH IN TICKMAP ${batchIndex} ${bitmap.contains!(key)}`) 
                 if (bitmap.contains!(key)) {
                     emit Debug(`${batchIndex} EXISTS`)
                     let mut batch = bitmap[key]
                     for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
-                        slice = slice ++ toByteVec!(i) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
+                        let mut offset = batchIndex * ChunksPerBatch + i
+                        slice = slice ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
                     }
                 }
             }
@@ -554,7 +569,8 @@ Contract Invariant(
                 if (bitmap.contains!(key)) {
                     batch = bitmap[key]
                     for (i = 0; i < ChunksPerBatch; i = i + 1) {
-                        slice = slice ++ toByteVec!(i) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
+                        offset = batchIndex * ChunksPerBatch + i
+                        slice = slice ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(batch.chunks[i]) ++ b`break`
                     }
                 }
             }

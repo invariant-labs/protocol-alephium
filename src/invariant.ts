@@ -29,7 +29,8 @@ import {
   deployReserve,
   MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
-  constructTickmap
+  constructTickmap,
+  decodeU256
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import { ChunkSize, ChunksPerBatch } from './consts'
@@ -334,7 +335,7 @@ export class Invariant {
     console.log('Gas used for query:', response.gasUsed)
     return constructTickmap(response.returns)
   }
-  async getFullTickmap(poolKey: PoolKey) {
+  async getFullTickmapLegacy(poolKey: PoolKey) {
     const promises: Promise<[bigint, bigint][]>[] = []
     const tickSpacing = poolKey.feeTier.tickSpacing
     let lowerTick = await getMinTick(tickSpacing)
@@ -367,6 +368,38 @@ export class Invariant {
     const storedTickmap = new Map<bigint, bigint>(fullResult)
     // console.log(storedTickmap)
     return { bitmap: storedTickmap }
+  }
+
+  async getFullTickmap(poolKey: PoolKey) {
+    const promises: Promise<[bigint, bigint][]>[] = []
+    const tickSpacing = poolKey.feeTier.tickSpacing
+    const mintTick = await getMinTick(tickSpacing)
+    const maxTick = await getMaxTick(tickSpacing)
+    const maxBatch = (-mintTick + maxTick + 1n) / (ChunkSize * ChunksPerBatch)
+
+    for (let i = 0n; i <= maxBatch; i++) {
+      promises.push(this.getBatch(poolKey, i))
+    }
+
+    console.log(promises.length)
+    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
+    const storedTickmap = new Map<bigint, bigint>(fullResult)
+    console.log(storedTickmap)
+    return { bitmap: storedTickmap }
+  }
+
+  async getBatch(poolKey: PoolKey, index: bigint): Promise<[bigint, bigint][]> {
+    const response = await this.instance.view.getSingleBatch({ args: { poolKey, index } })
+    console.log('Gas Used:', response.gasUsed)
+    console.log(response.returns)
+    const parts = response.returns.split('627265616b')
+    const batches: any[] = []
+
+    for (let i = 0; i < parts.length - 1; i += 2) {
+      batches.push([decodeU256(parts[i]), decodeU256(parts[i + 1])])
+    }
+
+    return batches
   }
   // async getLiquidityTicks() {}
   // async getAllLiquidityTicks() {}
