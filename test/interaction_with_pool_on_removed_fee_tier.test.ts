@@ -14,7 +14,6 @@ import {
   initPosition,
   initSwap,
   removePosition,
-  getPools,
   getPosition,
   expectError,
   getReserveBalances,
@@ -189,10 +188,6 @@ describe('interaction with pool on removed fee tiers tests', () => {
   })
   test('get pool', async () => {
     await getPool(invariant, poolKey)
-  })
-  test('get pools', async () => {
-    const pools = await getPools(invariant)
-    expect(pools.length).toBe(1)
   })
   test('transfer position', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)

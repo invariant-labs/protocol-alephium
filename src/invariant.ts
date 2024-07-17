@@ -19,7 +19,6 @@ import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
   balanceOf,
-  decodeFeeTiers,
   decodePool,
   decodePosition,
   decodeTick,
@@ -27,7 +26,9 @@ import {
   deployCLAMM,
   deployReserve,
   MAP_ENTRY_DEPOSIT,
-  waitTxConfirmed
+  waitTxConfirmed,
+  decodePools,
+  decodePoolKeys
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 
@@ -315,7 +316,9 @@ export class Invariant {
   // async getPositions() {}
   // async getAllPositions() {}
   // async getPoolKeys() {}
-  // async getAllPoolKeys() {}
+  async getAllPoolKeys() {
+    return decodePoolKeys((await this.instance.view.getAllPoolKeys()).returns)
+  }
   // async swapWithSlippage() {}
   // async getPositionTicks() {}
   // async getRawTickmap() {}
@@ -324,5 +327,13 @@ export class Invariant {
   // async getAllLiquidityTicks() {}
   // async getUserPositionAmount() {}
   // async getLiquidityTicksAmount() {}
-  // async getAllPoolsForPair() {}
+  async getAllPoolsForPair(token0Id: string, token1Id: string) {
+    return decodePools(
+      (
+        await this.instance.view.getAllPoolsForPair({
+          args: { token0: token0Id, token1: token1Id }
+        })
+      ).returns
+    )
+  }
 }
