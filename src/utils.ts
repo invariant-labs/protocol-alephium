@@ -258,7 +258,6 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
     })
   ).returns
 }
-
 export function getNodeUrl(network: Network) {
   if (network === Network.Local || network === Network.Devnet) {
     return 'http://127.0.0.1:22973'
