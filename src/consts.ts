@@ -14,7 +14,9 @@ export const {
   // MinSqrtPrice,
   MaxFeeTiers,
   SearchRange,
-  InvariantError
+  InvariantError,
+  ChunksPerBatch,
+  ChunkSize
 } = Invariant.consts
 
 export const { CLAMMError, DecimalError, WordSize, ArithmeticError } = CLAMM.consts

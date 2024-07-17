@@ -258,6 +258,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                 ] 
             }
             bitmap.insert!(originalCaller, id, batch)
+            emit Debug(`INITALIZING CHUNK AT INDEX ${chunk} BATCH KEY INDEX ${getKey(chunk)} ALERDY EXIST ${bitmap.contains!(id)}`)
         }
     }
 

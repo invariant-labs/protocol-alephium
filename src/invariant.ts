@@ -32,6 +32,7 @@ import {
   constructTickmap
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
+import { ChunkSize, ChunksPerBatch } from './consts'
 
 export class Invariant {
   instance: InvariantInstance
@@ -320,12 +321,52 @@ export class Invariant {
   // async getAllPoolKeys() {}
   // async swapWithSlippage() {}
   // async getPositionTicks() {}
+  async getRawTickmap(
+    poolKey: PoolKey,
+    lowerTickIndex: bigint,
+    upperTickIndex: bigint,
+    xToY: boolean
+  ): Promise<[bigint, bigint][]> {
+    const response = await this.instance.view.getTickmapSlice({
+      args: { poolKey, lowerTickIndex, upperTickIndex, xToY }
+    })
 
+    console.log('Gas used for query:', response.gasUsed)
+    return constructTickmap(response.returns)
+  }
   async getFullTickmap(poolKey: PoolKey) {
-    const response = await this.instance.view.getFullTickmap({ args: { poolKey } })
-    console.log('Full tickmap gas used:', response.gasUsed)
-    console.log('Full tickmap:', response.returns)
-    constructTickmap(response.returns)
+    const promises: Promise<[bigint, bigint][]>[] = []
+    const tickSpacing = poolKey.feeTier.tickSpacing
+    let lowerTick = await getMinTick(tickSpacing)
+    const maxTick = await getMaxTick(tickSpacing)
+    const jump = 4n * ChunkSize * ChunksPerBatch
+    while (lowerTick <= maxTick) {
+      let nextTick = lowerTick + jump
+      const remainder = nextTick % tickSpacing
+
+      if (remainder > 0) {
+        nextTick += tickSpacing - remainder
+      } else if (remainder < 0) {
+        nextTick -= remainder
+      }
+
+      let upperTick = nextTick
+
+      if (upperTick > maxTick) {
+        upperTick = maxTick
+      }
+
+      promises.push(this.getRawTickmap(poolKey, lowerTick, upperTick, true))
+
+      lowerTick = upperTick + tickSpacing
+    }
+
+    console.log(promises.length)
+    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
+    // console.log(fullResult)
+    const storedTickmap = new Map<bigint, bigint>(fullResult)
+    // console.log(storedTickmap)
+    return { bitmap: storedTickmap }
   }
   // async getLiquidityTicks() {}
   // async getAllLiquidityTicks() {}

@@ -81,5 +81,6 @@ describe('init invariant test', () => {
   }, 10000000)
   test('get tickmap slice', async () => {
     const tickmap = await invariant.getFullTickmap(poolKey)
+    console.log(tickmap)
   })
 })
