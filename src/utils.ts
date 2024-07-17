@@ -7,12 +7,14 @@ import {
   node,
   web3,
   bs58,
-  hexToBinUnsafe
+  hexToBinUnsafe,
+  SignExecuteScriptTxResult
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { MaxFeeTiers } from './consts'
+import { Network } from './network'
 
 const BREAK_BYTES = '627265616b'
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
@@ -251,4 +253,24 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
       }
     })
   ).returns
+}
+export function getNodeUrl(network: Network) {
+  if (network === Network.Local || network === Network.Devnet) {
+    return 'http://127.0.0.1:22973'
+  } else {
+    // we don't have this yet
+    return 'http://127.0.0.1:22973'
+  }
+}
+
+export const signAndSend = async (
+  signer: SignerProvider,
+  tx: Omit<SignExecuteScriptTxResult, 'signature'>
+): Promise<string> => {
+  const { address } = await signer.getSelectedAccount()
+  const { txId } = await signer.signAndSubmitUnsignedTx({
+    signerAddress: address,
+    unsignedTx: tx.unsignedTx
+  })
+  return txId
 }
