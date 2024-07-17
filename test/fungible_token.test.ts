@@ -2,9 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Network } from '../src/network'
 import { FungibleToken } from '../src/fungible_token'
-import { balanceOf } from '../src/utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { TokenFaucet } from '../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -56,5 +54,37 @@ describe('fungible token tests', () => {
     expect(balances.get(token1Address)).toBe(200n)
     expect(balances.get(token2Address)).toBe(300n)
     expect(balances.get(token3Address)).toBe(400n)
+  })
+
+  test('should get metadata for all tokens', async () => {
+    const tokenAddresses = [
+      await FungibleToken.deploy(admin, 0n, 'CoinONE', 'COIN1', 12n),
+      await FungibleToken.deploy(admin, 0n, 'CoinTWO', 'COIN2', 13n),
+      await FungibleToken.deploy(admin, 0n, 'CoinTHREE', 'COIN3', 14n),
+      await FungibleToken.deploy(admin, 0n, 'CoinFOUR', 'COIN4', 15n)
+    ]
+    const metadata = await token.tokenMetadataMulti(tokenAddresses)
+
+    expect(metadata.size).toBe(4)
+    expect(metadata.get(tokenAddresses[0])).toMatchObject({
+      name: 'CoinONE',
+      symbol: 'COIN1',
+      decimals: 12n
+    })
+    expect(metadata.get(tokenAddresses[1])).toMatchObject({
+      name: 'CoinTWO',
+      symbol: 'COIN2',
+      decimals: 13n
+    })
+    expect(metadata.get(tokenAddresses[2])).toMatchObject({
+      name: 'CoinTHREE',
+      symbol: 'COIN3',
+      decimals: 14n
+    })
+    expect(metadata.get(tokenAddresses[3])).toMatchObject({
+      name: 'CoinFOUR',
+      symbol: 'COIN4',
+      decimals: 15n
+    })
   })
 })

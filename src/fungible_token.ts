@@ -1,8 +1,14 @@
-import { DUST_AMOUNT, SignerProvider, TransactionBuilder } from '@alephium/web3'
+import { DUST_AMOUNT, hexToString, SignerProvider, TransactionBuilder } from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, getNodeUrl, waitTxConfirmed } from './utils'
 import { MaxU256 } from './consts'
+
+export type TokenMetadata = {
+  name: string
+  symbol: string
+  decimals: bigint
+}
 
 export class FungibleToken {
   network: Network
@@ -86,14 +92,32 @@ export class FungibleToken {
     return balanceOf(tokenId, owner)
   }
 
+  async tokenMetadataMulti(tokenAddresses: Array<string>): Promise<Map<string, TokenMetadata>> {
+    const metadata = await Promise.all(
+      tokenAddresses.map((tokenAddress, _) => this.tokenMetadata(tokenAddress))
+    )
+
+    return new Map(tokenAddresses.map((tokenAddress, i) => [tokenAddress, metadata[i]]))
+  }
+
+  async tokenMetadata(tokenAddress: string): Promise<TokenMetadata> {
+    const token = TokenFaucet.at(tokenAddress)
+    const result = await token.multicall({ getSymbol: {}, getName: {}, getDecimals: {} })
+    return {
+      name: hexToString(result.getName.returns),
+      symbol: hexToString(result.getSymbol.returns),
+      decimals: result.getDecimals.returns
+    }
+  }
+
   async tokenName(tokenAddress: string): Promise<string> {
     const token = TokenFaucet.at(tokenAddress)
-    return Buffer.from((await token.view.getName()).returns, 'hex').toString('utf8')
+    return hexToString((await token.view.getName()).returns)
   }
 
   async tokenSymbol(tokenAddress: string): Promise<string> {
     const token = TokenFaucet.at(tokenAddress)
-    return Buffer.from((await token.view.getSymbol()).returns, 'hex').toString('utf8')
+    return hexToString((await token.view.getSymbol()).returns)
   }
 
   async tokenDecimals(tokenAddress: string): Promise<bigint> {
