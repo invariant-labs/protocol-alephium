@@ -1,7 +1,7 @@
 struct Pool {
     mut poolKey: PoolKey,
     mut liquidity: U256,
-    mut sqrtPrice: U256,
+    mut sqrtPrice: SqrtPrice,
     mut currentTickIndex: I256,
     mut feeGrowthGlobalX: U256,
     mut feeGrowthGlobalY: U256,
@@ -55,8 +55,8 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
     @using(checkExternalCaller = false)
     pub fn poolUpdateTick(
         mut pool: Pool,
-        nextSqrtPrice: U256,
-        swapLimit: U256,
+        nextSqrtPrice: SqrtPrice,
+        swapLimit: SqrtPrice,
         mut remainingAmount: U256,
         byAmountIn: Bool,
         xToY: Bool,
@@ -68,7 +68,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         let mut hasCrossed = false
         let mut totalAmount = 0
 
-        if (!hasLimitingTick || swapLimit != nextSqrtPrice) {
+        if (!hasLimitingTick || swapLimit.v != nextSqrtPrice.v) {
             pool.currentTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, pool.poolKey.feeTier.tickSpacing)
             return totalAmount, remainingAmount, hasCrossed, pool
         }

@@ -51,7 +51,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         // PositionNotFound = 27
     }
 
-    pub fn getLiquidityByX(x: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: U256, roundingUp: Bool) -> SingleTokenLiquidity {
+    pub fn getLiquidityByX(x: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> SingleTokenLiquidity {
         assert!(lowerTick >= GlobalMinTick && upperTick <= GlobalMaxTick, UtilsError.InvalidTickIndex)
         let lowerSqrtPrice = calculateSqrtPrice(lowerTick)
         let upperSqrtPrice = calculateSqrtPrice(upperTick)
@@ -59,23 +59,23 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         return getLiquidityByXSqrtPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
     }
 
-    pub fn getLiquidityByXSqrtPrice(x: U256, lowerSqrtPrice: U256, upperSqrtPrice: U256, currentSqrtPrice: U256, roundingUp: Bool) -> SingleTokenLiquidity {
-        assert!(upperSqrtPrice >= currentSqrtPrice, UtilsError.UpperLTCurrentSqrtPrice)
+    pub fn getLiquidityByXSqrtPrice(x: U256, lowerSqrtPrice: SqrtPrice, upperSqrtPrice: SqrtPrice, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> SingleTokenLiquidity {
+        assert!(upperSqrtPrice.v >= currentSqrtPrice.v, UtilsError.UpperLTCurrentSqrtPrice)
 
         let mut nominator = U512 { higher: 0, lower: 0}
         let mut denominator = 0
         let mut liquidity = 0
-        if (currentSqrtPrice < lowerSqrtPrice) {
-            nominator = bigMulDiv256(lowerSqrtPrice, upperSqrtPrice, one(SqrtPriceScale))
-            denominator = upperSqrtPrice - lowerSqrtPrice
+        if (currentSqrtPrice.v < lowerSqrtPrice.v) {
+            nominator = bigMulDiv256(lowerSqrtPrice.v, upperSqrtPrice.v, one(SqrtPriceScale))
+            denominator = upperSqrtPrice.v - lowerSqrtPrice.v
             liquidity = toU256(bigDiv(bigMul(bigMul(nominator,x), one(LiquidityScale)), denominator, 1))
             return SingleTokenLiquidity { l: liquidity, amount: 0 }
         }
 
-        nominator = bigMulDiv256(currentSqrtPrice, upperSqrtPrice, one(SqrtPriceScale))
-        denominator = upperSqrtPrice - currentSqrtPrice
+        nominator = bigMulDiv256(currentSqrtPrice.v, upperSqrtPrice.v, one(SqrtPriceScale))
+        denominator = upperSqrtPrice.v - currentSqrtPrice.v
         liquidity = toU256(bigDiv(bigMul(bigMul(nominator,x), one(LiquidityScale)), denominator, 1))
-        let sqrtPriceDiff = currentSqrtPrice - lowerSqrtPrice
+        let sqrtPriceDiff = currentSqrtPrice.v - lowerSqrtPrice.v
         let y = calculateY(sqrtPriceDiff, liquidity, roundingUp)
         return SingleTokenLiquidity { l: liquidity, amount: y }
     }
@@ -89,7 +89,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         }
     }
 
-    pub fn getLiquidityByY(y: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: U256, roundingUp: Bool) -> SingleTokenLiquidity {
+    pub fn getLiquidityByY(y: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> SingleTokenLiquidity {
         assert!(lowerTick >= GlobalMinTick && upperTick <= GlobalMaxTick, UtilsError.InvalidTickIndex)
         let lowerSqrtPrice = calculateSqrtPrice(lowerTick)
         let upperSqrtPrice = calculateSqrtPrice(upperTick)
@@ -97,22 +97,22 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         return getLiquidityByYSqrtPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
     }
 
-    pub fn getLiquidityByYSqrtPrice(y: U256, lowerSqrtPrice: U256, upperSqrtPrice: U256, currentSqrtPrice: U256, roundingUp: Bool) -> SingleTokenLiquidity {
-        assert!(currentSqrtPrice >= lowerSqrtPrice, UtilsError.CurrentLTLowerSqrtPrice)
+    pub fn getLiquidityByYSqrtPrice(y: U256, lowerSqrtPrice: SqrtPrice, upperSqrtPrice: SqrtPrice, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> SingleTokenLiquidity {
+        assert!(currentSqrtPrice.v >= lowerSqrtPrice.v, UtilsError.CurrentLTLowerSqrtPrice)
 
         let mut sqrtPriceDiff = 0
         let mut liquidity = 0
 
-        if (upperSqrtPrice <= currentSqrtPrice) {
-            sqrtPriceDiff = upperSqrtPrice - lowerSqrtPrice
+        if (upperSqrtPrice.v <= currentSqrtPrice.v) {
+            sqrtPriceDiff = upperSqrtPrice.v - lowerSqrtPrice.v
             liquidity = toU256(bigDiv(bigMul(bigMul256(y, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff, 1))
             return SingleTokenLiquidity { l: liquidity, amount: 0 }
         }
 
-        sqrtPriceDiff = currentSqrtPrice - lowerSqrtPrice
+        sqrtPriceDiff = currentSqrtPrice.v - lowerSqrtPrice.v
         liquidity = toU256(bigDiv(bigMul(bigMul256(y, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff, 1))
-        let denominator = (currentSqrtPrice * upperSqrtPrice )/ one(SqrtPriceScale)
-        let nominator = upperSqrtPrice - currentSqrtPrice
+        let denominator = (currentSqrtPrice.v * upperSqrtPrice.v )/ one(SqrtPriceScale)
+        let nominator = upperSqrtPrice.v - currentSqrtPrice.v
         let x = calculateX(nominator, denominator, liquidity, roundingUp)
         return SingleTokenLiquidity { l: liquidity, amount: x }
     }
@@ -126,7 +126,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         }
     }
 
-    pub fn getLiquidity(x: U256, y: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: U256, roundingUp: Bool) -> LiquidityResult {
+    pub fn getLiquidity(x: U256, y: U256, lowerTick: I256, upperTick: I256, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> LiquidityResult {
         assert!(lowerTick >= GlobalMinTick && upperTick <= GlobalMaxTick, UtilsError.InvalidTickIndex)
         let lowerSqrtPrice = calculateSqrtPrice(lowerTick)
         let upperSqrtPrice = calculateSqrtPrice(upperTick)
@@ -134,10 +134,10 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         let mut resultByX = SingleTokenLiquidity { l: 0, amount: 0}
         let mut resultByY = SingleTokenLiquidity { l: 0, amount: 0}
 
-        if (upperSqrtPrice < currentSqrtPrice) {
+        if (upperSqrtPrice.v < currentSqrtPrice.v) {
             resultByY = getLiquidityByYSqrtPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
             return LiquidityResult { x: resultByY.amount, y: y, l: resultByY.l } 
-        } else if (currentSqrtPrice < lowerSqrtPrice) {
+        } else if (currentSqrtPrice.v < lowerSqrtPrice.v) {
             resultByX = getLiquidityByXSqrtPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
             return LiquidityResult { x: x, y: resultByX.amount, l: resultByX.l }
         } else {

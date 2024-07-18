@@ -3,7 +3,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
     fn addPool(
         originalCaller: Address,
         poolKey: PoolKey,
-        initSqrtPrice: U256,
+        initSqrtPrice: SqrtPrice,
         initTick: I256,
         currentTimestamp: U256,
         feeReceiver: Address
@@ -53,7 +53,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                     }
                 },
                 liquidity: 0,
-                sqrtPrice: 0,
+                sqrtPrice: SqrtPrice{v: 0},
                 currentTickIndex: 0i,
                 feeGrowthGlobalX: 0,
                 feeGrowthGlobalY: 0,

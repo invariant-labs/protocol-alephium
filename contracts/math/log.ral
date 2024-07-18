@@ -29,34 +29,34 @@ Abstract Contract Log() extends Decimal() {
         return 1 << (31 - Log2MinBinaryPosition)
     }
 
-    pub fn sqrtPriceToX32(val: U256) -> U256 {
-        return val * getLog2One() / one(SqrtPriceScale)
+    pub fn sqrtPriceToX32(val: SqrtPrice) -> U256 {
+        return val.v * getLog2One() / one(SqrtPriceScale)
     }
 
-    fn log2FloorX32(mut sqrtPrice: U256) -> U256 {
+    fn log2FloorX32( mut sqrtPriceX32: U256) -> U256 {
         let mut msb = 0
 
-        if (sqrtPrice >= 1 << 32) {
-            sqrtPrice = sqrtPrice >> 32
+        if (sqrtPriceX32 >= 1 << 32) {
+            sqrtPriceX32 = sqrtPriceX32 >> 32
             msb = msb | 32
         }
-        if (sqrtPrice >= 1 << 16) {
-            sqrtPrice = sqrtPrice >> 16
+        if (sqrtPriceX32 >= 1 << 16) {
+            sqrtPriceX32 = sqrtPriceX32 >> 16
             msb = msb | 16
         }
-        if (sqrtPrice >= 1 << 8) {
-            sqrtPrice = sqrtPrice >> 8
+        if (sqrtPriceX32 >= 1 << 8) {
+            sqrtPriceX32 = sqrtPriceX32 >> 8
             msb = msb | 8
         }
-        if (sqrtPrice >= 1 << 4) {
-            sqrtPrice = sqrtPrice >> 4
+        if (sqrtPriceX32 >= 1 << 4) {
+            sqrtPriceX32 = sqrtPriceX32 >> 4
             msb = msb | 4
         }
-        if (sqrtPrice >= 1 << 2) {
-            sqrtPrice = sqrtPrice >> 2
+        if (sqrtPriceX32 >= 1 << 2) {
+            sqrtPriceX32 = sqrtPriceX32 >> 2
             msb = msb | 2
         }
-        if (sqrtPrice >= 1 << 1) {
+        if (sqrtPriceX32 >= 1 << 1) {
             msb = msb | 1
         }
     
@@ -77,15 +77,15 @@ Abstract Contract Log() extends Decimal() {
         }
     }
 
-    pub fn log2IterativeApproximationX32(mut sqrtPrice: U256) -> (Bool, U256) {
+    pub fn log2IterativeApproximationX32(mut sqrtPriceX32: U256) -> (Bool, U256) {
         let mut sign = true
-        if (sqrtPrice < getLog2One()) {
+        if (sqrtPriceX32 < getLog2One()) {
             sign = false
-            sqrtPrice = (getLog2DoubleOne() / (sqrtPrice + 1))
+            sqrtPriceX32 = (getLog2DoubleOne() / (sqrtPriceX32 + 1))
         }
-        let log2Floor = log2FloorX32(sqrtPrice >> Log2Scale)
+        let log2Floor = log2FloorX32( sqrtPriceX32 >> Log2Scale)
         let mut result = log2Floor << Log2Scale
-        let mut y = (sqrtPrice) >> log2Floor
+        let mut y = sqrtPriceX32 >> log2Floor
 
         if (y == getLog2One()) {
             return sign, result
@@ -102,8 +102,8 @@ Abstract Contract Log() extends Decimal() {
         return sign, result
     }
 
-    pub fn getTickAtSqrtPrice(sqrtPrice: U256, tickSpacing: U256) -> I256 {
-        assert!(sqrtPrice <= MaxSqrtPrice && sqrtPrice >= MinSqrtPrice, LogError.SqrtPriceOutOfRange)
+    pub fn getTickAtSqrtPrice(sqrtPrice: SqrtPrice, tickSpacing: U256) -> I256 {
+        assert!(sqrtPrice.v <= MaxSqrtPrice && sqrtPrice.v >= MinSqrtPrice, LogError.SqrtPriceOutOfRange)
         let sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
 
         let (log2Sign, log2SqrtPrice) = log2IterativeApproximationX32(sqrtPriceX32)
@@ -129,15 +129,15 @@ Abstract Contract Log() extends Decimal() {
 
         let mut accurateTick = 0i
         if (log2Sign) {
-            let fartherTickSqrtPriceDecimal = sqrtPriceFromTick(fartherTick)
-            if (sqrtPrice >= fartherTickSqrtPriceDecimal) {
+            let fartherTickSqrtPriceDecimal = sqrtPriceFromTick(fartherTick).v
+            if (sqrtPrice.v >= fartherTickSqrtPriceDecimal) {
                 accurateTick = fartherTickWithSpacing
             } else {
                 accurateTick = nearerTickWithSpacing
             }
         } else {
-            let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick)
-            if (nearerTickSqrtPriceDecimal <= sqrtPrice) {
+            let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick).v
+            if (nearerTickSqrtPriceDecimal <= sqrtPrice.v) {
                 accurateTick = nearerTickWithSpacing
             } else {
                 accurateTick = fartherTickWithSpacing

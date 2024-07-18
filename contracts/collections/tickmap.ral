@@ -168,25 +168,25 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     }
 
     @using(checkExternalCaller = false)
-    pub fn getCloserLimit(sqrtPriceLimit: U256, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: PoolKey) -> (U256, Bool, I256, Bool) {
-        let mut closesTickBool = false
-        let mut closesTickIndex = 0i
+    pub fn getCloserLimit(sqrtPriceLimit: SqrtPrice, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: PoolKey) -> (SqrtPrice, Bool, I256, Bool) {
+        let mut closestTickBool = false
+        let mut closestTickIndex = 0i
         
         if (xToY) {
             let (closesTickBoolXtoY, closesTickIndexXtoY) = prevInitialized(currentTick, tickSpacing, poolKey)
-            closesTickBool = closesTickBoolXtoY
-            closesTickIndex = closesTickIndexXtoY
+            closestTickBool = closesTickBoolXtoY
+            closestTickIndex = closesTickIndexXtoY
         } else {
             let (closesTickBoolYtoX, closesTickIndexYtoX) = nextInitialized(currentTick, tickSpacing, poolKey)
-            closesTickBool = closesTickBoolYtoX
-            closesTickIndex = closesTickIndexYtoX
+            closestTickBool = closesTickBoolYtoX
+            closestTickIndex = closesTickIndexYtoX
         }
 
-        if (closesTickBool) {
-            let sqrtPriceExist = calculateSqrtPrice(closesTickIndex)
+        if (closestTickBool) {
+            let sqrtPriceExist = calculateSqrtPrice(closestTickIndex)
 
-            if ((xToY && sqrtPriceExist > sqrtPriceLimit) || (!xToY && sqrtPriceExist < sqrtPriceLimit)) {
-                return sqrtPriceExist, true, closesTickIndex, true
+            if ((xToY && sqrtPriceExist.v > sqrtPriceLimit.v) || (!xToY && sqrtPriceExist.v < sqrtPriceLimit.v)) {
+                return sqrtPriceExist, true, closestTickIndex, true
             } else {
                 return sqrtPriceExist, false, 0i, false
             }
@@ -196,7 +196,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
             assert!(currentTick != index, InvariantError.TickLimitReached)
 
-            if ((xToY && sqrtPriceNotExist > sqrtPriceLimit) || (!xToY && sqrtPriceNotExist < sqrtPriceLimit)) {
+            if ((xToY && sqrtPriceNotExist.v > sqrtPriceLimit.v) || (!xToY && sqrtPriceNotExist.v < sqrtPriceLimit.v)) {
                 return sqrtPriceNotExist, true, index, false
             } else {
                 return sqrtPriceNotExist, false, 0i, false

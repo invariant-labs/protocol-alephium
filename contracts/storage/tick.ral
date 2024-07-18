@@ -3,7 +3,7 @@ struct Tick {
     mut index: I256,
     mut liquidityChange: U256,
     mut liquidityGross: U256,
-    mut sqrtPrice: U256,
+    mut sqrtPrice: SqrtPrice,
     mut feeGrowthOutsideX: U256,
     mut feeGrowthOutsideY: U256,
     mut secondsOutside: U256

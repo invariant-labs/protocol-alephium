@@ -7,7 +7,7 @@ Abstract Contract Ticks() extends TickHelper() {
         sign: Bool,
         liquidityChange: U256,
         liquidityGross: U256,
-        sqrtPrice: U256,
+        sqrtPrice: SqrtPrice,
         feeGrowthOutsideX: U256,
         feeGrowthOutsideY: U256,
         secondsOutside: U256
@@ -47,7 +47,7 @@ Abstract Contract Ticks() extends TickHelper() {
                 index: 0i,
                 liquidityChange: 0,
                 liquidityGross: 0,
-                sqrtPrice: 0,
+                sqrtPrice: SqrtPrice{v: 0},
                 feeGrowthOutsideX: 0,
                 feeGrowthOutsideY: 0,
                 secondsOutside: 0
