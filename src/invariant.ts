@@ -339,7 +339,6 @@ export class Invariant {
   async getFullTickmap(poolKey: PoolKey) {
     const promises: Promise<[bigint, bigint][]>[] = []
     const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
-
     let currentBatch = 0n
 
     while (currentBatch <= maxBatch) {
