@@ -5,16 +5,21 @@ import {
   SignerProvider,
   ZERO_ADDRESS,
   node,
-  web3
+  web3,
+  SignExecuteScriptTxResult,
+  bs58,
+  hexToBinUnsafe,
+  ALPH_TOKEN_ID
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
 import { ChunkSize, ChunksPerBatch, MaxFeeTiers } from './consts'
 import { getMaxTick, getMinTick } from './math'
+import { Network } from './network'
 
+const BREAK_BYTES = '627265616b'
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
-
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array(Number(MaxFeeTiers)).fill({
     fee: 0n,
@@ -114,12 +119,15 @@ export async function deployTokenFaucet(
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
+  if (tokenId == ALPH_TOKEN_ID) {
+    return BigInt(balances.balance)
+  }
   const balance = balances.tokenBalances?.find(t => t.id === tokenId)
   return balance === undefined ? 0n : BigInt(balance.amount)
 }
 
 export function decodeFeeTiers(string: string) {
-  const parts = string.split('627265616b')
+  const parts = string.split(BREAK_BYTES)
   const feeTiers: any[] = []
 
   for (let i = 0; i < parts.length - 1; i += 2) {
@@ -135,23 +143,58 @@ export function decodeFeeTiers(string: string) {
 }
 
 export function decodePools(string: string) {
-  const parts = string.split('627265616b')
+  const offset = 16
+  const parts = string.split(BREAK_BYTES)
   const pools: any[] = []
-
-  for (let i = 0; i < parts.length - 1; i += 4) {
+  for (let i = 0; i < parts.length - 1; i += offset) {
     const pool = {
-      tokenX: parts[i],
-      tokenY: parts[i + 1],
-      fee: decodeU256(parts[i + 2]),
-      tickSpacing: decodeU256(parts[i + 3])
+      poolKey: {
+        tokenX: parts[i],
+        tokenY: parts[i + 1],
+        feeTier: {
+          fee: decodeU256(parts[i + 2]),
+          tickSpacing: decodeU256(parts[i + 3])
+        }
+      },
+      liquidity: decodeU256(parts[i + 4]),
+      sqrtPrice: decodeU256(parts[i + 5]),
+      currentTickIndex: decodeI256(parts[i + 6]),
+      feeGrowthGlobalX: decodeU256(parts[i + 7]),
+      feeGrowthGlobalY: decodeU256(parts[i + 8]),
+      feeProtocolTokenX: decodeU256(parts[i + 9]),
+      feeProtocolTokenY: decodeU256(parts[i + 10]),
+      startTimestamp: decodeU256(parts[i + 11]),
+      lastTimestamp: decodeU256(parts[i + 12]),
+      feeReceiver: AddressFromByteVec(parts[i + 13]),
+      reserveX: parts[i + 14],
+      reserveY: parts[i + 15],
+      exists: true
     }
-
     pools.push(pool)
   }
-
   return pools
 }
 
+export const decodePoolKeys = (string: string) => {
+  const parts = string.split(BREAK_BYTES)
+  const poolKeys: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 4) {
+    const poolKey = {
+      tokenX: parts[i],
+      tokenY: parts[i + 1],
+      feeTier: { fee: decodeU256(parts[i + 2]), tickSpacing: decodeU256(parts[i + 3]) }
+    }
+    poolKeys.push(poolKey)
+  }
+
+  return poolKeys
+}
+
+export const AddressFromByteVec = (string: string) => {
+  const address = bs58.encode(hexToBinUnsafe(string))
+  return address
+}
 function createEntityProxy<T>(entity: T, exists: boolean) {
   return new Proxy(
     { ...entity, exists },
@@ -184,6 +227,10 @@ function hexToBytes(hex: string): Uint8Array {
 
 export function decodeU256(string: string): bigint {
   return codec.compactUnsignedIntCodec.decodeU256(hexToBytes(string))
+}
+
+const decodeI256 = (string: string): bigint => {
+  return codec.compactSignedIntCodec.decodeI256(hexToBytes(string))
 }
 
 export const newPoolKey = async (
@@ -230,4 +277,25 @@ export const getMaxBatch = async (tickSpacing: bigint) => {
   const ticksAmount = -minTick + maxTick + 1n
   const lastBatch = ticksAmount / (ChunkSize * ChunksPerBatch)
   return lastBatch
+}
+
+export function getNodeUrl(network: Network) {
+  if (network === Network.Local || network === Network.Devnet) {
+    return 'http://127.0.0.1:22973'
+  } else {
+    // we don't have this yet
+    return 'http://127.0.0.1:22973'
+  }
+}
+
+export const signAndSend = async (
+  signer: SignerProvider,
+  tx: Omit<SignExecuteScriptTxResult, 'signature'>
+): Promise<string> => {
+  const { address } = await signer.getSelectedAccount()
+  const { txId } = await signer.signAndSubmitUnsignedTx({
+    signerAddress: address,
+    unsignedTx: tx.unsignedTx
+  })
+  return txId
 }

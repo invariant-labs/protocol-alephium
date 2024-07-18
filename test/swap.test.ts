@@ -19,11 +19,11 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
 import { InvariantError, MaxSqrtPrice, MinSqrtPrice, PercentageScale, VMError } from '../src/consts'
+import { toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet

@@ -2,9 +2,12 @@ import { web3 } from '@alephium/web3'
 import {
   calculateFee,
   calculateSqrtPrice,
+  calculateSqrtPriceAfterSlippage,
   getLiquidity,
   getLiquidityByX,
-  getLiquidityByY
+  getLiquidityByY,
+  toPercentage,
+  toSqrtPrice
 } from '../src/math'
 import { expectError } from '../src/testUtils'
 import { UtilsError } from '../src/consts'
@@ -256,6 +259,84 @@ describe('math spec', () => {
       const [x, y] = await calculateFee(pool, position, lowerTick, upperTick)
       expect(x).toBe(490n)
       expect(y).toBe(0n)
+    })
+  })
+  describe('test calculateSqrtPriceAfterSlippage', () => {
+    test('no slippage up', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(0n, 0n)
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
+      expect(limitSqrt).toBe(sqrtPrice)
+    })
+    test('no slippage down', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(0n, 0n)
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
+      expect(limitSqrt).toBe(sqrtPrice)
+    })
+    test('slippage of 1% up', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(1n, 2n)
+      // sqrt(1) * sqrt(1 + 0.01) = 1.0049876
+      const expected = 1004987562112089027021926n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 1% down', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(1n, 2n)
+      // sqrt(1) * sqrt(1 - 0.01) = 0.99498744
+      const expected = 994987437106619954734479n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 0.5% up', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(5n, 3n)
+      // sqrt(1) * sqrt(1 - 0.005) = 1.00249688
+      const expected = 1002496882788171067537936n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 0.5% down', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(5n, 3n)
+      // sqrt(1) * sqrt(1 - 0.005) = 0.997496867
+      const expected = 997496867163000166582694n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 0.00003% up', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(3n, 7n)
+      // sqrt(1) * sqrt(1 + 0.0000003) = 1.00000015
+      const expected = 1000000149999988750001687n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 0.00003% down', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(3n, 7n)
+      // sqrt(1) * sqrt(1 - 0.0000003) = 0.99999985
+      const expected = 999999849999988749998312n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 100% up', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(1n, 0n)
+      // sqrt(1) * sqrt(1 + 1) = 1.414213562373095048801688...
+      const expected = 1414213562373095048801688n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
+      expect(limitSqrt).toBe(expected)
+    })
+    test('slippage of 100% down', () => {
+      const sqrtPrice = toSqrtPrice(1n, 0n)
+      const slippage = toPercentage(1n, 0n)
+      // sqrt(1) * sqrt(1 - 1) = 0
+      const expected = 0n
+      const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
+      expect(limitSqrt).toBe(expected)
     })
   })
 })

@@ -14,11 +14,9 @@ import {
   initPosition,
   initSwap,
   removePosition,
-  getPools,
   getPosition,
   expectError,
-  getReserveBalances,
-  toLiquidity
+  getReserveBalances
 } from '../src/testUtils'
 import {
   ChangeFeeReceiver,
@@ -29,6 +27,7 @@ import {
   WithdrawProtocolFee
 } from '../artifacts/ts'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -189,10 +188,6 @@ describe('interaction with pool on removed fee tiers tests', () => {
   })
   test('get pool', async () => {
     await getPool(invariant, poolKey)
-  })
-  test('get pools', async () => {
-    const pools = await getPools(invariant)
-    expect(pools.length).toBe(1)
   })
   test('transfer position', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)

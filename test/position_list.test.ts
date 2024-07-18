@@ -12,13 +12,12 @@ import {
   initPosition,
   initTokensXY,
   isTickInitialized,
-  toLiquidity,
   removePosition,
   transferPosition,
   verifyPositionList,
   withdrawTokens
 } from '../src/testUtils'
-import { calculateSqrtPrice } from '../src/math'
+import { calculateSqrtPrice, toLiquidity } from '../src/math'
 import { InvariantError, MaxSqrtPrice, PercentageScale } from '../src/consts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../src/utils'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'

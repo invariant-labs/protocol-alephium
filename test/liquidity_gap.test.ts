@@ -14,11 +14,11 @@ import {
   initPosition,
   initSwap,
   initTokensXY,
-  toLiquidity,
   quote,
   withdrawTokens
 } from '../src/testUtils'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

@@ -5,12 +5,12 @@ import { Network } from '../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../src/snippets'
 import { TokenFaucetInstance } from '../artifacts/ts'
-import { initTokensXY, toLiquidity, withdrawTokens } from '../src/testUtils'
+import { initTokensXY, withdrawTokens } from '../src/testUtils'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { GlobalMaxTick, GlobalMinTick } from '../src'
 import { ChunkSize, ChunksPerBatch } from '../src/consts'
-import { getMaxChunk, getMaxTick, getMinTick } from '../src/math'
+import { getMaxChunk, getMaxTick, getMinTick, toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
