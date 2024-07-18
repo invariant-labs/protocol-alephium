@@ -2,27 +2,30 @@ Abstract Contract Reserves() {
     const MaxAssetsStored = 8
 
     @using(updateFields = true, preapprovedAssets = true)
-    fn handleReserves(caller: Address, subPath: ByteVec, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec) {
+    fn handleReserves(caller: Address, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec) {
         let deposit = mapEntryDeposit!()
         let mut xId = #
         let mut yId = #
         let mut initX = false
         let mut initY = false
+        let mut reservePath = #
 
         if (reserves.contains!(tokenX)) {
             xId = reserves[tokenX]
         } else {
             initX = true
+            reservePath = tokenX
         }
 
         if (reserves.contains!(tokenY)) {
             yId = reserves[tokenY]
         } else {
             initY = true
+            reservePath = tokenY
         }
 
-        if (initX && initY && lastReserveId == reserveTemplateId) {
-            let firstReserve = initReserve{caller -> ALPH: deposit}(caller, subPath, 2)
+        if (lastReserveId == reserveTemplateId) {
+            let firstReserve = initReserve{caller -> ALPH: deposit}(caller, reservePath, 2)
             reserves.insert!(caller, tokenX, firstReserve)
             reserves.insert!(caller, tokenY, firstReserve)
             lastReserveId = firstReserve
@@ -42,9 +45,9 @@ Abstract Contract Reserves() {
             } else if(canStoreSingleAsset) {
                 lastReserve.incrementAssets(1)
                 xId = lastReserveId
-                yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+                yId = initReserve{caller -> ALPH: deposit}(caller, reservePath, 1)
             } else {
-                let id = initReserve{caller -> ALPH: deposit}(caller, subPath, 2)
+                let id = initReserve{caller -> ALPH: deposit}(caller, reservePath, 2)
                 xId = id
                 yId = id
             }
@@ -55,7 +58,7 @@ Abstract Contract Reserves() {
                 xId = lastReserveId
                 lastReserve.incrementAssets(1)
             } else {
-                xId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+                xId = initReserve{caller -> ALPH: deposit}(caller, reservePath, 1)
             }
             reserves.insert!(caller, tokenX, xId)
         } else if (initY) {
@@ -63,7 +66,7 @@ Abstract Contract Reserves() {
                 yId = lastReserveId
                 lastReserve.incrementAssets(1)
             } else {
-                yId = initReserve{caller -> ALPH: deposit}(caller, subPath, 1)
+                yId = initReserve{caller -> ALPH: deposit}(caller, reservePath, 1)
             }
             reserves.insert!(caller, tokenY, yId)
         } else {
