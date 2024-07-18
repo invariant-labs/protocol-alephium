@@ -11,7 +11,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         assert!(!containsPool(poolKey), InvariantError.PoolAlreadyExist)
 
         let key = poolKeyBytes(poolKey)
-        let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, key, poolKey.tokenX, poolKey.tokenY)
+        let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, poolKey.tokenX, poolKey.tokenY)
         let state = Pool {
             poolKey: poolKey,
             liquidity: 0,
