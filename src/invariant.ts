@@ -1,4 +1,3 @@
-import { assert } from 'console'
 import {
   AddFeeTier,
   ChangeFeeReceiver,
@@ -15,7 +14,7 @@ import {
   WithdrawProtocolFee
 } from '../artifacts/ts'
 import { FeeTier, Pool, PoolKey, Position, QuoteResult, Tick } from '../artifacts/ts/types'
-import { calculateSqrtPriceAfterSlippage, calculateTick, getMaxTick, getMinTick } from './math'
+import { calculateSqrtPriceAfterSlippage, calculateTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -29,14 +28,13 @@ import {
   MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
   constructTickmap,
-  decodeU256,
   getMaxBatch,
   decodePools,
   decodePoolKeys,
   getNodeUrl,
   signAndSend
 } from './utils'
-import { ChunkSize, ChunksPerBatch, MAX_BATCHES_QUERIED } from './consts'
+import { MAX_BATCHES_QUERIED } from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,

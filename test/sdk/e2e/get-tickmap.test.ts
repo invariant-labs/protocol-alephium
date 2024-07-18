@@ -1,4 +1,4 @@
-import { ONE_ALPH, sleep, web3 } from '@alephium/web3'
+import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
 import { Network } from '../../../src/network'
@@ -22,7 +22,7 @@ let tokenY: TokenFaucetInstance
 let feeTier: FeeTier
 let poolKey: PoolKey
 
-describe('init invariant test', () => {
+describe('query tickmap tests', () => {
   const initialFee = 0n
   const [fee] = getBasicFeeTickSpacing()
   const tickSpacing = 1n
