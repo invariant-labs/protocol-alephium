@@ -240,9 +240,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(originalCaller: Address, poolKey: PoolKey, chunk: U256) -> () {
-        let key = getKey(chunk)
-        let id = poolKeyBytes(poolKey) ++ toByteVec!(key)
-        // emit Debug(`INITALIZING CHUNK AT INDEX ${chunk} BATCH KEY INDEX ${key} ALERDY EXIST ${bitmap.contains!(id)} ID: ${key / ChunksPerBatch}`)
+        let id = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(id)
         if(!exists) {
             let batch = TickmapBatch {

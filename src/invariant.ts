@@ -34,7 +34,7 @@ import {
   getMaxBatch
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
-import { ChunkSize, ChunksPerBatch } from './consts'
+import { ChunkSize, ChunksPerBatch, MAX_BATCHES_QUERIED } from './consts'
 
 export class Invariant {
   instance: InvariantInstance
@@ -333,20 +333,19 @@ export class Invariant {
       args: { poolKey, lowerBatch, upperBatch, xToY }
     })
 
-    console.log('Gas used for query:', response.gasUsed)
     return constructTickmap(response.returns)
   }
 
   async getFullTickmap(poolKey: PoolKey) {
     const promises: Promise<[bigint, bigint][]>[] = []
     const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
-    const jump = maxBatch
+
     let currentBatch = 0n
 
     while (currentBatch <= maxBatch) {
-      let nextBatch = currentBatch + jump
+      let nextBatch = currentBatch + MAX_BATCHES_QUERIED
       promises.push(this.getRawTickmap(poolKey, currentBatch, nextBatch, true))
-      currentBatch += jump
+      currentBatch += MAX_BATCHES_QUERIED
     }
 
     const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)

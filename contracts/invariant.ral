@@ -265,7 +265,6 @@ Contract Invariant(
         let (lowerChunk, upperChunk) = getChunks(lowerTickIndex, upperTickIndex, poolKey.feeTier.tickSpacing)
 
         if (lowerChunk == upperChunk) {
-            emit Debug(`here ${lowerChunk}`)
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
         } else {
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
