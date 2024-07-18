@@ -184,11 +184,10 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
         if (closesTickBool) {
             let sqrtPriceExist = calculateSqrtPrice(closesTickIndex)
-
             if ((xToY && sqrtPriceExist > sqrtPriceLimit) || (!xToY && sqrtPriceExist < sqrtPriceLimit)) {
                 return sqrtPriceExist, true, closesTickIndex, true
             } else {
-                return sqrtPriceExist, false, 0i, false
+                return sqrtPriceLimit, false, 0i, false
             }
         } else {
             let index = getSearchLimit(currentTick, tickSpacing, !xToY)
@@ -199,7 +198,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
             if ((xToY && sqrtPriceNotExist > sqrtPriceLimit) || (!xToY && sqrtPriceNotExist < sqrtPriceLimit)) {
                 return sqrtPriceNotExist, true, index, false
             } else {
-                return sqrtPriceNotExist, false, 0i, false
+                return sqrtPriceLimit, false, 0i, false
             }
         }
     }
