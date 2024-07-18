@@ -385,7 +385,3 @@ export const getReserveBalances = async (invariant: InvariantInstance, poolKey: 
   const y = await balanceOf(poolKey.tokenY, reserveY)
   return { x, y }
 }
-
-export const toLiquidity = (value: bigint) => {
-  return value * 10n ** LiquidityScale
-}

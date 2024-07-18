@@ -12,7 +12,6 @@ import {
 } from '../src/consts'
 import {
   getPool,
-  getReserveAddress,
   getReserveBalances,
   initFeeTier,
   initPool,

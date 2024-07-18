@@ -1,5 +1,6 @@
 import { CLAMM, Utils } from '../artifacts/ts'
 import { LiquidityResult, Pool, Position, SingleTokenLiquidity, Tick } from '../artifacts/ts/types'
+import { LiquidityScale, PercentageScale, SqrtPriceScale } from './consts'
 
 export const calculateSqrtPrice = async (tickIndex: bigint): Promise<bigint> => {
   return (
@@ -203,4 +204,61 @@ export const calculateTokenAmounts = async (
       }
     })
   ).returns
+}
+
+const sqrt = (value: bigint): bigint => {
+  if (value < 0n) {
+    throw 'square root of negative numbers is not supported'
+  }
+
+  if (value < 2n) {
+    return value
+  }
+
+  return newtonIteration(value, 1n)
+}
+
+const newtonIteration = (n: bigint, x0: bigint): bigint => {
+  const x1 = (n / x0 + x0) >> 1n
+  if (x0 === x1 || x0 === x1 - 1n) {
+    return x0
+  }
+  return newtonIteration(n, x1)
+}
+
+export const sqrtPriceToPrice = (sqrtPrice: bigint): bigint => {
+  return (sqrtPrice * sqrtPrice) / toSqrtPrice(1n)
+}
+
+export const priceToSqrtPrice = (price: bigint): bigint => {
+  return sqrt(price * toSqrtPrice(1n))
+}
+
+export const calculateSqrtPriceAfterSlippage = (
+  sqrtPrice: bigint,
+  slippage: bigint,
+  up: boolean
+): bigint => {
+  if (slippage === 0n) {
+    return sqrtPrice
+  }
+
+  const multiplier = toPercentage(1n) + (up ? slippage : -slippage)
+  const price = sqrtPriceToPrice(sqrtPrice)
+  const priceWithSlippage = price * multiplier * toPercentage(1n)
+  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / toPercentage(1n)
+
+  return sqrtPriceWithSlippage
+}
+
+export const toLiquidity = (value: bigint, offset = 0n) => {
+  return value * 10n ** (LiquidityScale - offset)
+}
+
+export const toSqrtPrice = (value: bigint, offset = 0n) => {
+  return value * 10n ** (SqrtPriceScale - offset)
+}
+
+export const toPercentage = (value: bigint, offset = 0n) => {
+  return value * 10n ** (PercentageScale - offset)
 }

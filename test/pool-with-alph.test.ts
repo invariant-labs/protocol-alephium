@@ -3,12 +3,13 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, newFeeTier, newPoolKey } from '../src/utils'
 import { MinSqrtPrice, PercentageScale } from '../src/consts'
-import { initTokensXY, toLiquidity, withdrawTokens } from '../src/testUtils'
+import { initTokensXY, withdrawTokens } from '../src/testUtils'
 import { TokenFaucetInstance } from '../artifacts/ts'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
 import { Invariant } from '../src/invariant'
 import { Network } from '../src/network'
 import { getBasicFeeTickSpacing } from '../src/snippets'
+import { toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

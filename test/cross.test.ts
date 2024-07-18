@@ -16,9 +16,9 @@ import {
   initFeeTier,
   initPosition,
   initSwap,
-  toLiquidity,
   withdrawTokens
 } from '../src/testUtils'
+import { toLiquidity } from '../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
