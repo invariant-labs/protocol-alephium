@@ -240,7 +240,9 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
     pub fn initializeChunk(originalCaller: Address, poolKey: PoolKey, chunk: U256) -> () {
-        let id = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
+        let key = getKey(chunk)
+        let id = poolKeyBytes(poolKey) ++ toByteVec!(key)
+        // emit Debug(`INITALIZING CHUNK AT INDEX ${chunk} BATCH KEY INDEX ${key} ALERDY EXIST ${bitmap.contains!(id)} ID: ${key / ChunksPerBatch}`)
         let exists = bitmap.contains!(id)
         if(!exists) {
             let batch = TickmapBatch {
@@ -257,8 +259,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                     0, 0, 0, 0
                 ] 
             }
+            
             bitmap.insert!(originalCaller, id, batch)
-            emit Debug(`INITALIZING CHUNK AT INDEX ${chunk} BATCH KEY INDEX ${getKey(chunk)} ALERDY EXIST ${bitmap.contains!(id)}`)
         }
     }
 
@@ -272,7 +274,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     @using(checkExternalCaller = false)
     pub fn getMaxChunk(tickSpacing: U256) -> (U256) {
         let maxTick = getMaxTick(tickSpacing)
-        let maxBitmapIndex = maxTick + GlobalMaxTick / toI256!(tickSpacing)
+        let maxBitmapIndex = (maxTick + GlobalMaxTick) / toI256!(tickSpacing)
         let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
         return maxChunkIndex
     }

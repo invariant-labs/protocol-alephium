@@ -265,6 +265,7 @@ Contract Invariant(
         let (lowerChunk, upperChunk) = getChunks(lowerTickIndex, upperTickIndex, poolKey.feeTier.tickSpacing)
 
         if (lowerChunk == upperChunk) {
+            emit Debug(`here ${lowerChunk}`)
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
         } else {
             initializeChunk{caller -> ALPH: mapEntryDeposit}(caller, poolKey, lowerChunk)
@@ -526,10 +527,9 @@ Contract Invariant(
         }
     }
 
-    pub fn getSingleBatch(poolKey: PoolKey, index: U256) -> ByteVec {
+    fn getSingleBatch(poolKey: PoolKey, index: U256) -> ByteVec {
         let mut batch = #
-        let key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(index))
-        emit Debug(`Batch at Index ${index} is added: ${bitmap.contains!(key)}`)
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(index)
         if (bitmap.contains!(key)) {
             let tickmapBatch = bitmap[key]
             for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
@@ -541,21 +541,14 @@ Contract Invariant(
     }
 
 
-    pub fn getTickmapSlice(poolKey: PoolKey, lowerTickIndex: I256, upperTickIndex: I256, xToY: Bool) -> ByteVec {
-        let tickSpacing = poolKey.feeTier.tickSpacing
-        let (startChunk, endChunk) = getChunks(lowerTickIndex, upperTickIndex, tickSpacing)
-        let startBatch = startChunk / ChunksPerBatch
-        let endBatch = endChunk / ChunksPerBatch
-
-        // emit Debug(`START CHUNK ${startChunk} END CHUNK ${endChunk} START BATCH ${startBatch} END BATCH ${endBatch}`)
-
+    pub fn getTickmapSlice(poolKey: PoolKey, lowerBatch: U256, upperBatch: U256, xToY: Bool) -> ByteVec {
         let mut slice = #
         if (xToY) {
-            for(let mut batchIndex = startBatch; batchIndex < endBatch; batchIndex = batchIndex + 1) {
+            for(let mut batchIndex = lowerBatch; batchIndex < upperBatch; batchIndex = batchIndex + 1) {
                 slice = slice ++ getSingleBatch(poolKey, batchIndex)
             }
         } else {
-            for(batchIndex = endBatch; batchIndex > startBatch; batchIndex = batchIndex - 1) {
+            for(batchIndex = upperBatch; batchIndex >= lowerBatch; batchIndex = batchIndex - 1) {
                 slice = slice ++ getSingleBatch(poolKey, batchIndex)
             }
         }

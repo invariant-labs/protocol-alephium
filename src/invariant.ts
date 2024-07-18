@@ -30,7 +30,8 @@ import {
   MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
   constructTickmap,
-  decodeU256
+  decodeU256,
+  getMaxBatch
 } from './utils'
 import { Address, DUST_AMOUNT, SignerProvider } from '@alephium/web3'
 import { ChunkSize, ChunksPerBatch } from './consts'
@@ -324,75 +325,33 @@ export class Invariant {
   // async getPositionTicks() {}
   async getRawTickmap(
     poolKey: PoolKey,
-    lowerTickIndex: bigint,
-    upperTickIndex: bigint,
+    lowerBatch: bigint,
+    upperBatch: bigint,
     xToY: boolean
   ): Promise<[bigint, bigint][]> {
     const response = await this.instance.view.getTickmapSlice({
-      args: { poolKey, lowerTickIndex, upperTickIndex, xToY }
+      args: { poolKey, lowerBatch, upperBatch, xToY }
     })
 
-    // console.log('Gas used for query:', response.gasUsed)
+    console.log('Gas used for query:', response.gasUsed)
     return constructTickmap(response.returns)
-  }
-  async getFullTickmapLegacy(poolKey: PoolKey) {
-    const promises: Promise<[bigint, bigint][]>[] = []
-    const tickSpacing = poolKey.feeTier.tickSpacing
-    let lowerTick = await getMinTick(tickSpacing)
-    const maxTick = await getMaxTick(tickSpacing)
-    const jump = 4n * ChunkSize * ChunksPerBatch
-    while (lowerTick <= maxTick) {
-      let nextTick = lowerTick + jump
-      const remainder = nextTick % tickSpacing
-
-      if (remainder > 0) {
-        nextTick += tickSpacing - remainder
-      } else if (remainder < 0) {
-        nextTick -= remainder
-      }
-
-      let upperTick = nextTick
-
-      if (upperTick > maxTick) {
-        upperTick = maxTick
-      }
-
-      promises.push(this.getRawTickmap(poolKey, lowerTick, upperTick, true))
-
-      lowerTick = upperTick + tickSpacing
-    }
-
-    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
-    const storedTickmap = new Map<bigint, bigint>(fullResult)
-    return { bitmap: storedTickmap }
   }
 
   async getFullTickmap(poolKey: PoolKey) {
     const promises: Promise<[bigint, bigint][]>[] = []
-    const tickSpacing = poolKey.feeTier.tickSpacing
-    const minTick = await getMinTick(tickSpacing)
-    const maxTick = await getMaxTick(tickSpacing)
-    const maxBatch = (-minTick + maxTick + 1n) / (ChunkSize * ChunksPerBatch)
+    const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
+    const jump = maxBatch
+    let currentBatch = 0n
 
-    for (let i = 0n; i <= maxBatch; i++) {
-      promises.push(this.getBatch(poolKey, i))
+    while (currentBatch <= maxBatch) {
+      let nextBatch = currentBatch + jump
+      promises.push(this.getRawTickmap(poolKey, currentBatch, nextBatch, true))
+      currentBatch += jump
     }
 
     const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
     const storedTickmap = new Map<bigint, bigint>(fullResult)
     return { bitmap: storedTickmap }
-  }
-
-  async getBatch(poolKey: PoolKey, index: bigint): Promise<[bigint, bigint][]> {
-    const response = await this.instance.view.getSingleBatch({ args: { poolKey, index } })
-    const parts = response.returns.split('627265616b')
-    const batches: any[] = []
-
-    for (let i = 0; i < parts.length - 1; i += 2) {
-      batches.push([decodeU256(parts[i]), decodeU256(parts[i + 1])])
-    }
-
-    return batches
   }
   // async getLiquidityTicks() {}
   // async getAllLiquidityTicks() {}

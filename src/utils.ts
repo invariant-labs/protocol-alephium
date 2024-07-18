@@ -10,7 +10,8 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
-import { MaxFeeTiers } from './consts'
+import { ChunkSize, ChunksPerBatch, MaxFeeTiers } from './consts'
+import { getMaxTick, getMinTick } from './math'
 
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 
@@ -221,4 +222,12 @@ export const constructTickmap = async (string: string): Promise<[bigint, bigint]
   }
 
   return chunks
+}
+
+export const getMaxBatch = async (tickSpacing: bigint) => {
+  const maxTick = await getMaxTick(tickSpacing)
+  const minTick = await getMinTick(tickSpacing)
+  const ticksAmount = -minTick + maxTick + 1n
+  const lastBatch = ticksAmount / (ChunkSize * ChunksPerBatch)
+  return lastBatch
 }
