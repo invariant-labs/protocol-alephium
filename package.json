@@ -33,7 +33,12 @@
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
     "test": "jest -i --config ./jest-config.json",
-    "test:tickmap": "npm test test/tickmap.test.ts"
+    "test:contract": "npm run test -- --testPathPattern=test/contract/*",
+    "test:contract:e2e": "npm run test -- --testPathPattern=test/contract/e2e/*",
+    "test:contract:unit": "npm run test -- --testPathPattern=test/contract/unit/*",
+    "test:sdk": "npm run test -- --testPathPattern=test/sdk/*",
+    "test:sdk:e2e": "npm run test -- --testPathPattern=test/sdk/e2e/*",
+    "test:sdk:unit": "npm run test -- --testPathPattern=test/sdk/unit/*"
   },
   "dependencies": {
     "@alephium/cli": "^1.0.1",
