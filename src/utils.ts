@@ -19,6 +19,15 @@ import { getMaxTick, getMinTick } from './math'
 import { Network } from './network'
 
 const BREAK_BYTES = '627265616b'
+export type FixedBigIntArray<N extends number> = N extends N
+  ? number extends N
+    ? bigint[]
+    : FixedBigIntArrayHelper<N, []>
+  : never
+type FixedBigIntArrayHelper<N extends number, T extends bigint[]> = T['length'] extends N
+  ? T
+  : FixedBigIntArrayHelper<N, [...T, bigint]>
+
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array(Number(MaxFeeTiers)).fill({

@@ -32,7 +32,8 @@ import {
   decodePools,
   decodePoolKeys,
   getNodeUrl,
-  signAndSend
+  signAndSend,
+  FixedBigIntArray
 } from './utils'
 import { MAX_BATCHES_QUERIED } from './consts'
 import {
@@ -527,10 +528,23 @@ export class Invariant {
     const storedTickmap = new Map<bigint, bigint>(fullResult)
     return { bitmap: storedTickmap }
   }
-  // async getLiquidityTicks() {}
+  async getLiquidityTicks(poolKey: PoolKey, ticks: FixedBigIntArray<12>) {
+    const response = await this.instance.view.getLiquidityTicks({
+      args: { poolKey, indexes: ticks }
+    })
+    console.log('Gas used for getting liquidity ticks', response.gasUsed)
+    console.log(response.returns)
+  }
   // async getAllLiquidityTicks() {}
   // async getUserPositionAmount() {}
-  // async getLiquidityTicksAmount() {}
+  async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
+    const response = await this.instance.view.getLiquidityTicksAmount({
+      args: { poolKey, lowerTick, upperTick }
+    })
+    console.log(response)
+    console.log('Gas used: ', response.gasUsed)
+    return response.returns
+  }
   async getAllPoolsForPair(token0Id: string, token1Id: string) {
     return decodePools(
       (
