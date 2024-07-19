@@ -14,7 +14,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, poolKey.tokenX, poolKey.tokenY)
         let state = Pool {
             poolKey: poolKey,
-            liquidity: 0,
+            liquidity: Liquidity{v: 0},
             sqrtPrice: initSqrtPrice,
             currentTickIndex: initTick,
             feeGrowthGlobalX: 0,
@@ -52,7 +52,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                         tickSpacing: 0
                     }
                 },
-                liquidity: 0,
+                liquidity: Liquidity{v: 0},
                 sqrtPrice: SqrtPrice{v: 0},
                 currentTickIndex: 0i,
                 feeGrowthGlobalX: 0,

@@ -40,7 +40,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
                         tickSpacing: 0
                     }
                 },
-                liquidity: 0,
+                liquidity: Liquidity{v: 0},
                 lowerTickIndex: 0i,
                 upperTickIndex: 0i,
                 feeGrowthInsideX: 0,

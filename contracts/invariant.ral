@@ -230,8 +230,8 @@ Contract Invariant(
             poolKey,
             index,
             true,
-            0,
-            0,
+            Liquidity{v: 0},
+            Liquidity{v: 0},
             clamm.calculateSqrtPrice(index),
             feeGrowthOutsideX,
             feeGrowthOutsideY, 
@@ -244,13 +244,13 @@ Contract Invariant(
         poolKey: PoolKey,
         lowerTickIndex: I256,
         upperTickIndex: I256,
-        liquidityDelta: U256,
+        liquidityDelta: Liquidity,
         slippageLimitLower: SqrtPrice,
         slippageLimitUpper: SqrtPrice
     ) -> () {
         let (exist, pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolNotFound)
-        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
+        assert!(liquidityDelta.v != 0, InvariantError.ZeroLiquidity)
         assert!(lowerTickIndex != upperTickIndex, InvariantError.InvalidTickIndex)
 
         let currentTimestamp = blockTimeStamp!()
@@ -284,7 +284,7 @@ Contract Invariant(
 
         let emptyPosition = Position {
           poolKey: poolKey,
-          liquidity: 0,
+          liquidity: Liquidity{v: 0},
           lowerTickIndex: lowerTickIndex,
           upperTickIndex: upperTickIndex,
           feeGrowthInsideX: 0,
@@ -504,7 +504,7 @@ Contract Invariant(
         let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
         let (_, lowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
-        let (_, _, mut mPosition, _, _) = modify(position, pool, lowerTick, upperTick, 0, false, blockTimeStamp!())
+        let (_, _, mut mPosition, _, _) = modify(position, pool, lowerTick, upperTick, Liquidity{v: 0}, false, blockTimeStamp!())
         
         let tokensOwedX = mPosition.tokensOwedX
         let tokensOwedY = mPosition.tokensOwedY
@@ -534,7 +534,7 @@ Contract Invariant(
                 ++ poolKey.tokenY ++ b`break`
                 ++ toByteVec!(poolKey.feeTier.fee) ++ b`break`
                 ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break` 
-                ++ toByteVec!(pool.liquidity) ++ b`break`
+                ++ toByteVec!(pool.liquidity.v) ++ b`break`
                 ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`
                 ++ toByteVec!(pool.currentTickIndex) ++ b`break`
                 ++ toByteVec!(pool.feeGrowthGlobalX) ++ b`break`

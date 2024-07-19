@@ -1,8 +1,8 @@
 struct Tick {
     mut sign: Bool,
     mut index: I256,
-    mut liquidityChange: U256,
-    mut liquidityGross: U256,
+    mut liquidityChange: Liquidity,
+    mut liquidityGross: Liquidity,
     mut sqrtPrice: SqrtPrice,
     mut feeGrowthOutsideX: U256,
     mut feeGrowthOutsideY: U256,
@@ -10,15 +10,15 @@ struct Tick {
 }
 
 Abstract Contract TickHelper() extends Decimal() {
-    fn updateTick(poolKey: PoolKey, mut tick: Tick, liquidityDelta: U256, maxLiquidityPerTick: U256, isUpper: Bool, isDeposit: Bool) -> Bool {
+    fn updateTick(poolKey: PoolKey, mut tick: Tick, liquidityDelta: Liquidity, maxLiquidityPerTick: Liquidity, isUpper: Bool, isDeposit: Bool) -> Bool {
         tick.liquidityGross = calculateNewLiquidityGross(tick, isDeposit, liquidityDelta, maxLiquidityPerTick)
         let updateLiquiditySign = isDeposit && !isUpper || !isDeposit && isUpper
         let updatedTick = updateLiquidityChange(tick, liquidityDelta, updateLiquiditySign)
         rewriteTick(poolKey, updatedTick)
-        return updatedTick.liquidityGross == 0
+        return updatedTick.liquidityGross.v == 0
     }
 
-    fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, U256) {
+    fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, Liquidity) {
         tick.feeGrowthOutsideX = wrappingSub(feeGrowthGlobalX, tick.feeGrowthOutsideX)
         tick.feeGrowthOutsideY = wrappingSub(feeGrowthGlobalY, tick.feeGrowthOutsideY)
 
@@ -29,31 +29,31 @@ Abstract Contract TickHelper() extends Decimal() {
         return (isBelowCurrent && !tick.sign || !isBelowCurrent && tick.sign), tick.liquidityChange
     }
 
-    fn updateLiquidityChange(mut tick: Tick, liquidityDelta: U256, add: Bool) -> Tick {
+    fn updateLiquidityChange(mut tick: Tick, liquidityDelta: Liquidity, add: Bool) -> Tick {
         if (tick.sign && !add || !tick.sign && add) {
-            if (tick.liquidityChange > liquidityDelta) {
-                tick.liquidityChange = tick.liquidityChange - liquidityDelta
+            if (tick.liquidityChange.v > liquidityDelta.v) {
+                tick.liquidityChange.v = tick.liquidityChange.v - liquidityDelta.v
             } else {
-                tick.liquidityChange = liquidityDelta - tick.liquidityChange
+                tick.liquidityChange.v = liquidityDelta.v - tick.liquidityChange.v
                 tick.sign = !tick.sign
             }
         } else {
-            tick.liquidityChange = tick.liquidityChange + liquidityDelta
+            tick.liquidityChange.v = tick.liquidityChange.v + liquidityDelta.v
         }
         
         return tick
     }
 
-    fn calculateNewLiquidityGross(tick: Tick, sign: Bool, liquidityDelta: U256, maxLiquidityPerTick: U256) -> U256 {
-        let mut newLiquidity = 0
+    fn calculateNewLiquidityGross(tick: Tick, sign: Bool, liquidityDelta: Liquidity, maxLiquidityPerTick: Liquidity) -> Liquidity {
+        let mut newLiquidityRaw = 0
         if (sign) {
-            newLiquidity = tick.liquidityGross + liquidityDelta
+            newLiquidityRaw = tick.liquidityGross.v + liquidityDelta.v
         } else {
-            assert!(tick.liquidityGross >= liquidityDelta, InvariantError.InvalidTickLiquidity)
-            newLiquidity = tick.liquidityGross - liquidityDelta
+            assert!(tick.liquidityGross.v >= liquidityDelta.v, InvariantError.InvalidTickLiquidity)
+            newLiquidityRaw = tick.liquidityGross.v - liquidityDelta.v
         }
 
-        assert!(newLiquidity <= maxLiquidityPerTick, InvariantError.InvalidTickLiquidity)
-        return newLiquidity
+        assert!(newLiquidityRaw <= maxLiquidityPerTick.v, InvariantError.InvalidTickLiquidity)
+        return Liquidity{ v: newLiquidityRaw}
     }
 }

@@ -1,6 +1,6 @@
 struct Pool {
     mut poolKey: PoolKey,
-    mut liquidity: U256,
+    mut liquidity: Liquidity,
     mut sqrtPrice: SqrtPrice,
     mut currentTickIndex: I256,
     mut feeGrowthGlobalX: U256,
@@ -20,7 +20,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
 
         let poolFee = amount - invariantProtocolFee
 
-        if (poolFee == 0 && invariantProtocolFee == 0 || pool.liquidity == 0) {
+        if (poolFee == 0 && invariantProtocolFee == 0 || pool.liquidity.v == 0) {
             return pool
         }
 
@@ -37,16 +37,16 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return pool
     }
     
-    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256, Pool) {
+    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: Liquidity, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256, Pool) {
         let (x, y, updateLiq) = clamm.calculateAmountDelta(pool.currentTickIndex, pool.sqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y, pool
         }
 
         if (liquiditySign) {
-            pool.liquidity = pool.liquidity + liquidityDelta
+            pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
         } else {
-            pool.liquidity = pool.liquidity - liquidityDelta
+            pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
         }
 
         return x, y, pool
@@ -104,11 +104,11 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return totalAmount, remainingAmount, hasCrossed, pool
     }
 
-    pub fn crossLiquidityUpdate(mut pool: Pool, add: Bool, liquidityDelta: U256) -> Pool {
+    pub fn crossLiquidityUpdate(mut pool: Pool, add: Bool, liquidityDelta: Liquidity) -> Pool {
         if (add) {
-            pool.liquidity = pool.liquidity + liquidityDelta
+            pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
         } else {
-            pool.liquidity = pool.liquidity - liquidityDelta
+            pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
         }
         return pool
     }

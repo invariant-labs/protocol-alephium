@@ -183,7 +183,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         globalFeeGrowthY: U256,
         positionFeeGrowthInsideX: U256,
         positionFeeGrowthInsideY: U256,
-        positionLiquidity: U256
+        positionLiquidity: Liquidity
     ) -> (U256, U256) {
         let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
             tickLowerIndex,
@@ -203,7 +203,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         return tokensOwedX, tokensOwedY
     }
 
-    pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
-        return toU256(bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
+    pub fn toFee(feeGrowth: U256, liquidity: Liquidity) -> U256 {
+        return toU256(bigMulDiv256(feeGrowth, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
     }
 }

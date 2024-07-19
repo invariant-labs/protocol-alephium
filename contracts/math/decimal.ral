@@ -2,14 +2,25 @@ struct SqrtPrice{
     mut v: U256
 }
 
-// struct Liquidity{
-//     l: U256
-// }
+struct Liquidity{
+    mut v: U256
+}
 
 // struct FeeGrowth{
-//     fg: U256
+//     mut v: U256
 // }
 
+// struct Percentage{
+//     mut v: U256
+// }
+
+// struct TokenAmount{
+//     mut v: U256
+// }
+
+// struct FixedPoint{
+//     mut v: U256
+// }
 
 Abstract Contract Decimal() {
     const SqrtPriceScale = 24

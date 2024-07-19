@@ -27,7 +27,7 @@ TxScript CreatePosition(
     poolKey: PoolKey,
     lowerTick: I256,
     upperTick: I256,
-    liquidityDelta: U256,
+    liquidityDelta: Liquidity,
     slippageLimitLower: SqrtPrice,
     slippageLimitUpper: SqrtPrice
 ) {

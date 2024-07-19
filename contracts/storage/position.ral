@@ -1,6 +1,6 @@
 struct Position {
     mut poolKey: PoolKey,
-    mut liquidity: U256,
+    mut liquidity: Liquidity,
     mut lowerTickIndex: I256,
     mut upperTickIndex: I256,
     mut feeGrowthInsideX: U256,
@@ -18,7 +18,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         mut pool: Pool,
         lowerTick: Tick,
         upperTick: Tick,
-        liquidityDelta: U256,
+        liquidityDelta: Liquidity,
         add: Bool,
         currentTimestamp: U256
     ) -> (U256, U256, Position, Bool, Bool) {
@@ -26,7 +26,6 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
 
         let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(pool.poolKey.feeTier.tickSpacing)
 
-        // Might add returning if tick is empty for deinitialization
         let isLowerEmpty = updateTick(pool.poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
         let isUpperEmpty = updateTick(pool.poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
 
@@ -54,7 +53,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
     fn update(
         mut position: Position,
         sign: Bool,
-        liquidityDelta: U256,
+        liquidityDelta: Liquidity,
         feeGrowthInsideX: U256,
         feeGrowthInsideY: U256
     ) -> Position {
@@ -71,15 +70,15 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
     }
 
     fn calculateNewLiquidity(
-        currentPositionLiquidity: U256,
+        currentPositionLiquidity: Liquidity,
         sign: Bool,
-        liquidityDelta: U256
-    ) -> U256 {
+        liquidityDelta: Liquidity
+    ) -> Liquidity {
         if (sign) {
-            return currentPositionLiquidity + liquidityDelta
+            return Liquidity{v: currentPositionLiquidity.v + liquidityDelta.v}
         } else {
-            assert!(currentPositionLiquidity >= liquidityDelta, InvariantError.InsufficientLiquidity)
-            return currentPositionLiquidity - liquidityDelta
+            assert!(currentPositionLiquidity.v >= liquidityDelta.v, InvariantError.InsufficientLiquidity)
+            return Liquidity{v: currentPositionLiquidity.v - liquidityDelta.v}
         }
     }
 }
