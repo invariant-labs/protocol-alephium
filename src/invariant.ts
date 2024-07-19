@@ -32,7 +32,8 @@ import {
   decodePools,
   decodePoolKeys,
   getNodeUrl,
-  signAndSend
+  signAndSend,
+  decodePositions
 } from './utils'
 import { MAX_BATCHES_QUERIED } from './consts'
 import {
@@ -491,7 +492,13 @@ export class Invariant {
     return (await this.instance.view.getProtocolFee()).returns
   }
 
-  // async getPositions() {}
+  async getPositions(owner: Address, size: bigint, offset: bigint) {
+    const response = await this.instance.view.getPositions({
+      args: { owner, size, offset }
+    })
+
+    return decodePositions(response.returns)
+  }
   // async getAllPositions() {}
   // async getPoolKeys() {}
   async getAllPoolKeys() {
