@@ -35,7 +35,7 @@ import {
   signAndSend,
   decodePositions
 } from './utils'
-import { MAX_BATCHES_QUERIED } from './consts'
+import { MAX_BATCHES_QUERIED, MAX_POSITIONS_QUERIED } from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
@@ -499,7 +499,15 @@ export class Invariant {
 
     return decodePositions(response.returns)
   }
-  // async getAllPositions() {}
+  async getAllPositions(
+    owner: string,
+    positionsCount?: bigint,
+    skipPages?: number[],
+    positionsPerPage?: bigint
+  ) {
+    const firstPageIndex = skipPages?.find(i => !skipPages.includes(i)) || 0
+    const positionsPerPageLimit = positionsPerPage || MAX_POSITIONS_QUERIED
+  }
   // async getPoolKeys() {}
   async getAllPoolKeys() {
     return decodePoolKeys((await this.instance.view.getAllPoolKeys()).returns)

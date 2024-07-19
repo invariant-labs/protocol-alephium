@@ -73,7 +73,6 @@ describe('get positions test', () => {
       sqrtPrice
     )
   })
-
   test('get positions', async () => {
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 2n, 0n)
     expect(positions.length).toBe(2)
@@ -119,4 +118,33 @@ describe('get positions test', () => {
     expect(positions.length).toBe(1)
     expect(totalPositions).toBe(2n)
   })
+  test('find limit of queried position in single query', async () => {
+    const positionToOpen = 81n
+
+    for (let i = 1n; i <= positionToOpen; i++) {
+      const { sqrtPrice } = await invariant.getPool(poolKey)
+      const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
+      const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
+      await invariant.createPosition(
+        positionOwner,
+        poolKey,
+        -i,
+        i,
+        liquidityDelta,
+        approveX,
+        approveY,
+        sqrtPrice,
+        sqrtPrice
+      )
+    }
+    const [positions, totalPositions] = await invariant.getPositions(
+      positionOwner.address,
+      999n,
+      0n
+    )
+    // additional 2 positions from beforeEach hook
+    const totalOpened = positionToOpen + 2n
+    expect(positions.length).toBe(Number(totalOpened))
+    expect(totalPositions).toBe(totalOpened)
+  }, 30000)
 })
