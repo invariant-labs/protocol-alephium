@@ -27,6 +27,11 @@ export const EMPTY_FEE_TIERS: FeeTiers = {
   })
 } as FeeTiers
 
+export interface Page {
+  index: number
+  entries: [Position, Pool][]
+}
+
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
