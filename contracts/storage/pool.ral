@@ -3,8 +3,8 @@ struct Pool {
     mut liquidity: Liquidity,
     mut sqrtPrice: SqrtPrice,
     mut currentTickIndex: I256,
-    mut feeGrowthGlobalX: U256,
-    mut feeGrowthGlobalY: U256,
+    mut feeGrowthGlobalX: FeeGrowth,
+    mut feeGrowthGlobalY: FeeGrowth,
     mut feeProtocolTokenX: U256,
     mut feeProtocolTokenY: U256,
     mut startTimestamp: U256,
@@ -27,10 +27,10 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         let feeGrowth = clamm.feeGrowthFromFee(pool.liquidity, poolFee)
 
         if (inX) {
-            pool.feeGrowthGlobalX = wrappingAdd(pool.feeGrowthGlobalX, feeGrowth)
+            pool.feeGrowthGlobalX = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalX.v, feeGrowth.v)}
             pool.feeProtocolTokenX = pool.feeProtocolTokenX + invariantProtocolFee
         } else {
-            pool.feeGrowthGlobalY = wrappingAdd(pool.feeGrowthGlobalY, feeGrowth)
+            pool.feeGrowthGlobalY = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalY.v, feeGrowth.v)}
             pool.feeProtocolTokenY = pool.feeProtocolTokenY + invariantProtocolFee
         }
 

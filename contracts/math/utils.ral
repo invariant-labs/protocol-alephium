@@ -173,16 +173,16 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
 
     pub fn calculateFee(
         tickLowerIndex: I256,
-        tickLowerFeeGrowthOutsideX: U256,
-        tickLowerFeeGrowthOutsideY: U256,
+        tickLowerFeeGrowthOutsideX: FeeGrowth,
+        tickLowerFeeGrowthOutsideY: FeeGrowth,
         tickUpperIndex: I256,
-        tickUpperFeeGrowthOutsideX: U256,
-        tickUpperFeeGrowthOutsideY: U256,
+        tickUpperFeeGrowthOutsideX: FeeGrowth,
+        tickUpperFeeGrowthOutsideY: FeeGrowth,
         tickCurrent: I256,
-        globalFeeGrowthX: U256,
-        globalFeeGrowthY: U256,
-        positionFeeGrowthInsideX: U256,
-        positionFeeGrowthInsideY: U256,
+        globalFeeGrowthX: FeeGrowth,
+        globalFeeGrowthY: FeeGrowth,
+        positionFeeGrowthInsideX: FeeGrowth,
+        positionFeeGrowthInsideY: FeeGrowth,
         positionLiquidity: Liquidity
     ) -> (U256, U256) {
         let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
@@ -197,13 +197,13 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
             globalFeeGrowthY
         )
 
-        let tokensOwedX = toFee(wrappingSub(feeGrowthInsideX, positionFeeGrowthInsideX), positionLiquidity)
-        let tokensOwedY = toFee(wrappingSub(feeGrowthInsideY, positionFeeGrowthInsideY), positionLiquidity)
+        let tokensOwedX = toFee(FeeGrowth{v: wrappingSub(feeGrowthInsideX.v, positionFeeGrowthInsideX.v)}, positionLiquidity)
+        let tokensOwedY = toFee(FeeGrowth{v: wrappingSub(feeGrowthInsideY.v, positionFeeGrowthInsideY.v)}, positionLiquidity)
 
         return tokensOwedX, tokensOwedY
     }
 
-    pub fn toFee(feeGrowth: U256, liquidity: Liquidity) -> U256 {
-        return toU256(bigMulDiv256(feeGrowth, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
+    pub fn toFee(feeGrowth: FeeGrowth, liquidity: Liquidity) -> U256 {
+        return toU256(bigMulDiv256(feeGrowth.v, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
     }
 }

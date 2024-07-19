@@ -8,8 +8,8 @@ Abstract Contract Ticks() extends TickHelper() {
         liquidityChange: Liquidity,
         liquidityGross: Liquidity,
         sqrtPrice: SqrtPrice,
-        feeGrowthOutsideX: U256,
-        feeGrowthOutsideY: U256,
+        feeGrowthOutsideX: FeeGrowth,
+        feeGrowthOutsideY: FeeGrowth,
         secondsOutside: U256
     ) -> () {
         let key = poolKeyBytes(poolKey) ++ toByteVec!(index)
@@ -48,8 +48,8 @@ Abstract Contract Ticks() extends TickHelper() {
                 liquidityChange: Liquidity{ v: 0 },
                 liquidityGross: Liquidity { v: 0},
                 sqrtPrice: SqrtPrice{v: 0},
-                feeGrowthOutsideX: 0,
-                feeGrowthOutsideY: 0,
+                feeGrowthOutsideX: FeeGrowth{v: 0},
+                feeGrowthOutsideY: FeeGrowth{v: 0},
                 secondsOutside: 0
             }
         }

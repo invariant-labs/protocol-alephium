@@ -3,8 +3,8 @@ struct Position {
     mut liquidity: Liquidity,
     mut lowerTickIndex: I256,
     mut upperTickIndex: I256,
-    mut feeGrowthInsideX: U256,
-    mut feeGrowthInsideY: U256,
+    mut feeGrowthInsideX: FeeGrowth,
+    mut feeGrowthInsideY: FeeGrowth,
     mut lastBlockNumber: U256,
     mut tokensOwedX: U256,
     mut tokensOwedY: U256,
@@ -54,11 +54,11 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         mut position: Position,
         sign: Bool,
         liquidityDelta: Liquidity,
-        feeGrowthInsideX: U256,
-        feeGrowthInsideY: U256
+        feeGrowthInsideX: FeeGrowth,
+        feeGrowthInsideY: FeeGrowth
     ) -> Position {
-        let tokensOwedX = clamm.toFee(wrappingSub(feeGrowthInsideX, position.feeGrowthInsideX), position.liquidity)
-        let tokensOwedY = clamm.toFee(wrappingSub(feeGrowthInsideY, position.feeGrowthInsideY), position.liquidity)
+        let tokensOwedX = clamm.toFee(FeeGrowth{v: wrappingSub(feeGrowthInsideX.v, position.feeGrowthInsideX.v)}, position.liquidity)
+        let tokensOwedY = clamm.toFee(FeeGrowth{v: wrappingSub(feeGrowthInsideY.v, position.feeGrowthInsideY.v)}, position.liquidity)
 
         position.liquidity = calculateNewLiquidity(position.liquidity, sign, liquidityDelta)
         position.feeGrowthInsideX = feeGrowthInsideX

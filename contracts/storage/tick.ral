@@ -4,8 +4,8 @@ struct Tick {
     mut liquidityChange: Liquidity,
     mut liquidityGross: Liquidity,
     mut sqrtPrice: SqrtPrice,
-    mut feeGrowthOutsideX: U256,
-    mut feeGrowthOutsideY: U256,
+    mut feeGrowthOutsideX: FeeGrowth,
+    mut feeGrowthOutsideY: FeeGrowth,
     mut secondsOutside: U256
 }
 
@@ -18,9 +18,9 @@ Abstract Contract TickHelper() extends Decimal() {
         return updatedTick.liquidityGross.v == 0
     }
 
-    fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: U256, feeGrowthGlobalY: U256, currentTick: I256) -> (Bool, Liquidity) {
-        tick.feeGrowthOutsideX = wrappingSub(feeGrowthGlobalX, tick.feeGrowthOutsideX)
-        tick.feeGrowthOutsideY = wrappingSub(feeGrowthGlobalY, tick.feeGrowthOutsideY)
+    fn cross(poolKey: PoolKey, mut tick: Tick,feeGrowthGlobalX: FeeGrowth, feeGrowthGlobalY: FeeGrowth, currentTick: I256) -> (Bool, Liquidity) {
+        tick.feeGrowthOutsideX = FeeGrowth{v: wrappingSub(feeGrowthGlobalX.v, tick.feeGrowthOutsideX.v)}
+        tick.feeGrowthOutsideY = FeeGrowth{v: wrappingSub(feeGrowthGlobalY.v, tick.feeGrowthOutsideY.v)}
 
         let isBelowCurrent = currentTick >= tick.index
 

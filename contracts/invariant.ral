@@ -209,14 +209,14 @@ Contract Invariant(
         poolKey: PoolKey,
         index: I256,
         currentTickIndex: I256,
-        feeGrowthGlobalX: U256,
-        feeGrowthGlobalY: U256,
+        feeGrowthGlobalX: FeeGrowth,
+        feeGrowthGlobalY: FeeGrowth,
         startTimestamp: U256
     ) -> () {
         clamm.checkTick(index, poolKey.feeTier.tickSpacing)
 
-        let mut feeGrowthOutsideX = 0
-        let mut feeGrowthOutsideY = 0
+        let mut feeGrowthOutsideX = FeeGrowth{v: 0}
+        let mut feeGrowthOutsideY = FeeGrowth{v: 0}
         let mut secondsOutside = 0
 
         if (index <= currentTickIndex) {
@@ -287,8 +287,8 @@ Contract Invariant(
           liquidity: Liquidity{v: 0},
           lowerTickIndex: lowerTickIndex,
           upperTickIndex: upperTickIndex,
-          feeGrowthInsideX: 0,
-          feeGrowthInsideY: 0,
+          feeGrowthInsideX: FeeGrowth{v: 0},
+          feeGrowthInsideY: FeeGrowth{v: 0},
           lastBlockNumber: currentTimestamp,
           tokensOwedX: 0,
           tokensOwedY: 0,
@@ -537,8 +537,8 @@ Contract Invariant(
                 ++ toByteVec!(pool.liquidity.v) ++ b`break`
                 ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`
                 ++ toByteVec!(pool.currentTickIndex) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalX) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalY) ++ b`break`
+                ++ toByteVec!(pool.feeGrowthGlobalX.v) ++ b`break`
+                ++ toByteVec!(pool.feeGrowthGlobalY.v) ++ b`break`
                 ++ toByteVec!(pool.feeProtocolTokenX) ++ b`break`
                 ++ toByteVec!(pool.feeProtocolTokenY) ++ b`break` 
                 ++ toByteVec!(pool.startTimestamp) ++ b`break`

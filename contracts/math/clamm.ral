@@ -336,12 +336,12 @@ Contract CLAMM() extends Uints(), Log(){
         return true
     }
 
-    pub fn toFee(feeGrowth: U256, liquidity: Liquidity) -> U256 {
-        return toU256(bigMulDiv256(feeGrowth, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
+    pub fn toFee(feeGrowth: FeeGrowth, liquidity: Liquidity) -> U256 {
+        return toU256(bigMulDiv256(feeGrowth.v, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
     }
 
-    pub fn feeGrowthFromFee(liquidity: Liquidity, fee: U256) -> U256 {
-        return toU256(bigMulDiv256(fee, one(LiquidityScale + FeeGrowthScale), liquidity.v))
+    pub fn feeGrowthFromFee(liquidity: Liquidity, fee: U256) -> FeeGrowth {
+        return FeeGrowth{v: toU256(bigMulDiv256(fee, one(LiquidityScale + FeeGrowthScale), liquidity.v))}
     }
 
 }

@@ -6,9 +6,9 @@ struct Liquidity{
     mut v: U256
 }
 
-// struct FeeGrowth{
-//     mut v: U256
-// }
+struct FeeGrowth{
+    mut v: U256
+}
 
 // struct Percentage{
 //     mut v: U256
@@ -238,43 +238,43 @@ Abstract Contract Decimal() {
 
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,
-        tickLowerFeeGrowthOutsideX: U256,
-        tickLowerFeeGrowthOutsideY: U256,
+        tickLowerFeeGrowthOutsideX: FeeGrowth,
+        tickLowerFeeGrowthOutsideY: FeeGrowth,
         tickUpperIndex: I256,
-        tickUpperFeeGrowthOutsideX: U256,
-        tickUpperFeeGrowthOutsideY: U256,
+        tickUpperFeeGrowthOutsideX: FeeGrowth,
+        tickUpperFeeGrowthOutsideY: FeeGrowth,
         tickCurrent: I256,
-        globalFeeGrowthX: U256,
-        globalFeeGrowthY: U256
-    ) -> (U256,U256) {
+        globalFeeGrowthX: FeeGrowth,
+        globalFeeGrowthY: FeeGrowth
+    ) -> (FeeGrowth,FeeGrowth) {
         let currentAboveLower = tickCurrent >= tickLowerIndex
         let currentBelowUpper = tickCurrent < tickUpperIndex
 
-        let mut feeGrowthBelowX = 0
-        let mut feeGrowthBelowY = 0
+        let mut feeGrowthBelowXRaw = 0
+        let mut feeGrowthBelowYRaw = 0
         
-        let mut feeGrowthAboveX = 0
-        let mut feeGrowthAboveY = 0
+        let mut feeGrowthAboveXRaw = 0
+        let mut feeGrowthAboveYRaw = 0
 
         if (currentAboveLower) {
-            feeGrowthBelowX = tickLowerFeeGrowthOutsideX
-            feeGrowthBelowY = tickLowerFeeGrowthOutsideY
+            feeGrowthBelowXRaw = tickLowerFeeGrowthOutsideX.v
+            feeGrowthBelowYRaw = tickLowerFeeGrowthOutsideY.v
         } else {
-            feeGrowthBelowX = wrappingSub(globalFeeGrowthX, tickLowerFeeGrowthOutsideX)
-            feeGrowthBelowY = wrappingSub(globalFeeGrowthY, tickLowerFeeGrowthOutsideY)
+            feeGrowthBelowXRaw = wrappingSub(globalFeeGrowthX.v, tickLowerFeeGrowthOutsideX.v)
+            feeGrowthBelowYRaw = wrappingSub(globalFeeGrowthY.v, tickLowerFeeGrowthOutsideY.v)
         }
 
         if (currentBelowUpper) {
-            feeGrowthAboveX = tickUpperFeeGrowthOutsideX
-            feeGrowthAboveY = tickUpperFeeGrowthOutsideY
+            feeGrowthAboveXRaw = tickUpperFeeGrowthOutsideX.v
+            feeGrowthAboveYRaw = tickUpperFeeGrowthOutsideY.v
         } else {
-            feeGrowthAboveX = wrappingSub(globalFeeGrowthX, tickUpperFeeGrowthOutsideX)
-            feeGrowthAboveY = wrappingSub(globalFeeGrowthY, tickUpperFeeGrowthOutsideY)
+            feeGrowthAboveXRaw = wrappingSub(globalFeeGrowthX.v, tickUpperFeeGrowthOutsideX.v)
+            feeGrowthAboveYRaw = wrappingSub(globalFeeGrowthY.v, tickUpperFeeGrowthOutsideY.v)
         }
 
-        let feeGrowthInsideX = wrappingSub(wrappingSub(globalFeeGrowthX, feeGrowthBelowX), feeGrowthAboveX)
-        let feeGrowthInsideY = wrappingSub(wrappingSub(globalFeeGrowthY, feeGrowthBelowY), feeGrowthAboveY)
+        let feeGrowthInsideXRaw = wrappingSub(wrappingSub(globalFeeGrowthX.v, feeGrowthBelowXRaw), feeGrowthAboveXRaw)
+        let feeGrowthInsideYRaw = wrappingSub(wrappingSub(globalFeeGrowthY.v, feeGrowthBelowYRaw), feeGrowthAboveYRaw)
 
-        return feeGrowthInsideX, feeGrowthInsideY
+        return FeeGrowth{v: feeGrowthInsideXRaw}, FeeGrowth{v: feeGrowthInsideYRaw}
     }
 }
