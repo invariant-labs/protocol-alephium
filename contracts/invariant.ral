@@ -522,6 +522,34 @@ Contract Invariant(
         }
     }
 
+    fn getSingleBatch(poolKey: PoolKey, index: U256) -> ByteVec {
+        let mut batch = #
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(index)
+        if (bitmap.contains!(key)) {
+            let tickmapBatch = bitmap[key]
+            for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
+                let offset = index * ChunksPerBatch + i
+                batch = batch ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(tickmapBatch.chunks[i]) ++ b`break`
+            }
+        }
+        return batch
+    }
+
+
+    pub fn getTickmapSlice(poolKey: PoolKey, lowerBatch: U256, upperBatch: U256, xToY: Bool) -> ByteVec {
+        let mut slice = #
+        if (xToY) {
+            for(let mut batchIndex = lowerBatch; batchIndex < upperBatch; batchIndex = batchIndex + 1) {
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
+            }
+        } else {
+            for(batchIndex = upperBatch; batchIndex >= lowerBatch; batchIndex = batchIndex - 1) {
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
+            }
+        }
+        return slice
+    }
+    
     pub fn getAllPoolsForPair(token0: ByteVec, token1: ByteVec) -> ByteVec {
         let mut matchingPools = b``
 

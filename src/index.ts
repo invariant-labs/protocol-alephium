@@ -13,4 +13,4 @@ export {
   SearchRange,
   InvariantError,
   MaxU256
-} from './consts.js'
+} from './consts'

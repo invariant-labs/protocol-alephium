@@ -27,11 +27,14 @@ import {
   deployReserve,
   MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
+  constructTickmap,
+  getMaxBatch,
   decodePools,
   decodePoolKeys,
   getNodeUrl,
   signAndSend
 } from './utils'
+import { MAX_BATCHES_QUERIED } from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
@@ -496,8 +499,34 @@ export class Invariant {
   }
 
   // async getPositionTicks() {}
-  // async getRawTickmap() {}
-  // async getFullTickmap() {}
+  async getRawTickmap(
+    poolKey: PoolKey,
+    lowerBatch: bigint,
+    upperBatch: bigint,
+    xToY: boolean
+  ): Promise<[bigint, bigint][]> {
+    const response = await this.instance.view.getTickmapSlice({
+      args: { poolKey, lowerBatch, upperBatch, xToY }
+    })
+
+    return constructTickmap(response.returns)
+  }
+
+  async getFullTickmap(poolKey: PoolKey) {
+    const promises: Promise<[bigint, bigint][]>[] = []
+    const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
+    let currentBatch = 0n
+
+    while (currentBatch <= maxBatch) {
+      let nextBatch = currentBatch + MAX_BATCHES_QUERIED
+      promises.push(this.getRawTickmap(poolKey, currentBatch, nextBatch, true))
+      currentBatch += MAX_BATCHES_QUERIED
+    }
+
+    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
+    const storedTickmap = new Map<bigint, bigint>(fullResult)
+    return { bitmap: storedTickmap }
+  }
   // async getLiquidityTicks() {}
   // async getAllLiquidityTicks() {}
   // async getUserPositionAmount() {}

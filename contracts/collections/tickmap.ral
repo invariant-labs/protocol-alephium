@@ -257,6 +257,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                     0, 0, 0, 0
                 ] 
             }
+            
             bitmap.insert!(originalCaller, id, batch)
         }
     }
@@ -271,7 +272,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     @using(checkExternalCaller = false)
     pub fn getMaxChunk(tickSpacing: U256) -> (U256) {
         let maxTick = getMaxTick(tickSpacing)
-        let maxBitmapIndex = maxTick + GlobalMaxTick / toI256!(tickSpacing)
+        let maxBitmapIndex = (maxTick + GlobalMaxTick) / toI256!(tickSpacing)
         let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
         return maxChunkIndex
     }

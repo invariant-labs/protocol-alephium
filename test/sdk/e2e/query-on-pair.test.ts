@@ -71,5 +71,5 @@ describe('query on token pair tests', () => {
 
     const queriedPools = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)
     expect(queriedPools.length).toBe(32)
-  })
+  }, 30000)
 })

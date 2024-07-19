@@ -14,7 +14,8 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
-import { MaxFeeTiers } from './consts'
+import { ChunkSize, ChunksPerBatch, MaxFeeTiers } from './consts'
+import { getMaxTick, getMinTick } from './math'
 import { Network } from './network'
 
 const BREAK_BYTES = '627265616b'
@@ -258,6 +259,26 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
     })
   ).returns
 }
+
+export const constructTickmap = async (string: string): Promise<[bigint, bigint][]> => {
+  const parts = string.split('627265616b')
+  const chunks: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    chunks.push([decodeU256(parts[i]), decodeU256(parts[i + 1])])
+  }
+
+  return chunks
+}
+
+export const getMaxBatch = async (tickSpacing: bigint) => {
+  const maxTick = await getMaxTick(tickSpacing)
+  const minTick = await getMinTick(tickSpacing)
+  const ticksAmount = -minTick + maxTick + 1n
+  const lastBatch = ticksAmount / (ChunkSize * ChunksPerBatch)
+  return lastBatch
+}
+
 export function getNodeUrl(network: Network) {
   if (network === Network.Local || network === Network.Devnet) {
     return 'http://127.0.0.1:22973'

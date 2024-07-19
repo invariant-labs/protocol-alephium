@@ -14,7 +14,9 @@ export const {
   // MinSqrtPrice,
   MaxFeeTiers,
   SearchRange,
-  InvariantError
+  InvariantError,
+  ChunksPerBatch,
+  ChunkSize
 } = Invariant.consts
 
 export const { CLAMMError, DecimalError, WordSize, ArithmeticError } = CLAMM.consts
@@ -26,6 +28,7 @@ export const MaxU256 =
 
 export const MaxSqrtPrice = 65535383934512647000000000000n
 export const MinSqrtPrice = 15258932000000000000n
+export const MAX_BATCHES_QUERIED = 18n
 
 export enum VMError {
   ArithmeticError = 'ArithmeticError',
