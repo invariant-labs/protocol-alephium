@@ -18,14 +18,14 @@ describe('log tests', () => {
   describe('sqrt price to x32', () => {
     test('min sqrt price -> sqrt(1.0001) ^ MIN_TICK', async () => {
       const minSqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: -221818n
           }
         })
       ).returns
       const result = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: minSqrtPriceDecimal
           }
@@ -36,14 +36,14 @@ describe('log tests', () => {
 
     test('max sqrt price -> sqrt(1.0001) ^ MAX_TICK', async () => {
       const maxSqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: 221818n
           }
         })
       ).returns
       const result = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: maxSqrtPriceDecimal
           }
@@ -57,14 +57,14 @@ describe('log tests', () => {
     test('log2 of 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: sqrtPriceDecimal
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -76,14 +76,14 @@ describe('log tests', () => {
     test('log2 > 0 when x > 1', async () => {
       const sqrtPriceDecimal = 879_000000000000000000000000n
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: sqrtPriceDecimal
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -95,14 +95,14 @@ describe('log tests', () => {
     test('log2 < 0 when x < 1', async () => {
       const sqrtPriceDecimal = 5900000000000000000000n
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: sqrtPriceDecimal
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -113,21 +113,21 @@ describe('log tests', () => {
 
     test('log2 of max sqrt price', async () => {
       const maxSqrtPrice = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: 221818n
           }
         })
       ).returns
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: maxSqrtPrice
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -138,21 +138,21 @@ describe('log tests', () => {
 
     test('log2 of min sqrt price', async () => {
       const maxSqrtPrice = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: -221818n
           }
         })
       ).returns
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: maxSqrtPrice
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -163,7 +163,7 @@ describe('log tests', () => {
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) - 1', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: -19999n
           }
@@ -171,14 +171,14 @@ describe('log tests', () => {
       ).returns
       sqrtPriceDecimal -= 1n
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: sqrtPriceDecimal
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -189,7 +189,7 @@ describe('log tests', () => {
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) + 1', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: {
             tickIndex: 19999n
           }
@@ -197,14 +197,14 @@ describe('log tests', () => {
       ).returns
       sqrtPriceDecimal -= 1n
       const sqrtPriceX32 = (
-        await clamm.methods.sqrtPriceToX32({
+        await clamm.view.sqrtPriceToX32({
           args: {
             val: sqrtPriceDecimal
           }
         })
       ).returns
       const result = (
-        await clamm.methods.log2IterativeApproximationX32({
+        await clamm.view.log2IterativeApproximationX32({
           args: {
             sqrtPrice: sqrtPriceX32
           }
@@ -218,7 +218,7 @@ describe('log tests', () => {
     test('around 0 tick / get tick at 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -231,7 +231,7 @@ describe('log tests', () => {
     test('around 0 tick / get tick slightly below 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n - 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -244,7 +244,7 @@ describe('log tests', () => {
     test('around 0 tick / get tick slightly above 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n + 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -256,12 +256,12 @@ describe('log tests', () => {
 
     test('around 1 tick / get tick at sqrt(1.0001)', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -273,12 +273,12 @@ describe('log tests', () => {
 
     test('around 1 tick / get tick slightly below sqrt(1.0001)', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal - 1n,
             tickSpacing: 1n
@@ -290,12 +290,12 @@ describe('log tests', () => {
 
     test('around 1 tick / get tick slightly above sqrt(1.0001)', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal + 1n,
             tickSpacing: 1n
@@ -307,12 +307,12 @@ describe('log tests', () => {
 
     test('around -1 tick / get tick at sqrt(1.0001 ^ (-1))', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -324,12 +324,12 @@ describe('log tests', () => {
 
     test('around -1 tick / get tick slightly below sqrt(1.0001 ^ (-1))', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal - 1n,
             tickSpacing: 1n
@@ -341,12 +341,12 @@ describe('log tests', () => {
 
     test('around -1 tick / get tick slightly above sqrt(1.0001 ^ (-1))', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal + 1n,
             tickSpacing: 1n
@@ -358,12 +358,12 @@ describe('log tests', () => {
 
     test('around max - 1 tick / get tick at sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 221818n - 1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -375,13 +375,13 @@ describe('log tests', () => {
 
     test('around max - 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 221818n - 1n }
         })
       ).returns
       sqrtPriceDecimal -= 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -393,13 +393,13 @@ describe('log tests', () => {
 
     test('around max - 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: 221818n - 1n }
         })
       ).returns
       sqrtPriceDecimal += 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -411,12 +411,12 @@ describe('log tests', () => {
 
     test('around min + 1 tick / get tick at sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -221818n + 1n }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -428,13 +428,13 @@ describe('log tests', () => {
 
     test('around min + 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -221818n + 1n }
         })
       ).returns
       sqrtPriceDecimal -= 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -446,13 +446,13 @@ describe('log tests', () => {
 
     test('around min + 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -221818n + 1n }
         })
       ).returns
       sqrtPriceDecimal += 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -466,7 +466,7 @@ describe('log tests', () => {
       const maxSqrtPrice = 65535383934512647000000000000n
       const sqrtPriceDecimal = maxSqrtPrice - 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -479,12 +479,12 @@ describe('log tests', () => {
     test('around 19999 tick / get tick at sqrt(1.0001 ^ 19999)', async () => {
       const tickIndex = 19999n
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -497,13 +497,13 @@ describe('log tests', () => {
     test('around 19999 tick / get tick slightly below sqrt(1.0001^19999)', async () => {
       const tickIndex = 19999n
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       sqrtPriceDecimal -= 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -516,13 +516,13 @@ describe('log tests', () => {
     test('around 19999 tick / get tick slightly above sqrt(1.0001^19999)', async () => {
       const tickIndex = 19999n
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       sqrtPriceDecimal += 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -535,12 +535,12 @@ describe('log tests', () => {
     test('around -19999 tick / get tick at sqrt(1.0001 ^ -19999)', async () => {
       const tickIndex = -19999n
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -553,13 +553,13 @@ describe('log tests', () => {
     test('around -19999 tick / get tick slightly below sqrt(1.0001^-19999)', async () => {
       const tickIndex = -19999n
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       sqrtPriceDecimal -= 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -572,13 +572,13 @@ describe('log tests', () => {
     test('around -19999 tick / get tick slightly above sqrt(1.0001^-19999)', async () => {
       const tickIndex = -19999n
       let sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       sqrtPriceDecimal += 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -590,13 +590,13 @@ describe('log tests', () => {
 
     test('get tick slightly above at min tick', async () => {
       const minSqrtPrice = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex: -221818n }
         })
       ).returns
       const sqrtPriceDecimal = minSqrtPrice + 1n
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -612,12 +612,12 @@ describe('log tests', () => {
 
     await expectError(
       DecimalError.TickOverBounds,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } }),
+      clamm.view.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } }),
       clamm
     )
     await expectError(
       DecimalError.TickOverBounds,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } }),
+      clamm.view.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } }),
       clamm
     )
   })
@@ -628,7 +628,7 @@ describe('log tests', () => {
       const tickSpacing = 3n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -643,7 +643,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -658,7 +658,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -673,7 +673,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -688,7 +688,7 @@ describe('log tests', () => {
       const tickSpacing = 3n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -703,13 +703,13 @@ describe('log tests', () => {
     test('all positive ticks', async () => {
       // for (let i = 0n; i < 221818n; i++) {
       //   const sqrtPriceDecimal = (
-      //     await clamm.methods.calculateSqrtPrice({
+      //     await clamm.view.calculateSqrtPrice({
       //       args: { tickIndex: i }
       //     })
       //   ).returns
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal,
       //           tickSpacing: 1n
@@ -720,7 +720,7 @@ describe('log tests', () => {
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal - 1n,
       //           tickSpacing: 1n
@@ -731,7 +731,7 @@ describe('log tests', () => {
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal + 1n,
       //           tickSpacing: 1n
@@ -746,13 +746,13 @@ describe('log tests', () => {
     test('all negative ticks', async () => {
       // for (let i = 0n; i < 221818n; i++) {
       //   const sqrtPriceDecimal = (
-      //     await clamm.methods.calculateSqrtPrice({
+      //     await clamm.view.calculateSqrtPrice({
       //       args: { tickIndex: -i }
       //     })
       //   ).returns
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal,
       //           tickSpacing: 1n
@@ -763,7 +763,7 @@ describe('log tests', () => {
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal - 1n,
       //           tickSpacing: 1n
@@ -774,7 +774,7 @@ describe('log tests', () => {
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal + 1n,
       //           tickSpacing: 1n
@@ -790,26 +790,26 @@ describe('log tests', () => {
       // const tickSpacing = 3n
       // for (let i = 0n; i < 221818n; i++) {
       //   const sqrtPriceDecimal = (
-      //     await clamm.methods.calculateSqrtPrice({
+      //     await clamm.view.calculateSqrtPrice({
       //       args: { tickIndex: i }
       //     })
       //   ).returns
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal,
       //           tickSpacing
       //         }
       //       })
       //     ).returns
-      //     const expectedTick = (await clamm.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } }))
+      //     const expectedTick = (await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } }))
       //       .returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal - 1n,
       //           tickSpacing
@@ -817,20 +817,20 @@ describe('log tests', () => {
       //       })
       //     ).returns
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal + 1n,
       //           tickSpacing
       //         }
       //       })
       //     ).returns
-      //     const expectedTick = (await clamm.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } }))
+      //     const expectedTick = (await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } }))
       //       .returns
       //     expect(tick).toBe(expectedTick)
       //   }
@@ -841,26 +841,26 @@ describe('log tests', () => {
       // const tickSpacing = 4n
       // for (let i = 0n; i < 221818n; i++) {
       //   const sqrtPriceDecimal = (
-      //     await clamm.methods.calculateSqrtPrice({
+      //     await clamm.view.calculateSqrtPrice({
       //       args: { tickIndex: -i }
       //     })
       //   ).returns
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal,
       //           tickSpacing
       //         }
       //       })
       //     ).returns
-      //     const expectedTick = (await clamm.methods.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } }))
+      //     const expectedTick = (await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } }))
       //       .returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal - 1n,
       //           tickSpacing
@@ -868,20 +868,20 @@ describe('log tests', () => {
       //       })
       //     ).returns
       //     const expectedTick = await (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = (
-      //       await clamm.methods.getTickAtSqrtPrice({
+      //       await clamm.view.getTickAtSqrtPrice({
       //         args: {
       //           sqrtPrice: sqrtPriceDecimal + 1n,
       //           tickSpacing
       //         }
       //       })
       //     ).returns
-      //     const expectedTick = (await clamm.methods.allignTickToSpacing({ args: { accurateTick: -i, tickSpacing } }))
+      //     const expectedTick = (await clamm.view.allignTickToSpacing({ args: { accurateTick: -i, tickSpacing } }))
       //       .returns
       //     expect(tick).toBe(expectedTick)
       //   }

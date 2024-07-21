@@ -25,7 +25,6 @@ import {
   EMPTY_FEE_TIERS,
   deployCLAMM,
   deployReserve,
-  MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
   constructTickmap,
   getMaxBatch,
@@ -39,6 +38,7 @@ import {
   Address,
   ALPH_TOKEN_ID,
   DUST_AMOUNT,
+  MAP_ENTRY_DEPOSIT,
   SignerProvider,
   TransactionBuilder
 } from '@alephium/web3'
