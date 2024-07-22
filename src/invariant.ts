@@ -31,9 +31,11 @@ import {
   decodePools,
   decodePoolKeys,
   getNodeUrl,
-  signAndSend
+  signAndSend,
+  decodePositions,
+  Page
 } from './utils'
-import { MAX_BATCHES_QUERIED, MAX_POOL_KEYS_QUERIED } from './consts'
+import { MAX_BATCHES_QUERIED, MAX_POOL_KEYS_QUERIED, MAX_POSITIONS_QUERIED } from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
@@ -491,8 +493,6 @@ export class Invariant {
     return (await this.instance.view.getProtocolFee()).returns
   }
 
-  // async getPositions() {}
-  // async getAllPositions() {}
   async getPoolKeys(size: bigint, offset: bigint): Promise<[PoolKey[], bigint]> {
     const response = await this.instance.view.getPoolKeys({
       args: { size, offset }
@@ -501,6 +501,63 @@ export class Invariant {
     const [serializedPoolKeys, totalPoolKeys] = response.returns
     return [decodePoolKeys(serializedPoolKeys), totalPoolKeys]
   }
+  async getPositions(owner: Address, size: bigint, offset: bigint) {
+    const response = await this.instance.view.getPositions({
+      args: { owner, size, offset }
+    })
+
+    return decodePositions(response.returns)
+  }
+  async getAllPositions(
+    owner: string,
+    positionsCount?: bigint,
+    skipPages?: number[],
+    positionsPerPage?: bigint
+  ) {
+    const firstPageIndex = skipPages?.find(i => !skipPages.includes(i)) || 0
+    const positionsPerPageLimit = positionsPerPage || MAX_POSITIONS_QUERIED
+
+    let pages: Page[] = []
+    let actualPositionsCount = positionsCount
+
+    if (!positionsCount) {
+      const [positions, totalPositions] = await this.getPositions(
+        owner,
+        positionsPerPageLimit,
+        BigInt(firstPageIndex) * positionsPerPageLimit
+      )
+      pages.push({ index: 0, entries: positions })
+      actualPositionsCount = totalPositions
+    }
+
+    const promises: Promise<[[Position, Pool][], bigint]>[] = []
+    const pageIndexes: number[] = []
+
+    for (
+      let i = positionsCount ? firstPageIndex : firstPageIndex + 1;
+      i < Math.ceil(Number(actualPositionsCount) / Number(positionsPerPageLimit));
+      i++
+    ) {
+      if (skipPages?.includes(i)) {
+        continue
+      }
+      pageIndexes.push(i)
+      promises.push(
+        this.getPositions(owner, positionsPerPageLimit, BigInt(i) * positionsPerPageLimit)
+      )
+    }
+
+    const positionsEntriesList = await Promise.all(promises)
+    pages = [
+      ...pages,
+      ...positionsEntriesList.map(([positionsEntries], index) => {
+        return { index: pageIndexes[index], entries: positionsEntries }
+      })
+    ]
+
+    return pages
+  }
+  // async getPoolKeys() {}
   async getAllPoolKeys() {
     const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
 
