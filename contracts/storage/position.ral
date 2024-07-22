@@ -82,4 +82,20 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
             return currentPositionLiquidity - liquidityDelta
         }
     }
+
+    fn serializePosition(position: Position) -> ByteVec {
+        return position.poolKey.tokenX ++ b`break`
+        ++ position.poolKey.tokenY ++ b`break`
+        ++ toByteVec!(position.poolKey.feeTier.fee) ++ b`break`
+        ++ toByteVec!(position.poolKey.feeTier.tickSpacing) ++ b`break`
+        ++ toByteVec!(position.liquidity) ++ b`break`
+        ++ toByteVec!(position.lowerTickIndex) ++ b`break`
+        ++ toByteVec!(position.upperTickIndex) ++ b`break`
+        ++ toByteVec!(position.feeGrowthInsideX) ++ b`break`
+        ++ toByteVec!(position.feeGrowthInsideY) ++ b`break`
+        ++ toByteVec!(position.lastBlockNumber) ++ b`break`
+        ++ toByteVec!(position.tokensOwedX) ++ b`break`
+        ++ toByteVec!(position.tokensOwedY) ++ b`break`
+        ++ toByteVec!(position.owner) ++ b`break`
+    }
 }

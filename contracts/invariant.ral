@@ -557,29 +557,32 @@ Contract Invariant(
             let poolKey = newPoolKey(token0, token1, feeTiers.feeTiers[i])
             let (exist, pool) = getPool(poolKey)
             if(exist) {
-                matchingPools = matchingPools
-                ++ poolKey.tokenX ++ b`break`
-                ++ poolKey.tokenY ++ b`break`
-                ++ toByteVec!(poolKey.feeTier.fee) ++ b`break`
-                ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break` 
-                ++ toByteVec!(pool.liquidity) ++ b`break`
-                ++ toByteVec!(pool.sqrtPrice) ++ b`break`
-                ++ toByteVec!(pool.currentTickIndex) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalX) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalY) ++ b`break`
-                ++ toByteVec!(pool.feeProtocolTokenX) ++ b`break`
-                ++ toByteVec!(pool.feeProtocolTokenY) ++ b`break` 
-                ++ toByteVec!(pool.startTimestamp) ++ b`break`
-                ++ toByteVec!(pool.lastTimestamp) ++ b`break`
-                ++ toByteVec!(pool.feeReceiver) ++ b`break` 
-                ++ pool.reserveX ++ b`break` 
-                ++ pool.reserveY ++ b`break`
+                matchingPools = matchingPools ++ serializePool(pool)
             }
         }
 
         return matchingPools        
     }
+
     pub fn getAllPoolKeys() -> ByteVec {
         return wrappedGetAllPoolKeys()
+    }
+
+    pub fn getPositions(owner: Address, size: U256, offset: U256) -> ByteVec {
+        let totalPositions = positionCount(owner)
+        let mut slice = #
+        for(let mut i = offset; i < totalPositions; i = i + 1) {
+            if (i >= offset + size) {
+                return slice ++ b`break` ++ toByteVec!(totalPositions)
+            }
+            let (_, position) = wrappedGetPosition(owner, i)
+            let (_, pool) = wrappedGetPool(position.poolKey)
+            slice = slice ++ serializePosition(position) ++ serializePool(pool)
+        }
+        return slice ++ b`break` ++ toByteVec!(totalPositions)
+    }
+
+    pub fn getUserPositionCount(owner: Address) -> U256 {
+        return positionCount(owner)
     }
 }
