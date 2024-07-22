@@ -1,12 +1,12 @@
 struct FeeTier {
-    mut fee: U256,
+    mut fee: Percentage,
     mut tickSpacing: U256
 }
 
 Abstract Contract FeeTierHelper() {
-    pub fn newFeeTier(fee: U256, tickSpacing: U256) -> FeeTier {
+    pub fn newFeeTier(fee: Percentage, tickSpacing: U256) -> FeeTier {
         assert!(tickSpacing > 0 && tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(fee < one(PercentageScale), InvariantError.InvalidFee)
+        assert!(fee.v < one(PercentageScale), InvariantError.InvalidFee)
 
         return FeeTier {
             fee: fee,

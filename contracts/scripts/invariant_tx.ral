@@ -10,7 +10,7 @@ TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeT
     invariant.createPool{callerAddress!() -> ALPH: 5 * mapEntryDeposit!() }(token0, token1, feeTier, initSqrtPrice, initTick)
 }
 
-TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
+TxScript ChangeProtocolFee(invariant: Invariant, newFee: Percentage) {
     invariant.changeProtocolFee(newFee)
 }
 

@@ -48,7 +48,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                     tokenX: nullId,
                     tokenY: nullId,
                     feeTier: FeeTier {
-                        fee: 0,
+                        fee: Percentage{v: 0},
                         tickSpacing: 0
                     }
                 },

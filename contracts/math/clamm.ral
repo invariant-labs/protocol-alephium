@@ -10,7 +10,7 @@ Contract CLAMM() extends Uints(), Log(){
         liquidity: Liquidity,
         amount: U256,
         byAmountIn: Bool,
-        fee: U256
+        fee: Percentage
     ) -> SwapResult {
         if (liquidity.v == 0) {
             return SwapResult { 
@@ -28,7 +28,7 @@ Contract CLAMM() extends Uints(), Log(){
         let mut amountOut = 0
 
         if (byAmountIn) {
-            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), one(PercentageScale)))
+            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee.v), one(PercentageScale)))
 
             if (xToY) {
                 amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
@@ -82,7 +82,7 @@ Contract CLAMM() extends Uints(), Log(){
         if (byAmountIn && nextSqrtPrice.v != targetSqrtPrice.v) {
             feeAmount = amount - amountIn
         } else {
-            feeAmount = toU256(bigMulDivUp256(amountIn, fee, one(PercentageScale)))
+            feeAmount = toU256(bigMulDivUp256(amountIn, fee.v, one(PercentageScale)))
         }
 
         return SwapResult { 
@@ -267,7 +267,7 @@ Contract CLAMM() extends Uints(), Log(){
         amount: U256,
         startingSqrtPrice: SqrtPrice,
         liquidity: Liquidity,
-        fee: U256,
+        fee: Percentage,
         byAmountIn: Bool,
         xToY: Bool
     ) -> Bool {
@@ -277,7 +277,7 @@ Contract CLAMM() extends Uints(), Log(){
 
         let mut nextSqrtPrice = SqrtPrice{v: 0}
         if (byAmountIn) {
-            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee), one(PercentageScale)))
+            let amountAfterFee = toU256(bigMulDiv256(amount, (one(PercentageScale) - fee.v), one(PercentageScale)))
             nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
         } else {
             nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)

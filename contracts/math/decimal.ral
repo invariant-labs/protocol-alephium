@@ -10,9 +10,9 @@ struct FeeGrowth{
     mut v: U256
 }
 
-// struct Percentage{
-//     mut v: U256
-// }
+struct Percentage{
+    mut v: U256
+}
 
 // struct TokenAmount{
 //     mut v: U256

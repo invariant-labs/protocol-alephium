@@ -1,4 +1,4 @@
-struct InvariantConfig { admin: Address, mut protocolFee: U256 }
+struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
 
 struct SwapResult {
     nextSqrtPrice: SqrtPrice,
@@ -83,14 +83,14 @@ Contract Invariant(
         FeeTierLimitReached = 28
     }
     
-    pub fn getProtocolFee() -> U256 {
+    pub fn getProtocolFee() -> Percentage {
         return config.protocolFee
     }
 
     @using(updateFields = true)
-    pub fn changeProtocolFee(newProtocolFee: U256) -> () {
+    pub fn changeProtocolFee(newProtocolFee: Percentage) -> () {
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
-        assert!(newProtocolFee < one(PercentageScale), InvariantError.InvalidProtocolFee)
+        assert!(newProtocolFee.v < one(PercentageScale), InvariantError.InvalidProtocolFee)
         config.protocolFee = newProtocolFee
     }
 
@@ -155,7 +155,7 @@ Contract Invariant(
 
         assert!(feeTierCount < MaxFeeTiers, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(feeTier.fee < one(PercentageScale), InvariantError.InvalidFee)
+        assert!(feeTier.fee.v < one(PercentageScale), InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
         
         feeTiers.feeTiers[feeTierCount] = feeTier
@@ -168,9 +168,9 @@ Contract Invariant(
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
         
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
-            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+            if(feeTiers.feeTiers[i].fee.v == feeTier.fee.v && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
-                feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: 0, tickSpacing: 0}
+                feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: Percentage{v: 0}, tickSpacing: 0}
                 feeTierCount = feeTierCount - 1
                 return
             }
@@ -180,7 +180,7 @@ Contract Invariant(
 
     pub fn feeTierExist(feeTier: FeeTier) -> Bool {
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
-            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+            if(feeTiers.feeTiers[i].fee.v == feeTier.fee.v && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 return true
             }
         }
@@ -532,7 +532,7 @@ Contract Invariant(
                 matchingPools = matchingPools
                 ++ poolKey.tokenX ++ b`break`
                 ++ poolKey.tokenY ++ b`break`
-                ++ toByteVec!(poolKey.feeTier.fee) ++ b`break`
+                ++ toByteVec!(poolKey.feeTier.fee.v) ++ b`break`
                 ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break` 
                 ++ toByteVec!(pool.liquidity.v) ++ b`break`
                 ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`

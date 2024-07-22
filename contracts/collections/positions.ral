@@ -36,7 +36,7 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
                     tokenX: addressToContractId!(nullContractAddress!()),
                     tokenY: addressToContractId!(nullContractAddress!()),
                     feeTier: FeeTier {
-                        fee: 0,
+                        fee: Percentage{v: 0},
                         tickSpacing: 0
                     }
                 },
