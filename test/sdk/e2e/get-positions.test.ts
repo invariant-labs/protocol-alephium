@@ -78,22 +78,22 @@ describe('get positions test', () => {
     expect(positions.length).toBe(2)
     expect(totalPositions).toBe(2n)
   })
-  test('get positions less than exist', async () => {
+  test('get less than all', async () => {
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 1n, 0n)
     expect(positions.length).toBe(1)
     expect(totalPositions).toBe(2n)
   })
-  test('get positions more than exist', async () => {
+  test('try to get more than all', async () => {
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 3n, 0n)
     expect(positions.length).toBe(2)
     expect(totalPositions).toBe(2n)
   })
-  test('get position with offset', async () => {
+  test('get with offset', async () => {
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 1n, 1n)
     expect(positions.length).toBe(1)
     expect(totalPositions).toBe(2n)
   })
-  test('get position with offset less than exist', async () => {
+  test('get with offset less than all', async () => {
     const { sqrtPrice } = await invariant.getPool(poolKey)
     const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
     const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -113,12 +113,12 @@ describe('get positions test', () => {
     expect(positions.length).toBe(1)
     expect(totalPositions).toBe(3n)
   })
-  test('get position with offset more than exist', async () => {
+  test('try to get with offset more than all', async () => {
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 2n, 1n)
     expect(positions.length).toBe(1)
     expect(totalPositions).toBe(2n)
   })
-  test('find limit of queried position in single query', async () => {
+  test('find limit of queried positions in single query', async () => {
     const positionToOpen = 81n
 
     for (let i = 1n; i <= positionToOpen; i++) {

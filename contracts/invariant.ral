@@ -582,7 +582,7 @@ Contract Invariant(
         return slice ++ b`break` ++ toByteVec!(totalPositions)
     }
 
-    pub fn getUserPositionAmount(owner: Address) -> U256 {
+    pub fn getUserPositionCount(owner: Address) -> U256 {
         return positionCount(owner)
     }
 }

@@ -20,7 +20,7 @@ let tokenY: TokenFaucetInstance
 let feeTier: FeeTier
 let poolKey: PoolKey
 
-describe('get positions test', () => {
+describe('get all positions test', () => {
   const initialFee = 0n
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const initSqrtPrice = 10n ** 24n
