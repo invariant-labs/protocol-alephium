@@ -2,6 +2,7 @@ import {
   Address,
   ContractInstance,
   DUST_AMOUNT,
+  MAP_ENTRY_DEPOSIT,
   SignerProvider,
   addressFromContractId
 } from '@alephium/web3'
@@ -20,17 +21,10 @@ import {
   CreatePosition,
   TransferPosition
 } from '../artifacts/ts'
-import {
-  MAP_ENTRY_DEPOSIT,
-  decodePool,
-  decodePosition,
-  deployTokenFaucet,
-  decodeTick,
-  balanceOf
-} from './utils'
+import { decodePool, decodePosition, deployTokenFaucet, decodeTick, balanceOf } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { LiquidityScale, VMError } from './consts'
+import { VMError } from './consts'
 import { FeeTier, Pool, PoolKey } from '../artifacts/ts/types'
 
 type TokenInstance = TokenFaucetInstance
@@ -47,9 +41,7 @@ export async function expectError(
       await script
     } catch (e: any) {
       const err = e.toString()
-      const regex = new RegExp(`${errorCode}$`)
-      if (!regex.test(err)) {
-        console.log(err)
+      if (!err.includes(Number(errorCode).toString())) {
         throw new Error('Invalid Error message')
       }
     }
@@ -102,7 +94,7 @@ export async function feeTierExists(invariant: InvariantInstance, ...feeTiers: F
   for (const feeTier of feeTiers) {
     tierStatus.push(
       (
-        await invariant.methods.feeTierExist({
+        await invariant.view.feeTierExist({
           args: { feeTier }
         })
       ).returns
@@ -183,7 +175,7 @@ export async function getFeeTiers(invariant: InvariantInstance) {
 export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
   return decodePool(
     (
-      await invariant.methods.getPool({
+      await invariant.view.getPool({
         args: {
           poolKey
         }
@@ -195,7 +187,7 @@ export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
 export async function getPosition(invariant: InvariantInstance, owner: Address, index: bigint) {
   return decodePosition(
     (
-      await invariant.methods.getPosition({
+      await invariant.view.getPosition({
         args: {
           owner,
           index
@@ -219,7 +211,7 @@ export const changeProtocolFee = async (
 }
 
 export const getProtocolFee = async (invariant: InvariantInstance) => {
-  return (await invariant.methods.getProtocolFee()).returns
+  return (await invariant.view.getProtocolFee()).returns
 }
 
 export async function initPosition(
@@ -261,7 +253,7 @@ export const quote = async (
   sqrtPriceLimit: bigint
 ) => {
   return (
-    await invariant.methods.quote({
+    await invariant.view.quote({
       args: {
         poolKey,
         xToY,
@@ -349,7 +341,7 @@ export async function initSwap(
 export const getTick = async (invariant: InvariantInstance, poolKey: PoolKey, index: bigint) => {
   return decodeTick(
     (
-      await invariant.methods.getTick({
+      await invariant.view.getTick({
         args: {
           poolKey,
           index

@@ -90,7 +90,7 @@ describe('liquidity gap tests', () => {
 
     const pool = await getPool(invariant, poolKey)
     const expectedSqrtPrice = (
-      await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } })
+      await invariant.view.calculateSqrtPrice({ args: { tickIndex: -10n } })
     ).returns
     const expectedYAmountOut = 9999n
     const liquidityDelta = toLiquidity(20006000n)
@@ -192,8 +192,7 @@ describe('liquidity gap tests', () => {
       index: -50n,
       liquidityChange: secondPosition.liquidity,
       liquidityGross: secondPosition.liquidity,
-      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -50n } }))
-        .returns,
+      sqrtPrice: (await invariant.view.calculateSqrtPrice({ args: { tickIndex: -50n } })).returns,
       feeGrowthOutsideX: 0n,
       feeGrowthOutsideY: 0n
     }
@@ -202,8 +201,7 @@ describe('liquidity gap tests', () => {
       index: -10n,
       liquidityChange: firstPosition.liquidity,
       liquidityGross: firstPosition.liquidity,
-      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } }))
-        .returns,
+      sqrtPrice: (await invariant.view.calculateSqrtPrice({ args: { tickIndex: -10n } })).returns,
       feeGrowthOutsideX: 29991002699190242927121n,
       feeGrowthOutsideY: 0n
     }
