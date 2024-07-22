@@ -129,7 +129,7 @@ describe('create pool tests', () => {
 
     const initTick = 2n
     const initSqrtPrice = (
-      await invariant.methods.calculateSqrtPrice({ args: { tickIndex: initTick } })
+      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
     ).returns
 
     const clamm = CLAMM.at(
@@ -156,7 +156,7 @@ describe('create pool tests', () => {
 
     const initTick = 0n
     const initSqrtPrice =
-      (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: initTick } })).returns + 1n
+      (await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })).returns + 1n
     await initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const pool = await getPool(invariant, poolKey)

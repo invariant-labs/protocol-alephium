@@ -1,13 +1,7 @@
-import { DUST_AMOUNT, ONE_ALPH, web3 } from '@alephium/web3'
+import { DUST_AMOUNT, MAP_ENTRY_DEPOSIT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import {
-  MAP_ENTRY_DEPOSIT,
-  balanceOf,
-  deployInvariant,
-  newFeeTier,
-  newPoolKey
-} from '../../../src/utils'
+import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError, MinSqrtPrice, PercentageScale } from '../../../src/consts'
 import {
   getPool,

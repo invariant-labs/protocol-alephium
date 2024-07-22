@@ -19,7 +19,6 @@ import { getMaxTick, getMinTick } from './math'
 import { Network } from './network'
 
 const BREAK_BYTES = '627265616b'
-export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array(Number(MaxFeeTiers)).fill({
     fee: 0n,
