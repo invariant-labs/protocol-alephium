@@ -583,8 +583,8 @@ Contract Invariant(
     pub fn getPoolKeys(size: U256, offset: U256) -> (ByteVec, U256) {
         let mut slice = #
         let offsetEnd = offset + size
-        let max = if (offsetEnd > poolKeyCount) poolKeyCount else offsetEnd
-        for(let mut i = offset + 1; i <= max; i = i + 1) {
+        let sliceEnd = if (offsetEnd > poolKeyCount) poolKeyCount else offsetEnd
+        for(let mut i = offset + 1; i <= sliceEnd; i = i + 1) {
             let poolKey = poolKeys[i]
             slice = slice ++ poolKey.tokenX ++ b`break` ++ poolKey.tokenY ++ b`break` ++ toByteVec!(poolKey.feeTier.fee) ++ b`break` ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break`
         }
