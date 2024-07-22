@@ -24,6 +24,7 @@ export const { UtilsError, MaxU256 } = Utils.consts
 export const { ReserveError } = Reserve.consts
 
 export const MAX_BATCHES_QUERIED = 18n
+export const MAX_POOL_KEYS_QUERIED = 117n
 export const MAX_POSITIONS_QUERIED = 83n
 
 export enum VMError {

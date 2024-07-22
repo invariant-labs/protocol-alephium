@@ -35,7 +35,7 @@ import {
   decodePositions,
   Page
 } from './utils'
-import { MAX_BATCHES_QUERIED, MAX_POSITIONS_QUERIED } from './consts'
+import { MAX_BATCHES_QUERIED, MAX_POOL_KEYS_QUERIED, MAX_POSITIONS_QUERIED } from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
@@ -493,6 +493,14 @@ export class Invariant {
     return (await this.instance.view.getProtocolFee()).returns
   }
 
+  async getPoolKeys(size: bigint, offset: bigint): Promise<[PoolKey[], bigint]> {
+    const response = await this.instance.view.getPoolKeys({
+      args: { size, offset }
+    })
+
+    const [serializedPoolKeys, totalPoolKeys] = response.returns
+    return [decodePoolKeys(serializedPoolKeys), totalPoolKeys]
+  }
   async getPositions(owner: Address, size: bigint, offset: bigint) {
     const response = await this.instance.view.getPositions({
       args: { owner, size, offset }
@@ -551,7 +559,15 @@ export class Invariant {
   }
   // async getPoolKeys() {}
   async getAllPoolKeys() {
-    return decodePoolKeys((await this.instance.view.getAllPoolKeys()).returns)
+    const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
+
+    const promises: Promise<[PoolKey[], bigint]>[] = []
+    for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_QUERIED)); i++) {
+      promises.push(this.getPoolKeys(MAX_POOL_KEYS_QUERIED, BigInt(i) * MAX_POOL_KEYS_QUERIED))
+    }
+
+    const poolKeysEntries = await Promise.all(promises)
+    return [...poolKeys, ...poolKeysEntries.map(([poolKeys]) => poolKeys).flat()]
   }
 
   // async getPositionTicks() {}

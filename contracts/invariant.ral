@@ -564,8 +564,15 @@ Contract Invariant(
         return matchingPools        
     }
 
-    pub fn getAllPoolKeys() -> ByteVec {
-        return wrappedGetAllPoolKeys()
+    pub fn getPoolKeys(size: U256, offset: U256) -> (ByteVec, U256) {
+        let mut slice = #
+        let offsetEnd = offset + size
+        let sliceEnd = if (offsetEnd > poolKeyCount) poolKeyCount else offsetEnd
+        for(let mut i = offset + 1; i <= sliceEnd; i = i + 1) {
+            let poolKey = poolKeys[i]
+            slice = slice ++ poolKey.tokenX ++ b`break` ++ poolKey.tokenY ++ b`break` ++ toByteVec!(poolKey.feeTier.fee) ++ b`break` ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break`
+        }
+        return slice, poolKeyCount
     }
 
     pub fn getPositions(owner: Address, size: U256, offset: U256) -> ByteVec {
