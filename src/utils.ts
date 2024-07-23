@@ -26,6 +26,11 @@ export const EMPTY_FEE_TIERS: FeeTiers = {
   })
 } as FeeTiers
 
+export interface Page {
+  index: number
+  entries: [Position, Pool][]
+}
+
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
 }
@@ -260,7 +265,7 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
 }
 
 export const constructTickmap = async (string: string): Promise<[bigint, bigint][]> => {
-  const parts = string.split('627265616b')
+  const parts = string.split(BREAK_BYTES)
   const chunks: any[] = []
 
   for (let i = 0; i < parts.length - 1; i += 2) {
@@ -268,6 +273,60 @@ export const constructTickmap = async (string: string): Promise<[bigint, bigint]
   }
 
   return chunks
+}
+
+export const decodePositions = (string: string): [[Position, Pool][], bigint] => {
+  const parts = string.split(BREAK_BYTES)
+  const spacing = 29
+  const positions: [Position, Pool][] = []
+  for (let i = 0; i < parts.length - 2; i += spacing) {
+    const position: Position = {
+      poolKey: {
+        tokenX: parts[i],
+        tokenY: parts[i + 1],
+        feeTier: {
+          fee: decodeU256(parts[i + 2]),
+          tickSpacing: decodeU256(parts[i + 3])
+        }
+      },
+      liquidity: decodeU256(parts[i + 4]),
+      lowerTickIndex: decodeI256(parts[i + 5]),
+      upperTickIndex: decodeI256(parts[i + 6]),
+      feeGrowthInsideX: decodeU256(parts[i + 7]),
+      feeGrowthInsideY: decodeU256(parts[i + 8]),
+      lastBlockNumber: decodeU256(parts[i + 9]),
+      tokensOwedX: decodeU256(parts[i + 10]),
+      tokensOwedY: decodeU256(parts[i + 11]),
+      owner: AddressFromByteVec(parts[i + 12])
+    }
+    const pool = {
+      poolKey: {
+        tokenX: parts[i + 13],
+        tokenY: parts[i + 14],
+        feeTier: {
+          fee: decodeU256(parts[i + 15]),
+          tickSpacing: decodeU256(parts[i + 16])
+        }
+      },
+      liquidity: decodeU256(parts[i + 17]),
+      sqrtPrice: decodeU256(parts[i + 18]),
+      currentTickIndex: decodeI256(parts[i + 19]),
+      feeGrowthGlobalX: decodeU256(parts[i + 20]),
+      feeGrowthGlobalY: decodeU256(parts[i + 21]),
+      feeProtocolTokenX: decodeU256(parts[i + 22]),
+      feeProtocolTokenY: decodeU256(parts[i + 23]),
+      startTimestamp: decodeU256(parts[i + 24]),
+      lastTimestamp: decodeU256(parts[i + 25]),
+      feeReceiver: AddressFromByteVec(parts[i + 26]),
+      reserveX: parts[i + 27],
+      reserveY: parts[i + 28]
+    }
+    positions.push([position, pool])
+  }
+
+  const totalPositions = decodeU256(parts[parts.length - 1])
+
+  return [positions, totalPositions]
 }
 
 export const getMaxBatch = async (tickSpacing: bigint) => {
