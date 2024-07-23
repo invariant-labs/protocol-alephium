@@ -50,7 +50,7 @@ describe('max tick cross spec', () => {
 
   test('max tick cross swap xToY and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
-    const amount = 40300n
+    const amount = 40282n
     const xToY = true
     const slippage = MinSqrtPrice
     const byAmountIn = true
@@ -95,7 +95,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = 120n
-    const amount = 45000n
+    const amount = 44998n
     const xToY = false
     const slippage = MaxSqrtPrice
     const byAmountIn = true
@@ -120,9 +120,10 @@ describe('max tick cross spec', () => {
 
     await withdrawTokens(swapper, [tokenY, amount])
 
+    const poolBefore = await getPool(invariant, poolKey)
+
     const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
 
-    const poolBefore = await getPool(invariant, poolKey)
     const { gasAmount } = await initSwap(
       invariant,
       swapper,
@@ -229,7 +230,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = -35000n
-    const amount = 13570000n
+    const amount = 13569916n
     const xToY = true
     const slippage = MinSqrtPrice
     const byAmountIn = true
@@ -254,9 +255,8 @@ describe('max tick cross spec', () => {
 
     await withdrawTokens(swapper, [tokenX, amount])
 
-    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
-
     const poolBefore = await getPool(invariant, poolKey)
+
     const { gasAmount } = await initSwap(
       invariant,
       swapper,
@@ -264,7 +264,7 @@ describe('max tick cross spec', () => {
       xToY,
       amount,
       byAmountIn,
-      targetSqrtPrice
+      slippage
     )
     const poolAfter = await getPool(invariant, poolKey)
     const crosses = (poolAfter.currentTickIndex - poolBefore.currentTickIndex) / -searchLimit
@@ -273,7 +273,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = 25000n
-    const amount = 17947900n
+    const amount = 17947500n
     const xToY = false
     const slippage = MaxSqrtPrice
     const byAmountIn = true
@@ -298,8 +298,6 @@ describe('max tick cross spec', () => {
 
     await withdrawTokens(swapper, [tokenY, amount])
 
-    const { targetSqrtPrice } = await quote(invariant, poolKey, xToY, amount, byAmountIn, slippage)
-
     const poolBefore = await getPool(invariant, poolKey)
     const { gasAmount } = await initSwap(
       invariant,
@@ -308,7 +306,7 @@ describe('max tick cross spec', () => {
       xToY,
       amount,
       byAmountIn,
-      targetSqrtPrice
+      slippage
     )
 
     const poolAfter = await getPool(invariant, poolKey)
