@@ -4,7 +4,12 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { TokenFaucetInstance } from '../../../artifacts/ts/'
 import { InvariantInstance } from '../../../artifacts/ts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { getBasicFeeTickSpacing, swapExactLimit } from '../../../src/snippets'
+import {
+  getBasicFeeTickSpacing,
+  initBasicPool,
+  initBasicPosition,
+  swapExactLimit
+} from '../../../src/snippets'
 import {
   initFeeTier,
   initSwap,
@@ -16,8 +21,9 @@ import {
   initTokensXY,
   initPool
 } from '../../../src/testUtils'
-import { InvariantError, LiquidityScale, MaxSqrtPrice } from '../../../src/consts'
-import { calculateSqrtPrice } from '../../../src/math'
+import { InvariantError, MaxSqrtPrice } from '../../../src/consts'
+import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
+import { PoolKey } from '../../../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -25,12 +31,12 @@ let positionOwner: PrivateKeyWallet
 let invariant: InvariantInstance
 let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
+let poolKey: PoolKey
 
 describe('Invariant Swap Tests', () => {
   const swapAmount = 10n ** 8n
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-  const initTick = 0n
-  const [lowerTick, upperTick] = [-1000n, 1000n]
+
   const withdrawAmount = 10n ** 10n
 
   beforeAll(async () => {
@@ -38,22 +44,24 @@ describe('Invariant Swap Tests', () => {
   })
 
   beforeEach(async () => {
-    invariant = await deployInvariant(admin, 0n)
+    invariant = await deployInvariant(admin, 10n ** 10n)
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
 
     const tokenSupply = 10n ** 23n
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await withdrawTokens(positionOwner, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    await initFeeTier(invariant, admin, feeTier)
-
-    const liquidityDelta = 10_000_000_000n * 10n ** LiquidityScale * 10n
-    const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
-
+    const initTick = 0n
     const initSqrtPrice = await calculateSqrtPrice(initTick)
 
+    poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
     await initPool(invariant, positionOwner, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
+
+    const [lowerTick, upperTick] = [-1000n, 1000n]
+
+    const liquidityDelta = toLiquidity(10_000_000_000n)
 
     const poolBefore = await getPool(invariant, poolKey)
 
@@ -82,11 +90,18 @@ describe('Invariant Swap Tests', () => {
 
   test('test_basic_slippage', async () => {
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
+
+    const swapAmount = 10n ** 8n
     await withdrawTokens(swapper, [tokenY, swapAmount])
+
     const targetSqrtPrice = 1009940000000000000000001n
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
     await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
+
+    let expectedSqrtPrice = 1009940000000000000000000n
+
+    const pool = await getPool(invariant, poolKey)
+
+    expect(pool.sqrtPrice).toBe(expectedSqrtPrice)
   })
 
   test('test_swap_close_to_limit', async () => {
@@ -108,13 +123,32 @@ describe('Invariant Swap Tests', () => {
   })
 
   test('test_swap_exact_limit', async () => {
+    invariant = await deployInvariant(admin, 10n ** 10n)
+    const tokenSupply = 10n ** 23n
+    ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
+
+    const feeTier = await newFeeTier(fee, tickSpacing)
+    await initFeeTier(invariant, admin, feeTier)
+
+    await initBasicPool(invariant, admin, tokenX, tokenY)
+
+    await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
+
     const swapAmount = 1000n
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-    const feeTier = await newFeeTier(fee, tickSpacing)
+
     await withdrawTokens(swapper, [tokenX, swapAmount])
 
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
+    const poolBefore = await getPool(invariant, poolKey)
+
+    console.log('poolBefore', poolBefore)
+
     await swapExactLimit(invariant, swapper, poolKey, true, swapAmount, true)
+
+    const poolAfter = await getPool(invariant, poolKey)
+
+    console.log('poolAfter', poolAfter)
   })
 })

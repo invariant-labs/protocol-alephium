@@ -19,7 +19,6 @@ import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { calculateSqrtPrice, toLiquidity } from './math'
 
-
 type TokenInstance = TokenFaucetInstance
 
 // 0.6% fee
@@ -151,9 +150,11 @@ export const swapExactLimit = async (
   const quoteResult = await quote(invariant, poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 
   await initSwap(invariant, signer, poolKey, xToY, amount, byAmountIn, quoteResult.targetSqrtPrice)
+
+  const poolAfter = await getPool(invariant, poolKey)
+
+  expect(poolAfter.sqrtPrice).toBe(quoteResult.targetSqrtPrice)
 }
-
-
 
 export const transferAndVerifyPosition = async (
   invariant: InvariantInstance,
