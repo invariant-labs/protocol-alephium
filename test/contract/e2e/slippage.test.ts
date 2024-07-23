@@ -141,14 +141,6 @@ describe('Invariant Swap Tests', () => {
 
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const poolBefore = await getPool(invariant, poolKey)
-
-    console.log('poolBefore', poolBefore)
-
     await swapExactLimit(invariant, swapper, poolKey, true, swapAmount, true)
-
-    const poolAfter = await getPool(invariant, poolKey)
-
-    console.log('poolAfter', poolAfter)
   })
 })
