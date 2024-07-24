@@ -2,22 +2,22 @@ TxScript IncrementAssets(reserve: Reserve, by: U256) {
     reserve.incrementAssets(by)
 }
 
-TxScript DepositSingleAsset(reserve: Reserve, id: ByteVec, amount: U256) {
-    reserve.depositSingleAsset{callerAddress!() -> id: amount}(callerAddress!(), id, amount)
+TxScript DepositSingleAsset(reserve: Reserve, id: ByteVec, amount: TokenAmount) {
+    reserve.depositSingleAsset{callerAddress!() -> id: amount.v}(callerAddress!(), id, amount)
 }
 
-TxScript DepositTwoAssets(reserve: Reserve, xId: ByteVec, yId: ByteVec, x: U256, y: U256) {
-    reserve.depositTwoAssets{callerAddress!() -> xId: x, yId: y}(callerAddress!(), xId, yId, x, y)
+TxScript DepositTwoAssets(reserve: Reserve, xId: ByteVec, yId: ByteVec, x: TokenAmount, y: TokenAmount) {
+    reserve.depositTwoAssets{callerAddress!() -> xId: x.v, yId: y.v}(callerAddress!(), xId, yId, x, y)
 }
 
-TxScript WithdrawSingleAsset(reserve: Reserve, id: ByteVec, amount: U256) {
+TxScript WithdrawSingleAsset(reserve: Reserve, id: ByteVec, amount: TokenAmount) {
     reserve.withdrawSingleAsset(callerAddress!(), id, amount)
 }
 
-TxScript WithdrawTwoAssets(reserve: Reserve, xId: ByteVec, yId: ByteVec, x: U256, y: U256) {
+TxScript WithdrawTwoAssets(reserve: Reserve, xId: ByteVec, yId: ByteVec, x: TokenAmount, y: TokenAmount) {
     reserve.withdrawTwoAssets(callerAddress!(), xId, yId, x, y)
 }
 
-TxScript SwapAssets(reserve: Reserve, inId: ByteVec, outId: ByteVec, in: U256, out: U256) {
-    reserve.swap{callerAddress!() -> inId: in}(callerAddress!(), inId, outId, in, out)
+TxScript SwapAssets(reserve: Reserve, inId: ByteVec, outId: ByteVec, in: TokenAmount, out: TokenAmount) {
+    reserve.swap{callerAddress!() -> inId: in.v}(callerAddress!(), inId, outId, in, out)
 }

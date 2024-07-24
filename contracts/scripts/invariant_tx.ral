@@ -54,9 +54,9 @@ TxScript ClaimFee(invariant: Invariant, index: U256) {
     invariant.claimFee(index)
 }
 
-TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: SqrtPrice) {
+TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: TokenAmount, byAmountIn: Bool, sqrtPriceLimit: SqrtPrice) {
     let mut swappedToken = poolKey.tokenX
-    let mut swappedAmount = amount
+    let mut swappedAmount = amount.v
     if (!xToY) {
         swappedToken = poolKey.tokenY
     }

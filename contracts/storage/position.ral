@@ -6,8 +6,8 @@ struct Position {
     mut feeGrowthInsideX: FeeGrowth,
     mut feeGrowthInsideY: FeeGrowth,
     mut lastBlockNumber: U256,
-    mut tokensOwedX: U256,
-    mut tokensOwedY: U256,
+    mut tokensOwedX: TokenAmount,
+    mut tokensOwedY: TokenAmount,
     mut owner: Address
 }
 
@@ -21,7 +21,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         liquidityDelta: Liquidity,
         add: Bool,
         currentTimestamp: U256
-    ) -> (U256, U256, Position, Bool, Bool) {
+    ) -> (TokenAmount, TokenAmount, Position, Bool, Bool) {
         pool.lastTimestamp = currentTimestamp
 
         let maxLiquidityPerTick = clamm.calculateMaxLiquidityPerTick(pool.poolKey.feeTier.tickSpacing)

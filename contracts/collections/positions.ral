@@ -46,8 +46,8 @@ Abstract Contract Positions(clamm: CLAMM) extends PositionHelper(clamm) {
                 feeGrowthInsideX: FeeGrowth{v: 0},
                 feeGrowthInsideY: FeeGrowth{v: 0},
                 lastBlockNumber: 0,
-                tokensOwedX: 0,
-                tokensOwedY: 0,
+                tokensOwedX: TokenAmount{v: 0},
+                tokensOwedY: TokenAmount{v: 0},
                 owner: nullContractAddress!()
             }
         } 
