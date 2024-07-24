@@ -243,20 +243,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         let id = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
         let exists = bitmap.contains!(id)
         if(!exists) {
-            let batch = TickmapBatch {
-                chunks: [
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0
-                ] 
-            }
+            let batch = TickmapBatch {chunks: [0; 94]}
             bitmap.insert!(originalCaller, id, batch)
         }
     }
