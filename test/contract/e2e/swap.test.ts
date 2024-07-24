@@ -22,19 +22,17 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import {
-  InvariantError,
-  MaxSqrtPrice,
-  MinSqrtPrice,
-  PercentageScale,
-  VMError
-} from '../../../src/consts'
-import { toLiquidity } from '../../../src/math'
+import { InvariantError, MaxSqrtPrice, MinSqrtPrice, VMError } from '../../../src/consts'
+import { toLiquidity, toPercentage } from '../../../src/math'
+import { Percentage } from '../../../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
 
 describe('swap tests', () => {
+  // 0.6% fee
+  const protocolFee = toPercentage(6n, 3n)
+
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
   })
@@ -52,8 +50,6 @@ describe('swap tests', () => {
   })
 
   test('x to y', async () => {
-    // 6% fee
-    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
     const invariant = await deployInvariant(admin, protocolFee)
 
     const positionsAmount = 2n * 10n ** 10n
@@ -142,6 +138,7 @@ describe('swap tests', () => {
         feeProtocolTokenX: 2n,
         feeProtocolTokenY: 0n
       }
+
       expect(poolAfter).toMatchObject(poolExpected)
       expect(poolAfter.liquidity).not.toBe(poolBefore.liquidity)
 
@@ -158,8 +155,6 @@ describe('swap tests', () => {
   })
 
   test('y to x', async () => {
-    // 6% fee
-    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
     const invariant = await deployInvariant(admin, protocolFee)
 
     const positionsAmount = 2n * 10n ** 10n
@@ -272,8 +267,6 @@ describe('swap tests', () => {
     }
   })
   test('not enough liquidity token x', async () => {
-    // 6% fee
-    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
     const invariant = await deployInvariant(admin, protocolFee)
 
     const positionsAmount = 2n * 10n ** 10n
@@ -343,8 +336,6 @@ describe('swap tests', () => {
   })
 
   test('not enough liquidity token y', async () => {
-    // 6% fee
-    const protocolFee = 6n * 10n ** (PercentageScale - 3n)
     const invariant = await deployInvariant(admin, protocolFee)
 
     const positionsAmount = 2n * 10n ** 10n

@@ -11,10 +11,11 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import { LiquidityScale, MaxSqrtPrice, MinSqrtPrice, SearchRange } from '../../../src/consts'
+import { MaxSqrtPrice, MinSqrtPrice, SearchRange } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { toLiquidity } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -25,7 +26,7 @@ describe('max tick cross spec', () => {
   const positionOwnerMint = 1n << 128n
   const swapperMint = 1n << 30n
   const supply = positionOwnerMint + swapperMint
-  const liquidityDelta = 10000000n * 10n ** LiquidityScale
+  const liquidityDelta = toLiquidity(10000000n)
   let admin: PrivateKeyWallet
   let positionOwner: PrivateKeyWallet
   let swapper: PrivateKeyWallet

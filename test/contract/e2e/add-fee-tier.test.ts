@@ -5,6 +5,8 @@ import { InvariantError, PercentageScale } from '../../../src/consts'
 import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../../../src/testUtils'
 import { deployInvariant, newFeeTier } from '../../../src/utils'
 import { FeeTier } from '../../../artifacts/ts/types'
+import { toPercentage } from '../../../src/math'
+import { unwrapFeeTier } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -19,7 +21,7 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing1 = 1n
     const tickSpacing2 = 2n
     const tickSpacing3 = 4n
@@ -27,9 +29,9 @@ describe('add fee tier tests', () => {
     {
       const tiersExist = await feeTierExists(
         invariant,
-        { fee, tickSpacing: tickSpacing1 },
-        { fee, tickSpacing: tickSpacing2 },
-        { fee, tickSpacing: tickSpacing3 }
+        await newFeeTier(fee, tickSpacing1),
+        await newFeeTier(fee, tickSpacing2),
+        await newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([false, false, false])
     }
@@ -42,9 +44,9 @@ describe('add fee tier tests', () => {
     {
       const tiersExist = await feeTierExists(
         invariant,
-        { fee, tickSpacing: tickSpacing1 },
-        { fee, tickSpacing: tickSpacing2 },
-        { fee, tickSpacing: tickSpacing3 }
+        await newFeeTier(fee, tickSpacing1),
+        await newFeeTier(fee, tickSpacing2),
+        await newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([true, false, false])
     }
@@ -57,9 +59,9 @@ describe('add fee tier tests', () => {
     {
       const tiersExist = await feeTierExists(
         invariant,
-        { fee, tickSpacing: tickSpacing1 },
-        { fee, tickSpacing: tickSpacing2 },
-        { fee, tickSpacing: tickSpacing3 }
+        await newFeeTier(fee, tickSpacing1),
+        await newFeeTier(fee, tickSpacing2),
+        await newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([true, true, false])
     }
@@ -71,7 +73,9 @@ describe('add fee tier tests', () => {
       }
     }
 
-    const feeTiers = await getFeeTiers(invariant)
+    const feeTiers = (await getFeeTiers(invariant)).map(tier => {
+      return unwrapFeeTier(tier)
+    })
     expect(feeTiers[0]).toStrictEqual({ fee, tickSpacing: tickSpacing1 })
     expect(feeTiers[1]).toStrictEqual({ fee, tickSpacing: tickSpacing2 })
     expect(feeTiers[2]).toStrictEqual({ fee, tickSpacing: tickSpacing3 })
@@ -82,7 +86,7 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 1n
     const feeTier = await newFeeTier(fee, tickSpacing)
 
@@ -99,7 +103,7 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 1n
     const feeTier = await newFeeTier(fee, tickSpacing)
 
@@ -121,9 +125,9 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 0n
-    const feeTier: FeeTier = { fee, tickSpacing }
+    const feeTier: FeeTier = { fee: { v: fee }, tickSpacing }
     expectError(
       InvariantError.InvalidTickSpacing,
       initFeeTier(invariant, admin, feeTier),
@@ -135,9 +139,9 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 101n
-    const feeTier: FeeTier = { fee, tickSpacing }
+    const feeTier: FeeTier = { fee: { v: fee }, tickSpacing }
     expectError(
       InvariantError.InvalidTickSpacing,
       initFeeTier(invariant, admin, feeTier),
@@ -151,7 +155,7 @@ describe('add fee tier tests', () => {
     // 100%
     const fee = 10n ** PercentageScale
     const tickSpacing = 10n
-    const feeTier: FeeTier = { fee, tickSpacing }
+    const feeTier: FeeTier = { fee: { v: fee }, tickSpacing }
     expectError(InvariantError.InvalidFee, initFeeTier(invariant, admin, feeTier), invariant)
   })
 })

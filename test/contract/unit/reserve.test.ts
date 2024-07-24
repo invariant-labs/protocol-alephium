@@ -283,7 +283,7 @@ const depositSingleAsset = async (
     initialFields: {
       reserve: reserve.contractId,
       id: token.contractId,
-      amount: amount
+      amount: { v: amount }
     },
     tokens: [{ id: token.contractId, amount: amount }]
   })
@@ -302,8 +302,8 @@ const depositTwoAssets = async (
       reserve: reserve.contractId,
       xId: tokenX.contractId,
       yId: tokenY.contractId,
-      x: amountX,
-      y: amountY
+      x: { v: amountX },
+      y: { v: amountY }
     },
     tokens: [
       { id: tokenX.contractId, amount: amountX },
@@ -322,7 +322,7 @@ const withdrawSingleAsset = async (
     initialFields: {
       reserve: reserve.contractId,
       id: token.contractId,
-      amount
+      amount: { v: amount }
     },
     attoAlphAmount: DUST_AMOUNT
   })
@@ -341,8 +341,8 @@ const withdrawTwoAssets = async (
       reserve: reserve.contractId,
       xId: tokenX.contractId,
       yId: tokenY.contractId,
-      x: amountX,
-      y: amountY
+      x: { v: amountX },
+      y: { v: amountY }
     },
     attoAlphAmount: DUST_AMOUNT * 2n
   })
@@ -361,8 +361,8 @@ const swapAssets = async (
       reserve: reserve.contractId,
       inId: tokenIn.contractId,
       outId: tokenOut.contractId,
-      in: inAmount,
-      out: outAmount
+      in: { v: inAmount },
+      out: { v: outAmount }
     },
     tokens: [{ id: tokenIn.contractId, amount: inAmount }]
   })

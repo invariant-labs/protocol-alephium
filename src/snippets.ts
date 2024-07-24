@@ -15,7 +15,7 @@ import {
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { calculateSqrtPrice, toLiquidity } from './math'
+import { calculateSqrtPrice, toLiquidity, toPercentage } from './math'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -33,7 +33,7 @@ export const initDexAndTokens = async (
   supply = 1000000n
 ): Promise<[InvariantInstance, TokenFaucetInstance, TokenFaucetInstance]> => {
   // 1%
-  const protocolFee = 10n ** (PercentageScale - 2n)
+  const protocolFee = toPercentage(1n, 2n)
   const invariant = await deployInvariant(admin, protocolFee)
   const [tokenX, tokenY] = await initTokensXY(admin, supply)
   return [invariant, tokenX, tokenY]

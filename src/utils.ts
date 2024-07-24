@@ -13,15 +13,16 @@ import {
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
+import { FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
 import { MaxFeeTiers } from './consts'
 import { Network } from './network'
+import { Pool } from './types'
 
 const BREAK_BYTES = '627265616b'
 export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
 export const EMPTY_FEE_TIERS: FeeTiers = {
-  feeTiers: new Array(Number(MaxFeeTiers)).fill({
-    fee: 0n,
+  feeTiers: new Array<FeeTier>(Number(MaxFeeTiers)).fill({
+    fee: { v: 0n },
     tickSpacing: 0n
   })
 } as FeeTiers
@@ -62,7 +63,7 @@ export async function deployInvariant(
   const deployResult = await waitTxConfirmed(
     Invariant.deploy(signer, {
       initialFields: {
-        config: { admin: account.address, protocolFee },
+        config: { admin: account.address, protocolFee: { v: protocolFee } },
         reserveTemplateId: reserve.contractId,
         feeTiers: EMPTY_FEE_TIERS,
         lastReserveId: reserve.contractId,
@@ -141,17 +142,17 @@ export function decodeFeeTiers(string: string) {
   return feeTiers
 }
 
-export function decodePools(string: string) {
+export function decodePools(string: string): Array<Pool> {
   const offset = 16
   const parts = string.split(BREAK_BYTES)
   const pools: any[] = []
   for (let i = 0; i < parts.length - 1; i += offset) {
-    const pool = {
+    const pool: Pool = {
       poolKey: {
         tokenX: parts[i],
         tokenY: parts[i + 1],
         feeTier: {
-          fee: decodeU256(parts[i + 2]),
+          fee: { v: decodeU256(parts[i + 2]) },
           tickSpacing: decodeU256(parts[i + 3])
         }
       },
@@ -174,50 +175,24 @@ export function decodePools(string: string) {
   return pools
 }
 
-export const decodePoolKeys = (string: string) => {
+export const decodePoolKeys = (string: string): Array<PoolKey> => {
   const parts = string.split(BREAK_BYTES)
   const poolKeys: any[] = []
 
   for (let i = 0; i < parts.length - 1; i += 4) {
-    const poolKey = {
+    const poolKey: PoolKey = {
       tokenX: parts[i],
       tokenY: parts[i + 1],
-      feeTier: { fee: decodeU256(parts[i + 2]), tickSpacing: decodeU256(parts[i + 3]) }
+      feeTier: { fee: { v: decodeU256(parts[i + 2]) }, tickSpacing: decodeU256(parts[i + 3]) }
     }
     poolKeys.push(poolKey)
   }
-
   return poolKeys
 }
 
 export const AddressFromByteVec = (string: string) => {
   const address = bs58.encode(hexToBinUnsafe(string))
   return address
-}
-function createEntityProxy<T>(entity: T, exists: boolean) {
-  return new Proxy(
-    { ...entity, exists },
-    {
-      get(target, prop, receiver) {
-        if (!exists && prop !== 'exists' && prop in target) {
-          throw new Error(`Entity does not exist, cannot access property "${String(prop)}"`)
-        }
-        return Reflect.get(target, prop, receiver)
-      }
-    }
-  )
-}
-
-export function decodePool(array: [boolean, Pool]) {
-  return createEntityProxy(array[1], array[0])
-}
-
-export function decodeTick(array: [boolean, Tick]) {
-  return createEntityProxy(array[1], array[0])
-}
-
-export function decodePosition(array: [boolean, Position]) {
-  return createEntityProxy(array[1], array[0])
 }
 
 function hexToBytes(hex: string): Uint8Array {
@@ -252,7 +227,7 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
   return (
     await Utils.tests.newFeeTier({
       testArgs: {
-        fee,
+        fee: { v: fee },
         tickSpacing
       }
     })

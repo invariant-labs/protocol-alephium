@@ -1,13 +1,22 @@
 import { CLAMM, Utils } from '../artifacts/ts'
-import { LiquidityResult, Pool, Position, SingleTokenLiquidity, Tick } from '../artifacts/ts/types'
-import { LiquidityScale, PercentageScale, SqrtPriceScale } from './consts'
+import { FeeGrowthScale, LiquidityScale, PercentageScale, SqrtPriceScale } from './consts'
+import { assert } from 'console'
+import {
+  Pool,
+  Position,
+  Tick,
+  LiquidityResult,
+  unwrapLiquidityResult,
+  SingleTokenLiquidity,
+  unwrapSingleTokenLiquidity
+} from './types'
 
 export const calculateSqrtPrice = async (tickIndex: bigint): Promise<bigint> => {
   return (
     await Utils.tests.calculateSqrtPrice({
       testArgs: { tickIndex }
     })
-  ).returns
+  ).returns.v
 }
 
 export const getLiquidityByX = async (
@@ -17,17 +26,19 @@ export const getLiquidityByX = async (
   currentSqrtPrice: bigint,
   roundingUp: boolean
 ): Promise<SingleTokenLiquidity> => {
-  return (
-    await Utils.tests.getLiquidityByX({
-      testArgs: {
-        x,
-        lowerTick,
-        upperTick,
-        currentSqrtPrice,
-        roundingUp
-      }
-    })
-  ).returns
+  return unwrapSingleTokenLiquidity(
+    (
+      await Utils.tests.getLiquidityByX({
+        testArgs: {
+          x: { v: x },
+          lowerTick,
+          upperTick,
+          currentSqrtPrice: { v: currentSqrtPrice },
+          roundingUp
+        }
+      })
+    ).returns
+  )
 }
 
 export const getLiquidityByY = async (
@@ -37,17 +48,19 @@ export const getLiquidityByY = async (
   currentSqrtPrice: bigint,
   roundingUp: boolean
 ): Promise<SingleTokenLiquidity> => {
-  return (
-    await Utils.tests.getLiquidityByY({
-      testArgs: {
-        y,
-        lowerTick,
-        upperTick,
-        currentSqrtPrice,
-        roundingUp
-      }
-    })
-  ).returns
+  return unwrapSingleTokenLiquidity(
+    (
+      await Utils.tests.getLiquidityByY({
+        testArgs: {
+          y: { v: y },
+          lowerTick,
+          upperTick,
+          currentSqrtPrice: { v: currentSqrtPrice },
+          roundingUp
+        }
+      })
+    ).returns
+  )
 }
 
 export const getLiquidity = async (
@@ -58,18 +71,20 @@ export const getLiquidity = async (
   currentSqrtPrice: bigint,
   roundingUp: boolean
 ): Promise<LiquidityResult> => {
-  return (
-    await Utils.tests.getLiquidity({
-      testArgs: {
-        x,
-        y,
-        lowerTick,
-        upperTick,
-        currentSqrtPrice,
-        roundingUp
-      }
-    })
-  ).returns
+  return unwrapLiquidityResult(
+    (
+      await Utils.tests.getLiquidity({
+        testArgs: {
+          x: { v: x },
+          y: { v: y },
+          lowerTick,
+          upperTick,
+          currentSqrtPrice: { v: currentSqrtPrice },
+          roundingUp
+        }
+      })
+    ).returns
+  )
 }
 
 export const getDeltaY = async (
@@ -81,13 +96,13 @@ export const getDeltaY = async (
   return (
     await CLAMM.tests.getDeltaY({
       testArgs: {
-        sqrtPriceA,
-        sqrtPriceB,
-        liquidity,
+        sqrtPriceA: { v: sqrtPriceA },
+        sqrtPriceB: { v: sqrtPriceB },
+        liquidity: { v: liquidity },
         roundingUp
       }
     })
-  ).returns
+  ).returns.v
 }
 
 export const getMaxTick = async (tickSpacing: bigint): Promise<bigint> => {
@@ -124,7 +139,7 @@ export const calculateTick = async (sqrtPrice: bigint, tickSpacing: bigint): Pro
   return (
     await Utils.tests.getTickAtSqrtPrice({
       testArgs: {
-        sqrtPrice,
+        sqrtPrice: { v: sqrtPrice },
         tickSpacing
       }
     })
@@ -138,7 +153,7 @@ export const getMaxSqrtPrice = async (tickSpacing: bigint): Promise<bigint> => {
         tickSpacing
       }
     })
-  ).returns
+  ).returns.v
 }
 
 export const getMinSqrtPrice = async (tickSpacing: bigint): Promise<bigint> => {
@@ -148,7 +163,7 @@ export const getMinSqrtPrice = async (tickSpacing: bigint): Promise<bigint> => {
         tickSpacing
       }
     })
-  ).returns
+  ).returns.v
 }
 
 export const isTokenX = async (candidate: string, compareTo: string): Promise<boolean> => {
@@ -158,6 +173,14 @@ export const isTokenX = async (candidate: string, compareTo: string): Promise<bo
         candidate,
         compareTo
       }
+    })
+  ).returns
+}
+
+export async function getTickAtSqrtPrice(sqrtPrice: bigint, tickSpacing: bigint): Promise<bigint> {
+  return (
+    await CLAMM.tests.getTickAtSqrtPrice({
+      testArgs: { sqrtPrice: { v: sqrtPrice }, tickSpacing }
     })
   ).returns
 }
@@ -172,17 +195,17 @@ export const calculateFee = async (
     await Utils.tests.calculateFee({
       testArgs: {
         tickLowerIndex: lowerTick.index,
-        tickLowerFeeGrowthOutsideX: lowerTick.feeGrowthOutsideX,
-        tickLowerFeeGrowthOutsideY: lowerTick.feeGrowthOutsideY,
+        tickLowerFeeGrowthOutsideX: { v: lowerTick.feeGrowthOutsideX },
+        tickLowerFeeGrowthOutsideY: { v: lowerTick.feeGrowthOutsideY },
         tickUpperIndex: upperTick.index,
-        tickUpperFeeGrowthOutsideX: upperTick.feeGrowthOutsideX,
-        tickUpperFeeGrowthOutsideY: upperTick.feeGrowthOutsideY,
+        tickUpperFeeGrowthOutsideX: { v: upperTick.feeGrowthOutsideX },
+        tickUpperFeeGrowthOutsideY: { v: upperTick.feeGrowthOutsideY },
         tickCurrent: pool.currentTickIndex,
-        globalFeeGrowthX: pool.feeGrowthGlobalX,
-        globalFeeGrowthY: pool.feeGrowthGlobalY,
-        positionFeeGrowthInsideX: position.feeGrowthInsideX,
-        positionFeeGrowthInsideY: position.feeGrowthInsideY,
-        positionLiquidity: position.liquidity
+        globalFeeGrowthX: { v: pool.feeGrowthGlobalX },
+        globalFeeGrowthY: { v: pool.feeGrowthGlobalY },
+        positionFeeGrowthInsideX: { v: position.feeGrowthInsideX },
+        positionFeeGrowthInsideY: { v: position.feeGrowthInsideY },
+        positionLiquidity: { v: position.liquidity }
       }
     })
   ).returns
@@ -192,18 +215,19 @@ export const calculateTokenAmounts = async (
   pool: Pool,
   position: Position
 ): Promise<[bigint, bigint, boolean]> => {
-  return (
+  const returns = (
     await CLAMM.tests.calculateAmountDelta({
       testArgs: {
         currentTickIndex: pool.currentTickIndex,
-        currentSqrtPrice: pool.sqrtPrice,
-        liquidityDelta: position.liquidity,
+        currentSqrtPrice: { v: pool.sqrtPrice },
+        liquidityDelta: { v: position.liquidity },
         liquiditySign: false,
         upperTick: position.upperTickIndex,
         lowerTick: position.lowerTickIndex
       }
     })
   ).returns
+  return [returns[0].v, returns[1].v, returns[2]]
 }
 
 const sqrt = (value: bigint): bigint => {
@@ -227,11 +251,11 @@ const newtonIteration = (n: bigint, x0: bigint): bigint => {
 }
 
 export const sqrtPriceToPrice = (sqrtPrice: bigint): bigint => {
-  return (sqrtPrice * sqrtPrice) / toSqrtPrice(1n)
+  return (sqrtPrice * sqrtPrice) / getSqrtPriceDenominator()
 }
 
 export const priceToSqrtPrice = (price: bigint): bigint => {
-  return sqrt(price * toSqrtPrice(1n))
+  return sqrt(price * getSqrtPriceDenominator())
 }
 
 export const calculateSqrtPriceAfterSlippage = (
@@ -243,22 +267,38 @@ export const calculateSqrtPriceAfterSlippage = (
     return sqrtPrice
   }
 
-  const multiplier = toPercentage(1n) + (up ? slippage : -slippage)
+  const multiplier = getPercentageDenominator() + (up ? slippage : -slippage)
   const price = sqrtPriceToPrice(sqrtPrice)
-  const priceWithSlippage = price * multiplier * toPercentage(1n)
-  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / toPercentage(1n)
+  const priceWithSlippage = price * multiplier * getPercentageDenominator()
+  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / getPercentageDenominator()
 
   return sqrtPriceWithSlippage
 }
 
 export const toLiquidity = (value: bigint, offset = 0n) => {
+  assert(offset < LiquidityScale, 'offset must be less than LiquidityScale')
   return value * 10n ** (LiquidityScale - offset)
 }
 
-export const toSqrtPrice = (value: bigint, offset = 0n) => {
+export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
+  assert(offset < SqrtPriceScale, 'offset must be less than SqrtPriceScale')
   return value * 10n ** (SqrtPriceScale - offset)
 }
 
-export const toPercentage = (value: bigint, offset = 0n) => {
+export const getSqrtPriceDenominator = (): bigint => {
+  return 10n ** SqrtPriceScale
+}
+
+export const toPercentage = (value: bigint, offset = 0n): bigint => {
+  assert(offset < PercentageScale, 'offset must be less than PercentageScale')
   return value * 10n ** (PercentageScale - offset)
+}
+
+export const getPercentageDenominator = (): bigint => {
+  return 10n ** PercentageScale
+}
+
+export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
+  assert(offset < FeeGrowthScale, 'offset must be less than FeeGrowthScale')
+  return value * 10n ** (FeeGrowthScale - offset)
 }

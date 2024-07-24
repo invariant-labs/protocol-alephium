@@ -4,6 +4,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMM, Invariant } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import {
+  calculateSqrtPrice,
   expectError,
   getPool,
   getPosition,
@@ -45,9 +46,7 @@ describe('position tests', () => {
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
     const initTick = 10n
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -99,9 +98,7 @@ describe('position tests', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 10n
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -147,9 +144,7 @@ describe('position tests', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -305,9 +300,7 @@ describe('position tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -392,9 +385,7 @@ describe('position tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -484,9 +475,7 @@ describe('position tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)

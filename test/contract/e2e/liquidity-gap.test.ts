@@ -3,8 +3,9 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MinSqrtPrice, PercentageScale } from '../../../src/consts'
+import { MinSqrtPrice } from '../../../src/consts'
 import {
+  calculateSqrtPrice,
   getPool,
   getPosition,
   getReserveBalances,
@@ -18,7 +19,7 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
-import { toLiquidity } from '../../../src/math'
+import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -32,17 +33,17 @@ describe('liquidity gap tests', () => {
   let tokenY: TokenFaucetInstance
   let feeTier: FeeTier
   let poolKey: PoolKey
-  const fee = 6n * 10n ** (PercentageScale - 3n)
+  const fee = toPercentage(6n, 3n)
   const tickSpacing = 10n
   const initTick = 0n
-  const initSqrtPrice = 10n ** 24n
+  const initSqrtPrice = toSqrtPrice(1n)
 
   beforeAll(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
-    const protocolFee = 10n ** (PercentageScale - 2n)
+    const protocolFee = toPercentage(1n, 2n)
     invariant = await deployInvariant(deployer, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, mintAmount)
     feeTier = await newFeeTier(fee, tickSpacing)
@@ -89,9 +90,7 @@ describe('liquidity gap tests', () => {
     await initSwap(invariant, swapper, poolKey, true, amount, true, targetSqrtPrice)
 
     const pool = await getPool(invariant, poolKey)
-    const expectedSqrtPrice = (
-      await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } })
-    ).returns
+    const expectedSqrtPrice = await calculateSqrtPrice(invariant, -10n)
     const expectedYAmountOut = 9999n
     const liquidityDelta = toLiquidity(20006000n)
     const lowerTick = -10n
@@ -192,8 +191,7 @@ describe('liquidity gap tests', () => {
       index: -50n,
       liquidityChange: secondPosition.liquidity,
       liquidityGross: secondPosition.liquidity,
-      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -50n } }))
-        .returns,
+      sqrtPrice: await calculateSqrtPrice(invariant, -50n),
       feeGrowthOutsideX: 0n,
       feeGrowthOutsideY: 0n
     }
@@ -202,8 +200,7 @@ describe('liquidity gap tests', () => {
       index: -10n,
       liquidityChange: firstPosition.liquidity,
       liquidityGross: firstPosition.liquidity,
-      sqrtPrice: (await invariant.methods.calculateSqrtPrice({ args: { tickIndex: -10n } }))
-        .returns,
+      sqrtPrice: await calculateSqrtPrice(invariant, -10n),
       feeGrowthOutsideX: 29991002699190242927121n,
       feeGrowthOutsideY: 0n
     }
