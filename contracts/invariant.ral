@@ -609,7 +609,6 @@ Contract Invariant(
             
             let key = keyBytes ++ toByteVec!(index)
             let tick = ticks[key]
-            // emit Debug(`Serializing tick index ${index} with liquidity change ${tick.liquidityChange} and sign ${tick.sign} on bytes ${toByteVec!(tick.index)} ${toByteVec!(tick.liquidityChange)} ${toByteVec!(tick.sign)}`)
             emptyTicks = emptyTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
         }
 

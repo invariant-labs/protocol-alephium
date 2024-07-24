@@ -1,7 +1,6 @@
 import {
   NodeProvider,
   codec,
-  ONE_ALPH,
   SignerProvider,
   ZERO_ADDRESS,
   node,

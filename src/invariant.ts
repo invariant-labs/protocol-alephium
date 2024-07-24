@@ -622,8 +622,6 @@ export class Invariant {
       args: { poolKey, indexes, length: BigInt(ticks.length) }
     })
 
-    // console.log('Gas used for getting liquidity ticks', response.gasUsed)
-
     return decodeLiquidityTicks(response.returns)
   }
   async getAllLiquidityTicks(poolKey: PoolKey, tickmap: Tickmap) {
