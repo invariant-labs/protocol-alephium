@@ -191,7 +191,7 @@ export const calculateFee = async (
   lowerTick: Tick,
   upperTick: Tick
 ): Promise<[bigint, bigint]> => {
-  return (
+  const returns = (
     await Utils.tests.calculateFee({
       testArgs: {
         tickLowerIndex: lowerTick.index,
@@ -209,6 +209,8 @@ export const calculateFee = async (
       }
     })
   ).returns
+
+  return [returns[0].v, returns[1].v]
 }
 
 export const calculateTokenAmounts = async (

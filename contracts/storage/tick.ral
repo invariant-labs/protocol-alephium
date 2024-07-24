@@ -45,15 +45,15 @@ Abstract Contract TickHelper() extends Decimal() {
     }
 
     fn calculateNewLiquidityGross(tick: Tick, sign: Bool, liquidityDelta: Liquidity, maxLiquidityPerTick: Liquidity) -> Liquidity {
-        let mut newLiquidityRaw = 0
+        let mut newLiquidity = Liquidity{v: 0}
         if (sign) {
-            newLiquidityRaw = tick.liquidityGross.v + liquidityDelta.v
+            newLiquidity.v = tick.liquidityGross.v + liquidityDelta.v
         } else {
             assert!(tick.liquidityGross.v >= liquidityDelta.v, InvariantError.InvalidTickLiquidity)
-            newLiquidityRaw = tick.liquidityGross.v - liquidityDelta.v
+            newLiquidity.v = tick.liquidityGross.v - liquidityDelta.v
         }
 
-        assert!(newLiquidityRaw <= maxLiquidityPerTick.v, InvariantError.InvalidTickLiquidity)
-        return Liquidity{ v: newLiquidityRaw}
+        assert!(newLiquidity.v <= maxLiquidityPerTick.v, InvariantError.InvalidTickLiquidity)
+        return newLiquidity
     }
 }

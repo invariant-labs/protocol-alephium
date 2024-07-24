@@ -16,11 +16,11 @@ struct Pool {
 
 Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
     fn addFee(mut pool: Pool, amount: TokenAmount, inX: Bool, protocolFee: Percentage) -> Pool {
-        let invariantProtocolFeeRaw = mulUp(amount.v, protocolFee.v, one(PercentageScale))
+        let invariantProtocolFee = TokenAmount{v: mulUp(amount.v, protocolFee.v, one(PercentageScale))}
 
-        let poolFee = TokenAmount{v: amount.v - invariantProtocolFeeRaw}
+        let poolFee = TokenAmount{v: amount.v - invariantProtocolFee.v}
 
-        if (poolFee.v == 0 && invariantProtocolFeeRaw == 0 || pool.liquidity.v == 0) {
+        if (poolFee.v == 0 && invariantProtocolFee.v == 0 || pool.liquidity.v == 0) {
             return pool
         }
 
@@ -28,10 +28,10 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
 
         if (inX) {
             pool.feeGrowthGlobalX = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalX.v, feeGrowth.v)}
-            pool.feeProtocolTokenX = TokenAmount{v: pool.feeProtocolTokenX.v + invariantProtocolFeeRaw}
+            pool.feeProtocolTokenX = TokenAmount{v: pool.feeProtocolTokenX.v + invariantProtocolFee.v}
         } else {
             pool.feeGrowthGlobalY = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalY.v, feeGrowth.v)}
-            pool.feeProtocolTokenY = TokenAmount{v: pool.feeProtocolTokenY.v + invariantProtocolFeeRaw}
+            pool.feeProtocolTokenY = TokenAmount{v: pool.feeProtocolTokenY.v + invariantProtocolFee.v}
         }
 
         return pool

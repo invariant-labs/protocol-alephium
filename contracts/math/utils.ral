@@ -100,29 +100,29 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
     pub fn getLiquidityByYSqrtPrice(y: TokenAmount, lowerSqrtPrice: SqrtPrice, upperSqrtPrice: SqrtPrice, currentSqrtPrice: SqrtPrice, roundingUp: Bool) -> SingleTokenLiquidity {
         assert!(currentSqrtPrice.v >= lowerSqrtPrice.v, UtilsError.CurrentLTLowerSqrtPrice)
 
-        let mut sqrtPriceDiff = 0
-        let mut liquidity = 0
+        let mut sqrtPriceDiff = SqrtPrice{v: 0}
+        let mut liquidity = Liquidity{v: 0}
 
         if (upperSqrtPrice.v <= currentSqrtPrice.v) {
-            sqrtPriceDiff = upperSqrtPrice.v - lowerSqrtPrice.v
-            liquidity = toU256(bigDiv(bigMul(bigMul256(y.v, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff, 1))
-            return SingleTokenLiquidity { l: Liquidity{v: liquidity}, amount: TokenAmount{v: 0} }
+            sqrtPriceDiff.v = upperSqrtPrice.v - lowerSqrtPrice.v
+            liquidity.v = toU256(bigDiv(bigMul(bigMul256(y.v, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff.v, 1))
+            return SingleTokenLiquidity { l: liquidity, amount: TokenAmount{v: 0} }
         }
 
-        sqrtPriceDiff = currentSqrtPrice.v - lowerSqrtPrice.v
-        liquidity = toU256(bigDiv(bigMul(bigMul256(y.v, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff, 1))
-        let denominator = (currentSqrtPrice.v * upperSqrtPrice.v )/ one(SqrtPriceScale)
-        let nominator = upperSqrtPrice.v - currentSqrtPrice.v
+        sqrtPriceDiff.v = currentSqrtPrice.v - lowerSqrtPrice.v
+        liquidity.v = toU256(bigDiv(bigMul(bigMul256(y.v, one(SqrtPriceScale)), one(LiquidityScale)), sqrtPriceDiff.v, 1))
+        let denominator = SqrtPrice{v: (currentSqrtPrice.v * upperSqrtPrice.v )/ one(SqrtPriceScale)}
+        let nominator = SqrtPrice{v: upperSqrtPrice.v - currentSqrtPrice.v}
         let x = calculateX(nominator, denominator, liquidity, roundingUp)
-        return SingleTokenLiquidity { l: Liquidity{v: liquidity}, amount: TokenAmount{v: x} }
+        return SingleTokenLiquidity { l: liquidity, amount: x }
     }
 
-    pub fn calculateX(nominator: U256, denominator: U256, liquidity: U256, roundingUp: Bool) -> U256 {
-        let common = bigMulDiv256(liquidity, nominator, denominator)
+    pub fn calculateX(nominator: SqrtPrice, denominator: SqrtPrice, liquidity: Liquidity, roundingUp: Bool) -> TokenAmount {
+        let common = bigMulDiv256(liquidity.v, nominator.v, denominator.v)
         if (roundingUp) {
-            return toU256(bigDiv(bigAdd(common, almostOne(LiquidityScale)), one(LiquidityScale), 1))
+            return TokenAmount{v: toU256(bigDiv(bigAdd(common, almostOne(LiquidityScale)), one(LiquidityScale), 1))}
         } else {
-            return toU256(bigDiv(common, one(LiquidityScale), 1))
+            return TokenAmount{v: toU256(bigDiv(common, one(LiquidityScale), 1))}
         }
     }
 
@@ -184,7 +184,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         positionFeeGrowthInsideX: FeeGrowth,
         positionFeeGrowthInsideY: FeeGrowth,
         positionLiquidity: Liquidity
-    ) -> (U256, U256) {
+    ) -> (TokenAmount, TokenAmount) {
         let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
             tickLowerIndex,
             tickLowerFeeGrowthOutsideX,
@@ -203,7 +203,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         return tokensOwedX, tokensOwedY
     }
 
-    pub fn toFee(feeGrowth: FeeGrowth, liquidity: Liquidity) -> U256 {
-        return toU256(bigMulDiv256(feeGrowth.v, liquidity.v, one(FeeGrowthScale + LiquidityScale)))
+    pub fn toFee(feeGrowth: FeeGrowth, liquidity: Liquidity) -> TokenAmount {
+        return TokenAmount{v: toU256(bigMulDiv256(feeGrowth.v, liquidity.v, one(FeeGrowthScale + LiquidityScale)))}
     }
 }
