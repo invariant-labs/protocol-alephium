@@ -599,18 +599,18 @@ Contract Invariant(
         return positionCount(owner)
     }
 
-    pub fn getLiquidityTicks(poolKey: PoolKey, indexes: [I256; 12]) -> [LiquidityTick; 12] {
-        let mut emptyTicks = [ LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }, LiquidityTick { index: 0i, liquidityChange: 0, sign: false }]
+    pub fn getLiquidityTicks(poolKey: PoolKey, indexes: ByteVec, length: U256) -> ByteVec {
+        let mut emptyTicks = #
 
         let keyBytes = poolKeyBytes(poolKey)
 
-        for (let mut i = 0; i < 12; i = i + 1) {
-            let index = indexes[i]
-         
+        for (let mut i = 0; i < length; i = i + 1) {
+            let index = toI256!(u256From4Byte!(byteVecSlice!(indexes, i * 4, (i + 1) * 4))) - GlobalMaxTick
+            
             let key = keyBytes ++ toByteVec!(index)
             let tick = ticks[key]
-
-            emptyTicks[i] = LiquidityTick { index: tick.index, liquidityChange: tick.liquidityChange, sign: tick.sign }
+            // emit Debug(`Serializing tick index ${index} with liquidity change ${tick.liquidityChange} and sign ${tick.sign} on bytes ${toByteVec!(tick.index)} ${toByteVec!(tick.liquidityChange)} ${toByteVec!(tick.sign)}`)
+            emptyTicks = emptyTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
         }
 
         return emptyTicks
@@ -653,12 +653,11 @@ Contract Invariant(
         }
 
         amount = countActiveBitsInChunk(getChunk(minChunkIndex, poolKey), minBit, ChunkSize - 1)
-
         for(i = minChunkIndex + 1; i < maxChunkIndex; i = i + 1) {
             amount = amount + countOnes(getChunk(i, poolKey))
         }
 
-        amount = countActiveBitsInChunk(getChunk(maxChunkIndex, poolKey), 0, maxBit)
+        amount = amount + countActiveBitsInChunk(getChunk(maxChunkIndex, poolKey), 0, maxBit)
 
         return amount
     }

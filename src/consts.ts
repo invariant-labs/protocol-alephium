@@ -26,6 +26,7 @@ export const { ReserveError } = Reserve.consts
 export const MAX_BATCHES_QUERIED = 18n
 export const MAX_POOL_KEYS_QUERIED = 117n
 export const MAX_POSITIONS_QUERIED = 83n
+export const MAX_LIQUIDITY_TICKS_QUERIED = 269n
 
 export enum VMError {
   ArithmeticError = 'ArithmeticError',

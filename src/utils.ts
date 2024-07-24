@@ -9,24 +9,29 @@ import {
   SignExecuteScriptTxResult,
   bs58,
   hexToBinUnsafe,
-  ALPH_TOKEN_ID
+  ALPH_TOKEN_ID,
+  decodeBool
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { FeeTier, FeeTiers, Pool, PoolKey, Position, Tick } from '../artifacts/ts/types'
-import { ChunkSize, ChunksPerBatch, MaxFeeTiers } from './consts'
+import {
+  FeeTier,
+  FeeTiers,
+  LiquidityTick,
+  Pool,
+  PoolKey,
+  Position,
+  Tick
+} from '../artifacts/ts/types'
+import { ChunkSize, ChunksPerBatch, GlobalMaxTick, MaxFeeTiers } from './consts'
 import { getMaxTick, getMinTick } from './math'
 import { Network } from './network'
 
 const BREAK_BYTES = '627265616b'
-export type FixedBigIntArray<N extends number> = N extends N
-  ? number extends N
-    ? bigint[]
-    : FixedBigIntArrayHelper<N, []>
-  : never
-type FixedBigIntArrayHelper<N extends number, T extends bigint[]> = T['length'] extends N
-  ? T
-  : FixedBigIntArrayHelper<N, [...T, bigint]>
+
+export interface Tickmap {
+  bitmap: Map<bigint, bigint>
+}
 
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array(Number(MaxFeeTiers)).fill({
@@ -365,4 +370,28 @@ export const signAndSend = async (
     unsignedTx: tx.unsignedTx
   })
   return txId
+}
+
+export const toByteVecWithOffset = (
+  values: bigint[],
+  offset: bigint = GlobalMaxTick,
+  radix: number = 16,
+  length: number = 8,
+  filler: string = '0'
+): string => {
+  return values.map(value => (value + offset).toString(radix).padStart(length, filler)).join('')
+}
+
+export const decodeLiquidityTicks = (string: string): LiquidityTick[] => {
+  const parts = string.split(BREAK_BYTES)
+  const ticks: LiquidityTick[] = []
+  for (let i = 0; i < parts.length - 1; i += 3) {
+    const tick: LiquidityTick = {
+      index: decodeI256(parts[i]),
+      liquidityChange: decodeU256(parts[i + 1]),
+      sign: decodeBool(hexToBytes(parts[i + 2]))
+    }
+    ticks.push(tick)
+  }
+  return ticks
 }

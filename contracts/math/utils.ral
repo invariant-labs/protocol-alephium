@@ -206,4 +206,13 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
     pub fn toFee(feeGrowth: U256, liquidity: U256) -> U256 {
         return toU256(bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
     }
+
+    pub fn positionToTick(
+        chunk: U256,
+        bit: U256,
+        tickSpacing: U256
+    ) -> I256 {
+        let tickRangeLimit = GlobalMaxTick - (GlobalMaxTick % toI256!(tickSpacing))
+        return toI256!(chunk * ChunkSize * tickSpacing + (bit * tickSpacing)) - tickRangeLimit
+    }
 }
