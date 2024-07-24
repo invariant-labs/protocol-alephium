@@ -206,13 +206,13 @@ export const calculateTokenAmounts = async (
   ).returns
 }
 
-export const positionToTick = async (
+export const bitPositionToTick = async (
   chunk: bigint,
   bit: bigint,
   tickSpacing: bigint
 ): Promise<bigint> => {
   return (
-    await Utils.tests.positionToTick({
+    await Utils.tests.bitPositionToTick({
       testArgs: {
         chunk,
         bit,

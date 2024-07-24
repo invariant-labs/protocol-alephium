@@ -600,7 +600,7 @@ Contract Invariant(
     }
 
     pub fn getLiquidityTicks(poolKey: PoolKey, indexes: ByteVec, length: U256) -> ByteVec {
-        let mut emptyTicks = #
+        let mut liquidityTicks = #
 
         let keyBytes = poolKeyBytes(poolKey)
 
@@ -609,10 +609,10 @@ Contract Invariant(
             
             let key = keyBytes ++ toByteVec!(index)
             let tick = ticks[key]
-            emptyTicks = emptyTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
+            liquidityTicks = liquidityTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
         }
 
-        return emptyTicks
+        return liquidityTicks
     }
 
     pub fn getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: I256, upperTick: I256) -> U256 {
@@ -659,20 +659,5 @@ Contract Invariant(
         amount = amount + countActiveBitsInChunk(getChunk(maxChunkIndex, poolKey), 0, maxBit)
 
         return amount
-    }
-
-
-    fn countActiveBitsInChunk(chunk: U256, minBit: U256, maxBit: U256) -> U256 {
-        let range = (chunk >> minBit) & ((1 << (maxBit - minBit + 1)) - 1)
-        return countOnes(range)
-    }
-
-    fn countOnes(mut v: U256) -> U256 {
-        let mut num = 0
-        while(v > 0) {
-            num = num + (v & 1)
-            v = v >> 1
-        }
-        return num
     }
 }

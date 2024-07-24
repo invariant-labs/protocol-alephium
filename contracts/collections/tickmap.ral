@@ -278,4 +278,18 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
         return maxChunkIndex
     }
+
+    pub fn countActiveBitsInChunk(chunk: U256, minBit: U256, maxBit: U256) -> U256 {
+        let range = (chunk >> minBit) & ((1 << (maxBit - minBit + 1)) - 1)
+        return countOnes(range)
+    }
+
+    fn countOnes(mut v: U256) -> U256 {
+        let mut num = 0
+        while(v > 0) {
+            num = num + (v & 1)
+            v = v >> 1
+        }
+        return num
+    }
 }

@@ -207,7 +207,7 @@ Contract Utils() extends Uints(), Decimal(), Log(), PoolKeyHelper(), FeeTierHelp
         return toU256(bigMulDiv256(feeGrowth, liquidity, one(FeeGrowthScale + LiquidityScale)))
     }
 
-    pub fn positionToTick(
+    pub fn bitPositionToTick(
         chunk: U256,
         bit: U256,
         tickSpacing: U256

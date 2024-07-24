@@ -1,4 +1,4 @@
-import { toApiByteVec, web3 } from '@alephium/web3'
+import { web3 } from '@alephium/web3'
 import {
   calculateFee,
   calculateSqrtPrice,
@@ -10,11 +10,10 @@ import {
   toSqrtPrice
 } from '../../../src/math'
 import { expectError } from '../../../src/testUtils'
-import { GlobalMaxTick, UtilsError } from '../../../src/consts'
+import { UtilsError } from '../../../src/consts'
 import { Pool, Position, Tick } from '../../../artifacts/ts/types'
-import { newFeeTier, newPoolKey, toByteVecWithOffset } from '../../../src/utils'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
-import { Utils } from '../../../artifacts/ts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

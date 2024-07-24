@@ -22,7 +22,7 @@ import {
   QuoteResult,
   Tick
 } from '../artifacts/ts/types'
-import { calculateSqrtPriceAfterSlippage, calculateTick, positionToTick } from './math'
+import { calculateSqrtPriceAfterSlippage, calculateTick, bitPositionToTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -630,7 +630,7 @@ export class Invariant {
       for (let bit = 0n; bit < ChunkSize; bit++) {
         const checkedBit = chunk & (1n << bit)
         if (checkedBit) {
-          const tickIndex = await positionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
+          const tickIndex = await bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
           tickIndexes.push(tickIndex)
         }
       }
