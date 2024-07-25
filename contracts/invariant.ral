@@ -25,6 +25,12 @@ struct FeeTiers {
     mut feeTiers: [FeeTier; 32]
 }
 
+struct LiquidityTick {
+    mut index: I256,
+    mut liquidityChange: U256,
+    mut sign: Bool
+}
+
 Contract Invariant(
     mut config: InvariantConfig,
     clamm: CLAMM,
@@ -591,5 +597,67 @@ Contract Invariant(
 
     pub fn getUserPositionCount(owner: Address) -> U256 {
         return positionCount(owner)
+    }
+
+    pub fn getLiquidityTicks(poolKey: PoolKey, indexes: ByteVec, length: U256) -> ByteVec {
+        let mut liquidityTicks = #
+
+        let keyBytes = poolKeyBytes(poolKey)
+
+        for (let mut i = 0; i < length; i = i + 1) {
+            let index = toI256!(u256From4Byte!(byteVecSlice!(indexes, i * 4, (i + 1) * 4))) - GlobalMaxTick
+            
+            let key = keyBytes ++ toByteVec!(index)
+            let tick = ticks[key]
+            liquidityTicks = liquidityTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
+        }
+
+        return liquidityTicks
+    }
+
+    pub fn getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: I256, upperTick: I256) -> U256 {
+        let tickSpacing = poolKey.feeTier.tickSpacing
+        clamm.checkTicks(lowerTick, upperTick, tickSpacing)
+
+        let (minChunkIndex, minBit) = tickToPosition(lowerTick, tickSpacing)
+        let (maxChunkIndex, maxBit) = tickToPosition(upperTick, tickSpacing)
+        let minBatch = minChunkIndex / ChunksPerBatch
+        let maxBatch = maxChunkIndex / ChunksPerBatch
+
+        let mut amount = 0
+
+        if(minBatch == maxBatch) {
+            let key = poolKeyBytes(poolKey) ++ toByteVec!(minBatch)
+
+            if(!bitmap.contains!(key)) {
+                return 0
+            }
+
+            let batch = bitmap[key].chunks
+            let minIndexInBatch = minChunkIndex % ChunksPerBatch
+            let maxIndexInBatch = maxChunkIndex % ChunksPerBatch
+
+            if(minIndexInBatch == maxIndexInBatch) {
+                amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, maxBit)
+                return amount
+            }
+
+            amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, ChunkSize - 1)    
+            for(let mut i = minIndexInBatch + 1; i < maxIndexInBatch; i = i + 1) {
+                amount = amount + countOnes(batch[i])
+            }
+            
+            amount = amount + countActiveBitsInChunk(batch[maxIndexInBatch], 0, maxBit)
+            return amount
+        }
+
+        amount = countActiveBitsInChunk(getChunk(minChunkIndex, poolKey), minBit, ChunkSize - 1)
+        for(i = minChunkIndex + 1; i < maxChunkIndex; i = i + 1) {
+            amount = amount + countOnes(getChunk(i, poolKey))
+        }
+
+        amount = amount + countActiveBitsInChunk(getChunk(maxChunkIndex, poolKey), 0, maxBit)
+
+        return amount
     }
 }

@@ -206,6 +206,21 @@ export const calculateTokenAmounts = async (
   ).returns
 }
 
+export const bitPositionToTick = async (
+  chunk: bigint,
+  bit: bigint,
+  tickSpacing: bigint
+): Promise<bigint> => {
+  return (
+    await Utils.tests.bitPositionToTick({
+      testArgs: {
+        chunk,
+        bit,
+        tickSpacing
+      }
+    })
+  ).returns
+}
 const sqrt = (value: bigint): bigint => {
   if (value < 0n) {
     throw 'square root of negative numbers is not supported'

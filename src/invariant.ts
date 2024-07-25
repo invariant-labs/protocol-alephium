@@ -13,8 +13,16 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { FeeTier, Pool, PoolKey, Position, QuoteResult, Tick } from '../artifacts/ts/types'
-import { calculateSqrtPriceAfterSlippage, calculateTick } from './math'
+import {
+  FeeTier,
+  LiquidityTick,
+  Pool,
+  PoolKey,
+  Position,
+  QuoteResult,
+  Tick
+} from '../artifacts/ts/types'
+import { calculateSqrtPriceAfterSlippage, calculateTick, bitPositionToTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -33,9 +41,18 @@ import {
   getNodeUrl,
   signAndSend,
   decodePositions,
-  Page
+  Page,
+  toByteVecWithOffset,
+  decodeLiquidityTicks,
+  Tickmap
 } from './utils'
-import { MAX_BATCHES_QUERIED, MAX_POOL_KEYS_QUERIED, MAX_POSITIONS_QUERIED } from './consts'
+import {
+  ChunkSize,
+  MAX_BATCHES_QUERIED,
+  MAX_LIQUIDITY_TICKS_QUERIED,
+  MAX_POOL_KEYS_QUERIED,
+  MAX_POSITIONS_QUERIED
+} from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
@@ -584,7 +601,7 @@ export class Invariant {
     return constructTickmap(response.returns)
   }
 
-  async getFullTickmap(poolKey: PoolKey) {
+  async getFullTickmap(poolKey: PoolKey): Promise<Tickmap> {
     const promises: Promise<[bigint, bigint][]>[] = []
     const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
     let currentBatch = 0n
@@ -599,10 +616,41 @@ export class Invariant {
     const storedTickmap = new Map<bigint, bigint>(fullResult)
     return { bitmap: storedTickmap }
   }
-  // async getLiquidityTicks() {}
-  // async getAllLiquidityTicks() {}
+  async getLiquidityTicks(poolKey: PoolKey, ticks: bigint[]) {
+    const indexes = toByteVecWithOffset(ticks)
+    const response = await this.instance.view.getLiquidityTicks({
+      args: { poolKey, indexes, length: BigInt(ticks.length) }
+    })
+
+    return decodeLiquidityTicks(response.returns)
+  }
+  async getAllLiquidityTicks(poolKey: PoolKey, tickmap: Tickmap) {
+    const tickIndexes: bigint[] = []
+    for (const [chunkIndex, chunk] of tickmap.bitmap.entries()) {
+      for (let bit = 0n; bit < ChunkSize; bit++) {
+        const checkedBit = chunk & (1n << bit)
+        if (checkedBit) {
+          const tickIndex = await bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
+          tickIndexes.push(tickIndex)
+        }
+      }
+    }
+    const limit = Number(MAX_LIQUIDITY_TICKS_QUERIED)
+    const promises: Promise<LiquidityTick[]>[] = []
+    for (let i = 0; i < tickIndexes.length; i += limit) {
+      promises.push(this.getLiquidityTicks(poolKey, tickIndexes.slice(i, i + limit)))
+    }
+
+    const liquidityTicks = await Promise.all(promises)
+    return liquidityTicks.flat()
+  }
   // async getUserPositionAmount() {}
-  // async getLiquidityTicksAmount() {}
+  async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
+    const response = await this.instance.view.getLiquidityTicksAmount({
+      args: { poolKey, lowerTick, upperTick }
+    })
+    return response.returns
+  }
   async getAllPoolsForPair(token0Id: string, token1Id: string) {
     return decodePools(
       (
