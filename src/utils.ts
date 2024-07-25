@@ -1,7 +1,6 @@
 import {
   NodeProvider,
   codec,
-  ONE_ALPH,
   SignerProvider,
   ZERO_ADDRESS,
   node,
@@ -9,23 +8,34 @@ import {
   SignExecuteScriptTxResult,
   bs58,
   hexToBinUnsafe,
-  ALPH_TOKEN_ID
+  ALPH_TOKEN_ID,
+  decodeBool
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
-import { MaxFeeTiers } from './consts'
+import { ChunkSize, ChunksPerBatch, GlobalMaxTick, MaxFeeTiers } from './consts'
 import { Network } from './network'
-import { Pool } from './types'
+import { LiquidityTick, Pool, Position } from './types'
+import { getMaxTick, getMinTick } from './math'
 
 const BREAK_BYTES = '627265616b'
-export const MAP_ENTRY_DEPOSIT = ONE_ALPH / 10n
+
+export interface Tickmap {
+  bitmap: Map<bigint, bigint>
+}
+
 export const EMPTY_FEE_TIERS: FeeTiers = {
   feeTiers: new Array<FeeTier>(Number(MaxFeeTiers)).fill({
     fee: { v: 0n },
     tickSpacing: 0n
   })
 } as FeeTiers
+
+export interface Page {
+  index: number
+  entries: [Position, Pool][]
+}
 
 function isConfirmed(txStatus: node.TxStatus): txStatus is node.Confirmed {
   return txStatus.type === 'Confirmed'
@@ -233,6 +243,80 @@ export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeT
     })
   ).returns
 }
+
+export const constructTickmap = async (string: string): Promise<[bigint, bigint][]> => {
+  const parts = string.split(BREAK_BYTES)
+  const chunks: any[] = []
+
+  for (let i = 0; i < parts.length - 1; i += 2) {
+    chunks.push([decodeU256(parts[i]), decodeU256(parts[i + 1])])
+  }
+
+  return chunks
+}
+
+export const decodePositions = (string: string): [[Position, Pool][], bigint] => {
+  const parts = string.split(BREAK_BYTES)
+  const spacing = 29
+  const positions: [Position, Pool][] = []
+  for (let i = 0; i < parts.length - 2; i += spacing) {
+    const position: Position = {
+      poolKey: {
+        tokenX: parts[i],
+        tokenY: parts[i + 1],
+        feeTier: {
+          fee: { v: decodeU256(parts[i + 2]) },
+          tickSpacing: decodeU256(parts[i + 3])
+        }
+      },
+      liquidity: decodeU256(parts[i + 4]),
+      lowerTickIndex: decodeI256(parts[i + 5]),
+      upperTickIndex: decodeI256(parts[i + 6]),
+      feeGrowthInsideX: decodeU256(parts[i + 7]),
+      feeGrowthInsideY: decodeU256(parts[i + 8]),
+      lastBlockNumber: decodeU256(parts[i + 9]),
+      tokensOwedX: decodeU256(parts[i + 10]),
+      tokensOwedY: decodeU256(parts[i + 11]),
+      owner: AddressFromByteVec(parts[i + 12])
+    }
+    const pool: Pool = {
+      poolKey: {
+        tokenX: parts[i + 13],
+        tokenY: parts[i + 14],
+        feeTier: {
+          fee: { v: decodeU256(parts[i + 15]) },
+          tickSpacing: decodeU256(parts[i + 16])
+        }
+      },
+      liquidity: decodeU256(parts[i + 17]),
+      sqrtPrice: decodeU256(parts[i + 18]),
+      currentTickIndex: decodeI256(parts[i + 19]),
+      feeGrowthGlobalX: decodeU256(parts[i + 20]),
+      feeGrowthGlobalY: decodeU256(parts[i + 21]),
+      feeProtocolTokenX: decodeU256(parts[i + 22]),
+      feeProtocolTokenY: decodeU256(parts[i + 23]),
+      startTimestamp: decodeU256(parts[i + 24]),
+      lastTimestamp: decodeU256(parts[i + 25]),
+      feeReceiver: AddressFromByteVec(parts[i + 26]),
+      reserveX: parts[i + 27],
+      reserveY: parts[i + 28]
+    }
+    positions.push([position, pool])
+  }
+
+  const totalPositions = decodeU256(parts[parts.length - 1])
+
+  return [positions, totalPositions]
+}
+
+export const getMaxBatch = async (tickSpacing: bigint) => {
+  const maxTick = await getMaxTick(tickSpacing)
+  const minTick = await getMinTick(tickSpacing)
+  const ticksAmount = -minTick + maxTick + 1n
+  const lastBatch = ticksAmount / (ChunkSize * ChunksPerBatch)
+  return lastBatch
+}
+
 export function getNodeUrl(network: Network) {
   if (network === Network.Local || network === Network.Devnet) {
     return 'http://127.0.0.1:22973'
@@ -252,4 +336,28 @@ export const signAndSend = async (
     unsignedTx: tx.unsignedTx
   })
   return txId
+}
+
+export const toByteVecWithOffset = (
+  values: bigint[],
+  offset: bigint = GlobalMaxTick,
+  radix: number = 16,
+  length: number = 8,
+  filler: string = '0'
+): string => {
+  return values.map(value => (value + offset).toString(radix).padStart(length, filler)).join('')
+}
+
+export const decodeLiquidityTicks = (string: string): LiquidityTick[] => {
+  const parts = string.split(BREAK_BYTES)
+  const ticks: LiquidityTick[] = []
+  for (let i = 0; i < parts.length - 1; i += 3) {
+    const tick: LiquidityTick = {
+      index: decodeI256(parts[i]),
+      liquidityChange: decodeU256(parts[i + 1]),
+      sign: decodeBool(hexToBytes(parts[i + 2]))
+    }
+    ticks.push(tick)
+  }
+  return ticks
 }

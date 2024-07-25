@@ -117,4 +117,23 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         let key = poolKeyBytes(pool.poolKey)
         pools[key] = pool
     }
+    
+    fn serializePool(pool: Pool) -> ByteVec {
+        return pool.poolKey.tokenX ++ b`break`
+        ++ pool.poolKey.tokenY ++ b`break`
+        ++ toByteVec!(pool.poolKey.feeTier.fee.v) ++ b`break`
+        ++ toByteVec!(pool.poolKey.feeTier.tickSpacing) ++ b`break` 
+        ++ toByteVec!(pool.liquidity.v) ++ b`break`
+        ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`
+        ++ toByteVec!(pool.currentTickIndex) ++ b`break`
+        ++ toByteVec!(pool.feeGrowthGlobalX.v) ++ b`break`
+        ++ toByteVec!(pool.feeGrowthGlobalY.v) ++ b`break`
+        ++ toByteVec!(pool.feeProtocolTokenX.v) ++ b`break`
+        ++ toByteVec!(pool.feeProtocolTokenY.v) ++ b`break` 
+        ++ toByteVec!(pool.startTimestamp) ++ b`break`
+        ++ toByteVec!(pool.lastTimestamp) ++ b`break`
+        ++ toByteVec!(pool.feeReceiver) ++ b`break` 
+        ++ pool.reserveX ++ b`break` 
+        ++ pool.reserveY ++ b`break`
+    }
 }

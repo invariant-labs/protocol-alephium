@@ -233,12 +233,12 @@ describe('log tests', () => {
     test('around -19999 tick / get tick at sqrt(1.0001 ^ -19999)', async () => {
       const tickIndex = -19999n
       const sqrtPriceDecimal = (
-        await clamm.methods.calculateSqrtPrice({
+        await clamm.view.calculateSqrtPrice({
           args: { tickIndex }
         })
       ).returns
       const result = (
-        await clamm.methods.getTickAtSqrtPrice({
+        await clamm.view.getTickAtSqrtPrice({
           args: {
             sqrtPrice: sqrtPriceDecimal,
             tickSpacing: 1n
@@ -277,12 +277,12 @@ describe('log tests', () => {
 
     await expectError(
       DecimalError.TickOverBounds,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } }),
+      clamm.view.calculateSqrtPrice({ args: { tickIndex: GlobalMaxTick + 1n } }),
       clamm
     )
     await expectError(
       DecimalError.TickOverBounds,
-      clamm.methods.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } }),
+      clamm.view.calculateSqrtPrice({ args: { tickIndex: GlobalMinTick - 1n } }),
       clamm
     )
   })
@@ -293,7 +293,7 @@ describe('log tests', () => {
       const tickSpacing = 3n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -308,7 +308,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -323,7 +323,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -338,7 +338,7 @@ describe('log tests', () => {
       const tickSpacing = 10n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -353,7 +353,7 @@ describe('log tests', () => {
       const tickSpacing = 3n
 
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: {
             accurateTick,
             tickSpacing
@@ -408,21 +408,21 @@ describe('log tests', () => {
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, tickSpacing)
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, tickSpacing)
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
@@ -436,21 +436,21 @@ describe('log tests', () => {
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, tickSpacing)
       //     const expectedTick = await (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }
       //   {
       //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, tickSpacing)
       //     const expectedTick = (
-      //       await clamm.methods.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
+      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
       //     ).returns
       //     expect(tick).toBe(expectedTick)
       //   }

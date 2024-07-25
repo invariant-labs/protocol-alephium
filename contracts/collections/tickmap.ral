@@ -168,6 +168,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     }
 
     @using(checkExternalCaller = false)
+    
     pub fn getCloserLimit(sqrtPriceLimit: SqrtPrice, xToY: Bool, currentTick: I256, tickSpacing: U256, poolKey: PoolKey) -> (SqrtPrice, Bool, I256, Bool) {
         let mut closestTickBool = false
         let mut closestTickIndex = 0i
@@ -184,11 +185,10 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
 
         if (closestTickBool) {
             let sqrtPriceExist = calculateSqrtPrice(closestTickIndex)
-
             if ((xToY && sqrtPriceExist.v > sqrtPriceLimit.v) || (!xToY && sqrtPriceExist.v < sqrtPriceLimit.v)) {
                 return sqrtPriceExist, true, closestTickIndex, true
             } else {
-                return sqrtPriceExist, false, 0i, false
+                return sqrtPriceLimit, false, 0i, false
             }
         } else {
             let index = getSearchLimit(currentTick, tickSpacing, !xToY)
@@ -199,10 +199,12 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
             if ((xToY && sqrtPriceNotExist.v > sqrtPriceLimit.v) || (!xToY && sqrtPriceNotExist.v < sqrtPriceLimit.v)) {
                 return sqrtPriceNotExist, true, index, false
             } else {
-                return sqrtPriceNotExist, false, 0i, false
+                return sqrtPriceLimit, false, 0i, false
             }
         }
     }
+
+
 
     fn getChunk(chunk: U256, poolKey: PoolKey) -> U256 {
         let key = poolKeyBytes(poolKey) ++ toByteVec!(getKey(chunk))
@@ -258,8 +260,22 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     @using(checkExternalCaller = false)
     pub fn getMaxChunk(tickSpacing: U256) -> (U256) {
         let maxTick = getMaxTick(tickSpacing)
-        let maxBitmapIndex = maxTick + GlobalMaxTick / toI256!(tickSpacing)
+        let maxBitmapIndex = (maxTick + GlobalMaxTick) / toI256!(tickSpacing)
         let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
         return maxChunkIndex
+    }
+
+    pub fn countActiveBitsInChunk(chunk: U256, minBit: U256, maxBit: U256) -> U256 {
+        let range = (chunk >> minBit) & ((1 << (maxBit - minBit + 1)) - 1)
+        return countOnes(range)
+    }
+
+    fn countOnes(mut v: U256) -> U256 {
+        let mut num = 0
+        while(v > 0) {
+            num = num + (v & 1)
+            v = v >> 1
+        }
+        return num
     }
 }

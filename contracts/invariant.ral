@@ -25,6 +25,12 @@ struct FeeTiers {
     mut feeTiers: [FeeTier; 32]
 }
 
+struct LiquidityTick {
+    mut index: I256,
+    mut liquidityChange: Liquidity,
+    mut sign: Bool
+}
+
 Contract Invariant(
     mut config: InvariantConfig,
     clamm: CLAMM,
@@ -522,6 +528,34 @@ Contract Invariant(
         }
     }
 
+    fn getSingleBatch(poolKey: PoolKey, index: U256) -> ByteVec {
+        let mut batch = #
+        let key = poolKeyBytes(poolKey) ++ toByteVec!(index)
+        if (bitmap.contains!(key)) {
+            let tickmapBatch = bitmap[key]
+            for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
+                let offset = index * ChunksPerBatch + i
+                batch = batch ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(tickmapBatch.chunks[i]) ++ b`break`
+            }
+        }
+        return batch
+    }
+
+
+    pub fn getTickmapSlice(poolKey: PoolKey, lowerBatch: U256, upperBatch: U256, xToY: Bool) -> ByteVec {
+        let mut slice = #
+        if (xToY) {
+            for(let mut batchIndex = lowerBatch; batchIndex < upperBatch; batchIndex = batchIndex + 1) {
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
+            }
+        } else {
+            for(batchIndex = upperBatch; batchIndex >= lowerBatch; batchIndex = batchIndex - 1) {
+                slice = slice ++ getSingleBatch(poolKey, batchIndex)
+            }
+        }
+        return slice
+    }
+    
     pub fn getAllPoolsForPair(token0: ByteVec, token1: ByteVec) -> ByteVec {
         let mut matchingPools = b``
 
@@ -529,29 +563,101 @@ Contract Invariant(
             let poolKey = newPoolKey(token0, token1, feeTiers.feeTiers[i])
             let (exist, pool) = getPool(poolKey)
             if(exist) {
-                matchingPools = matchingPools
-                ++ poolKey.tokenX ++ b`break`
-                ++ poolKey.tokenY ++ b`break`
-                ++ toByteVec!(poolKey.feeTier.fee.v) ++ b`break`
-                ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break` 
-                ++ toByteVec!(pool.liquidity.v) ++ b`break`
-                ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`
-                ++ toByteVec!(pool.currentTickIndex) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalX.v) ++ b`break`
-                ++ toByteVec!(pool.feeGrowthGlobalY.v) ++ b`break`
-                ++ toByteVec!(pool.feeProtocolTokenX.v) ++ b`break`
-                ++ toByteVec!(pool.feeProtocolTokenY.v) ++ b`break` 
-                ++ toByteVec!(pool.startTimestamp) ++ b`break`
-                ++ toByteVec!(pool.lastTimestamp) ++ b`break`
-                ++ toByteVec!(pool.feeReceiver) ++ b`break` 
-                ++ pool.reserveX ++ b`break` 
-                ++ pool.reserveY ++ b`break`
+                matchingPools = matchingPools ++ serializePool(pool)
             }
         }
 
         return matchingPools        
     }
-    pub fn getAllPoolKeys() -> ByteVec {
-        return wrappedGetAllPoolKeys()
+
+    pub fn getPoolKeys(size: U256, offset: U256) -> (ByteVec, U256) {
+        let mut slice = #
+        let offsetEnd = offset + size
+        let sliceEnd = if (offsetEnd > poolKeyCount) poolKeyCount else offsetEnd
+        for(let mut i = offset + 1; i <= sliceEnd; i = i + 1) {
+            let poolKey = poolKeys[i]
+            slice = slice ++ poolKey.tokenX ++ b`break` ++ poolKey.tokenY ++ b`break` ++ toByteVec!(poolKey.feeTier.fee.v) ++ b`break` ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break`
+        }
+        return slice, poolKeyCount
+    }
+
+    pub fn getPositions(owner: Address, size: U256, offset: U256) -> ByteVec {
+        let totalPositions = positionCount(owner)
+        let mut slice = #
+        for(let mut i = offset; i < totalPositions; i = i + 1) {
+            if (i >= offset + size) {
+                return slice ++ b`break` ++ toByteVec!(totalPositions)
+            }
+            let (_, position) = wrappedGetPosition(owner, i)
+            let (_, pool) = wrappedGetPool(position.poolKey)
+            slice = slice ++ serializePosition(position) ++ serializePool(pool)
+        }
+        return slice ++ b`break` ++ toByteVec!(totalPositions)
+    }
+
+    pub fn getUserPositionCount(owner: Address) -> U256 {
+        return positionCount(owner)
+    }
+
+    pub fn getLiquidityTicks(poolKey: PoolKey, indexes: ByteVec, length: U256) -> ByteVec {
+        let mut liquidityTicks = #
+
+        let keyBytes = poolKeyBytes(poolKey)
+
+        for (let mut i = 0; i < length; i = i + 1) {
+            let index = toI256!(u256From4Byte!(byteVecSlice!(indexes, i * 4, (i + 1) * 4))) - GlobalMaxTick
+            
+            let key = keyBytes ++ toByteVec!(index)
+            let tick = ticks[key]
+            liquidityTicks = liquidityTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange.v) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
+        }
+
+        return liquidityTicks
+    }
+
+    pub fn getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: I256, upperTick: I256) -> U256 {
+        let tickSpacing = poolKey.feeTier.tickSpacing
+        clamm.checkTicks(lowerTick, upperTick, tickSpacing)
+
+        let (minChunkIndex, minBit) = tickToPosition(lowerTick, tickSpacing)
+        let (maxChunkIndex, maxBit) = tickToPosition(upperTick, tickSpacing)
+        let minBatch = minChunkIndex / ChunksPerBatch
+        let maxBatch = maxChunkIndex / ChunksPerBatch
+
+        let mut amount = 0
+
+        if(minBatch == maxBatch) {
+            let key = poolKeyBytes(poolKey) ++ toByteVec!(minBatch)
+
+            if(!bitmap.contains!(key)) {
+                return 0
+            }
+
+            let batch = bitmap[key].chunks
+            let minIndexInBatch = minChunkIndex % ChunksPerBatch
+            let maxIndexInBatch = maxChunkIndex % ChunksPerBatch
+
+            if(minIndexInBatch == maxIndexInBatch) {
+                amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, maxBit)
+                return amount
+            }
+
+            amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, ChunkSize - 1)    
+            for(let mut i = minIndexInBatch + 1; i < maxIndexInBatch; i = i + 1) {
+                amount = amount + countOnes(batch[i])
+            }
+            
+            amount = amount + countActiveBitsInChunk(batch[maxIndexInBatch], 0, maxBit)
+            return amount
+        }
+
+        amount = countActiveBitsInChunk(getChunk(minChunkIndex, poolKey), minBit, ChunkSize - 1)
+        for(i = minChunkIndex + 1; i < maxChunkIndex; i = i + 1) {
+            amount = amount + countOnes(getChunk(i, poolKey))
+        }
+
+        amount = amount + countActiveBitsInChunk(getChunk(maxChunkIndex, poolKey), 0, maxBit)
+
+        return amount
     }
 }

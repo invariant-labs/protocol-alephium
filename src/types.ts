@@ -10,7 +10,8 @@ import {
   FeeTier as _FeeTier,
   QuoteResult as _QuoteResult,
   LiquidityResult as _LiquidityResult,
-  SingleTokenLiquidity as _SingleTokenLiquidity
+  SingleTokenLiquidity as _SingleTokenLiquidity,
+  LiquidityTick as _LiquidityTick
 } from '../artifacts/ts/types'
 
 type WrappedNumber = FeeGrowth | Liquidity | Percentage | SqrtPrice | TokenAmount
@@ -26,6 +27,7 @@ export type FeeTier = UnwrapNumbers<_FeeTier>
 export type QuoteResult = UnwrapNumbers<_QuoteResult>
 export type LiquidityResult = UnwrapNumbers<_LiquidityResult>
 export type SingleTokenLiquidity = UnwrapNumbers<_SingleTokenLiquidity>
+export type LiquidityTick = UnwrapNumbers<_LiquidityTick>
 
 export function unwrapPool(pool: _Pool): Pool {
   const unwrapped = {
@@ -86,6 +88,10 @@ export function unwrapSingleTokenLiquidity(
   singleTokenLiquidity: _SingleTokenLiquidity
 ): SingleTokenLiquidity {
   return { l: singleTokenLiquidity.l.v, amount: singleTokenLiquidity.amount.v }
+}
+
+export function unwrapLiquidityTick(liquidityTick: _LiquidityTick): LiquidityTick {
+  return { ...liquidityTick, liquidityChange: liquidityTick.liquidityChange.v }
 }
 
 function createEntityProxy<T>(entity: T, exists: boolean) {

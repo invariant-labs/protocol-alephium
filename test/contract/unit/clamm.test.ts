@@ -216,7 +216,7 @@ describe('clamm tests', () => {
       const accurateTick = 0n
       const tickSpacing = 3n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -226,7 +226,7 @@ describe('clamm tests', () => {
       const accurateTick = 14n
       const tickSpacing = 10n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -236,7 +236,7 @@ describe('clamm tests', () => {
       const accurateTick = 20n
       const tickSpacing = 10n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -246,7 +246,7 @@ describe('clamm tests', () => {
       const accurateTick = -14n
       const tickSpacing = 10n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -256,7 +256,7 @@ describe('clamm tests', () => {
       const accurateTick = -21n
       const tickSpacing = 10n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -266,7 +266,7 @@ describe('clamm tests', () => {
       const accurateTick = -120n
       const tickSpacing = 3n
       const result = (
-        await clamm.methods.alignTickToSpacing({
+        await clamm.view.alignTickToSpacing({
           args: { accurateTick, tickSpacing }
         })
       ).returns
@@ -281,7 +281,7 @@ describe('clamm tests', () => {
 
         let tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 3n)
         let expectedTick = (
-          await clamm.methods.alignTickToSpacing({
+          await clamm.view.alignTickToSpacing({
             args: { accurateTick: i, tickSpacing: 3n }
           })
         ).returns
@@ -293,7 +293,7 @@ describe('clamm tests', () => {
         const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
         let tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 3n)
         let expectedTick = (
-          await clamm.methods.alignTickToSpacing({
+          await clamm.view.alignTickToSpacing({
             args: { accurateTick: i, tickSpacing: 3n }
           })
         ).returns

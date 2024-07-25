@@ -14,13 +14,14 @@ import {
   WithdrawProtocolFee
 } from '../artifacts/ts'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
-import { calculateSqrtPriceAfterSlippage, calculateTick } from './math'
+import { bitPositionToTick, calculateSqrtPriceAfterSlippage, calculateTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
   decodePool,
   decodePosition,
   decodeTick,
+  LiquidityTick,
   Pool,
   Position,
   QuoteResult,
@@ -32,17 +33,31 @@ import {
   EMPTY_FEE_TIERS,
   deployCLAMM,
   deployReserve,
-  MAP_ENTRY_DEPOSIT,
   waitTxConfirmed,
+  constructTickmap,
+  getMaxBatch,
   decodePools,
   decodePoolKeys,
   getNodeUrl,
-  signAndSend
+  signAndSend,
+  decodePositions,
+  Page,
+  toByteVecWithOffset,
+  decodeLiquidityTicks,
+  Tickmap
 } from './utils'
+import {
+  ChunkSize,
+  MAX_BATCHES_QUERIED,
+  MAX_LIQUIDITY_TICKS_QUERIED,
+  MAX_POOL_KEYS_QUERIED,
+  MAX_POSITIONS_QUERIED
+} from './consts'
 import {
   Address,
   ALPH_TOKEN_ID,
   DUST_AMOUNT,
+  MAP_ENTRY_DEPOSIT,
   SignerProvider,
   TransactionBuilder
 } from '@alephium/web3'
@@ -502,20 +517,147 @@ export class Invariant {
     return (await this.instance.view.getProtocolFee()).returns.v
   }
 
-  // async getPositions() {}
-  // async getAllPositions() {}
+  async getPoolKeys(size: bigint, offset: bigint): Promise<[PoolKey[], bigint]> {
+    const response = await this.instance.view.getPoolKeys({
+      args: { size, offset }
+    })
+
+    const [serializedPoolKeys, totalPoolKeys] = response.returns
+    return [decodePoolKeys(serializedPoolKeys), totalPoolKeys]
+  }
+  async getPositions(owner: Address, size: bigint, offset: bigint) {
+    const response = await this.instance.view.getPositions({
+      args: { owner, size, offset }
+    })
+
+    return decodePositions(response.returns)
+  }
+  async getAllPositions(
+    owner: string,
+    positionsCount?: bigint,
+    skipPages?: number[],
+    positionsPerPage?: bigint
+  ) {
+    const firstPageIndex = skipPages?.find(i => !skipPages.includes(i)) || 0
+    const positionsPerPageLimit = positionsPerPage || MAX_POSITIONS_QUERIED
+
+    let pages: Page[] = []
+    let actualPositionsCount = positionsCount
+
+    if (!positionsCount) {
+      const [positions, totalPositions] = await this.getPositions(
+        owner,
+        positionsPerPageLimit,
+        BigInt(firstPageIndex) * positionsPerPageLimit
+      )
+      pages.push({ index: 0, entries: positions })
+      actualPositionsCount = totalPositions
+    }
+
+    const promises: Promise<[[Position, Pool][], bigint]>[] = []
+    const pageIndexes: number[] = []
+
+    for (
+      let i = positionsCount ? firstPageIndex : firstPageIndex + 1;
+      i < Math.ceil(Number(actualPositionsCount) / Number(positionsPerPageLimit));
+      i++
+    ) {
+      if (skipPages?.includes(i)) {
+        continue
+      }
+      pageIndexes.push(i)
+      promises.push(
+        this.getPositions(owner, positionsPerPageLimit, BigInt(i) * positionsPerPageLimit)
+      )
+    }
+
+    const positionsEntriesList = await Promise.all(promises)
+    pages = [
+      ...pages,
+      ...positionsEntriesList.map(([positionsEntries], index) => {
+        return { index: pageIndexes[index], entries: positionsEntries }
+      })
+    ]
+
+    return pages
+  }
   // async getPoolKeys() {}
   async getAllPoolKeys() {
-    return decodePoolKeys((await this.instance.view.getAllPoolKeys()).returns)
+    const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
+
+    const promises: Promise<[PoolKey[], bigint]>[] = []
+    for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_QUERIED)); i++) {
+      promises.push(this.getPoolKeys(MAX_POOL_KEYS_QUERIED, BigInt(i) * MAX_POOL_KEYS_QUERIED))
+    }
+
+    const poolKeysEntries = await Promise.all(promises)
+    return [...poolKeys, ...poolKeysEntries.map(([poolKeys]) => poolKeys).flat()]
   }
 
   // async getPositionTicks() {}
-  // async getRawTickmap() {}
-  // async getFullTickmap() {}
-  // async getLiquidityTicks() {}
-  // async getAllLiquidityTicks() {}
+  async getRawTickmap(
+    poolKey: PoolKey,
+    lowerBatch: bigint,
+    upperBatch: bigint,
+    xToY: boolean
+  ): Promise<[bigint, bigint][]> {
+    const response = await this.instance.view.getTickmapSlice({
+      args: { poolKey, lowerBatch, upperBatch, xToY }
+    })
+
+    return constructTickmap(response.returns)
+  }
+
+  async getFullTickmap(poolKey: PoolKey): Promise<Tickmap> {
+    const promises: Promise<[bigint, bigint][]>[] = []
+    const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
+    let currentBatch = 0n
+
+    while (currentBatch <= maxBatch) {
+      let nextBatch = currentBatch + MAX_BATCHES_QUERIED
+      promises.push(this.getRawTickmap(poolKey, currentBatch, nextBatch, true))
+      currentBatch += MAX_BATCHES_QUERIED
+    }
+
+    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
+    const storedTickmap = new Map<bigint, bigint>(fullResult)
+    return { bitmap: storedTickmap }
+  }
+  async getLiquidityTicks(poolKey: PoolKey, ticks: bigint[]) {
+    const indexes = toByteVecWithOffset(ticks)
+    const response = await this.instance.view.getLiquidityTicks({
+      args: { poolKey, indexes, length: BigInt(ticks.length) }
+    })
+
+    return decodeLiquidityTicks(response.returns)
+  }
+  async getAllLiquidityTicks(poolKey: PoolKey, tickmap: Tickmap) {
+    const tickIndexes: bigint[] = []
+    for (const [chunkIndex, chunk] of tickmap.bitmap.entries()) {
+      for (let bit = 0n; bit < ChunkSize; bit++) {
+        const checkedBit = chunk & (1n << bit)
+        if (checkedBit) {
+          const tickIndex = await bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
+          tickIndexes.push(tickIndex)
+        }
+      }
+    }
+    const limit = Number(MAX_LIQUIDITY_TICKS_QUERIED)
+    const promises: Promise<LiquidityTick[]>[] = []
+    for (let i = 0; i < tickIndexes.length; i += limit) {
+      promises.push(this.getLiquidityTicks(poolKey, tickIndexes.slice(i, i + limit)))
+    }
+
+    const liquidityTicks = await Promise.all(promises)
+    return liquidityTicks.flat()
+  }
   // async getUserPositionAmount() {}
-  // async getLiquidityTicksAmount() {}
+  async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
+    const response = await this.instance.view.getLiquidityTicksAmount({
+      args: { poolKey, lowerTick, upperTick }
+    })
+    return response.returns
+  }
   async getAllPoolsForPair(token0Id: string, token1Id: string) {
     return decodePools(
       (

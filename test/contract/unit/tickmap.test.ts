@@ -34,7 +34,7 @@ describe('tickmap tests', () => {
       const feeTier = await newFeeTier(0n, tickSpacing)
       const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-      const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+      const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
         .returns
 
       await InitializeChunk.execute(sender, {
@@ -49,7 +49,7 @@ describe('tickmap tests', () => {
 
       expect(
         (
-          await invariant.methods.getBit({
+          await invariant.view.getBit({
             args: { tick, poolKey }
           })
         ).returns
@@ -66,7 +66,7 @@ describe('tickmap tests', () => {
 
       expect(
         (
-          await invariant.methods.getBit({
+          await invariant.view.getBit({
             args: { tick, poolKey }
           })
         ).returns
@@ -84,7 +84,7 @@ describe('tickmap tests', () => {
 
       expect(
         (
-          await invariant.methods.getBit({
+          await invariant.view.getBit({
             args: { tick, poolKey }
           })
         ).returns
@@ -99,7 +99,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -123,7 +123,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({ args: { tick: 0n, tickSpacing: 1n, poolKey } })
+      await invariant.view.nextInitialized({ args: { tick: 0n, tickSpacing: 1n, poolKey } })
     ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
@@ -138,7 +138,7 @@ describe('tickmap tests', () => {
 
     {
       const [chunkIndex] = (
-        await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })
+        await invariant.view.tickToPosition({ args: { tick: tick50, tickSpacing } })
       ).returns
 
       await InitializeChunk.execute(sender, {
@@ -163,7 +163,7 @@ describe('tickmap tests', () => {
     }
     {
       const [chunkIndex] = (
-        await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })
+        await invariant.view.tickToPosition({ args: { tick: tick100, tickSpacing } })
       ).returns
 
       await InitializeChunk.execute(sender, {
@@ -188,14 +188,14 @@ describe('tickmap tests', () => {
     }
     {
       const [isSome, index] = (
-        await invariant.methods.nextInitialized({ args: { tick: 0n, tickSpacing: 10n, poolKey } })
+        await invariant.view.nextInitialized({ args: { tick: 0n, tickSpacing: 10n, poolKey } })
       ).returns
       expect(isSome).toBe(true)
       expect(index).toBe(tick50)
     }
     {
       const [isSome, index] = (
-        await invariant.methods.nextInitialized({ args: { tick: 50n, tickSpacing: 10n, poolKey } })
+        await invariant.view.nextInitialized({ args: { tick: 50n, tickSpacing: 10n, poolKey } })
       ).returns
       expect(isSome).toBe(true)
       expect(index).toBe(tick100)
@@ -209,7 +209,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -233,7 +233,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+      await invariant.view.nextInitialized({ args: { tick, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(false)
   })
@@ -244,7 +244,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -268,7 +268,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({
+      await invariant.view.nextInitialized({
         args: { tick: -TICK_SEARCH_RANGE, tickSpacing: 1n, poolKey }
       })
     ).returns
@@ -282,7 +282,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -306,7 +306,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({
+      await invariant.view.nextInitialized({
         args: { tick: -TICK_SEARCH_RANGE - 1n, tickSpacing: 1n, poolKey }
       })
     ).returns
@@ -319,7 +319,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -343,7 +343,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({
+      await invariant.view.nextInitialized({
         args: { tick: GlobalMinTick + 1n, tickSpacing: 1n, poolKey }
       })
     ).returns
@@ -357,7 +357,7 @@ describe('tickmap tests', () => {
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+      await invariant.view.nextInitialized({ args: { tick, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(false)
   })
@@ -369,7 +369,7 @@ describe('tickmap tests', () => {
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [isSome] = (
-      await invariant.methods.nextInitialized({ args: { tick, tickSpacing, poolKey } })
+      await invariant.view.nextInitialized({ args: { tick, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(false)
   })
@@ -380,7 +380,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -404,7 +404,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.nextInitialized({
+      await invariant.view.nextInitialized({
         args: { tick: GlobalMaxTick - 256n, tickSpacing, poolKey }
       })
     ).returns
@@ -418,7 +418,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -442,7 +442,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+      await invariant.view.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
@@ -456,7 +456,7 @@ describe('tickmap tests', () => {
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
     {
       const [chunkIndex] = (
-        await invariant.methods.tickToPosition({ args: { tick: tick50, tickSpacing } })
+        await invariant.view.tickToPosition({ args: { tick: tick50, tickSpacing } })
       ).returns
 
       await InitializeChunk.execute(sender, {
@@ -481,7 +481,7 @@ describe('tickmap tests', () => {
     }
     {
       const [chunkIndex] = (
-        await invariant.methods.tickToPosition({ args: { tick: tick100, tickSpacing } })
+        await invariant.view.tickToPosition({ args: { tick: tick100, tickSpacing } })
       ).returns
 
       await InitializeChunk.execute(sender, {
@@ -506,14 +506,14 @@ describe('tickmap tests', () => {
     }
     {
       const [isSome, index] = (
-        await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+        await invariant.view.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
       ).returns
       expect(isSome).toBe(true)
       expect(index).toBe(tick50)
     }
     {
       const [isSome, index] = (
-        await invariant.methods.prevInitialized({ args: { tick: -50n, tickSpacing: 10n, poolKey } })
+        await invariant.view.prevInitialized({ args: { tick: -50n, tickSpacing: 10n, poolKey } })
       ).returns
       expect(isSome).toBe(true)
       expect(index).toBe(tick50)
@@ -526,7 +526,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -550,7 +550,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.prevInitialized({ args: { tick, tickSpacing, poolKey } })
+      await invariant.view.prevInitialized({ args: { tick, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(true)
     expect(index).toBe(tick)
@@ -562,7 +562,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -586,7 +586,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome] = (
-      await invariant.methods.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
+      await invariant.view.prevInitialized({ args: { tick: 0n, tickSpacing, poolKey } })
     ).returns
     expect(isSome).toBe(false)
   })
@@ -597,7 +597,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -621,7 +621,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.prevInitialized({
+      await invariant.view.prevInitialized({
         args: { tick: TICK_SEARCH_RANGE, tickSpacing, poolKey }
       })
     ).returns
@@ -636,7 +636,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -660,7 +660,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome] = (
-      await invariant.methods.prevInitialized({
+      await invariant.view.prevInitialized({
         args: { tick: TICK_SEARCH_RANGE + 1n, tickSpacing, poolKey }
       })
     ).returns
@@ -673,7 +673,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -697,7 +697,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome] = (
-      await invariant.methods.prevInitialized({
+      await invariant.view.prevInitialized({
         args: { tick: GlobalMaxTick - 1n, tickSpacing, poolKey }
       })
     ).returns
@@ -710,7 +710,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -734,7 +734,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.prevInitialized({
+      await invariant.view.prevInitialized({
         args: { tick: GlobalMinTick + 320n, tickSpacing, poolKey }
       })
     ).returns
@@ -748,7 +748,7 @@ describe('tickmap tests', () => {
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
-    const [chunkIndex] = (await invariant.methods.tickToPosition({ args: { tick, tickSpacing } }))
+    const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
 
     await InitializeChunk.execute(sender, {
@@ -772,7 +772,7 @@ describe('tickmap tests', () => {
     })
 
     const [isSome, index] = (
-      await invariant.methods.prevInitialized({
+      await invariant.view.prevInitialized({
         args: { tick: GlobalMinTick + 255n, tickSpacing, poolKey }
       })
     ).returns
@@ -786,7 +786,7 @@ describe('tickmap tests', () => {
       const tick = 0n
       const tickSpacing = 1n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       expect(result).toBe(TICK_SEARCH_RANGE)
     }
@@ -794,7 +794,7 @@ describe('tickmap tests', () => {
       const tick = 0n
       const tickSpacing = 1n
       const up = false
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       expect(result).toBe(-TICK_SEARCH_RANGE)
     }
@@ -802,7 +802,7 @@ describe('tickmap tests', () => {
       const tick = 60n
       const tickSpacing = 12n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       const expected = tick + TICK_SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
@@ -811,7 +811,7 @@ describe('tickmap tests', () => {
       const tick = 60n
       const tickSpacing = 12n
       const up = false
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       const expected = tick - TICK_SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
@@ -820,7 +820,7 @@ describe('tickmap tests', () => {
       const tick = GlobalMaxTick - 22n
       const tickSpacing = 5n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       const expected = GlobalMaxTick - 3n
       expect(result).toBe(expected)
@@ -829,7 +829,7 @@ describe('tickmap tests', () => {
       const tick = GlobalMaxTick - 3n
       const tickSpacing = 5n
       const up = true
-      const result = (await invariant.methods.getSearchLimit({ args: { tick, tickSpacing, up } }))
+      const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
       const expected = tick
       expect(result).toBe(expected)
@@ -847,7 +847,7 @@ describe('tickmap tests', () => {
 
       {
         const [chunkIndex] = (
-          await invariant.methods.tickToPosition({ args: { tick: maxIndex, tickSpacing } })
+          await invariant.view.tickToPosition({ args: { tick: maxIndex, tickSpacing } })
         ).returns
 
         await InitializeChunk.execute(sender, {
@@ -872,7 +872,7 @@ describe('tickmap tests', () => {
       }
       {
         const [chunkIndex] = (
-          await invariant.methods.tickToPosition({ args: { tick: minIndex, tickSpacing } })
+          await invariant.view.tickToPosition({ args: { tick: minIndex, tickSpacing } })
         ).returns
 
         await InitializeChunk.execute(sender, {
@@ -898,7 +898,7 @@ describe('tickmap tests', () => {
       const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing
       {
         const [isSome] = (
-          await invariant.methods.nextInitialized({
+          await invariant.view.nextInitialized({
             args: { tick: maxIndex - tickEdgeDiff, tickSpacing, poolKey }
           })
         ).returns
@@ -906,7 +906,7 @@ describe('tickmap tests', () => {
       }
       {
         const [isSome] = (
-          await invariant.methods.prevInitialized({
+          await invariant.view.prevInitialized({
             args: { tick: minIndex + tickEdgeDiff, tickSpacing, poolKey }
           })
         ).returns
@@ -924,7 +924,7 @@ describe('tickmap tests', () => {
       const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing
       {
         const [isSome] = (
-          await invariant.methods.nextInitialized({
+          await invariant.view.nextInitialized({
             args: { tick: maxIndex - tickEdgeDiff, tickSpacing, poolKey }
           })
         ).returns
@@ -932,7 +932,7 @@ describe('tickmap tests', () => {
       }
       {
         const [isSome] = (
-          await invariant.methods.prevInitialized({
+          await invariant.view.prevInitialized({
             args: { tick: minIndex + tickEdgeDiff, tickSpacing, poolKey }
           })
         ).returns
