@@ -197,7 +197,7 @@ export const calculateFee = async (
   lowerTick: Tick,
   upperTick: Tick
 ): Promise<[bigint, bigint]> => {
-  const returns = (
+  const [{ v: tokensOwedX }, { v: tokensOwedY }] = (
     await Utils.tests.calculateFee({
       testArgs: {
         tickLowerIndex: lowerTick.index,
@@ -216,14 +216,14 @@ export const calculateFee = async (
     })
   ).returns
 
-  return [returns[0].v, returns[1].v]
+  return [tokensOwedX, tokensOwedY]
 }
 
 export const calculateTokenAmounts = async (
   pool: Pool,
   position: Position
 ): Promise<[bigint, bigint, boolean]> => {
-  const returns = (
+  const [{ v: amountX }, { v: amountY }, updateLiquidity] = (
     await CLAMM.tests.calculateAmountDelta({
       testArgs: {
         currentTickIndex: pool.currentTickIndex,
@@ -235,7 +235,7 @@ export const calculateTokenAmounts = async (
       }
     })
   ).returns
-  return [returns[0].v, returns[1].v, returns[2]]
+  return [amountX, amountY, updateLiquidity]
 }
 
 export const bitPositionToTick = async (
