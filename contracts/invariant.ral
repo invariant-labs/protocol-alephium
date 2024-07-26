@@ -1,24 +1,24 @@
-struct InvariantConfig { admin: Address, mut protocolFee: U256 }
+struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
 
 struct SwapResult {
-    nextSqrtPrice: U256,
-    amountIn: U256,
-    amountOut: U256,
-    feeAmount: U256
+    nextSqrtPrice: SqrtPrice,
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    feeAmount: TokenAmount
 }
 
 struct CalculateSwapResult {
-    amountIn: U256,
-    amountOut: U256,
-    startSqrtPrice: U256,
-    targetSqrtPrice: U256,
-    fee: U256
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    startSqrtPrice: SqrtPrice,
+    targetSqrtPrice: SqrtPrice,
+    fee: TokenAmount
 }
 
 struct QuoteResult {
-    amountIn: U256,
-    amountOut: U256,
-    targetSqrtPrice: U256
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    targetSqrtPrice: SqrtPrice
 }
 
 struct FeeTiers {
@@ -27,7 +27,7 @@ struct FeeTiers {
 
 struct LiquidityTick {
     mut index: I256,
-    mut liquidityChange: U256,
+    mut liquidityChange: Liquidity,
     mut sign: Bool
 }
 
@@ -89,14 +89,14 @@ Contract Invariant(
         FeeTierLimitReached = 28
     }
     
-    pub fn getProtocolFee() -> U256 {
+    pub fn getProtocolFee() -> Percentage {
         return config.protocolFee
     }
 
     @using(updateFields = true)
-    pub fn changeProtocolFee(newProtocolFee: U256) -> () {
+    pub fn changeProtocolFee(newProtocolFee: Percentage) -> () {
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
-        assert!(newProtocolFee < one(PercentageScale), InvariantError.InvalidProtocolFee)
+        assert!(newProtocolFee.v < one(PercentageScale), InvariantError.InvalidProtocolFee)
         config.protocolFee = newProtocolFee
     }
 
@@ -111,8 +111,8 @@ Contract Invariant(
 
         let x = pool.feeProtocolTokenX
         let y = pool.feeProtocolTokenY
-        pool.feeProtocolTokenX = 0
-        pool.feeProtocolTokenY = 0
+        pool.feeProtocolTokenX = TokenAmount{v: 0}
+        pool.feeProtocolTokenY = TokenAmount{v: 0}
 
         rewritePool(pool)
 
@@ -137,7 +137,7 @@ Contract Invariant(
     }
 
     @using(preapprovedAssets = true, checkExternalCaller = false)
-    pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> () {
+    pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: SqrtPrice, initTick: I256) -> () {
         assert!(feeTierExist(feeTier), InvariantError.FeeTierNotFound)
 
         clamm.checkTick(initTick, feeTier.tickSpacing)
@@ -161,7 +161,7 @@ Contract Invariant(
 
         assert!(feeTierCount < MaxFeeTiers, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(feeTier.fee < one(PercentageScale), InvariantError.InvalidFee)
+        assert!(feeTier.fee.v < one(PercentageScale), InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
         
         feeTiers.feeTiers[feeTierCount] = feeTier
@@ -174,9 +174,9 @@ Contract Invariant(
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
         
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
-            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+            if(feeTiers.feeTiers[i].fee.v == feeTier.fee.v && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 feeTiers.feeTiers[i] = feeTiers.feeTiers[feeTierCount - 1]
-                feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: 0, tickSpacing: 0}
+                feeTiers.feeTiers[feeTierCount - 1] = FeeTier{fee: Percentage{v: 0}, tickSpacing: 0}
                 feeTierCount = feeTierCount - 1
                 return
             }
@@ -186,7 +186,7 @@ Contract Invariant(
 
     pub fn feeTierExist(feeTier: FeeTier) -> Bool {
         for(let mut i = 0; i < feeTierCount; i = i + 1) {
-            if(feeTiers.feeTiers[i].fee == feeTier.fee && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
+            if(feeTiers.feeTiers[i].fee.v == feeTier.fee.v && feeTiers.feeTiers[i].tickSpacing == feeTier.tickSpacing) {
                 return true
             }
         }
@@ -215,14 +215,14 @@ Contract Invariant(
         poolKey: PoolKey,
         index: I256,
         currentTickIndex: I256,
-        feeGrowthGlobalX: U256,
-        feeGrowthGlobalY: U256,
+        feeGrowthGlobalX: FeeGrowth,
+        feeGrowthGlobalY: FeeGrowth,
         startTimestamp: U256
     ) -> () {
         clamm.checkTick(index, poolKey.feeTier.tickSpacing)
 
-        let mut feeGrowthOutsideX = 0
-        let mut feeGrowthOutsideY = 0
+        let mut feeGrowthOutsideX = FeeGrowth{v: 0}
+        let mut feeGrowthOutsideY = FeeGrowth{v: 0}
         let mut secondsOutside = 0
 
         if (index <= currentTickIndex) {
@@ -236,8 +236,8 @@ Contract Invariant(
             poolKey,
             index,
             true,
-            0,
-            0,
+            Liquidity{v: 0},
+            Liquidity{v: 0},
             clamm.calculateSqrtPrice(index),
             feeGrowthOutsideX,
             feeGrowthOutsideY, 
@@ -250,13 +250,13 @@ Contract Invariant(
         poolKey: PoolKey,
         lowerTickIndex: I256,
         upperTickIndex: I256,
-        liquidityDelta: U256,
-        slippageLimitLower: U256,
-        slippageLimitUpper: U256
+        liquidityDelta: Liquidity,
+        slippageLimitLower: SqrtPrice,
+        slippageLimitUpper: SqrtPrice
     ) -> () {
         let (exist, pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolNotFound)
-        assert!(liquidityDelta != 0, InvariantError.ZeroLiquidity)
+        assert!(liquidityDelta.v != 0, InvariantError.ZeroLiquidity)
         assert!(lowerTickIndex != upperTickIndex, InvariantError.InvalidTickIndex)
 
         let currentTimestamp = blockTimeStamp!()
@@ -283,32 +283,32 @@ Contract Invariant(
             flip(true, upperTickIndex, poolKey)
         }
 
-        assert!(pool.sqrtPrice >= slippageLimitLower && pool.sqrtPrice <= slippageLimitUpper, InvariantError.PriceLimitReached)
+        assert!(pool.sqrtPrice.v >= slippageLimitLower.v && pool.sqrtPrice.v <= slippageLimitUpper.v, InvariantError.PriceLimitReached)
 
         let (_, lowerTick) = wrappedGetTick(poolKey, lowerTickIndex)
         let (_, upperTick) = wrappedGetTick(poolKey, upperTickIndex)
 
         let emptyPosition = Position {
           poolKey: poolKey,
-          liquidity: 0,
+          liquidity: Liquidity{v: 0},
           lowerTickIndex: lowerTickIndex,
           upperTickIndex: upperTickIndex,
-          feeGrowthInsideX: 0,
-          feeGrowthInsideY: 0,
+          feeGrowthInsideX: FeeGrowth{v: 0},
+          feeGrowthInsideY: FeeGrowth{v: 0},
           lastBlockNumber: currentTimestamp,
-          tokensOwedX: 0,
-          tokensOwedY: 0,
+          tokensOwedX: TokenAmount{v: 0},
+          tokensOwedY: TokenAmount{v: 0},
           owner: caller
-        } 
+        }
 
         let (x, y, mPosition, _, _) = modify(emptyPosition, pool, lowerTick, upperTick, liquidityDelta, true, currentTimestamp)
         wrappedAddPosition{caller -> ALPH: mapEntry2Deposits}(caller, caller, mPosition)
 
         if (pool.reserveX == pool.reserveY) {
-            Reserve(pool.reserveX).depositTwoAssets{caller -> pool.poolKey.tokenX: x, pool.poolKey.tokenY: y}(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, x, y)
+            Reserve(pool.reserveX).depositTwoAssets{caller -> pool.poolKey.tokenX: x.v, pool.poolKey.tokenY: y.v}(caller, pool.poolKey.tokenX, pool.poolKey.tokenY, x, y)
         } else {
-            Reserve(pool.reserveX).depositSingleAsset{caller -> pool.poolKey.tokenX: x}(caller, pool.poolKey.tokenX, x)
-            Reserve(pool.reserveY).depositSingleAsset{caller -> pool.poolKey.tokenY: y}(caller, pool.poolKey.tokenY, y)    
+            Reserve(pool.reserveX).depositSingleAsset{caller -> pool.poolKey.tokenX: x.v}(caller, pool.poolKey.tokenX, x)
+            Reserve(pool.reserveY).depositSingleAsset{caller -> pool.poolKey.tokenY: y.v}(caller, pool.poolKey.tokenY, y)    
         }
     }
     @using(checkExternalCaller = false)
@@ -326,8 +326,8 @@ Contract Invariant(
 
         let (mut x, mut y, mPosition, isLowerEmpty, isUpperEmpty) = modify(position, pool, lowerTick, upperTick, position.liquidity, false, blockTimeStamp!())
         
-        x = x + mPosition.tokensOwedX
-        y = y + mPosition.tokensOwedY
+        x.v = x.v + mPosition.tokensOwedX.v
+        y.v = y.v + mPosition.tokensOwedY.v
 
         if (isLowerEmpty) {
             removeTick(caller, poolKey, position.lowerTickIndex)
@@ -360,9 +360,9 @@ Contract Invariant(
     pub fn quote(
         poolKey: PoolKey,
         xToY: Bool,
-        amount: U256,
+        amount: TokenAmount,
         byAmountIn: Bool,
-        sqrtPriceLimit: U256
+        sqrtPriceLimit: SqrtPrice
     ) -> QuoteResult {
         let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 
@@ -376,11 +376,11 @@ Contract Invariant(
     fn calculateSwap(
         poolKey: PoolKey,
         xToY: Bool,
-        amount: U256,
+        amount: TokenAmount,
         byAmountIn: Bool,
-        sqrtPriceLimit: U256
+        sqrtPriceLimit: SqrtPrice
     ) -> CalculateSwapResult {
-        assert!(amount != 0, InvariantError.ZeroAmount)
+        assert!(amount.v != 0, InvariantError.ZeroAmount)
         let (exist, mut pool) = wrappedGetPool(poolKey)
         assert!(exist, InvariantError.PoolNotFound)
         
@@ -388,20 +388,20 @@ Contract Invariant(
         let tickSpacing = poolKey.feeTier.tickSpacing
 
         if (xToY) {
-            assert!(sqrtPrice > sqrtPriceLimit && sqrtPriceLimit <= MaxSqrtPrice, InvariantError.WrongPriceLimit)             
+            assert!(sqrtPrice.v > sqrtPriceLimit.v && sqrtPriceLimit.v <= MaxSqrtPrice, InvariantError.WrongPriceLimit)             
         } else {
-            assert!(sqrtPrice < sqrtPriceLimit && sqrtPriceLimit >= MinSqrtPrice, InvariantError.WrongPriceLimit)
+            assert!(sqrtPrice.v < sqrtPriceLimit.v && sqrtPriceLimit.v >= MinSqrtPrice, InvariantError.WrongPriceLimit)
         }
 
         let tickLimit = if (xToY) getMinTick(tickSpacing) else getMaxTick(tickSpacing)
 
-        let mut totalAmountIn = 0
-        let mut totalAmountOut = 0
-        let mut eventFeeAmount = 0
+        let mut totalAmountIn = TokenAmount{v: 0}
+        let mut totalAmountOut = TokenAmount{v: 0}
+        let mut eventFeeAmount = TokenAmount{v: 0}
         let mut remainingAmount = amount
         let eventStartSqrtPrice = sqrtPrice
 
-        while (remainingAmount != 0) {
+        while (remainingAmount.v != 0) {
             let currentTickIndex = pool.currentTickIndex
             let liquidity = pool.liquidity
             sqrtPrice = pool.sqrtPrice
@@ -424,24 +424,24 @@ Contract Invariant(
             )
 
             if (byAmountIn) {
-                remainingAmount = remainingAmount - (swapResult.amountIn + swapResult.feeAmount)
+                remainingAmount.v = remainingAmount.v - (swapResult.amountIn.v + swapResult.feeAmount.v)
             } else {
-                remainingAmount = remainingAmount - swapResult.amountOut
+                remainingAmount.v = remainingAmount.v - swapResult.amountOut.v
             }
 
             pool = addFee(pool, swapResult.feeAmount, xToY, config.protocolFee)
             pool.sqrtPrice = swapResult.nextSqrtPrice
 
-            totalAmountIn = totalAmountIn + swapResult.amountIn + swapResult.feeAmount
-            totalAmountOut = totalAmountOut + swapResult.amountOut
-            eventFeeAmount = eventFeeAmount + swapResult.feeAmount
+            totalAmountIn.v = totalAmountIn.v + swapResult.amountIn.v + swapResult.feeAmount.v
+            totalAmountOut.v = totalAmountOut.v + swapResult.amountOut.v
+            eventFeeAmount.v = eventFeeAmount.v + swapResult.feeAmount.v
 
-            assert!(swapResult.nextSqrtPrice != sqrtPriceLimit || remainingAmount == 0, InvariantError.PriceLimitReached)
+            assert!(swapResult.nextSqrtPrice.v != sqrtPriceLimit.v || remainingAmount.v == 0, InvariantError.PriceLimitReached)
 
             let (amountToAdd, amountAfterTickUpdate, _, uPool) = poolUpdateTick(pool, swapResult.nextSqrtPrice, swapLimit, remainingAmount, byAmountIn, xToY, config.protocolFee, hasLimitingTick, isInitialized, limitingTickIndex)
 
             remainingAmount = amountAfterTickUpdate
-            totalAmountIn = totalAmountIn + amountToAdd
+            totalAmountIn.v = totalAmountIn.v + amountToAdd.v
             pool = uPool
             let reachedTickLimit = if (xToY) pool.currentTickIndex <= tickLimit else pool.currentTickIndex >= tickLimit
 
@@ -452,7 +452,7 @@ Contract Invariant(
         let key = poolKeyBytes(poolKey)
         pools[key] = pool
 
-        assert!(totalAmountOut != 0, InvariantError.NoGainSwap)
+        assert!(totalAmountOut.v != 0, InvariantError.NoGainSwap)
         
         return CalculateSwapResult {
             amountIn: totalAmountIn,
@@ -467,9 +467,9 @@ Contract Invariant(
     pub fn swap(
         poolKey: PoolKey,
         xToY: Bool,
-        amount: U256,
+        amount: TokenAmount,
         byAmountIn: Bool,
-        sqrtPriceLimit: U256
+        sqrtPriceLimit: SqrtPrice
     ) -> CalculateSwapResult {
         let caller = callerAddress!()
         let calculateSwapResult = calculateSwap(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
@@ -480,16 +480,16 @@ Contract Invariant(
 
         if (xToY) {
             if (pool.reserveX == pool.reserveY) {
-                Reserve(pool.reserveX).swap{caller -> tokenX: calculateSwapResult.amountIn}(caller, tokenX, tokenY, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
+                Reserve(pool.reserveX).swap{caller -> tokenX: calculateSwapResult.amountIn.v}(caller, tokenX, tokenY, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
             } else {
-                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenX: calculateSwapResult.amountIn}(caller, tokenX, calculateSwapResult.amountIn)
+                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenX: calculateSwapResult.amountIn.v}(caller, tokenX, calculateSwapResult.amountIn)
                 Reserve(pool.reserveY).withdrawSingleAsset(caller, tokenY, calculateSwapResult.amountOut)    
             }
         } else {
             if (pool.reserveX == pool.reserveY) {
-                Reserve(pool.reserveX).swap{caller -> tokenY: calculateSwapResult.amountIn}(caller, tokenY, tokenX, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
+                Reserve(pool.reserveX).swap{caller -> tokenY: calculateSwapResult.amountIn.v}(caller, tokenY, tokenX, calculateSwapResult.amountIn, calculateSwapResult.amountOut)
             } else {
-                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenY: calculateSwapResult.amountIn}(caller, tokenY, calculateSwapResult.amountIn)
+                Reserve(pool.reserveX).depositSingleAsset{caller -> tokenY: calculateSwapResult.amountIn.v}(caller, tokenY, calculateSwapResult.amountIn)
                 Reserve(pool.reserveY).withdrawSingleAsset(caller, tokenX, calculateSwapResult.amountOut)    
             }
         }
@@ -510,13 +510,13 @@ Contract Invariant(
         let (_, upperTick) = wrappedGetTick(poolKey, position.upperTickIndex)
         let (_, lowerTick) = wrappedGetTick(poolKey, position.lowerTickIndex)
 
-        let (_, _, mut mPosition, _, _) = modify(position, pool, lowerTick, upperTick, 0, false, blockTimeStamp!())
+        let (_, _, mut mPosition, _, _) = modify(position, pool, lowerTick, upperTick, Liquidity{v: 0}, false, blockTimeStamp!())
         
         let tokensOwedX = mPosition.tokensOwedX
         let tokensOwedY = mPosition.tokensOwedY
 
-        mPosition.tokensOwedX = 0
-        mPosition.tokensOwedY = 0
+        mPosition.tokensOwedX = TokenAmount{v: 0}
+        mPosition.tokensOwedY = TokenAmount{v: 0}
 
         positions[key] = mPosition
 
@@ -576,7 +576,7 @@ Contract Invariant(
         let sliceEnd = if (offsetEnd > poolKeyCount) poolKeyCount else offsetEnd
         for(let mut i = offset + 1; i <= sliceEnd; i = i + 1) {
             let poolKey = poolKeys[i]
-            slice = slice ++ poolKey.tokenX ++ b`break` ++ poolKey.tokenY ++ b`break` ++ toByteVec!(poolKey.feeTier.fee) ++ b`break` ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break`
+            slice = slice ++ poolKey.tokenX ++ b`break` ++ poolKey.tokenY ++ b`break` ++ toByteVec!(poolKey.feeTier.fee.v) ++ b`break` ++ toByteVec!(poolKey.feeTier.tickSpacing) ++ b`break`
         }
         return slice, poolKeyCount
     }
@@ -609,7 +609,7 @@ Contract Invariant(
             
             let key = keyBytes ++ toByteVec!(index)
             let tick = ticks[key]
-            liquidityTicks = liquidityTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
+            liquidityTicks = liquidityTicks ++ toByteVec!(tick.index) ++ b`break` ++ toByteVec!(tick.liquidityChange.v) ++ b`break` ++ toByteVec!(tick.sign) ++ b`break`
         }
 
         return liquidityTicks

@@ -39,7 +39,7 @@ describe('remove fee tier tests', () => {
     expect(tierExists).toBeFalsy()
 
     const feeTiers = await getFeeTiers(invariant)
-    expect(feeTiers[0]).toStrictEqual({ fee, tickSpacing: tickSpacings[1] })
+    expect(feeTiers[0]).toStrictEqual({ fee: { v: fee }, tickSpacing: tickSpacings[1] })
     expect(feeTiers.length).toBe(1)
   })
 

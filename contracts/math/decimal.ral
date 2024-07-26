@@ -1,3 +1,27 @@
+struct SqrtPrice{
+    mut v: U256
+}
+
+struct Liquidity{
+    mut v: U256
+}
+
+struct FeeGrowth{
+    mut v: U256
+}
+
+struct Percentage{
+    mut v: U256
+}
+
+struct TokenAmount{
+    mut v: U256
+}
+
+struct FixedPoint{
+    mut v: U256
+}
+
 Abstract Contract Decimal() {
     const SqrtPriceScale = 24
     const LiquidityScale = 5
@@ -5,7 +29,11 @@ Abstract Contract Decimal() {
     const FixedPointScale = 12
     const PercentageScale = 12
     const TokenAmountScale = 0
-    const FixedPointDenominator = 1000000000000
+    const SqrtPriceDenominator = 10**SqrtPriceScale
+    const LiquidiyDenominator = 10**LiquidityScale
+    const FeeGrowthDenominator = 10**FeeGrowthScale
+    const PercentageDenominator = 10**PercentageScale
+    const FixedPointDenominator = 10**FixedPointScale
     const GlobalMaxTick = 221818i
     const GlobalMinTick = -221818i
     const MaxSqrtPrice = 65535383934512647000000000000
@@ -16,9 +44,7 @@ Abstract Contract Decimal() {
         TickOverBounds = 0
     }
 
-    pub fn getSqrtPriceScale() -> U256 {
-        return SqrtPriceScale
-    }
+    // TODO: In global constants update remove all these `get` functions, unecessary indirection to please the compiler
 
     pub fn getLiquidityScale() -> U256 {
         return LiquidityScale
@@ -28,16 +54,24 @@ Abstract Contract Decimal() {
         return FeeGrowthScale
     }
 
-    pub fn getFixedPointScale() -> U256 {
-        return FixedPointScale
-    }
-
-    pub fn getPercentageScale() -> U256 {
-        return PercentageScale
-    }
-
     pub fn getTokenAmountScale() -> U256 {
         return TokenAmountScale
+    }
+
+    pub fn getSqrtPriceDenominator() -> U256 {
+        return SqrtPriceDenominator
+    }
+
+    pub fn getLiquidityDenominator() -> U256 {
+        return LiquidiyDenominator
+    }
+
+    pub fn getFeeGrowthDenominator() -> U256 {
+        return FeeGrowthDenominator
+    }
+
+    pub fn getPercentageDenominator() -> U256 {
+        return PercentageDenominator
     }
 
     pub fn getGlobalMaxTick() -> I256 {
@@ -48,12 +82,12 @@ Abstract Contract Decimal() {
         return GlobalMinTick
     }
 
-    pub fn getMaxSqrtPrice(tickSpacing: U256) -> U256 {
+    pub fn getMaxSqrtPrice(tickSpacing: U256) -> SqrtPrice {
         let maxTick = getMaxTick(tickSpacing)
         return calculateSqrtPrice(maxTick)
     }
 
-    pub fn getMinSqrtPrice(tickSpacing: U256) -> U256 {
+    pub fn getMinSqrtPrice(tickSpacing: U256) -> SqrtPrice {
         let minTick = getMinTick(tickSpacing)
         return calculateSqrtPrice(minTick)
     }
@@ -102,14 +136,14 @@ Abstract Contract Decimal() {
 
     pub fn sqrtPriceFromTick(
         tickIndex: I256
-    ) -> U256 {
+    ) -> SqrtPrice {
         let sqrtPrice = calculateSqrtPrice(tickIndex)
         return sqrtPrice
     }
 
     pub fn calculateSqrtPrice(
         tickIndex: I256
-    ) -> U256 {
+    ) -> SqrtPrice {
         let mut tickIndexAbs = 0
         if (tickIndex < 0i) {
             tickIndexAbs = toU256!((-1) * tickIndex)
@@ -117,70 +151,70 @@ Abstract Contract Decimal() {
             tickIndexAbs = toU256!(tickIndex)
         }
 
-        let mut sqrtPrice = one(FixedPointScale)  
+        let mut sqrtPrice = FixedPoint{v: one(FixedPointScale)}
 
         assert!(tickIndexAbs <= toU256!(GlobalMaxTick), DecimalError.TickOverBounds)
 
         if (tickIndexAbs & 0x1 != 0) {
-            sqrtPrice = (sqrtPrice * 1000049998750) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000049998750) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x2 != 0) {
-            sqrtPrice = (sqrtPrice * 1000100000000) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000100000000) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x4 != 0) {
-            sqrtPrice = (sqrtPrice * 1000200010000) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000200010000) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x8 != 0) {
-            sqrtPrice = (sqrtPrice * 1000400060004) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000400060004) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x10 != 0) {
-            sqrtPrice = (sqrtPrice * 1000800280056)  / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000800280056)  / FixedPointDenominator
         }
         if (tickIndexAbs & 0x20 != 0) {
-            sqrtPrice = (sqrtPrice * 1001601200560) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1001601200560) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x40 != 0) {
-            sqrtPrice = (sqrtPrice * 1003204964963) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1003204964963) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x80 != 0) {
-            sqrtPrice = (sqrtPrice * 1006420201726) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1006420201726) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x100 != 0) {
-            sqrtPrice = (sqrtPrice * 1012881622442) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1012881622442) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x200 != 0) {
-            sqrtPrice = (sqrtPrice * 1025929181080) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1025929181080) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x400 != 0) {
-            sqrtPrice = (sqrtPrice * 1052530684591) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1052530684591) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x800 != 0) {
-            sqrtPrice = (sqrtPrice * 1107820842005) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1107820842005) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x1000 != 0) {
-            sqrtPrice = (sqrtPrice * 1227267017980) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1227267017980) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x2000 != 0) {
-            sqrtPrice = (sqrtPrice * 1506184333421) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1506184333421) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x4000 != 0) {
-            sqrtPrice = (sqrtPrice * 2268591246242) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 2268591246242) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x8000 != 0) {
-            sqrtPrice = (sqrtPrice * 5146506242525) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 5146506242525) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x00010000 != 0) {
-            sqrtPrice = (sqrtPrice * 26486526504348) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 26486526504348) / FixedPointDenominator
         }
         if (tickIndexAbs & 0x00020000 != 0) {
-            sqrtPrice = (sqrtPrice * 701536086265529) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 701536086265529) / FixedPointDenominator
         }
 
         if (tickIndex >= 0i) {
-            return rescale(sqrtPrice, FixedPointScale, SqrtPriceScale)
+            return SqrtPrice{ v: rescale(sqrtPrice.v, FixedPointScale, SqrtPriceScale)}
         } else {
-            let sqrtPriceInFixedPointScale = FixedPointDenominator * FixedPointDenominator / sqrtPrice
-            return rescale(sqrtPriceInFixedPointScale, FixedPointScale, SqrtPriceScale)
+            let sqrtPriceInFixedPointScale = FixedPointDenominator * FixedPointDenominator / sqrtPrice.v
+            return SqrtPrice{ v: rescale(sqrtPriceInFixedPointScale, FixedPointScale, SqrtPriceScale)}
         }
     }
 
@@ -214,42 +248,42 @@ Abstract Contract Decimal() {
 
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,
-        tickLowerFeeGrowthOutsideX: U256,
-        tickLowerFeeGrowthOutsideY: U256,
+        tickLowerFeeGrowthOutsideX: FeeGrowth,
+        tickLowerFeeGrowthOutsideY: FeeGrowth,
         tickUpperIndex: I256,
-        tickUpperFeeGrowthOutsideX: U256,
-        tickUpperFeeGrowthOutsideY: U256,
+        tickUpperFeeGrowthOutsideX: FeeGrowth,
+        tickUpperFeeGrowthOutsideY: FeeGrowth,
         tickCurrent: I256,
-        globalFeeGrowthX: U256,
-        globalFeeGrowthY: U256
-    ) -> (U256,U256) {
+        globalFeeGrowthX: FeeGrowth,
+        globalFeeGrowthY: FeeGrowth
+    ) -> (FeeGrowth,FeeGrowth) {
         let currentAboveLower = tickCurrent >= tickLowerIndex
         let currentBelowUpper = tickCurrent < tickUpperIndex
 
-        let mut feeGrowthBelowX = 0
-        let mut feeGrowthBelowY = 0
+        let mut feeGrowthBelowX = FeeGrowth{v: 0}
+        let mut feeGrowthBelowY = FeeGrowth{v: 0}
         
-        let mut feeGrowthAboveX = 0
-        let mut feeGrowthAboveY = 0
+        let mut feeGrowthAboveX = FeeGrowth{v: 0}
+        let mut feeGrowthAboveY = FeeGrowth{v: 0}
 
         if (currentAboveLower) {
             feeGrowthBelowX = tickLowerFeeGrowthOutsideX
             feeGrowthBelowY = tickLowerFeeGrowthOutsideY
         } else {
-            feeGrowthBelowX = wrappingSub(globalFeeGrowthX, tickLowerFeeGrowthOutsideX)
-            feeGrowthBelowY = wrappingSub(globalFeeGrowthY, tickLowerFeeGrowthOutsideY)
+            feeGrowthBelowX.v = wrappingSub(globalFeeGrowthX.v, tickLowerFeeGrowthOutsideX.v)
+            feeGrowthBelowY.v = wrappingSub(globalFeeGrowthY.v, tickLowerFeeGrowthOutsideY.v)
         }
 
         if (currentBelowUpper) {
             feeGrowthAboveX = tickUpperFeeGrowthOutsideX
             feeGrowthAboveY = tickUpperFeeGrowthOutsideY
         } else {
-            feeGrowthAboveX = wrappingSub(globalFeeGrowthX, tickUpperFeeGrowthOutsideX)
-            feeGrowthAboveY = wrappingSub(globalFeeGrowthY, tickUpperFeeGrowthOutsideY)
+            feeGrowthAboveX.v = wrappingSub(globalFeeGrowthX.v, tickUpperFeeGrowthOutsideX.v)
+            feeGrowthAboveY.v = wrappingSub(globalFeeGrowthY.v, tickUpperFeeGrowthOutsideY.v)
         }
 
-        let feeGrowthInsideX = wrappingSub(wrappingSub(globalFeeGrowthX, feeGrowthBelowX), feeGrowthAboveX)
-        let feeGrowthInsideY = wrappingSub(wrappingSub(globalFeeGrowthY, feeGrowthBelowY), feeGrowthAboveY)
+        let feeGrowthInsideX = FeeGrowth{v: wrappingSub(wrappingSub(globalFeeGrowthX.v, feeGrowthBelowX.v), feeGrowthAboveX.v)}
+        let feeGrowthInsideY = FeeGrowth{v: wrappingSub(wrappingSub(globalFeeGrowthY.v, feeGrowthBelowY.v), feeGrowthAboveY.v)}
 
         return feeGrowthInsideX, feeGrowthInsideY
     }

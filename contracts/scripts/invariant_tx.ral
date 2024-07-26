@@ -6,11 +6,11 @@ TxScript RemoveFeeTier(invariant: Invariant, feeTier: FeeTier) {
     invariant.removeFeeTier(feeTier)
 }
 
-TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256){
+TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: SqrtPrice, initTick: I256){
     invariant.createPool{callerAddress!() -> ALPH: 5 * mapEntryDeposit!() }(token0, token1, feeTier, initSqrtPrice, initTick)
 }
 
-TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256) {
+TxScript ChangeProtocolFee(invariant: Invariant, newFee: Percentage) {
     invariant.changeProtocolFee(newFee)
 }
 
@@ -27,9 +27,9 @@ TxScript CreatePosition(
     poolKey: PoolKey,
     lowerTick: I256,
     upperTick: I256,
-    liquidityDelta: U256,
-    slippageLimitLower: U256,
-    slippageLimitUpper: U256
+    liquidityDelta: Liquidity,
+    slippageLimitLower: SqrtPrice,
+    slippageLimitUpper: SqrtPrice
 ) {
     let amountX = tokenRemaining!(callerAddress!(), poolKey.tokenX)
     let amountY = tokenRemaining!(callerAddress!(), poolKey.tokenY)
@@ -54,9 +54,9 @@ TxScript ClaimFee(invariant: Invariant, index: U256) {
     invariant.claimFee(index)
 }
 
-TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256, byAmountIn: Bool, sqrtPriceLimit: U256) {
+TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: TokenAmount, byAmountIn: Bool, sqrtPriceLimit: SqrtPrice) {
     let mut swappedToken = poolKey.tokenX
-    let mut swappedAmount = amount
+    let mut swappedAmount = amount.v
     if (!xToY) {
         swappedToken = poolKey.tokenY
     }

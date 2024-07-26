@@ -19,13 +19,15 @@ import {
   TokenFaucetInstance,
   WithdrawProtocolFee,
   CreatePosition,
-  TransferPosition
+  TransferPosition,
+  CLAMMInstance
 } from '../artifacts/ts'
-import { decodePool, decodePosition, deployTokenFaucet, decodeTick, balanceOf } from './utils'
+import { deployTokenFaucet, balanceOf } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
-import { FeeTier, Pool, PoolKey } from '../artifacts/ts/types'
+import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { decodePool, decodePosition, decodeTick, Pool, unwrapQuoteResult } from './types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -131,7 +133,7 @@ export async function initPool(
       token0: token0.contractId,
       token1: token1.contractId,
       feeTier,
-      initSqrtPrice,
+      initSqrtPrice: { v: initSqrtPrice },
       initTick
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n
@@ -167,7 +169,7 @@ export async function withdrawTokens(
   }
 }
 
-export async function getFeeTiers(invariant: InvariantInstance) {
+export async function getFeeTiers(invariant: InvariantInstance): Promise<Array<FeeTier>> {
   const state = await invariant.fetchState()
   return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
 }
@@ -205,13 +207,13 @@ export const changeProtocolFee = async (
   return await ChangeProtocolFee.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      newFee
+      newFee: { v: newFee }
     }
   })
 }
 
-export const getProtocolFee = async (invariant: InvariantInstance) => {
-  return (await invariant.view.getProtocolFee()).returns
+export const getProtocolFee = async (invariant: InvariantInstance): Promise<bigint> => {
+  return (await invariant.view.getProtocolFee()).returns.v
 }
 
 export async function initPosition(
@@ -232,9 +234,9 @@ export async function initPosition(
       poolKey,
       lowerTick,
       upperTick,
-      liquidityDelta,
-      slippageLimitLower,
-      slippageLimitUpper
+      liquidityDelta: { v: liquidityDelta },
+      slippageLimitLower: { v: slippageLimitLower },
+      slippageLimitUpper: { v: slippageLimitUpper }
     },
     tokens: [
       { id: poolKey.tokenX, amount: approvedTokensX },
@@ -252,17 +254,19 @@ export const quote = async (
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ) => {
-  return (
-    await invariant.view.quote({
-      args: {
-        poolKey,
-        xToY,
-        amount,
-        byAmountIn,
-        sqrtPriceLimit
-      }
-    })
-  ).returns
+  return unwrapQuoteResult(
+    (
+      await invariant.view.quote({
+        args: {
+          poolKey,
+          xToY,
+          amount: { v: amount },
+          byAmountIn,
+          sqrtPriceLimit: { v: sqrtPriceLimit }
+        }
+      })
+    ).returns
+  )
 }
 
 export const removePosition = async (
@@ -329,9 +333,9 @@ export async function initSwap(
       invariant: invariant.contractId,
       poolKey,
       xToY,
-      amount,
+      amount: { v: amount },
       byAmountIn,
-      sqrtPriceLimit
+      sqrtPriceLimit: { v: sqrtPriceLimit }
     },
     tokens: [{ id, amount: approvedAmount }],
     attoAlphAmount: DUST_AMOUNT * 2n
@@ -376,4 +380,292 @@ export const getReserveBalances = async (invariant: InvariantInstance, poolKey: 
   const x = await balanceOf(poolKey.tokenX, reserveX)
   const y = await balanceOf(poolKey.tokenY, reserveY)
   return { x, y }
+}
+
+export const feeGrowthFromFee = async (
+  clamm: CLAMMInstance,
+  liquidity: bigint,
+  fee: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.feeGrowthFromFee({ args: { liquidity: { v: liquidity }, fee: { v: fee } } })
+  ).returns.v
+}
+
+export const calculateSqrtPrice = async (
+  clamm: CLAMMInstance | InvariantInstance,
+  tickIndex: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.calculateSqrtPrice({
+      args: { tickIndex }
+    })
+  ).returns.v
+}
+
+export const toFee = async (
+  clamm: CLAMMInstance,
+  liquidity: bigint,
+  feeGrowth: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.toFee({
+      args: { liquidity: { v: liquidity }, feeGrowth: { v: feeGrowth } }
+    })
+  ).returns.v
+}
+
+export const getTickAtSqrtPrice = async (
+  clamm: CLAMMInstance,
+  sqrtPrice: bigint,
+  tickSpacing: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.getTickAtSqrtPrice({
+      args: { sqrtPrice: { v: sqrtPrice }, tickSpacing }
+    })
+  ).returns
+}
+
+export const getDeltaX = async (
+  clamm: CLAMMInstance,
+  sqrtPriceA: bigint,
+  sqrtPriceB: bigint,
+  liquidity: bigint,
+  roundingUp: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getDeltaX({
+      args: {
+        sqrtPriceA: { v: sqrtPriceA },
+        sqrtPriceB: { v: sqrtPriceB },
+        liquidity: { v: liquidity },
+        roundingUp
+      }
+    })
+  ).returns.v
+}
+
+export const getDeltaY = async (
+  clamm: CLAMMInstance,
+  sqrtPriceA: bigint,
+  sqrtPriceB: bigint,
+  liquidity: bigint,
+  roundingUp: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getDeltaY({
+      args: {
+        sqrtPriceA: { v: sqrtPriceA },
+        sqrtPriceB: { v: sqrtPriceB },
+        liquidity: { v: liquidity },
+        roundingUp
+      }
+    })
+  ).returns.v
+}
+
+export const getNextSqrtPriceYDown = async (
+  clamm: CLAMMInstance,
+  startingSqrtPrice: bigint,
+  liquidity: bigint,
+  y: bigint,
+  addY: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getNextSqrtPriceYDown({
+      args: {
+        startingSqrtPrice: { v: startingSqrtPrice },
+        liquidity: { v: liquidity },
+        y: { v: y },
+        addY
+      }
+    })
+  ).returns.v
+}
+
+export const calculateMinAmountOut = async (
+  clamm: CLAMMInstance,
+  expectedAmountOut: bigint,
+  slippage: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.calculateMinAmountOut({
+      args: { expectedAmountOut: { v: expectedAmountOut }, slippage: { v: slippage } }
+    })
+  ).returns.v
+}
+
+export const isEnoughAmountToChangePrice = async (
+  clamm: CLAMMInstance,
+  amount: bigint,
+  startingSqrtPrice: bigint,
+  liquidity: bigint,
+  fee: bigint,
+  byAmountIn: boolean,
+  xToY: boolean
+): Promise<boolean> => {
+  return (
+    await clamm.view.isEnoughAmountToChangePrice({
+      args: {
+        amount: { v: amount },
+        startingSqrtPrice: { v: startingSqrtPrice },
+        liquidity: { v: liquidity },
+        fee: { v: fee },
+        byAmountIn,
+        xToY
+      }
+    })
+  ).returns
+}
+
+export const calculateFeeGrowthInside = async (
+  clamm: CLAMMInstance,
+  tickLowerIndex: bigint,
+  tickLowerFeeGrowthOutsideX: bigint,
+  tickLowerFeeGrowthOutsideY: bigint,
+  tickUpperIndex: bigint,
+  tickUpperFeeGrowthOutsideX: bigint,
+  tickUpperFeeGrowthOutsideY: bigint,
+  tickCurrent: bigint,
+  globalFeeGrowthX: bigint,
+  globalFeeGrowthY: bigint
+): Promise<[bigint, bigint]> => {
+  const returns = (
+    await clamm.view.calculateFeeGrowthInside({
+      args: {
+        tickLowerIndex,
+        tickLowerFeeGrowthOutsideX: { v: tickLowerFeeGrowthOutsideX },
+        tickLowerFeeGrowthOutsideY: { v: tickLowerFeeGrowthOutsideY },
+        tickUpperIndex,
+        tickUpperFeeGrowthOutsideX: { v: tickUpperFeeGrowthOutsideX },
+        tickUpperFeeGrowthOutsideY: { v: tickUpperFeeGrowthOutsideY },
+        tickCurrent,
+        globalFeeGrowthX: { v: globalFeeGrowthX },
+        globalFeeGrowthY: { v: globalFeeGrowthY }
+      }
+    })
+  ).returns
+  return [returns[0].v, returns[1].v]
+}
+
+export const calculateAmountDelta = async (
+  clamm: CLAMMInstance,
+  currentTickIndex: bigint,
+  currentSqrtPrice: bigint,
+  liquidityDelta: bigint,
+  liquiditySign: boolean,
+  upperTick: bigint,
+  lowerTick: bigint
+): Promise<[bigint, bigint, boolean]> => {
+  const returns = (
+    await clamm.view.calculateAmountDelta({
+      args: {
+        currentTickIndex,
+        currentSqrtPrice: { v: currentSqrtPrice },
+        liquidityDelta: { v: liquidityDelta },
+        liquiditySign,
+        upperTick,
+        lowerTick
+      }
+    })
+  ).returns
+  return [returns[0].v, returns[1].v, returns[2]]
+}
+
+export const getNextSqrtPriceXUp = async (
+  clamm: CLAMMInstance,
+  startingSqrtPrice: bigint,
+  liquidity: bigint,
+  x: bigint,
+  addX: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getNextSqrtPriceXUp({
+      args: {
+        startingSqrtPrice: { v: startingSqrtPrice },
+        liquidity: { v: liquidity },
+        x: { v: x },
+        addX
+      }
+    })
+  ).returns.v
+}
+
+export const getNextSqrtPriceFromInput = async (
+  clamm: CLAMMInstance,
+  startingSqrtPrice: bigint,
+  liquidity: bigint,
+  amount: bigint,
+  xToY: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getNextSqrtPriceFromInput({
+      args: {
+        startingSqrtPrice: { v: startingSqrtPrice },
+        liquidity: { v: liquidity },
+        amount: { v: amount },
+        xToY
+      }
+    })
+  ).returns.v
+}
+
+export const getNextSqrtPriceFromOutput = async (
+  clamm: CLAMMInstance,
+  startingSqrtPrice: bigint,
+  liquidity: bigint,
+  amount: bigint,
+  xToY: boolean
+): Promise<bigint> => {
+  return (
+    await clamm.view.getNextSqrtPriceFromOutput({
+      args: {
+        startingSqrtPrice: { v: startingSqrtPrice },
+        liquidity: { v: liquidity },
+        amount: { v: amount },
+        xToY
+      }
+    })
+  ).returns.v
+}
+
+export const computeSwapStep = async (
+  clamm: CLAMMInstance,
+  currentSqrtPrice: bigint,
+  targetSqrtPrice: bigint,
+  liquidity: bigint,
+  amount: bigint,
+  byAmountIn: boolean,
+  fee: bigint
+): Promise<{ nextSqrtPrice: bigint; amountIn: bigint; amountOut: bigint; feeAmount: bigint }> => {
+  const swapResult = (
+    await clamm.view.computeSwapStep({
+      args: {
+        currentSqrtPrice: { v: currentSqrtPrice },
+        targetSqrtPrice: { v: targetSqrtPrice },
+        liquidity: { v: liquidity },
+        amount: { v: amount },
+        byAmountIn,
+        fee: { v: fee }
+      }
+    })
+  ).returns
+  return {
+    nextSqrtPrice: swapResult.nextSqrtPrice.v,
+    amountIn: swapResult.amountIn.v,
+    amountOut: swapResult.amountOut.v,
+    feeAmount: swapResult.feeAmount.v
+  }
+}
+
+export const calculateMaxLiquidityPerTick = async (
+  clamm: CLAMMInstance,
+  tickSpacing: bigint
+): Promise<bigint> => {
+  return (
+    await clamm.view.calculateMaxLiquidityPerTick({
+      args: { tickSpacing }
+    })
+  ).returns.v
 }

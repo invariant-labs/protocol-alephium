@@ -1,12 +1,12 @@
 struct Pool {
     mut poolKey: PoolKey,
-    mut liquidity: U256,
-    mut sqrtPrice: U256,
+    mut liquidity: Liquidity,
+    mut sqrtPrice: SqrtPrice,
     mut currentTickIndex: I256,
-    mut feeGrowthGlobalX: U256,
-    mut feeGrowthGlobalY: U256,
-    mut feeProtocolTokenX: U256,
-    mut feeProtocolTokenY: U256,
+    mut feeGrowthGlobalX: FeeGrowth,
+    mut feeGrowthGlobalY: FeeGrowth,
+    mut feeProtocolTokenX: TokenAmount,
+    mut feeProtocolTokenY: TokenAmount,
     mut startTimestamp: U256,
     mut lastTimestamp: U256,
     mut feeReceiver: Address,
@@ -15,38 +15,38 @@ struct Pool {
 }
 
 Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
-    fn addFee(mut pool: Pool, amount: U256, inX: Bool, protocolFee: U256) -> Pool {
-        let invariantProtocolFee = mulUp(amount, protocolFee, one(PercentageScale))
+    fn addFee(mut pool: Pool, amount: TokenAmount, inX: Bool, protocolFee: Percentage) -> Pool {
+        let invariantProtocolFee = TokenAmount{v: mulUp(amount.v, protocolFee.v, one(PercentageScale))}
 
-        let poolFee = amount - invariantProtocolFee
+        let poolFee = TokenAmount{v: amount.v - invariantProtocolFee.v}
 
-        if (poolFee == 0 && invariantProtocolFee == 0 || pool.liquidity == 0) {
+        if (poolFee.v == 0 && invariantProtocolFee.v == 0 || pool.liquidity.v == 0) {
             return pool
         }
 
         let feeGrowth = clamm.feeGrowthFromFee(pool.liquidity, poolFee)
 
         if (inX) {
-            pool.feeGrowthGlobalX = wrappingAdd(pool.feeGrowthGlobalX, feeGrowth)
-            pool.feeProtocolTokenX = pool.feeProtocolTokenX + invariantProtocolFee
+            pool.feeGrowthGlobalX = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalX.v, feeGrowth.v)}
+            pool.feeProtocolTokenX = TokenAmount{v: pool.feeProtocolTokenX.v + invariantProtocolFee.v}
         } else {
-            pool.feeGrowthGlobalY = wrappingAdd(pool.feeGrowthGlobalY, feeGrowth)
-            pool.feeProtocolTokenY = pool.feeProtocolTokenY + invariantProtocolFee
+            pool.feeGrowthGlobalY = FeeGrowth{v: wrappingAdd(pool.feeGrowthGlobalY.v, feeGrowth.v)}
+            pool.feeProtocolTokenY = TokenAmount{v: pool.feeProtocolTokenY.v + invariantProtocolFee.v}
         }
 
         return pool
     }
     
-    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: U256, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (U256, U256, Pool) {
+    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: Liquidity, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (TokenAmount, TokenAmount, Pool) {
         let (x, y, updateLiq) = clamm.calculateAmountDelta(pool.currentTickIndex, pool.sqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y, pool
         }
 
         if (liquiditySign) {
-            pool.liquidity = pool.liquidity + liquidityDelta
+            pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
         } else {
-            pool.liquidity = pool.liquidity - liquidityDelta
+            pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
         }
 
         return x, y, pool
@@ -55,20 +55,20 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
     @using(checkExternalCaller = false)
     pub fn poolUpdateTick(
         mut pool: Pool,
-        nextSqrtPrice: U256,
-        swapLimit: U256,
-        mut remainingAmount: U256,
+        nextSqrtPrice: SqrtPrice,
+        swapLimit: SqrtPrice,
+        mut remainingAmount: TokenAmount,
         byAmountIn: Bool,
         xToY: Bool,
-        protocolFee: U256,
+        protocolFee: Percentage,
         hasLimitingTick: Bool,
         isLimitingTickInitialized: Bool,
         limitingTickIndex: I256
-    ) -> (U256, U256, Bool, Pool) {
+    ) -> (TokenAmount, TokenAmount, Bool, Pool) {
         let mut hasCrossed = false
-        let mut totalAmount = 0
+        let mut totalAmount = TokenAmount{v: 0}
 
-        if (!hasLimitingTick || swapLimit != nextSqrtPrice) {
+        if (!hasLimitingTick || swapLimit.v != nextSqrtPrice.v) {
             pool.currentTickIndex = clamm.getTickAtSqrtPrice(nextSqrtPrice, pool.poolKey.feeTier.tickSpacing)
             return totalAmount, remainingAmount, hasCrossed, pool
         }
@@ -82,12 +82,12 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
                 let (add, liquidityDelta) = cross(pool.poolKey, tick, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.currentTickIndex)
                 pool = crossLiquidityUpdate(pool, add, liquidityDelta)
                 hasCrossed = true
-            } else if (remainingAmount != 0) {
+            } else if (remainingAmount.v != 0) {
                 if (byAmountIn) {
                     pool = addFee(pool, remainingAmount, xToY, protocolFee)
                     totalAmount = remainingAmount
                 }
-                remainingAmount = 0
+                remainingAmount.v = 0
             } else {
                 // do nothing
             }
@@ -104,11 +104,11 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return totalAmount, remainingAmount, hasCrossed, pool
     }
 
-    pub fn crossLiquidityUpdate(mut pool: Pool, add: Bool, liquidityDelta: U256) -> Pool {
+    pub fn crossLiquidityUpdate(mut pool: Pool, add: Bool, liquidityDelta: Liquidity) -> Pool {
         if (add) {
-            pool.liquidity = pool.liquidity + liquidityDelta
+            pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
         } else {
-            pool.liquidity = pool.liquidity - liquidityDelta
+            pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
         }
         return pool
     }
@@ -121,15 +121,15 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
     fn serializePool(pool: Pool) -> ByteVec {
         return pool.poolKey.tokenX ++ b`break`
         ++ pool.poolKey.tokenY ++ b`break`
-        ++ toByteVec!(pool.poolKey.feeTier.fee) ++ b`break`
+        ++ toByteVec!(pool.poolKey.feeTier.fee.v) ++ b`break`
         ++ toByteVec!(pool.poolKey.feeTier.tickSpacing) ++ b`break` 
-        ++ toByteVec!(pool.liquidity) ++ b`break`
-        ++ toByteVec!(pool.sqrtPrice) ++ b`break`
+        ++ toByteVec!(pool.liquidity.v) ++ b`break`
+        ++ toByteVec!(pool.sqrtPrice.v) ++ b`break`
         ++ toByteVec!(pool.currentTickIndex) ++ b`break`
-        ++ toByteVec!(pool.feeGrowthGlobalX) ++ b`break`
-        ++ toByteVec!(pool.feeGrowthGlobalY) ++ b`break`
-        ++ toByteVec!(pool.feeProtocolTokenX) ++ b`break`
-        ++ toByteVec!(pool.feeProtocolTokenY) ++ b`break` 
+        ++ toByteVec!(pool.feeGrowthGlobalX.v) ++ b`break`
+        ++ toByteVec!(pool.feeGrowthGlobalY.v) ++ b`break`
+        ++ toByteVec!(pool.feeProtocolTokenX.v) ++ b`break`
+        ++ toByteVec!(pool.feeProtocolTokenY.v) ++ b`break` 
         ++ toByteVec!(pool.startTimestamp) ++ b`break`
         ++ toByteVec!(pool.lastTimestamp) ++ b`break`
         ++ toByteVec!(pool.feeReceiver) ++ b`break` 

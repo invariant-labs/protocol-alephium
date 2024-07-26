@@ -3,7 +3,7 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
     fn addPool(
         originalCaller: Address,
         poolKey: PoolKey,
-        initSqrtPrice: U256,
+        initSqrtPrice: SqrtPrice,
         initTick: I256,
         currentTimestamp: U256,
         feeReceiver: Address
@@ -14,13 +14,13 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
         let (reserveX, reserveY) = handleReserves{originalCaller -> ALPH: mapEntryDeposit!() * 3}(originalCaller, poolKey.tokenX, poolKey.tokenY)
         let state = Pool {
             poolKey: poolKey,
-            liquidity: 0,
+            liquidity: Liquidity{v: 0},
             sqrtPrice: initSqrtPrice,
             currentTickIndex: initTick,
-            feeGrowthGlobalX: 0,
-            feeGrowthGlobalY: 0,
-            feeProtocolTokenX: 0,
-            feeProtocolTokenY: 0,
+            feeGrowthGlobalX: FeeGrowth{v: 0},
+            feeGrowthGlobalY: FeeGrowth{v: 0},
+            feeProtocolTokenX: TokenAmount{v: 0},
+            feeProtocolTokenY: TokenAmount{v: 0},
             startTimestamp: currentTimestamp,
             lastTimestamp: currentTimestamp,
             feeReceiver: feeReceiver,
@@ -48,17 +48,17 @@ Abstract Contract Pools(clamm: CLAMM) extends PoolKeyHelper(), PoolHelper(clamm)
                     tokenX: nullId,
                     tokenY: nullId,
                     feeTier: FeeTier {
-                        fee: 0,
+                        fee: Percentage{v: 0},
                         tickSpacing: 0
                     }
                 },
-                liquidity: 0,
-                sqrtPrice: 0,
+                liquidity: Liquidity{v: 0},
+                sqrtPrice: SqrtPrice{v: 0},
                 currentTickIndex: 0i,
-                feeGrowthGlobalX: 0,
-                feeGrowthGlobalY: 0,
-                feeProtocolTokenX: 0,
-                feeProtocolTokenY: 0,
+                feeGrowthGlobalX: FeeGrowth{v: 0},
+                feeGrowthGlobalY: FeeGrowth{v: 0},
+                feeProtocolTokenX: TokenAmount{v: 0},
+                feeProtocolTokenY: TokenAmount{v: 0},
                 startTimestamp: 0,
                 lastTimestamp: 0,
                 feeReceiver: nullContractAddress!(),

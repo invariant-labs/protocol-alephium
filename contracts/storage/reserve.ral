@@ -19,40 +19,40 @@ Contract Reserve(invariant: Address, mut assetsStored: U256) {
     }
 
     @using(preapprovedAssets = true, payToContractOnly = true)
-    pub fn depositSingleAsset(from: Address, id: ByteVec, amount: U256) -> () {
+    pub fn depositSingleAsset(from: Address, id: ByteVec, amount: TokenAmount) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        transferTokenToSelf!(from, id, amount)
+        transferTokenToSelf!(from, id, amount.v)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn depositTwoAssets(from: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+    pub fn depositTwoAssets(from: Address, xId: ByteVec, yId: ByteVec, x: TokenAmount, y: TokenAmount) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        transferTokenToSelf!(from, xId, x)
-        transferTokenToSelf!(from, yId, y)
+        transferTokenToSelf!(from, xId, x.v)
+        transferTokenToSelf!(from, yId, y.v)
     }
 
     @using(assetsInContract = true)
-    pub fn withdrawSingleAsset(to: Address, id: ByteVec, amount: U256) -> () {
+    pub fn withdrawSingleAsset(to: Address, id: ByteVec, amount: TokenAmount) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        transferTokenFromSelf!(to, id, amount)
+        transferTokenFromSelf!(to, id, amount.v)
     }
 
     @using(assetsInContract = true)
-    pub fn withdrawTwoAssets(to: Address, xId: ByteVec, yId: ByteVec, x: U256, y: U256) -> () {
+    pub fn withdrawTwoAssets(to: Address, xId: ByteVec, yId: ByteVec, x: TokenAmount, y: TokenAmount) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        transferTokenFromSelf!(to, xId, x)
-        transferTokenFromSelf!(to, yId, y)
+        transferTokenFromSelf!(to, xId, x.v)
+        transferTokenFromSelf!(to, yId, y.v)
     }
 
     @using(preapprovedAssets = true, assetsInContract = true)
-    pub fn swap(swapper: Address, inId: ByteVec, outId: ByteVec, in: U256, out: U256) -> () {
+    pub fn swap(swapper: Address, inId: ByteVec, outId: ByteVec, in: TokenAmount, out: TokenAmount) -> () {
         let caller = callerAddress!()
         checkCaller!(invariant == caller, ReserveError.NotInvariant)
-        transferTokenToSelf!(swapper, inId, in)
-        transferTokenFromSelf!(swapper, outId, out)
+        transferTokenToSelf!(swapper, inId, in.v)
+        transferTokenFromSelf!(swapper, outId, out.v)
     }
 }

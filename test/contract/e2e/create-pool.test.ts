@@ -3,7 +3,14 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { CLAMMError, InvariantError, PercentageScale } from '../../../src/consts'
-import { getPool, initPool, initFeeTier, initTokensXY, expectError } from '../../../src/testUtils'
+import {
+  getPool,
+  initPool,
+  initFeeTier,
+  initTokensXY,
+  expectError,
+  calculateSqrtPrice
+} from '../../../src/testUtils'
 import { CLAMM, Invariant } from '../../../artifacts/ts'
 import { PoolKey } from '../../../artifacts/ts/types'
 
@@ -128,9 +135,7 @@ describe('create pool tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 2n
-    const initSqrtPrice = (
-      await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })
-    ).returns
+    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
 
     const clamm = CLAMM.at(
       addressFromContractId((await fetchContractState(Invariant, invariant)).fields.clamm)
@@ -155,8 +160,7 @@ describe('create pool tests', () => {
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice =
-      (await invariant.view.calculateSqrtPrice({ args: { tickIndex: initTick } })).returns + 1n
+    const initSqrtPrice = (await calculateSqrtPrice(invariant, initTick)) + 1n
     await initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const pool = await getPool(invariant, poolKey)

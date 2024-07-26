@@ -58,13 +58,13 @@ describe('query on token pair tests', () => {
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     for (let tickSpacing = 1n; tickSpacing <= 32n; tickSpacing++) {
-      const feeTier10TS = await newFeeTier(fee, tickSpacing)
-      await invariant.addFeeTier(deployer, feeTier10TS)
+      const feeTier = await newFeeTier(fee, tickSpacing)
+      await invariant.addFeeTier(deployer, feeTier)
       await invariant.createPool(
         deployer,
         tokenX.contractId,
         tokenY.contractId,
-        feeTier10TS,
+        feeTier,
         initSqrtPrice
       )
     }

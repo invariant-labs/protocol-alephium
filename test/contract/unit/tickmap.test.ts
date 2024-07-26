@@ -3,18 +3,21 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip, InitializeChunk } from '../../../artifacts/ts'
 
-import { deployInvariant } from '../../../src/utils'
+import { deployInvariant, deployTokenFaucet, newFeeTier, newPoolKey } from '../../../src/utils'
 import { GlobalMinTick, GlobalMaxTick } from '../../../src/consts'
-import { PoolKey } from '../../../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
+let token0Addr: string
+let token1Addr: string
 
 const TICK_SEARCH_RANGE = 256n
 const protocolFee = 100n
 describe('tickmap tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
+    token0Addr = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.address
+    token1Addr = (await deployTokenFaucet(sender, '', '', 0n, 0n)).contractInstance.address
   })
 
   test('flip bit', async () => {
@@ -28,14 +31,8 @@ describe('tickmap tests', () => {
       { tickSpacing: 100n, tick: 20000n }
     ]
     for (const { tick, tickSpacing } of params) {
-      const poolKey = {
-        tokenX: '',
-        tokenY: '',
-        feeTier: {
-          fee: 0n,
-          tickSpacing
-        }
-      }
+      const feeTier = await newFeeTier(0n, tickSpacing)
+      const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
       const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
         .returns
@@ -98,14 +95,9 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 5n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -141,14 +133,8 @@ describe('tickmap tests', () => {
     const tick50 = 50n
     const tick100 = 100n
     const tickSpacing = 10n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     {
       const [chunkIndex] = (
@@ -220,14 +206,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 10n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -261,14 +241,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -305,14 +279,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -348,14 +316,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 10n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -391,14 +353,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 22n
     const tickSpacing = 4n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [isSome, index] = (
       await invariant.view.nextInitialized({ args: { tick, tickSpacing, poolKey } })
@@ -409,14 +365,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 2n
     const tickSpacing = 4n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [isSome] = (
       await invariant.view.nextInitialized({ args: { tick, tickSpacing, poolKey } })
@@ -427,14 +377,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMaxTick - 255n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -471,14 +415,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = -5n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -514,15 +452,8 @@ describe('tickmap tests', () => {
     const tick50 = -50n
     const tick100 = -100n
     const tickSpacing = 10n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
-
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
     {
       const [chunkIndex] = (
         await invariant.view.tickToPosition({ args: { tick: tick50, tickSpacing } })
@@ -592,14 +523,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 10n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -634,14 +559,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 10n
     const tickSpacing = 10n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -675,14 +594,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -720,14 +633,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = 0n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -763,14 +670,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick + 1n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -806,14 +707,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick + 255n
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -850,14 +745,8 @@ describe('tickmap tests', () => {
     const invariant = await deployInvariant(sender, protocolFee)
     const tick = GlobalMinTick
     const tickSpacing = 1n
-    const poolKey: PoolKey = {
-      tokenX: '',
-      tokenY: '',
-      feeTier: {
-        fee: 0n,
-        tickSpacing
-      }
-    }
+    const feeTier = await newFeeTier(0n, tickSpacing)
+    const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
 
     const [chunkIndex] = (await invariant.view.tickToPosition({ args: { tick, tickSpacing } }))
       .returns
@@ -949,14 +838,8 @@ describe('tickmap tests', () => {
   test('test next and prev intialized', async () => {
     // initialized edges
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
-      const poolKey: PoolKey = {
-        tokenX: '',
-        tokenY: '',
-        feeTier: {
-          fee: 0n,
-          tickSpacing
-        }
-      }
+      const feeTier = await newFeeTier(0n, tickSpacing)
+      const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
@@ -1031,14 +914,8 @@ describe('tickmap tests', () => {
       }
     }
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
-      const poolKey: PoolKey = {
-        tokenX: '',
-        tokenY: '',
-        feeTier: {
-          fee: 0n,
-          tickSpacing
-        }
-      }
+      const feeTier = await newFeeTier(0n, tickSpacing)
+      const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
