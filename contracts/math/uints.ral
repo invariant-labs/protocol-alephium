@@ -293,7 +293,7 @@ Abstract Contract Uints () {
     }
 
     pub fn newBigMul256(a: U256, b: U256) -> U512 {
-        let mulMod = mulModN!(a, b, u256Max!())
+        let mulMod = mulModN!(a, b, MaxU256)
         let lower = a |*| b
         let mut higher = mulMod |-| lower
 

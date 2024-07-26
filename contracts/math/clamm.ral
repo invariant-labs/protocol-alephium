@@ -291,7 +291,7 @@ Contract CLAMM() extends Uints(), Log(){
     ) -> Liquidity {
         let maxTicksAmountSqrtPriceLimited = 2 * toU256!(getGlobalMaxTick()) + 1
         let ticksAmountSpacingLimited = maxTicksAmountSqrtPriceLimited / tickSpacing
-        let maxLiquidity = Liquidity{v: u256Max!() / ticksAmountSpacingLimited}
+        let maxLiquidity = Liquidity{v: MaxU256 / ticksAmountSpacingLimited}
         return maxLiquidity
     }
 

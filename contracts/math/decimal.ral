@@ -29,6 +29,10 @@ Abstract Contract Decimal() {
     const FixedPointScale = 12
     const PercentageScale = 12
     const TokenAmountScale = 0
+    const SqrtPriceDenominator = 1000000000000000000000000
+    const LiquidiyDenominator = 100000
+    const FeeGrowthDenominator = 10000000000000000000000000000
+    const PercentageDenominator = 1000000000000
     const FixedPointDenominator = 1000000000000
     const GlobalMaxTick = 221818i
     const GlobalMinTick = -221818i
@@ -39,6 +43,8 @@ Abstract Contract Decimal() {
     enum DecimalError {
         TickOverBounds = 0
     }
+
+    // TODO: In global constants update remove all these `get` functions, unecessary indirection to please the compiler
 
     pub fn getSqrtPriceScale() -> U256 {
         return SqrtPriceScale
@@ -62,6 +68,22 @@ Abstract Contract Decimal() {
 
     pub fn getTokenAmountScale() -> U256 {
         return TokenAmountScale
+    }
+
+    pub fn getSqrtPriceDenominator() -> U256 {
+        return SqrtPriceDenominator
+    }
+
+    pub fn getLiquidityDenominator() -> U256 {
+        return LiquidiyDenominator
+    }
+
+    pub fn getFeeGrowthDenominator() -> U256 {
+        return FeeGrowthDenominator
+    }
+
+    pub fn getPercentageDenominator() -> U256 {
+        return PercentageDenominator
     }
 
     pub fn getGlobalMaxTick() -> I256 {

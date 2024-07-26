@@ -369,15 +369,15 @@ describe('log tests', () => {
       //   for (let i = 0n; i < GlobalMaxTick; i++) {
       //     const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
       //     {
-      //       const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
+      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       //       expect(tick).toBe(i)
       //     }
       //     {
-      //       const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
+      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
       //       expect(tick).toBe(i - 1n)
       //     }
       //     {
-      //       const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
+      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
       //       expect(tick).toBe(i)
       //     }
       //   }
@@ -387,15 +387,15 @@ describe('log tests', () => {
       // for (let i = 0n; i < GlobalMaxTick; i++) {
       //   const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
       //   {
-      //     const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
+      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       //     expect(tick).toBe(-i)
       //   }
       //   {
-      //     const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
+      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
       //     expect(tick).toBe(-i - 1n)
       //   }
       //   {
-      //     const tick = getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
+      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
       //     expect(tick).toBe(-i)
       //   }
       // }

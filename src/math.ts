@@ -1,6 +1,12 @@
 import { CLAMM, Utils } from '../artifacts/ts'
-import { FeeGrowthScale, LiquidityScale, PercentageScale, SqrtPriceScale } from './consts'
-import { assert } from 'console'
+import {
+  FeeGrowthScale,
+  LiquidityScale,
+  PercentageDenominator,
+  PercentageScale,
+  SqrtPriceDenominator,
+  SqrtPriceScale
+} from './consts'
 import {
   Pool,
   Position,
@@ -268,11 +274,11 @@ const newtonIteration = (n: bigint, x0: bigint): bigint => {
 }
 
 export const sqrtPriceToPrice = (sqrtPrice: bigint): bigint => {
-  return (sqrtPrice * sqrtPrice) / getSqrtPriceDenominator()
+  return (sqrtPrice * sqrtPrice) / SqrtPriceDenominator
 }
 
 export const priceToSqrtPrice = (price: bigint): bigint => {
-  return sqrt(price * getSqrtPriceDenominator())
+  return sqrt(price * SqrtPriceDenominator)
 }
 
 export const calculateSqrtPriceAfterSlippage = (
@@ -284,38 +290,30 @@ export const calculateSqrtPriceAfterSlippage = (
     return sqrtPrice
   }
 
-  const multiplier = getPercentageDenominator() + (up ? slippage : -slippage)
+  const multiplier = PercentageDenominator + (up ? slippage : -slippage)
   const price = sqrtPriceToPrice(sqrtPrice)
-  const priceWithSlippage = price * multiplier * getPercentageDenominator()
-  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / getPercentageDenominator()
+  const priceWithSlippage = price * multiplier * PercentageDenominator
+  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / PercentageDenominator
 
   return sqrtPriceWithSlippage
 }
 
 export const toLiquidity = (value: bigint, offset = 0n) => {
-  assert(offset < LiquidityScale, 'offset must be less than LiquidityScale')
+  if (offset >= LiquidityScale) throw new Error(`offset must be less than ${LiquidityScale}`)
   return value * 10n ** (LiquidityScale - offset)
 }
 
 export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
-  assert(offset < SqrtPriceScale, 'offset must be less than SqrtPriceScale')
+  if (offset >= SqrtPriceScale) throw new Error(`offset must be less than ${SqrtPriceScale}`)
   return value * 10n ** (SqrtPriceScale - offset)
 }
 
-export const getSqrtPriceDenominator = (): bigint => {
-  return 10n ** SqrtPriceScale
-}
-
 export const toPercentage = (value: bigint, offset = 0n): bigint => {
-  assert(offset < PercentageScale, 'offset must be less than PercentageScale')
+  if (offset >= PercentageScale) throw new Error(`offset must be less than ${PercentageScale}`)
   return value * 10n ** (PercentageScale - offset)
 }
 
-export const getPercentageDenominator = (): bigint => {
-  return 10n ** PercentageScale
-}
-
 export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
-  assert(offset < FeeGrowthScale, 'offset must be less than FeeGrowthScale')
+  if (offset >= FeeGrowthScale) throw new Error(`offset must be less than ${FeeGrowthScale}`)
   return value * 10n ** (FeeGrowthScale - offset)
 }

@@ -129,15 +129,15 @@ Abstract Contract Log() extends Decimal() {
 
         let mut accurateTick = 0i
         if (log2Sign) {
-            let fartherTickSqrtPriceDecimal = sqrtPriceFromTick(fartherTick).v
-            if (sqrtPrice.v >= fartherTickSqrtPriceDecimal) {
+            let fartherTickSqrtPriceDecimal = sqrtPriceFromTick(fartherTick)
+            if (sqrtPrice.v >= fartherTickSqrtPriceDecimal.v) {
                 accurateTick = fartherTickWithSpacing
             } else {
                 accurateTick = nearerTickWithSpacing
             }
         } else {
-            let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick).v
-            if (nearerTickSqrtPriceDecimal <= sqrtPrice.v) {
+            let nearerTickSqrtPriceDecimal = sqrtPriceFromTick(nearerTick)
+            if (nearerTickSqrtPriceDecimal.v <= sqrtPrice.v) {
                 accurateTick = nearerTickWithSpacing
             } else {
                 accurateTick = fartherTickWithSpacing
