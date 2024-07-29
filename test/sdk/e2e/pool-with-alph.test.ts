@@ -2,7 +2,7 @@ import { ALPH_TOKEN_ID, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MinSqrtPrice, PercentageScale } from '../../../src/consts'
+import { MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
@@ -14,7 +14,7 @@ import { toLiquidity } from '../../../src/math'
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('create pool with ALP token as swappable asset tests', () => {
-  const protocolFee = 10n ** (PercentageScale - 2n)
+  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const positionOwnerMint = 3000n
   const swapperMint = 10n ** 15n
@@ -98,7 +98,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
       alph: await balanceOf(poolKey.tokenX, swapper.address),
       y: await balanceOf(poolKey.tokenY, swapper.address)
     }
-    await invariant.swap(swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
+    await invariant.swap(swapper, poolKey, true, swapAmount, true, MIN_SQRT_PRICE)
     const swapperBalanceAfter = {
       alph: await balanceOf(poolKey.tokenX, swapper.address),
       y: await balanceOf(poolKey.tokenY, swapper.address)

@@ -8,7 +8,7 @@ import {
   initDexAndTokens
 } from '../../../src/snippets'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MinSqrtPrice } from '../../../src/consts'
+import { MIN_SQRT_PRICE } from '../../../src/consts'
 import {
   getPool,
   getReserveBalances,
@@ -77,7 +77,7 @@ describe('cross tests', () => {
       }
 
       const poolBefore = await getPool(invariant, poolKey)
-      await initSwap(invariant, swapper, poolKey, true, approvedAmount, true, MinSqrtPrice)
+      await initSwap(invariant, swapper, poolKey, true, approvedAmount, true, MIN_SQRT_PRICE)
 
       expect(await getPool(invariant, poolKey)).toMatchObject({
         liquidity: poolBefore.liquidity + liquidityDelta,

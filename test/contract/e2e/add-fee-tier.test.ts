@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { InvariantError, PercentageScale } from '../../../src/consts'
+import { InvariantError, PERCENTAGE_SCALE } from '../../../src/consts'
 import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../../../src/testUtils'
 import { deployInvariant, newFeeTier } from '../../../src/utils'
 import { FeeTier } from '../../../artifacts/ts/types'
@@ -153,7 +153,7 @@ describe('add fee tier tests', () => {
     const invariant = await deployInvariant(admin, 0n)
 
     // 100%
-    const fee = 10n ** PercentageScale
+    const fee = 10n ** PERCENTAGE_SCALE
     const tickSpacing = 10n
     const feeTier: FeeTier = { fee: { v: fee }, tickSpacing }
     expectError(InvariantError.InvalidFee, initFeeTier(invariant, admin, feeTier), invariant)

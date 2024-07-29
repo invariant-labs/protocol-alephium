@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, newFeeTier } from '../../../src/utils'
-import { InvariantError, PercentageScale } from '../../../src/consts'
+import { InvariantError, PERCENTAGE_SCALE } from '../../../src/consts'
 import {
   expectError,
   feeTierExists,
@@ -18,7 +18,7 @@ let admin: PrivateKeyWallet
 
 describe('remove fee tier tests', () => {
   // 0.02%
-  const fee = 2n * 10n ** (PercentageScale - 4n)
+  const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
   const tickSpacings = [1n, 2n]
   let feeTier1TS: FeeTier
   let feeTier2TS: FeeTier

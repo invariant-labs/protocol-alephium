@@ -1,25 +1,5 @@
 struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
-
-struct SwapResult {
-    nextSqrtPrice: SqrtPrice,
-    amountIn: TokenAmount,
-    amountOut: TokenAmount,
-    feeAmount: TokenAmount
-}
-
-struct CalculateSwapResult {
-    amountIn: TokenAmount,
-    amountOut: TokenAmount,
-    startSqrtPrice: SqrtPrice,
-    targetSqrtPrice: SqrtPrice,
-    fee: TokenAmount
-}
-
-struct QuoteResult {
-    amountIn: TokenAmount,
-    amountOut: TokenAmount,
-    targetSqrtPrice: SqrtPrice
-}
+const MaxFeeTiers = 32
 
 struct FeeTiers {
     mut feeTiers: [FeeTier; 32]
@@ -55,39 +35,6 @@ Contract Invariant(
     // Key: TokenId, Value: ReserveId
     mapping[ByteVec, ByteVec] reserves
 
-    const MaxFeeTiers = 32
-    
-    enum InvariantError {
-        NotAdmin = 0
-        InsufficientLiquidity = 1
-        InvalidTickSpacing = 2
-        InvalidFee = 3
-        FeeTierNotFound = 4
-        TokensAreSame = 5
-        PoolKeyAlreadyExist = 6
-        TickAndSqrtPriceMismatch = 7
-        NotFeeReceiver = 8
-        InvalidTickLiquidity = 9
-        ZeroLiquidity = 10
-        PriceLimitReached = 11
-        InvalidProtocolFee = 12
-        // NotOwner = 13
-        ZeroAmount = 14
-        WrongPriceLimit = 15
-        NoGainSwap = 16
-        // PositionDoesNotExist = 17
-        FeeTierAlreadyExist = 18
-        PoolNotFound = 19
-        PoolAlreadyExist = 20
-        TickAlreadyExist = 21
-        InvalidTickIndex = 22
-        TickAndTickSpacingMismatch = 23
-        TickLimitReached = 24
-        ChunkNotFound = 25
-        InvalidTickmapBit = 26
-        PositionNotFound = 27
-        FeeTierLimitReached = 28
-    }
     
     pub fn getProtocolFee() -> Percentage {
         return config.protocolFee
@@ -96,7 +43,7 @@ Contract Invariant(
     @using(updateFields = true)
     pub fn changeProtocolFee(newProtocolFee: Percentage) -> () {
         checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
-        assert!(newProtocolFee.v < one(PercentageScale), InvariantError.InvalidProtocolFee)
+        assert!(newProtocolFee.v < PERCENTAGE_DENOMINATOR, InvariantError.InvalidProtocolFee)
         config.protocolFee = newProtocolFee
     }
 
@@ -161,7 +108,7 @@ Contract Invariant(
 
         assert!(feeTierCount < MaxFeeTiers, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
-        assert!(feeTier.fee.v < one(PercentageScale), InvariantError.InvalidFee)
+        assert!(feeTier.fee.v < PERCENTAGE_DENOMINATOR, InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)
         
         feeTiers.feeTiers[feeTierCount] = feeTier
@@ -388,9 +335,9 @@ Contract Invariant(
         let tickSpacing = poolKey.feeTier.tickSpacing
 
         if (xToY) {
-            assert!(sqrtPrice.v > sqrtPriceLimit.v && sqrtPriceLimit.v <= MaxSqrtPrice, InvariantError.WrongPriceLimit)             
+            assert!(sqrtPrice.v > sqrtPriceLimit.v && sqrtPriceLimit.v <= MAX_SQRT_PRICE, InvariantError.WrongPriceLimit)             
         } else {
-            assert!(sqrtPrice.v < sqrtPriceLimit.v && sqrtPriceLimit.v >= MinSqrtPrice, InvariantError.WrongPriceLimit)
+            assert!(sqrtPrice.v < sqrtPriceLimit.v && sqrtPriceLimit.v >= MIN_SQRT_PRICE, InvariantError.WrongPriceLimit)
         }
 
         let tickLimit = if (xToY) getMinTick(tickSpacing) else getMaxTick(tickSpacing)
@@ -533,8 +480,8 @@ Contract Invariant(
         let key = poolKeyBytes(poolKey) ++ toByteVec!(index)
         if (bitmap.contains!(key)) {
             let tickmapBatch = bitmap[key]
-            for (let mut i = 0; i < ChunksPerBatch; i = i + 1) {
-                let offset = index * ChunksPerBatch + i
+            for (let mut i = 0; i < CHUNKS_PER_BATCH; i = i + 1) {
+                let offset = index * CHUNKS_PER_BATCH + i
                 batch = batch ++ toByteVec!(offset) ++ b`break` ++ toByteVec!(tickmapBatch.chunks[i]) ++ b`break`
             }
         }
@@ -605,7 +552,7 @@ Contract Invariant(
         let keyBytes = poolKeyBytes(poolKey)
 
         for (let mut i = 0; i < length; i = i + 1) {
-            let index = toI256!(u256From4Byte!(byteVecSlice!(indexes, i * 4, (i + 1) * 4))) - GlobalMaxTick
+            let index = toI256!(u256From4Byte!(byteVecSlice!(indexes, i * 4, (i + 1) * 4))) - GLOBAL_MAX_TICK
             
             let key = keyBytes ++ toByteVec!(index)
             let tick = ticks[key]
@@ -621,8 +568,8 @@ Contract Invariant(
 
         let (minChunkIndex, minBit) = tickToPosition(lowerTick, tickSpacing)
         let (maxChunkIndex, maxBit) = tickToPosition(upperTick, tickSpacing)
-        let minBatch = minChunkIndex / ChunksPerBatch
-        let maxBatch = maxChunkIndex / ChunksPerBatch
+        let minBatch = minChunkIndex / CHUNKS_PER_BATCH
+        let maxBatch = maxChunkIndex / CHUNKS_PER_BATCH
 
         let mut amount = 0
 
@@ -634,15 +581,15 @@ Contract Invariant(
             }
 
             let batch = bitmap[key].chunks
-            let minIndexInBatch = minChunkIndex % ChunksPerBatch
-            let maxIndexInBatch = maxChunkIndex % ChunksPerBatch
+            let minIndexInBatch = minChunkIndex % CHUNKS_PER_BATCH
+            let maxIndexInBatch = maxChunkIndex % CHUNKS_PER_BATCH
 
             if(minIndexInBatch == maxIndexInBatch) {
                 amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, maxBit)
                 return amount
             }
 
-            amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, ChunkSize - 1)    
+            amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, CHUNK_SIZE - 1)    
             for(let mut i = minIndexInBatch + 1; i < maxIndexInBatch; i = i + 1) {
                 amount = amount + countOnes(batch[i])
             }
@@ -651,7 +598,7 @@ Contract Invariant(
             return amount
         }
 
-        amount = countActiveBitsInChunk(getChunk(minChunkIndex, poolKey), minBit, ChunkSize - 1)
+        amount = countActiveBitsInChunk(getChunk(minChunkIndex, poolKey), minBit, CHUNK_SIZE - 1)
         for(i = minChunkIndex + 1; i < maxChunkIndex; i = i + 1) {
             amount = amount + countOnes(getChunk(i, poolKey))
         }

@@ -47,7 +47,7 @@ import {
   Tickmap
 } from './utils'
 import {
-  ChunkSize,
+  CHUNK_SIZE,
   MAX_BATCHES_QUERIED,
   MAX_LIQUIDITY_TICKS_QUERIED,
   MAX_POOL_KEYS_QUERIED,
@@ -634,7 +634,7 @@ export class Invariant {
   async getAllLiquidityTicks(poolKey: PoolKey, tickmap: Tickmap) {
     const tickIndexes: bigint[] = []
     for (const [chunkIndex, chunk] of tickmap.bitmap.entries()) {
-      for (let bit = 0n; bit < ChunkSize; bit++) {
+      for (let bit = 0n; bit < CHUNK_SIZE; bit++) {
         const checkedBit = chunk & (1n << bit)
         if (checkedBit) {
           const tickIndex = await bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)

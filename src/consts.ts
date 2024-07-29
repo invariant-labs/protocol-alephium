@@ -1,31 +1,14 @@
-import { CLAMM, Invariant, Reserve, Utils } from '../artifacts/ts'
+import { CLAMM, Invariant } from '../artifacts/ts'
+
+export * from '../artifacts/ts/constants'
 
 export const {
-  SqrtPriceScale,
-  LiquidityScale,
-  FeeGrowthScale,
-  FixedPointScale,
-  PercentageScale,
-  TokenAmountScale,
-  SqrtPriceDenominator,
-  LiquidiyDenominator,
-  FeeGrowthDenominator,
-  PercentageDenominator,
-  FixedPointDenominator,
-  GlobalMaxTick,
-  GlobalMinTick,
-  MaxSqrtPrice,
-  MinSqrtPrice,
-  MaxFeeTiers,
-  SearchRange,
-  InvariantError,
-  ChunksPerBatch,
-  ChunkSize
+  SEARCH_RANGE,
+  CHUNKS_PER_BATCH,
+  CHUNK_SIZE
 } = Invariant.consts
 
-export const { CLAMMError, DecimalError, WordSize, ArithmeticError } = CLAMM.consts
-export const { UtilsError, MaxU256 } = Utils.consts
-export const { ReserveError } = Reserve.consts
+export const { WORD_SIZE } = CLAMM.consts
 
 export const MAX_BATCHES_QUERIED = 18n
 export const MAX_POOL_KEYS_QUERIED = 117n

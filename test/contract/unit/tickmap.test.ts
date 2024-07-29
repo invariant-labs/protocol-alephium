@@ -4,7 +4,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Flip, InitializeChunk } from '../../../artifacts/ts'
 
 import { deployInvariant, deployTokenFaucet, newFeeTier, newPoolKey } from '../../../src/utils'
-import { GlobalMinTick, GlobalMaxTick } from '../../../src/consts'
+import { GLOBAL_MIN_TICK, GLOBAL_MAX_TICK } from '../../../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -26,8 +26,8 @@ describe('tickmap tests', () => {
     const params = [
       { tickSpacing: 1n, tick: 0n },
       { tickSpacing: 1n, tick: 7n },
-      { tickSpacing: 1n, tick: GlobalMaxTick - 1n },
-      { tickSpacing: 1n, tick: GlobalMaxTick - 40n },
+      { tickSpacing: 1n, tick: GLOBAL_MAX_TICK - 1n },
+      { tickSpacing: 1n, tick: GLOBAL_MAX_TICK - 40n },
       { tickSpacing: 100n, tick: 20000n }
     ]
     for (const { tick, tickSpacing } of params) {
@@ -314,7 +314,7 @@ describe('tickmap tests', () => {
   })
   test('next initialized chunk - farther than limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMaxTick - 10n
+    const tick = GLOBAL_MAX_TICK - 10n
     const tickSpacing = 1n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -344,14 +344,14 @@ describe('tickmap tests', () => {
 
     const [isSome, index] = (
       await invariant.view.nextInitialized({
-        args: { tick: GlobalMinTick + 1n, tickSpacing: 1n, poolKey }
+        args: { tick: GLOBAL_MIN_TICK + 1n, tickSpacing: 1n, poolKey }
       })
     ).returns
     expect(isSome).toBe(false)
   })
   test('next initialized chunk - hitting the limit limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMaxTick - 22n
+    const tick = GLOBAL_MAX_TICK - 22n
     const tickSpacing = 4n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -363,7 +363,7 @@ describe('tickmap tests', () => {
   })
   test('next initialized chunk - already at limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMaxTick - 2n
+    const tick = GLOBAL_MAX_TICK - 2n
     const tickSpacing = 4n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -375,7 +375,7 @@ describe('tickmap tests', () => {
   })
   test('next initialized chunk - at pos 255', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMaxTick - 255n
+    const tick = GLOBAL_MAX_TICK - 255n
     const tickSpacing = 1n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -405,7 +405,7 @@ describe('tickmap tests', () => {
 
     const [isSome, index] = (
       await invariant.view.nextInitialized({
-        args: { tick: GlobalMaxTick - 256n, tickSpacing, poolKey }
+        args: { tick: GLOBAL_MAX_TICK - 256n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -668,7 +668,7 @@ describe('tickmap tests', () => {
   })
   test('prev initialized chunk - further than limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMinTick + 1n
+    const tick = GLOBAL_MIN_TICK + 1n
     const tickSpacing = 1n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -698,14 +698,14 @@ describe('tickmap tests', () => {
 
     const [isSome] = (
       await invariant.view.prevInitialized({
-        args: { tick: GlobalMaxTick - 1n, tickSpacing, poolKey }
+        args: { tick: GLOBAL_MAX_TICK - 1n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(false)
   })
   test('prev initialized chunk - at pos 255', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMinTick + 255n
+    const tick = GLOBAL_MIN_TICK + 255n
     const tickSpacing = 1n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -735,7 +735,7 @@ describe('tickmap tests', () => {
 
     const [isSome, index] = (
       await invariant.view.prevInitialized({
-        args: { tick: GlobalMinTick + 320n, tickSpacing, poolKey }
+        args: { tick: GLOBAL_MIN_TICK + 320n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -743,7 +743,7 @@ describe('tickmap tests', () => {
   })
   test('prev initialized chunk - at pos 0', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GlobalMinTick
+    const tick = GLOBAL_MIN_TICK
     const tickSpacing = 1n
     const feeTier = await newFeeTier(0n, tickSpacing)
     const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
@@ -773,7 +773,7 @@ describe('tickmap tests', () => {
 
     const [isSome, index] = (
       await invariant.view.prevInitialized({
-        args: { tick: GlobalMinTick + 255n, tickSpacing, poolKey }
+        args: { tick: GLOBAL_MIN_TICK + 255n, tickSpacing, poolKey }
       })
     ).returns
     expect(isSome).toBe(true)
@@ -817,16 +817,16 @@ describe('tickmap tests', () => {
       expect(result).toBe(expected)
     }
     {
-      const tick = GlobalMaxTick - 22n
+      const tick = GLOBAL_MAX_TICK - 22n
       const tickSpacing = 5n
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = GlobalMaxTick - 3n
+      const expected = GLOBAL_MAX_TICK - 3n
       expect(result).toBe(expected)
     }
     {
-      const tick = GlobalMaxTick - 3n
+      const tick = GLOBAL_MAX_TICK - 3n
       const tickSpacing = 5n
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
@@ -842,7 +842,7 @@ describe('tickmap tests', () => {
       const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
-      const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
+      const maxIndex = GLOBAL_MAX_TICK - (GLOBAL_MAX_TICK % tickSpacing)
       const minIndex = -maxIndex
 
       {
@@ -918,7 +918,7 @@ describe('tickmap tests', () => {
       const poolKey = await newPoolKey(token0Addr, token1Addr, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
-      const maxIndex = GlobalMaxTick - (GlobalMaxTick % tickSpacing)
+      const maxIndex = GLOBAL_MAX_TICK - (GLOBAL_MAX_TICK % tickSpacing)
       const minIndex = -maxIndex
 
       const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing

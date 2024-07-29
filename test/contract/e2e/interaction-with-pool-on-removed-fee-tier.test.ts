@@ -2,7 +2,7 @@ import { DUST_AMOUNT, MAP_ENTRY_DEPOSIT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { InvariantError, MinSqrtPrice, PercentageScale } from '../../../src/consts'
+import { InvariantError, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import {
   getPool,
   initPool,
@@ -41,8 +41,8 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('interaction with pool on removed fee tiers tests', () => {
-  const protocolFee = 10n ** (PercentageScale - 2n)
-  const fee = 6n * 10n ** (PercentageScale - 3n)
+  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
+  const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
   const tickSpacing = 10n
   const initTick = 0n
   const initSqrtPrice = 10n ** 24n
@@ -117,7 +117,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(dexYBefore).toBe(1000n)
 
     const poolBefore = await getPool(invariant, poolKey)
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     await initSwap(invariant, swapper, poolKey, true, amount, true, slippage)
     const poolAfter = await getPool(invariant, poolKey)
     expect(poolAfter.liquidity).toBe(poolBefore.liquidity)

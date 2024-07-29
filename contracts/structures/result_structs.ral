@@ -1,0 +1,31 @@
+struct SwapResult {
+    nextSqrtPrice: SqrtPrice,
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    feeAmount: TokenAmount
+}
+
+struct CalculateSwapResult {
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    startSqrtPrice: SqrtPrice,
+    targetSqrtPrice: SqrtPrice,
+    fee: TokenAmount
+}
+
+struct QuoteResult {
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    targetSqrtPrice: SqrtPrice
+}
+
+struct SingleTokenLiquidity {
+    mut l: Liquidity,
+    mut amount: TokenAmount
+}
+
+struct LiquidityResult {
+    x: TokenAmount,
+    y: TokenAmount,
+    l: Liquidity
+}

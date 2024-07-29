@@ -7,7 +7,7 @@ export type Settings = {
   openaiAPIKey?: string
   ipfs?: {
     infura?: {
-      projectId: string,
+      projectId: string
       projectSecret: string
     }
   }
@@ -25,6 +25,10 @@ const defaultSettings: Settings = {
 }
 
 const configuration: Configuration<Settings> = {
+  compilerOptions: {
+    errorOnWarnings: true,
+    ignoreUnusedConstantsWarnings: true
+  },
   networks: {
     devnet: {
       nodeUrl: 'http://127.0.0.1:22973',
@@ -35,13 +39,15 @@ const configuration: Configuration<Settings> = {
 
     testnet: {
       nodeUrl: process.env.NODE_URL as string,
-      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
+      privateKeys:
+        process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       settings: defaultSettings
     },
 
     mainnet: {
       nodeUrl: process.env.NODE_URL as string,
-      privateKeys: process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
+      privateKeys:
+        process.env.PRIVATE_KEYS === undefined ? [] : process.env.PRIVATE_KEYS.split(','),
       settings: defaultSettings
     }
   }

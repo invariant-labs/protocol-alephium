@@ -1,17 +1,17 @@
 Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
-    const ChunkSize = 256
-    const HalfChunkSize = 128
-    const SearchRange = 256i
-    const ChunksPerBatch = 94
+    const CHUNK_SIZE = 256
+    const HALF_CHUNK_SIZE = CHUNK_SIZE/2
+    const SEARCH_RANGE = 256i
+    const CHUNKS_PER_BATCH = 94
 
     pub fn tickToPosition(tick: I256, tickSpacing: U256) -> (U256, U256) {
-        assert!(tick >= GlobalMinTick && tick <= GlobalMaxTick, InvariantError.InvalidTickIndex)
+        assert!(tick >= GLOBAL_MIN_TICK && tick <= GLOBAL_MAX_TICK, InvariantError.InvalidTickIndex)
         assert!(tick % toI256!(tickSpacing) == 0i, InvariantError.TickAndTickSpacingMismatch)
     
-        let bitmapIndex = toU256!(tick + GlobalMaxTick) / tickSpacing
+        let bitmapIndex = toU256!(tick + GLOBAL_MAX_TICK) / tickSpacing
     
-        let chunk = bitmapIndex / ChunkSize
-        let bit = bitmapIndex % ChunkSize
+        let chunk = bitmapIndex / CHUNK_SIZE
+        let bit = bitmapIndex % CHUNK_SIZE
     
         return chunk, bit
     }
@@ -30,8 +30,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         let mut limit = 0i
 
         if (up) {
-            let rangeLimitUp = index + SearchRange
-            let sqrtPriceLimitUp = GlobalMaxTick / toI256!(tickSpacing)
+            let rangeLimitUp = index + SEARCH_RANGE
+            let sqrtPriceLimitUp = GLOBAL_MAX_TICK / toI256!(tickSpacing)
 
             if (rangeLimitUp < sqrtPriceLimitUp) {
                 limit = rangeLimitUp
@@ -39,8 +39,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                 limit = sqrtPriceLimitUp
             }
         } else {
-            let rangeLimitDown = index - SearchRange
-            let sqrtPriceLimitDown = GlobalMinTick / toI256!(tickSpacing)
+            let rangeLimitDown = index - SEARCH_RANGE
+            let sqrtPriceLimitDown = GLOBAL_MIN_TICK / toI256!(tickSpacing)
 
             if (rangeLimitDown > sqrtPriceLimitDown) {
                 limit = rangeLimitDown
@@ -55,7 +55,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     pub fn nextInitialized(tick: I256, tickSpacing: U256, poolKey: PoolKey) -> (Bool, I256) {
         let limit = getSearchLimit(tick, tickSpacing, true)
 
-        if (tick + toI256!(tickSpacing) > GlobalMaxTick) {
+        if (tick + toI256!(tickSpacing) > GLOBAL_MAX_TICK) {
             return false, 0i
         }
 
@@ -72,9 +72,9 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                 }
 
                 if (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
-                    let index = chunk * ChunkSize + bit
+                    let index = chunk * CHUNK_SIZE + bit
                     
-                    return true, (toI256!(index) - (GlobalMaxTick / toI256!(tickSpacing))) * toI256!(tickSpacing)
+                    return true, (toI256!(index) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
@@ -96,15 +96,15 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
         while (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
             let value = getChunk(chunk, poolKey)
 
-            let upper = value >> HalfChunkSize & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            let upper = value >> HALF_CHUNK_SIZE & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             let lower = value & 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 
             let mut part = 0
             let mut part_bit = 0
 
-            if (bit >= HalfChunkSize) {
+            if (bit >= HALF_CHUNK_SIZE) {
                 part = upper
-                part_bit = bit - HalfChunkSize
+                part_bit = bit - HALF_CHUNK_SIZE
             } else {
                 part = lower
                 part_bit = bit
@@ -118,23 +118,23 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
             }
 
             if (part & mask != 0) {
-                if (bit >= HalfChunkSize) {
-                    bit = part_bit + HalfChunkSize
+                if (bit >= HALF_CHUNK_SIZE) {
+                    bit = part_bit + HALF_CHUNK_SIZE
                 } else {
                     bit = part_bit
                 }
                 if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                    let mut index = chunk * ChunkSize + bit
-                    return true, (toI256!(index) - (GlobalMaxTick / toI256!(tickSpacing))) * toI256!(tickSpacing)
+                    let mut index = chunk * CHUNK_SIZE + bit
+                    return true, (toI256!(index) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
                 }
             }
 
             // Check lower part
-            if (bit >= HalfChunkSize) {
+            if (bit >= HALF_CHUNK_SIZE) {
                 part = lower
-                part_bit = HalfChunkSize - 1
+                part_bit = HALF_CHUNK_SIZE - 1
                 mask = 1 << part_bit
 
                 while (part_bit > 0 && part & mask == 0) {
@@ -145,8 +145,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                 if(part & mask != 0) {
                     bit = part_bit
                     if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                        index = chunk * ChunkSize + bit
-                        return true, (toI256!(index) - (GlobalMaxTick / toI256!(tickSpacing))) * toI256!(tickSpacing)
+                        index = chunk * CHUNK_SIZE + bit
+                        return true, (toI256!(index) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
                     } else {
                         return false, 0i
                     }
@@ -160,7 +160,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
             } else {
                 return false, 0i
             }
-            bit = ChunkSize - 1
+            bit = CHUNK_SIZE - 1
             
         }
 
@@ -260,8 +260,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
     @using(checkExternalCaller = false)
     pub fn getMaxChunk(tickSpacing: U256) -> (U256) {
         let maxTick = getMaxTick(tickSpacing)
-        let maxBitmapIndex = (maxTick + GlobalMaxTick) / toI256!(tickSpacing)
-        let maxChunkIndex = toU256!(maxBitmapIndex) / ChunkSize
+        let maxBitmapIndex = (maxTick + GLOBAL_MAX_TICK) / toI256!(tickSpacing)
+        let maxChunkIndex = toU256!(maxBitmapIndex) / CHUNK_SIZE
         return maxChunkIndex
     }
 

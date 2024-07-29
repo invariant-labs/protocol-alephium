@@ -26,9 +26,14 @@ import {
 import {
   ArithmeticError,
   CLAMMError,
-  GlobalMaxTick,
-  GlobalMinTick,
-  MaxU256,
+  FEE_GROWTH_DENOMINATOR,
+  GLOBAL_MAX_TICK,
+  GLOBAL_MIN_TICK,
+  LIQUIDITY_DENOMINATOR,
+  MAX_SQRT_PRICE,
+  MAX_U256,
+  MIN_SQRT_PRICE,
+  SQRT_PRICE_DENOMINATOR,
   VMError
 } from '../../../src/consts'
 
@@ -71,9 +76,6 @@ describe('clamm tests', () => {
   test('fee growth from fee - domain', async () => {
     const clamm = await deployCLAMM(sender)
 
-    const liquidityDenominator = 10n ** 5n
-    const sqrtPriceDenominator = 10n ** 24n
-    const feeGrowthDenominator = 10n ** 28n
     // max FeeGrowth case inside of domain
     {
       const maxTickSpacing = 100n
@@ -85,7 +87,7 @@ describe('clamm tests', () => {
       const maxDeltaSqrtPrice = sqrtPriceUpper - sqrtPriceLower
       const maxLiquidity = (1n << 256n) - 1n
       const maxToken =
-        (maxLiquidity * maxDeltaSqrtPrice) / liquidityDenominator / sqrtPriceDenominator
+        (maxLiquidity * maxDeltaSqrtPrice) / LIQUIDITY_DENOMINATOR / SQRT_PRICE_DENOMINATOR
       const feeGrowth = await feeGrowthFromFee(clamm, maxLiquidity, maxToken)
 
       expect(feeGrowth).toStrictEqual(473129365723326089999999999999999n)
@@ -94,7 +96,7 @@ describe('clamm tests', () => {
     {
       const basisPoint = 10000n
       const minToken = 1n
-      const maxLiquidity = minToken * feeGrowthDenominator * liquidityDenominator * basisPoint
+      const maxLiquidity = minToken * FEE_GROWTH_DENOMINATOR * LIQUIDITY_DENOMINATOR * basisPoint
       const feeGrowth = await feeGrowthFromFee(clamm, maxLiquidity, minToken + basisPoint)
       // outside of domain trigger overflow due to result not fit into FeeGrowth
       {
@@ -379,8 +381,6 @@ describe('clamm tests', () => {
   })
   describe('get delta x - domain', () => {
     let clamm: CLAMMInstance
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
     const almostMinSqrtPrice = 15259695000000000000n
     const maxLiquidity = (1n << 256n) - 1n
     const minLiquidity = 1n
@@ -390,8 +390,8 @@ describe('clamm tests', () => {
     })
     test('maximalize delta sqrt price and liquidity', async () => {
       const params = {
-        sqrtPriceA: maxSqrtPrice,
-        sqrtPriceB: minSqrtPrice,
+        sqrtPriceA: MAX_SQRT_PRICE,
+        sqrtPriceB: MIN_SQRT_PRICE,
         liquidity: maxLiquidity
       }
       const resultUp = await getDeltaX(
@@ -417,8 +417,8 @@ describe('clamm tests', () => {
     })
     test('maximalize delta sqrt price and minimalize liquidity', async () => {
       const params = {
-        sqrtPriceA: maxSqrtPrice,
-        sqrtPriceB: minSqrtPrice,
+        sqrtPriceA: MAX_SQRT_PRICE,
+        sqrtPriceB: MIN_SQRT_PRICE,
         liquidity: minLiquidity
       }
       const resultUp = await getDeltaX(
@@ -440,7 +440,7 @@ describe('clamm tests', () => {
     })
     test('minimize denominator on maximize liquidity which fit into token amounts', async () => {
       const params = {
-        sqrtPriceA: minSqrtPrice,
+        sqrtPriceA: MIN_SQRT_PRICE,
         sqrtPriceB: almostMinSqrtPrice,
         liquidity: maxLiquidity
       }
@@ -467,7 +467,7 @@ describe('clamm tests', () => {
     })
     test('minimize denominator on minimize liquidity which fit into token amounts', async () => {
       const params = {
-        sqrtPriceA: minSqrtPrice,
+        sqrtPriceA: MIN_SQRT_PRICE,
         sqrtPriceB: almostMinSqrtPrice,
         liquidity: minLiquidity
       }
@@ -495,7 +495,7 @@ describe('clamm tests', () => {
       const minSearchSqrtPrice = await calculateSqrtPrice(clamm, maxSearchLimit)
 
       const params = {
-        sqrtPriceA: maxSqrtPrice,
+        sqrtPriceA: MAX_SQRT_PRICE,
         sqrtPriceB: minSearchSqrtPrice,
         liquidity: maxLiquidity
       }
@@ -511,16 +511,16 @@ describe('clamm tests', () => {
       )
     })
     test('minimal price difference', async () => {
-      const almostMaxSqrtPrice = maxSqrtPrice - 1n * 10n ** 24n
-      const almostMinSqrtPrice = minSqrtPrice + 1n * 10n ** 24n
+      const almostMaxSqrtPrice = MAX_SQRT_PRICE - 1n * 10n ** 24n
+      const almostMinSqrtPrice = MIN_SQRT_PRICE + 1n * 10n ** 24n
       const paramsUpperBound = {
-        sqrtPriceA: maxSqrtPrice,
+        sqrtPriceA: MAX_SQRT_PRICE,
         sqrtPriceB: almostMaxSqrtPrice,
         liquidity: maxLiquidity,
         roundingUp: true
       }
       const paramsBottomBound = {
-        sqrtPriceA: minSqrtPrice,
+        sqrtPriceA: MIN_SQRT_PRICE,
         sqrtPriceB: almostMinSqrtPrice,
         liquidity: maxLiquidity,
         roundingUp: true
@@ -546,8 +546,8 @@ describe('clamm tests', () => {
     })
     test('zero liquidity', async () => {
       const params = {
-        sqrtPriceA: maxSqrtPrice,
-        sqrtPriceB: minSqrtPrice,
+        sqrtPriceA: MAX_SQRT_PRICE,
+        sqrtPriceB: MIN_SQRT_PRICE,
         liquidity: 0n
       }
       const resultUp = await getDeltaX(
@@ -650,8 +650,6 @@ describe('clamm tests', () => {
 
   describe('get delta y - domain', () => {
     let clamm: CLAMMInstance
-    const minSqrtPrice = 15258932000000000000n
-    const maxSqrtPrice = 65535_383934512647000000000000n
     const minLiquidity = 1n
     const maxLiquidity = 2n ** 256n - 1n
 
@@ -660,8 +658,8 @@ describe('clamm tests', () => {
     })
 
     it('maximize delta sqrt price and liquidity', async () => {
-      const resultUp = await getDeltaY(clamm, maxSqrtPrice, minSqrtPrice, maxLiquidity, true)
-      const resultDown = await getDeltaY(clamm, maxSqrtPrice, minSqrtPrice, maxLiquidity, false)
+      const resultUp = await getDeltaY(clamm, MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, true)
+      const resultDown = await getDeltaY(clamm, MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, false)
 
       expect(resultUp).toStrictEqual(
         75884790229800029582010010030152469040784228171629896065450012281800526658806n
@@ -672,14 +670,14 @@ describe('clamm tests', () => {
     })
 
     it('can be zero', async () => {
-      const result = await getDeltaY(clamm, maxSqrtPrice, maxSqrtPrice - 1n, minLiquidity, false)
+      const result = await getDeltaY(clamm, MAX_SQRT_PRICE, MAX_SQRT_PRICE - 1n, minLiquidity, false)
 
       expect(result).toStrictEqual(0n)
     })
 
     it('liquidity is zero', async () => {
-      const sqrtPriceA = maxSqrtPrice
-      const sqrtPriceB = minSqrtPrice
+      const sqrtPriceA = MAX_SQRT_PRICE
+      const sqrtPriceB = MIN_SQRT_PRICE
 
       const result = await getDeltaY(clamm, sqrtPriceA, sqrtPriceB, 0n, true)
 
@@ -687,8 +685,8 @@ describe('clamm tests', () => {
     })
 
     it('all max', async () => {
-      const sqrtPriceA = maxSqrtPrice
-      const sqrtPriceB = maxSqrtPrice
+      const sqrtPriceA = MAX_SQRT_PRICE
+      const sqrtPriceB = MAX_SQRT_PRICE
       const liquidity = maxLiquidity
       const result = await getDeltaY(clamm, sqrtPriceA, sqrtPriceB, liquidity, true)
 
@@ -699,11 +697,9 @@ describe('clamm tests', () => {
   test('get next sqrt price y down - base samples', async () => {
     const clamm = await deployCLAMM(sender)
 
-    const sqrtPriceDenominator = 10n ** 24n
-    const liquidityDenominator = 10n ** 5n
     {
-      const startingSqrtPrice = 1n * sqrtPriceDenominator
-      const liquidity = 1n * liquidityDenominator
+      const startingSqrtPrice = 1n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 1n * LIQUIDITY_DENOMINATOR
       const y = 1n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -712,11 +708,11 @@ describe('clamm tests', () => {
         y,
         true
       )
-      expect(nextSqrtPrice).toEqual(2n * sqrtPriceDenominator)
+      expect(nextSqrtPrice).toEqual(2n * SQRT_PRICE_DENOMINATOR)
     }
     {
-      const startingSqrtPrice = 1n * sqrtPriceDenominator
-      const liquidity = 2n * liquidityDenominator
+      const startingSqrtPrice = 1n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 2n * LIQUIDITY_DENOMINATOR
       const y = 3n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -728,8 +724,8 @@ describe('clamm tests', () => {
       expect(nextSqrtPrice).toEqual(25n * 10n ** 23n)
     }
     {
-      const startingSqrtPrice = 2n * sqrtPriceDenominator
-      const liquidity = 3n * liquidityDenominator
+      const startingSqrtPrice = 2n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 3n * LIQUIDITY_DENOMINATOR
       const y = 5n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -738,11 +734,11 @@ describe('clamm tests', () => {
         y,
         true
       )
-      expect(nextSqrtPrice).toEqual((11n * sqrtPriceDenominator) / 3n)
+      expect(nextSqrtPrice).toEqual((11n * SQRT_PRICE_DENOMINATOR) / 3n)
     }
     {
-      const startingSqrtPrice = 24234n * sqrtPriceDenominator
-      const liquidity = 3000n * liquidityDenominator
+      const startingSqrtPrice = 24234n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 3000n * LIQUIDITY_DENOMINATOR
       const y = 5000n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -751,11 +747,11 @@ describe('clamm tests', () => {
         y,
         true
       )
-      expect(nextSqrtPrice).toEqual((72707n * sqrtPriceDenominator) / 3n)
+      expect(nextSqrtPrice).toEqual((72707n * SQRT_PRICE_DENOMINATOR) / 3n)
     }
     {
-      const startingSqrtPrice = 1n * sqrtPriceDenominator
-      const liquidity = 2n * liquidityDenominator
+      const startingSqrtPrice = 1n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 2n * LIQUIDITY_DENOMINATOR
       const y = 1n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -767,8 +763,8 @@ describe('clamm tests', () => {
       expect(nextSqrtPrice).toEqual(5n * 10n ** 23n)
     }
     {
-      const startingSqrtPrice = 100000n * sqrtPriceDenominator
-      const liquidity = 500000000n * liquidityDenominator
+      const startingSqrtPrice = 100000n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 500000000n * LIQUIDITY_DENOMINATOR
       const y = 4000n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -780,8 +776,8 @@ describe('clamm tests', () => {
       expect(nextSqrtPrice).toEqual(99999999992000000000000000000n)
     }
     {
-      const startingSqrtPrice = 3n * sqrtPriceDenominator
-      const liquidity = 222n * liquidityDenominator
+      const startingSqrtPrice = 3n * SQRT_PRICE_DENOMINATOR
+      const liquidity = 222n * LIQUIDITY_DENOMINATOR
       const y = 37n
       const nextSqrtPrice = await getNextSqrtPriceYDown(
         clamm,
@@ -798,10 +794,10 @@ describe('clamm tests', () => {
 
     const minY = 1n
     const maxY = (1n << 256n) - 1n
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
-    const almostMinSqrtPrice = minSqrtPrice + 1n
-    const almostMaxSqrtPrice = maxSqrtPrice - 1n
+    const MAX_SQRT_PRICE = 65535383934512647000000000000n
+    const MIN_SQRT_PRICE = 15258932000000000000n
+    const almostMinSqrtPrice = MIN_SQRT_PRICE + 1n
+    const almostMaxSqrtPrice = MAX_SQRT_PRICE - 1n
     const minSqrtPriceOutsideDomain = 1n
     const minLiquidity = 1n
     const maxLiquidity = (1n << 256n) - 1n
@@ -810,10 +806,10 @@ describe('clamm tests', () => {
 
     // Min value inside domain
     {
-      // increases minSqrtPrice
+      // increases MIN_SQRT_PRICE
       {
         const params = {
-          startingSqrtPrice: minSqrtPrice,
+          startingSqrtPrice: MIN_SQRT_PRICE,
           liquidity: maxLiquidity,
           y: minY + (1n << 128n) * (1n << 32n),
           addY: true
@@ -847,10 +843,10 @@ describe('clamm tests', () => {
     }
     // Max value inside domain
     {
-      // decreases maxSqrtPrice
+      // decreases MAX_SQRT_PRICE
       {
         const params = {
-          startingSqrtPrice: maxSqrtPrice,
+          startingSqrtPrice: MAX_SQRT_PRICE,
           liquidity: maxLiquidity,
           y: minY + (1n << 128n) * (1n << 32n),
           addY: false
@@ -886,7 +882,7 @@ describe('clamm tests', () => {
     {
       {
         const params = {
-          startingSqrtPrice: maxSqrtPrice,
+          startingSqrtPrice: MAX_SQRT_PRICE,
           liquidity: minLiquidity,
           y: maxY,
           addY: true
@@ -915,7 +911,7 @@ describe('clamm tests', () => {
     {
       {
         const params = {
-          startingSqrtPrice: maxSqrtPrice,
+          startingSqrtPrice: MAX_SQRT_PRICE,
           liquidity: oneLiquidity,
           y: minOverflowTokenY - 2n,
           addY: true
@@ -974,7 +970,7 @@ describe('clamm tests', () => {
     // Y max
     {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         y: maxY,
         addY: true
@@ -991,7 +987,7 @@ describe('clamm tests', () => {
     // L = 0
     {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: 0n,
         y: minY,
         addY: true
@@ -1005,7 +1001,7 @@ describe('clamm tests', () => {
     // TokenAmount is zero
     {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         y: 0n,
         addY: true
@@ -1017,7 +1013,7 @@ describe('clamm tests', () => {
         params.y,
         true
       )
-      expect(nextSqrtPrice).toEqual(minSqrtPrice)
+      expect(nextSqrtPrice).toEqual(MIN_SQRT_PRICE)
     }
   })
 
@@ -1172,13 +1168,12 @@ describe('clamm tests', () => {
     const maxAmount = (1n << 256n) - 1n
     const minAmount = 1n
     const minLiquidity = 1n
-    const maxSqrtPrice = 65535383934512647000000000000n
     const minFee = 0n
     // max fee
     {
       const params = {
         amount: minAmount,
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: minLiquidity,
         fee: maxFee,
         byAmountIn: false,
@@ -1202,7 +1197,7 @@ describe('clamm tests', () => {
     {
       const params = {
         amount: maxAmount,
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: zeroLiquidity,
         fee: maxFee,
         byAmountIn: false,
@@ -1223,7 +1218,7 @@ describe('clamm tests', () => {
     {
       const params = {
         amount: minAmount,
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: minLiquidity,
         fee: minFee,
         byAmountIn: false,
@@ -1246,7 +1241,7 @@ describe('clamm tests', () => {
     // Max amount
     const params = {
       amount: maxAmount,
-      startingSqrtPrice: maxSqrtPrice,
+      startingSqrtPrice: MAX_SQRT_PRICE,
       liquidity: minLiquidity,
       fee: minFee,
       byAmountIn: false,
@@ -1648,19 +1643,19 @@ describe('clamm tests', () => {
 
   describe('calculate amount delta - domain', () => {
     let clamm: CLAMMInstance
-    let maxLiquidity = MaxU256
+    let maxLiquidity = MAX_U256
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
     })
 
     test('max x', async () => {
-      const currentTickIndex = GlobalMinTick
+      const currentTickIndex = GLOBAL_MIN_TICK
       const currentSqrtPrice = 1_000000000000000000000000n
       const liquidityDelta = maxLiquidity
       const liquiditySign = true
-      const upperTick = GlobalMaxTick
-      const lowerTick = GlobalMinTick + 1n
+      const upperTick = GLOBAL_MAX_TICK
+      const lowerTick = GLOBAL_MIN_TICK + 1n
 
       const result = await calculateAmountDelta(
         clamm,
@@ -1679,12 +1674,12 @@ describe('clamm tests', () => {
     })
 
     test('max y', async () => {
-      const currentTickIndex = GlobalMaxTick
+      const currentTickIndex = GLOBAL_MAX_TICK
       const currentSqrtPrice = 1_000000000000000000000000n
       const liquidityDelta = maxLiquidity
       const liquiditySign = true
-      const upperTick = GlobalMaxTick - 1n
-      const lowerTick = GlobalMinTick
+      const upperTick = GLOBAL_MAX_TICK - 1n
+      const lowerTick = GLOBAL_MIN_TICK
 
       const result = await calculateAmountDelta(
         clamm,
@@ -1747,11 +1742,11 @@ describe('clamm tests', () => {
 
     test('all max', async () => {
       const currentTickIndex = 0n
-      const currentSqrtPrice = MaxU256
-      const liquidityDelta = MaxU256
+      const currentSqrtPrice = MAX_U256
+      const liquidityDelta = MAX_U256
       const liquiditySign = true
-      const upperTick = GlobalMaxTick
-      const lowerTick = GlobalMinTick
+      const upperTick = GLOBAL_MAX_TICK
+      const lowerTick = GLOBAL_MIN_TICK
 
       await expectVMError(
         VMError.ArithmeticError,
@@ -1841,12 +1836,10 @@ describe('clamm tests', () => {
 
   describe('get next sqrt price x up - domain', () => {
     let clamm: CLAMMInstance
-    const maxLiquidity = MaxU256
+    const maxLiquidity = MAX_U256
     const minLiquidity = 1n
-    const maxX = MaxU256
+    const maxX = MAX_U256
     const minX = 1n
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
     const almostMinSqrtPrice = 15258932000000000001n
     const almostMaxSqrtPrice = 65535383934512646999999999999n
 
@@ -1856,7 +1849,7 @@ describe('clamm tests', () => {
 
     test('min value inside domain / increases min sqrt price', async () => {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         x: 600000000n,
         addX: false
@@ -1891,7 +1884,7 @@ describe('clamm tests', () => {
 
     test('max value inside domain / decreases max sqrt price', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
         x: 2n ** 128n - 1n,
         addX: true
@@ -1925,7 +1918,7 @@ describe('clamm tests', () => {
 
     test('all max', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
         x: maxX,
         addX: true
@@ -1942,7 +1935,7 @@ describe('clamm tests', () => {
 
     test('subtraction underflow', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: minLiquidity,
         x: maxX,
         addX: false
@@ -1962,7 +1955,7 @@ describe('clamm tests', () => {
 
     test('max possible result test', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
         x: minX,
         addX: true
@@ -1979,7 +1972,7 @@ describe('clamm tests', () => {
 
     test('liquidity is zero', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: 0n,
         x: minX,
         addX: true
@@ -1996,7 +1989,7 @@ describe('clamm tests', () => {
 
     test('amount is zero', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
         x: 0n,
         addX: true
@@ -2014,13 +2007,11 @@ describe('clamm tests', () => {
 
   describe('next sqrt price from input - domain', () => {
     let clamm: CLAMMInstance
-    const maxLiquidity = MaxU256
+    const maxLiquidity = MAX_U256
     const minLiquidity = 1n
-    const maxAmount = MaxU256
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
-    const almostMaxSqrtPrice = maxSqrtPrice - 1n
-    const almostMinSqrtPrice = minSqrtPrice + 1n
+    const maxAmount = MAX_U256
+    const almostMaxSqrtPrice = MAX_SQRT_PRICE - 1n
+    const almostMinSqrtPrice = MIN_SQRT_PRICE + 1n
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
@@ -2062,7 +2053,7 @@ describe('clamm tests', () => {
 
     test('amount = 0', async () => {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         amount: 0n,
         xToY: true
@@ -2074,12 +2065,12 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(minSqrtPrice)
+      expect(result).toEqual(MIN_SQRT_PRICE)
     })
 
     test('liquidity = 0', async () => {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: 0n,
         amount: 20n,
         xToY: true
@@ -2096,7 +2087,7 @@ describe('clamm tests', () => {
 
     test('error handling', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: minLiquidity,
         amount: maxAmount,
         xToY: false
@@ -2117,13 +2108,12 @@ describe('clamm tests', () => {
 
   describe('next sqrt price from output - domain', () => {
     let clamm: CLAMMInstance
-    const maxLiquidity = MaxU256
+    const maxLiquidity = MAX_U256
     const minLiquidity = 1n
-    const maxAmount = MaxU256
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
-    const almostMaxSqrtPrice = maxSqrtPrice - 1n
-    const almostMinSqrtPrice = minSqrtPrice + 1n
+    const maxAmount = MAX_U256
+
+    const almostMaxSqrtPrice = MAX_SQRT_PRICE - 1n
+    const almostMinSqrtPrice = MIN_SQRT_PRICE + 1n
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
@@ -2165,7 +2155,7 @@ describe('clamm tests', () => {
 
     test('amount = 0', async () => {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         amount: 0n,
         xToY: true
@@ -2177,12 +2167,12 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(minSqrtPrice)
+      expect(result).toEqual(MIN_SQRT_PRICE)
     })
 
     test('liquidity = 0', async () => {
       const params = {
-        startingSqrtPrice: minSqrtPrice,
+        startingSqrtPrice: MIN_SQRT_PRICE,
         liquidity: 0n,
         amount: 20n,
         xToY: true
@@ -2202,7 +2192,7 @@ describe('clamm tests', () => {
 
     test('error handling', async () => {
       const params = {
-        startingSqrtPrice: maxSqrtPrice,
+        startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: minLiquidity,
         amount: maxAmount,
         xToY: false
@@ -2562,12 +2552,10 @@ describe('clamm tests', () => {
 
     const oneSqrtPrice = 1_000000000000000000000000n
     const twoSqrtPrice = 2_000000000000000000000000n
-    const maxSqrtPrice = 65535383934512647000000000000n
-    const minSqrtPrice = 15258932000000000000n
     const oneLiquidity = 1_00000n
-    const maxLiquidity = MaxU256
-    const maxAmount = MaxU256
-    const maxAmountNotReachedTargetSqrtPrice = MaxU256 - 1n
+    const maxLiquidity = MAX_U256
+    const maxAmount = MAX_U256
+    const maxAmountNotReachedTargetSqrtPrice = MAX_U256 - 1n
     const maxFee = 1_000000000000n
     const minFee = 0n
 
@@ -2661,7 +2649,7 @@ describe('clamm tests', () => {
         currentSqrtPrice: oneSqrtPrice,
         targetSqrtPrice: twoSqrtPrice,
         liquidity: maxLiquidity,
-        amount: MaxU256,
+        amount: MAX_U256,
         byAmountIn: true,
         fee: maxFee - 19n
       }
@@ -2684,8 +2672,8 @@ describe('clamm tests', () => {
 
     test('get next sqrt price from input -> get next sqrt price x up', async () => {
       const params = {
-        currentSqrtPrice: maxSqrtPrice,
-        targetSqrtPrice: minSqrtPrice,
+        currentSqrtPrice: MAX_SQRT_PRICE,
+        targetSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         amount: maxAmountNotReachedTargetSqrtPrice,
         byAmountIn: true,
@@ -2710,8 +2698,8 @@ describe('clamm tests', () => {
 
     test('get next sqrt price from input -> get next sqrt price y down / scale', async () => {
       const params = {
-        currentSqrtPrice: minSqrtPrice,
-        targetSqrtPrice: maxSqrtPrice,
+        currentSqrtPrice: MIN_SQRT_PRICE,
+        targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
         amount: maxAmountNotReachedTargetSqrtPrice,
         byAmountIn: true,
@@ -2737,8 +2725,8 @@ describe('clamm tests', () => {
     test('get next sqrt price from input -> get next sqrt price y down / big div - no possible to trigger from compute swap step', async () => {
       const minOverflowTokenAmount = 340282366920939n
       const params = {
-        currentSqrtPrice: minSqrtPrice,
-        targetSqrtPrice: maxSqrtPrice,
+        currentSqrtPrice: MIN_SQRT_PRICE,
+        targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: oneLiquidity - 1n,
         amount: minOverflowTokenAmount - 1n,
         byAmountIn: true,
@@ -2754,7 +2742,7 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: maxSqrtPrice,
+        nextSqrtPrice: MAX_SQRT_PRICE,
         amountIn: 65535n,
         amountOut: 65534n,
         feeAmount: 0n
@@ -2764,10 +2752,10 @@ describe('clamm tests', () => {
     test('get next sqrt price from output -> get next sqrt price x up / min sqrt price different at maximum amount', async () => {
       const minDiff = 232826265438719159684n
       const params = {
-        currentSqrtPrice: maxSqrtPrice - minDiff,
-        targetSqrtPrice: maxSqrtPrice,
+        currentSqrtPrice: MAX_SQRT_PRICE - minDiff,
+        targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
-        amount: MaxU256 - 1n,
+        amount: MAX_U256 - 1n,
         byAmountIn: false,
         fee: minFee
       }
@@ -2790,10 +2778,10 @@ describe('clamm tests', () => {
 
     test('get next sqrt price from output -> get next sqrt price x up / min sqrt price different at maximum amount', async () => {
       const params = {
-        currentSqrtPrice: minSqrtPrice,
-        targetSqrtPrice: maxSqrtPrice,
+        currentSqrtPrice: MIN_SQRT_PRICE,
+        targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: 281477613507675_00000n,
-        amount: MaxU256 - 1n,
+        amount: MAX_U256 - 1n,
         byAmountIn: false,
         fee: minFee
       }
@@ -2816,8 +2804,8 @@ describe('clamm tests', () => {
 
     test('get next sqrt price from output -> get next sqrt price x up / min token change', async () => {
       const params = {
-        currentSqrtPrice: maxSqrtPrice - 1_000000000000000000000000n,
-        targetSqrtPrice: maxSqrtPrice,
+        currentSqrtPrice: MAX_SQRT_PRICE - 1_000000000000000000000000n,
+        targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: 10000000000_00000n,
         amount: 1n,
         byAmountIn: false,
@@ -2842,8 +2830,8 @@ describe('clamm tests', () => {
 
     test('get next sqrt price from output -> get next sqrt price x up / max amount out, by amount in == false', async () => {
       const params = {
-        currentSqrtPrice: maxSqrtPrice,
-        targetSqrtPrice: minSqrtPrice,
+        currentSqrtPrice: MAX_SQRT_PRICE,
+        targetSqrtPrice: MIN_SQRT_PRICE,
         liquidity: maxLiquidity,
         amount: maxAmount,
         byAmountIn: false,

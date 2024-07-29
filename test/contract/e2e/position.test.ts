@@ -19,7 +19,7 @@ import {
   removePosition,
   withdrawTokens
 } from '../../../src/testUtils'
-import { InvariantError, MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../../../src/consts'
+import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import { toLiquidity } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -65,7 +65,7 @@ describe('position tests', () => {
       upperTickIndex,
       liquidityDelta,
       0n,
-      MaxSqrtPrice
+      MAX_SQRT_PRICE
     )
 
     const position = await getPosition(invariant, positionOwner.address, 0n)
@@ -123,7 +123,7 @@ describe('position tests', () => {
         tickIndex,
         liquidityDelta,
         0n,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       ),
       invariant
     )
@@ -132,8 +132,8 @@ describe('position tests', () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     const supply = 10n ** 20n + 1000n
     const mint = 10n ** 10n
-    const protocolFee = 10n ** (PercentageScale - 2n)
-    const fee = 6n * 10n ** (PercentageScale - 3n)
+    const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
+    const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
     const tickSpacing = 10n
 
     const invariant = await deployInvariant(admin, protocolFee)
@@ -234,7 +234,7 @@ describe('position tests', () => {
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, poolKey)
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
 
     await initSwap(invariant, swapper, poolKey, true, amount, true, slippage)
 
@@ -289,7 +289,7 @@ describe('position tests', () => {
     const initTick = -23028n
     const initialBalance = 100000000n
     const protocolFee = 0n
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
 
     const positionOwner = await getSigner(ONE_ALPH * 1001n, 0)
 
@@ -311,7 +311,7 @@ describe('position tests', () => {
     const liquidityDelta = toLiquidity(100n)
 
     const poolBefore = await getPool(invariant, poolKey)
-    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
+    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MAX_SQRT_PRICE]
     await initPosition(
       invariant,
       positionOwner,
@@ -373,7 +373,7 @@ describe('position tests', () => {
     const initTick = -23028n
     const initialBalance = 10000000000n
     const protocolFee = 0n
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
     const tickSpacing = 4n
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -396,7 +396,7 @@ describe('position tests', () => {
     const liquidityDelta = toLiquidity(10000n)
 
     const poolBefore = await getPool(invariant, poolKey)
-    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
+    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MAX_SQRT_PRICE]
 
     await initPosition(
       invariant,
@@ -463,7 +463,7 @@ describe('position tests', () => {
     const initTick = -23028n
     const initialBalance = 10000000000n
     const protocolFee = 0n
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
     const tickSpacing = 4n
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -486,7 +486,7 @@ describe('position tests', () => {
     const liquidityDelta = toLiquidity(10000n)
 
     const poolBefore = await getPool(invariant, poolKey)
-    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MaxSqrtPrice]
+    const [slippageLimitLower, slippageLimitUpper] = [poolBefore.sqrtPrice, MAX_SQRT_PRICE]
 
     await initPosition(
       invariant,

@@ -2,7 +2,7 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MaxSqrtPrice, MinSqrtPrice, PercentageScale } from '../../../src/consts'
+import { MAX_SQRT_PRICE, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import {
   feeTierExists,
   getPool,
@@ -27,7 +27,7 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('multiple swap tests', () => {
-  const fee = 10n ** (PercentageScale - 3n)
+  const fee = 10n ** (PERCENTAGE_SCALE - 3n)
   const tickSpacing = 1n
   const initTick = 0n
   const [lowerTick, upperTick] = [-953n, 953n]
@@ -44,7 +44,7 @@ describe('multiple swap tests', () => {
   })
 
   beforeEach(async () => {
-    const protocolFee = 10n ** (PercentageScale - 2n)
+    const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
     invariant = await deployInvariant(admin, protocolFee)
 
     const mintPosition = 10n ** 10n
@@ -98,7 +98,7 @@ describe('multiple swap tests', () => {
     {
       await withdrawTokens(swapper, [tokenX, mintSwapper])
       const swapAmount = 10n
-      const sqrtPriceLimit = MinSqrtPrice
+      const sqrtPriceLimit = MIN_SQRT_PRICE
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(
           invariant,
@@ -150,7 +150,7 @@ describe('multiple swap tests', () => {
     {
       await withdrawTokens(swapper, [tokenY, mintSwapper])
       const swapAmount = 10n
-      const sqrtPriceLimit = MaxSqrtPrice
+      const sqrtPriceLimit = MAX_SQRT_PRICE
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(
           invariant,

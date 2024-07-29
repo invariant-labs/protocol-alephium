@@ -12,7 +12,7 @@ import {
   initSwap,
   withdrawTokens
 } from '../../../src/testUtils'
-import { InvariantError, MaxSqrtPrice, MinSqrtPrice } from '../../../src/consts'
+import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE } from '../../../src/consts'
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 
@@ -95,7 +95,7 @@ describe('cross tests', () => {
       true,
       limitWithoutCrossTickAmount,
       true,
-      MinSqrtPrice
+      MIN_SQRT_PRICE
     )
 
     expect(await getPool(invariant, poolKey)).toMatchObject({
@@ -125,7 +125,7 @@ describe('cross tests', () => {
         true,
         minAmountToCrossFromTickPrice,
         true,
-        MinSqrtPrice
+        MIN_SQRT_PRICE
       )
 
       await initSwap(
@@ -135,7 +135,7 @@ describe('cross tests', () => {
         false,
         minAmountToCrossFromTickPrice,
         true,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
     }
     // a new position with massive liquidity
@@ -154,8 +154,8 @@ describe('cross tests', () => {
         lowerTick,
         upperTick,
         liquidityDelta,
-        MinSqrtPrice,
-        MaxSqrtPrice
+        MIN_SQRT_PRICE,
+        MAX_SQRT_PRICE
       )
     }
     {
@@ -171,10 +171,10 @@ describe('cross tests', () => {
         true,
         xOut,
         false,
-        MinSqrtPrice,
+        MIN_SQRT_PRICE,
         predictedRequiredX
       )
-      await initSwap(invariant, swapper, poolKey, false, yIn, true, MaxSqrtPrice)
+      await initSwap(invariant, swapper, poolKey, false, yIn, true, MAX_SQRT_PRICE)
 
       const expectedLiquidity = toLiquidity(19996000399699901991603n)
       expect(await getPool(invariant, poolKey)).toMatchObject({
@@ -216,7 +216,7 @@ describe('cross tests', () => {
 
     await expectError(
       InvariantError.NoGainSwap,
-      initSwap(invariant, swapper, poolKey, true, notCrossAmount, true, MinSqrtPrice),
+      initSwap(invariant, swapper, poolKey, true, notCrossAmount, true, MIN_SQRT_PRICE),
       invariant
     )
   })
