@@ -299,21 +299,25 @@ export const calculateSqrtPriceAfterSlippage = (
 }
 
 export const toLiquidity = (value: bigint, offset = 0n) => {
-  if (offset >= LIQUIDITY_SCALE) throw new Error(`offset must be less than ${LIQUIDITY_SCALE}`)
+  if (offset > LIQUIDITY_SCALE)
+    throw new Error(`offset must be less than or equal to ${LIQUIDITY_SCALE}`)
   return value * 10n ** (LIQUIDITY_SCALE - offset)
 }
 
 export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
-  if (offset >= SQRT_PRICE_SCALE) throw new Error(`offset must be less than ${SQRT_PRICE_SCALE}`)
+  if (offset > SQRT_PRICE_SCALE)
+    throw new Error(`offset must be less than or equal to ${SQRT_PRICE_SCALE}`)
   return value * 10n ** (SQRT_PRICE_SCALE - offset)
 }
 
 export const toPercentage = (value: bigint, offset = 0n): bigint => {
-  if (offset >= PERCENTAGE_SCALE) throw new Error(`offset must be less than ${PERCENTAGE_SCALE}`)
+  if (offset > PERCENTAGE_SCALE)
+    throw new Error(`offset must be less than or equal to ${PERCENTAGE_SCALE}`)
   return value * 10n ** (PERCENTAGE_SCALE - offset)
 }
 
 export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
-  if (offset >= FEE_GROWTH_SCALE) throw new Error(`offset must be less than ${FEE_GROWTH_SCALE}`)
+  if (offset > FEE_GROWTH_SCALE)
+    throw new Error(`offset must be less than or equal to ${FEE_GROWTH_SCALE}`)
   return value * 10n ** (FEE_GROWTH_SCALE - offset)
 }

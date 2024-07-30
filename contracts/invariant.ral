@@ -1,6 +1,6 @@
 struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
-const MaxFeeTiers = 32
 
+const MAX_FEE_TIERS = 32
 struct FeeTiers {
     mut feeTiers: [FeeTier; 32]
 }
@@ -106,7 +106,7 @@ Contract Invariant(
         let caller = callerAddress!()
         checkCaller!(caller == config.admin, InvariantError.NotAdmin)
 
-        assert!(feeTierCount < MaxFeeTiers, InvariantError.FeeTierLimitReached)
+        assert!(feeTierCount < MAX_FEE_TIERS, InvariantError.FeeTierLimitReached)
         assert!(feeTier.tickSpacing > 0 && feeTier.tickSpacing <= 100, InvariantError.InvalidTickSpacing)
         assert!(feeTier.fee.v < PERCENTAGE_DENOMINATOR, InvariantError.InvalidFee)
         assert!(!feeTierExist(feeTier), InvariantError.FeeTierAlreadyExist)

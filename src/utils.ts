@@ -14,7 +14,7 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
-import { CHUNK_SIZE, CHUNKS_PER_BATCH, GLOBAL_MAX_TICK, MaxFeeTiers } from './consts'
+import { CHUNK_SIZE, CHUNKS_PER_BATCH, GLOBAL_MAX_TICK, MAX_FEE_TIERS } from './consts'
 import { Network } from './network'
 import { LiquidityTick, Pool, Position } from './types'
 import { getMaxTick, getMinTick } from './math'
@@ -26,7 +26,7 @@ export interface Tickmap {
 }
 
 export const EMPTY_FEE_TIERS: FeeTiers = {
-  feeTiers: new Array<FeeTier>(Number(MaxFeeTiers)).fill({
+  feeTiers: new Array<FeeTier>(Number(MAX_FEE_TIERS)).fill({
     fee: { v: 0n },
     tickSpacing: 0n
   })
