@@ -1,0 +1,8 @@
+// structs for intermediary calculations inside of the contract
+
+struct SwapResult {
+    nextSqrtPrice: SqrtPrice,
+    amountIn: TokenAmount,
+    amountOut: TokenAmount,
+    feeAmount: TokenAmount
+}

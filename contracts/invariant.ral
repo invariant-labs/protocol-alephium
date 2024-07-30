@@ -1,16 +1,3 @@
-struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
-
-const MAX_FEE_TIERS = 32
-struct FeeTiers {
-    mut feeTiers: [FeeTier; 32]
-}
-
-struct LiquidityTick {
-    mut index: I256,
-    mut liquidityChange: Liquidity,
-    mut sign: Bool
-}
-
 Contract Invariant(
     mut config: InvariantConfig,
     clamm: CLAMM,

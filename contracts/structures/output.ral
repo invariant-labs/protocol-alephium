@@ -1,9 +1,4 @@
-struct SwapResult {
-    nextSqrtPrice: SqrtPrice,
-    amountIn: TokenAmount,
-    amountOut: TokenAmount,
-    feeAmount: TokenAmount
-}
+// structs used for entrypoint output, sometimes replaced with ByteVec and used only in Ts
 
 struct CalculateSwapResult {
     amountIn: TokenAmount,
@@ -28,4 +23,10 @@ struct LiquidityResult {
     x: TokenAmount,
     y: TokenAmount,
     l: Liquidity
+}
+
+struct LiquidityTick {
+    mut index: I256,
+    mut liquidityChange: Liquidity,
+    mut sign: Bool
 }
