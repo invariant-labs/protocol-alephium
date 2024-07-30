@@ -28,7 +28,7 @@
     "clean:windows": "node -e \"if (process.platform === 'win32') process.exit(1)\" || , if exist dist rmdir /Q /S dist",
     "devnet:start": "npx --yes @alephium/cli@latest devnet start",
     "devnet:stop": "npx --yes @alephium/cli@latest devnet stop",
-    "compile": "npx cli compile",
+    "compile": "npx cli compile && npx ts-node stats",
     "deploy": "npx cli deploy",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --fix --ext ts",
@@ -38,7 +38,8 @@
     "test:contract:unit": "npm run test -- --testPathPattern=test/contract/unit/*",
     "test:sdk": "npm run test -- --testPathPattern=test/sdk/*",
     "test:sdk:e2e": "npm run test -- --testPathPattern=test/sdk/e2e/*",
-    "test:sdk:unit": "npm run test -- --testPathPattern=test/sdk/unit/*"
+    "test:sdk:unit": "npm run test -- --testPathPattern=test/sdk/unit/*",
+    "stats": "npx ts-node stats"
   },
   "dependencies": {
     "@alephium/cli": "^1.3.0",
