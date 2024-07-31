@@ -8,8 +8,8 @@ import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
-import { GlobalMaxTick, GlobalMinTick } from '../../../src'
-import { ChunkSize, ChunksPerBatch } from '../../../src/consts'
+import { GLOBAL_MAX_TICK, GLOBAL_MIN_TICK } from '../../../src'
+import { CHUNK_SIZE, CHUNKS_PER_BATCH } from '../../../src/consts'
 import { getMaxChunk, getMaxTick, getMinTick, toLiquidity } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -28,8 +28,8 @@ describe('query tickmap tests', () => {
   const tickSpacing = 1n
   const initSqrtPrice = 10n ** 24n
   const supply = 10n ** 10n
-  const lowerTickIndex = GlobalMinTick
-  const upperTickIndex = GlobalMaxTick
+  const lowerTickIndex = GLOBAL_MIN_TICK
+  const upperTickIndex = GLOBAL_MAX_TICK
   const ticks = [-221818n, -221817n, -58n, 5n, 221817n, 221818n]
 
   beforeEach(async () => {
@@ -66,9 +66,9 @@ describe('query tickmap tests', () => {
       sqrtPrice,
       sqrtPrice
     )
-    const batchSize = ChunkSize * ChunksPerBatch
+    const batchSize = CHUNK_SIZE * CHUNKS_PER_BATCH
     const pool = await invariant.getPool(poolKey)
-    for (let i = GlobalMinTick; i <= GlobalMaxTick; i += batchSize) {
+    for (let i = GLOBAL_MIN_TICK; i <= GLOBAL_MAX_TICK; i += batchSize) {
       {
         const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
         const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -104,7 +104,7 @@ describe('query tickmap tests', () => {
     const tikcmap = await invariant.getFullTickmap(poolKey)
     const maxChunk = await getMaxChunk(tickSpacing)
     const lastChunkInBatch =
-      BigInt(Math.ceil(Number(maxChunk) / Number(ChunksPerBatch))) * ChunksPerBatch
+      BigInt(Math.ceil(Number(maxChunk) / Number(CHUNKS_PER_BATCH))) * CHUNKS_PER_BATCH
     expect(tikcmap.bitmap.size).toBe(Number(lastChunkInBatch))
   }, 1000000)
 

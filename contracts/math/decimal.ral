@@ -1,87 +1,4 @@
-struct SqrtPrice{
-    mut v: U256
-}
-
-struct Liquidity{
-    mut v: U256
-}
-
-struct FeeGrowth{
-    mut v: U256
-}
-
-struct Percentage{
-    mut v: U256
-}
-
-struct TokenAmount{
-    mut v: U256
-}
-
-struct FixedPoint{
-    mut v: U256
-}
-
 Abstract Contract Decimal() {
-    const SqrtPriceScale = 24
-    const LiquidityScale = 5
-    const FeeGrowthScale = 28
-    const FixedPointScale = 12
-    const PercentageScale = 12
-    const TokenAmountScale = 0
-    const SqrtPriceDenominator = 10**SqrtPriceScale
-    const LiquidiyDenominator = 10**LiquidityScale
-    const FeeGrowthDenominator = 10**FeeGrowthScale
-    const PercentageDenominator = 10**PercentageScale
-    const FixedPointDenominator = 10**FixedPointScale
-    const GlobalMaxTick = 221818i
-    const GlobalMinTick = -221818i
-    const MaxSqrtPrice = 65535383934512647000000000000
-    const MinSqrtPrice = 15258932000000000000
-
-
-    enum DecimalError {
-        TickOverBounds = 0
-    }
-
-    // TODO: In global constants update remove all these `get` functions, unecessary indirection to please the compiler
-
-    pub fn getLiquidityScale() -> U256 {
-        return LiquidityScale
-    }
-
-    pub fn getFeeGrowthScale() -> U256 {
-        return FeeGrowthScale
-    }
-
-    pub fn getTokenAmountScale() -> U256 {
-        return TokenAmountScale
-    }
-
-    pub fn getSqrtPriceDenominator() -> U256 {
-        return SqrtPriceDenominator
-    }
-
-    pub fn getLiquidityDenominator() -> U256 {
-        return LiquidiyDenominator
-    }
-
-    pub fn getFeeGrowthDenominator() -> U256 {
-        return FeeGrowthDenominator
-    }
-
-    pub fn getPercentageDenominator() -> U256 {
-        return PercentageDenominator
-    }
-
-    pub fn getGlobalMaxTick() -> I256 {
-        return GlobalMaxTick
-    }
-
-    pub fn getGlobalMinTick() -> I256 {
-        return GlobalMinTick
-    }
-
     pub fn getMaxSqrtPrice(tickSpacing: U256) -> SqrtPrice {
         let maxTick = getMaxTick(tickSpacing)
         return calculateSqrtPrice(maxTick)
@@ -94,12 +11,12 @@ Abstract Contract Decimal() {
 
     pub fn getMaxTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
-        return GlobalMaxTick / convertedTickSpacing * convertedTickSpacing
+        return GLOBAL_MAX_TICK / convertedTickSpacing * convertedTickSpacing
     }
 
     pub fn getMinTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
-        return GlobalMinTick / convertedTickSpacing * convertedTickSpacing
+        return GLOBAL_MIN_TICK / convertedTickSpacing * convertedTickSpacing
     }
 
     pub fn mul(l: U256, r:U256, rScale: U256) -> U256 {
@@ -111,19 +28,19 @@ Abstract Contract Decimal() {
     }
     
     pub fn divToTokenUp(l: U256, r: U256) -> U256 {
-        return (((l * one(SqrtPriceScale) + (r - 1)) / r) + almostOne(SqrtPriceScale)) / one(SqrtPriceScale)
+        return (((l * SQRT_PRICE_DENOMINATOR + (r - 1)) / r) + almostOne(SQRT_PRICE_SCALE)) / SQRT_PRICE_DENOMINATOR
     }   
 
     pub fn divToToken(l: U256, r: U256) -> U256 {
-        return ((l * one(SqrtPriceScale)) / r) / one(SqrtPriceScale)
+        return ((l * SQRT_PRICE_DENOMINATOR) / r) / SQRT_PRICE_DENOMINATOR
     }   
 
     pub fn divUp(l: U256, r: U256) -> U256 {
-        return l * one(SqrtPriceScale) + (r - 1) / r
-    }   
+        return l * SQRT_PRICE_DENOMINATOR + (r - 1) / r
+    }
 
     pub fn div(l: U256, r: U256) -> U256 {
-        return l * one(SqrtPriceScale) / r
+        return l * SQRT_PRICE_DENOMINATOR / r
     }   
 
     pub fn almostOne(scale: U256) -> U256 {
@@ -151,70 +68,70 @@ Abstract Contract Decimal() {
             tickIndexAbs = toU256!(tickIndex)
         }
 
-        let mut sqrtPrice = FixedPoint{v: one(FixedPointScale)}
+        let mut sqrtPrice = FixedPoint{v: FIXED_POINT_DENOMINATOR}
 
-        assert!(tickIndexAbs <= toU256!(GlobalMaxTick), DecimalError.TickOverBounds)
+        assert!(tickIndexAbs <= toU256!(GLOBAL_MAX_TICK), DecimalError.TickOverBounds)
 
         if (tickIndexAbs & 0x1 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000049998750) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000049998750) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x2 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000100000000) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000100000000) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x4 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000200010000) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000200010000) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x8 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000400060004) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000400060004) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x10 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000800280056)  / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1000800280056)  / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x20 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1001601200560) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1001601200560) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x40 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1003204964963) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1003204964963) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x80 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1006420201726) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1006420201726) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x100 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1012881622442) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1012881622442) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x200 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1025929181080) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1025929181080) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x400 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1052530684591) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1052530684591) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x800 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1107820842005) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1107820842005) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x1000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1227267017980) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1227267017980) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x2000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1506184333421) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 1506184333421) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x4000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 2268591246242) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 2268591246242) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x8000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 5146506242525) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 5146506242525) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x00010000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 26486526504348) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 26486526504348) / FIXED_POINT_DENOMINATOR
         }
         if (tickIndexAbs & 0x00020000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 701536086265529) / FixedPointDenominator
+            sqrtPrice.v = (sqrtPrice.v * 701536086265529) / FIXED_POINT_DENOMINATOR
         }
 
         if (tickIndex >= 0i) {
-            return SqrtPrice{ v: rescale(sqrtPrice.v, FixedPointScale, SqrtPriceScale)}
+            return SqrtPrice{ v: rescale(sqrtPrice.v, FIXED_POINT_SCALE, SQRT_PRICE_SCALE)}
         } else {
-            let sqrtPriceInFixedPointScale = FixedPointDenominator * FixedPointDenominator / sqrtPrice.v
-            return SqrtPrice{ v: rescale(sqrtPriceInFixedPointScale, FixedPointScale, SqrtPriceScale)}
+            let sqrtPriceInFixedPointScale = FIXED_POINT_DENOMINATOR * FIXED_POINT_DENOMINATOR / sqrtPrice.v
+            return SqrtPrice{ v: rescale(sqrtPriceInFixedPointScale, FIXED_POINT_SCALE, SQRT_PRICE_SCALE)}
         }
     }
 
@@ -229,18 +146,16 @@ Abstract Contract Decimal() {
     }
 
     pub fn wrappingAdd(a: U256, b: U256) -> U256 {
-        let u256Max = u256Max!()
-        if (b > u256Max - a) {
-            return (b - (u256Max - a)) - 1
+        if (b > MAX_U256 - a) {
+            return (b - (MAX_U256 - a)) - 1
         } else {
             return a + b
         }
     }
 
     pub fn wrappingSub(a: U256, b: U256) -> U256 {
-        let u256Max = u256Max!()
         if (b > a) {
-            return u256Max - (b - a) + 1
+            return MAX_U256 - (b - a) + 1
         } else {
             return a - b
         }

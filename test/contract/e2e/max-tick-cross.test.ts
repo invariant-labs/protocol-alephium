@@ -11,7 +11,7 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import { MaxSqrtPrice, MinSqrtPrice, SearchRange } from '../../../src/consts'
+import { MAX_SQRT_PRICE, MIN_SQRT_PRICE, SEARCH_RANGE } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
@@ -21,7 +21,7 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('max tick cross spec', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-  const searchLimit = SearchRange * tickSpacing
+  const searchLimit = SEARCH_RANGE * tickSpacing
   const txGasLimit = 5000000n
   const positionOwnerMint = 1n << 128n
   const swapperMint = 1n << 30n
@@ -53,7 +53,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = -250n
     const amount = 40282n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = lastInitializedTick; i < 0n; i += 10n) {
@@ -98,7 +98,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = 120n
     const amount = 44998n
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = 0n; i < lastInitializedTick; i += 10n) {
@@ -144,7 +144,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = -250n
     const amount = 35250n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = lastInitializedTick; i < 0n; i += 20n) {
@@ -188,7 +188,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = 240n
     const amount = 40000n
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = 0n; i < lastInitializedTick; i += 20n) {
@@ -233,7 +233,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = -35000n
     const amount = 13569916n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = lastInitializedTick; i < 0n; i += searchLimit) {
@@ -276,7 +276,7 @@ describe('max tick cross spec', () => {
     const lastInitializedTick = 25000n
     const amount = 17947500n
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
 
     for (let i = 0n; i < lastInitializedTick; i += searchLimit) {
@@ -320,7 +320,7 @@ describe('max tick cross spec', () => {
     const mintAmount = 60000n
     const swapAmount = 44500n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = lastInitializedTick; i < 0n; i += 10n) {
@@ -376,7 +376,7 @@ describe('max tick cross spec', () => {
     const swapAmount = 39000n
 
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = 0n; i < lastInitializedTick; i += 10n) {
@@ -430,7 +430,7 @@ describe('max tick cross spec', () => {
     const mintAmount = 60000n
     const swapAmount = 39500n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = lastInitializedTick; i < 0n; i += 20n) {
@@ -486,7 +486,7 @@ describe('max tick cross spec', () => {
     const swapAmount = 39000n
 
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = 0n; i < lastInitializedTick; i += 20n) {
@@ -540,7 +540,7 @@ describe('max tick cross spec', () => {
     const mintAmount = 20000000n
     const swapAmount = 6050000n
     const xToY = true
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = lastInitializedTick; i < 0n; i += searchLimit) {
@@ -594,7 +594,7 @@ describe('max tick cross spec', () => {
     const mintAmount = 20000000n
     const swapAmount = 6408000n
     const xToY = false
-    const slippage = MaxSqrtPrice
+    const slippage = MAX_SQRT_PRICE
     const byAmountIn = false
 
     for (let i = 0n; i < lastInitializedTick; i += searchLimit) {

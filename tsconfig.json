@@ -23,6 +23,7 @@
     "test/**/*.ts",
     "scripts/**/*.ts",
     "alephium.config.ts",
-    "artifacts/**/*.ts"
+    "artifacts/**/*.ts",
+    "stats/**/*.ts"
   ]
 }

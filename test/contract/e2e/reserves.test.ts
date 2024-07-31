@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MaxSqrtPrice, PercentageScale } from '../../../src/consts'
+import { MAX_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import {
   getPool,
   initPool,
@@ -26,7 +26,7 @@ let positionOwner: PrivateKeyWallet
 let swapper: PrivateKeyWallet
 let invariant: InvariantInstance
 describe('reserves tests - manage multiple tokens', () => {
-  const protocolFee = 10n ** (PercentageScale - 2n)
+  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   let feeTier: FeeTier
 
@@ -79,7 +79,7 @@ describe('reserves tests - manage multiple tokens', () => {
         upperTickIndex,
         liquidityDelta,
         0n,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
     }
   })

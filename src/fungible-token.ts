@@ -2,7 +2,7 @@ import { DUST_AMOUNT, hexToString, SignerProvider, TransactionBuilder } from '@a
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, getNodeUrl, signAndSend, waitTxConfirmed } from './utils'
-import { MaxU256 } from './consts'
+import { MAX_U256 } from './consts'
 
 export type TokenMetadata = {
   name: string
@@ -34,10 +34,10 @@ export class FungibleToken {
           name: Buffer.from(name, 'utf8').toString('hex'),
           symbol: Buffer.from(symbol, 'utf8').toString('hex'),
           decimals,
-          supply: MaxU256,
-          balance: MaxU256
+          supply: MAX_U256,
+          balance: MAX_U256
         },
-        issueTokenAmount: MaxU256
+        issueTokenAmount: MAX_U256
       })
     )
 

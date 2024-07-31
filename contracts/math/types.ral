@@ -1,0 +1,41 @@
+struct SqrtPrice{
+    mut v: U256
+}
+const SQRT_PRICE_SCALE = 24
+const SQRT_PRICE_DENOMINATOR = 10**SQRT_PRICE_SCALE
+const MAX_SQRT_PRICE = 65535383934512647000000000000
+const MIN_SQRT_PRICE = 15258932000000000000
+
+struct Liquidity{
+    mut v: U256
+}
+const LIQUIDITY_SCALE = 5
+const LIQUIDITY_DENOMINATOR = 10**LIQUIDITY_SCALE
+
+
+struct FeeGrowth{
+    mut v: U256
+}
+const FEE_GROWTH_SCALE = 28
+const FEE_GROWTH_DENOMINATOR = 10**FEE_GROWTH_SCALE
+
+
+struct Percentage{
+    mut v: U256
+}
+const PERCENTAGE_SCALE = 12
+const PERCENTAGE_DENOMINATOR = 10**PERCENTAGE_SCALE
+
+
+struct TokenAmount{
+    mut v: U256
+}
+const TOKEN_AMOUNT_SCALE = 0
+const TOKEN_AMOUNT_DENOMINATOR = 10**TOKEN_AMOUNT_SCALE
+
+struct FixedPoint{
+    mut v: U256
+}
+const FIXED_POINT_SCALE = 12
+const FIXED_POINT_DENOMINATOR = 10**FIXED_POINT_SCALE
+

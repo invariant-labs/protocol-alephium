@@ -7,10 +7,6 @@ Contract TokenFaucet(
     supply: U256,
     mut balance: U256
 ) implements IFungibleToken {
-    enum ErrorCodes {
-        InvalidWithdrawAmount = 0
-    }
-
     pub fn getTotalSupply() -> U256 {
         return supply
     }
@@ -33,7 +29,7 @@ Contract TokenFaucet(
 
     @using(assetsInContract = true, updateFields = true, checkExternalCaller = false)
     pub fn withdraw(amount: U256) -> () {
-        assert!(amount <= balance, ErrorCodes.InvalidWithdrawAmount)
+        assert!(amount <= balance, FaucetError.InvalidWithdrawAmount)
         
         transferTokenFromSelf!(callerAddress!(), selfTokenId!(), amount)
 

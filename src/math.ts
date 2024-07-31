@@ -1,11 +1,11 @@
 import { CLAMM, Utils } from '../artifacts/ts'
 import {
-  FeeGrowthScale,
-  LiquidityScale,
-  PercentageDenominator,
-  PercentageScale,
-  SqrtPriceDenominator,
-  SqrtPriceScale
+  FEE_GROWTH_SCALE,
+  LIQUIDITY_SCALE,
+  PERCENTAGE_DENOMINATOR,
+  PERCENTAGE_SCALE,
+  SQRT_PRICE_DENOMINATOR,
+  SQRT_PRICE_SCALE
 } from './consts'
 import {
   Pool,
@@ -274,11 +274,11 @@ const newtonIteration = (n: bigint, x0: bigint): bigint => {
 }
 
 export const sqrtPriceToPrice = (sqrtPrice: bigint): bigint => {
-  return (sqrtPrice * sqrtPrice) / SqrtPriceDenominator
+  return (sqrtPrice * sqrtPrice) / SQRT_PRICE_DENOMINATOR
 }
 
 export const priceToSqrtPrice = (price: bigint): bigint => {
-  return sqrt(price * SqrtPriceDenominator)
+  return sqrt(price * SQRT_PRICE_DENOMINATOR)
 }
 
 export const calculateSqrtPriceAfterSlippage = (
@@ -290,30 +290,34 @@ export const calculateSqrtPriceAfterSlippage = (
     return sqrtPrice
   }
 
-  const multiplier = PercentageDenominator + (up ? slippage : -slippage)
+  const multiplier = PERCENTAGE_DENOMINATOR + (up ? slippage : -slippage)
   const price = sqrtPriceToPrice(sqrtPrice)
-  const priceWithSlippage = price * multiplier * PercentageDenominator
-  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / PercentageDenominator
+  const priceWithSlippage = price * multiplier * PERCENTAGE_DENOMINATOR
+  const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / PERCENTAGE_DENOMINATOR
 
   return sqrtPriceWithSlippage
 }
 
 export const toLiquidity = (value: bigint, offset = 0n) => {
-  if (offset >= LiquidityScale) throw new Error(`offset must be less than ${LiquidityScale}`)
-  return value * 10n ** (LiquidityScale - offset)
+  if (offset > LIQUIDITY_SCALE)
+    throw new Error(`offset must be less than or equal to ${LIQUIDITY_SCALE}`)
+  return value * 10n ** (LIQUIDITY_SCALE - offset)
 }
 
 export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
-  if (offset >= SqrtPriceScale) throw new Error(`offset must be less than ${SqrtPriceScale}`)
-  return value * 10n ** (SqrtPriceScale - offset)
+  if (offset > SQRT_PRICE_SCALE)
+    throw new Error(`offset must be less than or equal to ${SQRT_PRICE_SCALE}`)
+  return value * 10n ** (SQRT_PRICE_SCALE - offset)
 }
 
 export const toPercentage = (value: bigint, offset = 0n): bigint => {
-  if (offset >= PercentageScale) throw new Error(`offset must be less than ${PercentageScale}`)
-  return value * 10n ** (PercentageScale - offset)
+  if (offset > PERCENTAGE_SCALE)
+    throw new Error(`offset must be less than or equal to ${PERCENTAGE_SCALE}`)
+  return value * 10n ** (PERCENTAGE_SCALE - offset)
 }
 
 export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
-  if (offset >= FeeGrowthScale) throw new Error(`offset must be less than ${FeeGrowthScale}`)
-  return value * 10n ** (FeeGrowthScale - offset)
+  if (offset > FEE_GROWTH_SCALE)
+    throw new Error(`offset must be less than or equal to ${FEE_GROWTH_SCALE}`)
+  return value * 10n ** (FEE_GROWTH_SCALE - offset)
 }

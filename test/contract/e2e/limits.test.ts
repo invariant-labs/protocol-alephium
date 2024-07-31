@@ -3,12 +3,12 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { initDexAndTokens } from '../../../src/snippets'
 import {
-  GlobalMaxTick,
-  GlobalMinTick,
-  MaxSqrtPrice,
-  MaxU256,
-  MinSqrtPrice,
-  PercentageScale
+  GLOBAL_MAX_TICK,
+  GLOBAL_MIN_TICK,
+  MAX_SQRT_PRICE,
+  MAX_U256,
+  MIN_SQRT_PRICE,
+  PERCENTAGE_SCALE
 } from '../../../src/consts'
 import {
   getPool,
@@ -44,15 +44,15 @@ describe('limits tests', () => {
     await bigDepositOneAndSwapTheOther(false)
   })
   test('big deposit both tokens', async () => {
-    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MaxU256)
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MAX_U256)
 
     const user = await getSigner(ONE_ALPH * 1000n, 0)
-    await withdrawTokens(user, [tokenX, MaxU256], [tokenY, MaxU256])
+    await withdrawTokens(user, [tokenX, MAX_U256], [tokenY, MAX_U256])
 
     // 2^176
     const limitAmount = 95780971304118053647396689196894323976171195136475136n
     // 0.6% fee
-    const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
+    const [fee, tickSpacing] = [6n * 10n ** (PERCENTAGE_SCALE - 3n), 1n]
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
@@ -79,8 +79,8 @@ describe('limits tests', () => {
       invariant,
       user,
       poolKey,
-      MaxU256,
-      MaxU256,
+      MAX_U256,
+      MAX_U256,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -93,8 +93,8 @@ describe('limits tests', () => {
       tokenY: await balanceOf(tokenY.contractId, user.address)
     }
     expect(userBalance).toMatchObject({
-      tokenX: MaxU256 - limitAmount,
-      tokenY: MaxU256 - y
+      tokenX: MAX_U256 - limitAmount,
+      tokenY: MAX_U256 - y
     })
 
     const invariantBalance = await getReserveBalances(invariant, poolKey)
@@ -105,15 +105,15 @@ describe('limits tests', () => {
     })
   })
   test('deposit limits at upper limit', async () => {
-    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MaxU256)
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MAX_U256)
 
     const user = await getSigner(ONE_ALPH * 1000n, 0)
-    await withdrawTokens(user, [tokenX, MaxU256], [tokenY, MaxU256])
+    await withdrawTokens(user, [tokenX, MAX_U256], [tokenY, MAX_U256])
 
     // 2^236
     const limitAmount = 110427941548649020598956093796432407239217743554726184882600387580788736n
     // 0.6% fee
-    const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
+    const [fee, tickSpacing] = [6n * 10n ** (PERCENTAGE_SCALE - 3n), 1n]
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
@@ -131,7 +131,7 @@ describe('limits tests', () => {
     const { l: liquidityDelta } = await getLiquidityByY(
       positionAmount,
       0n,
-      GlobalMaxTick,
+      GLOBAL_MAX_TICK,
       sqrtPrice,
       false
     )
@@ -142,10 +142,10 @@ describe('limits tests', () => {
       invariant,
       user,
       poolKey,
-      MaxU256,
-      MaxU256,
+      MAX_U256,
+      MAX_U256,
       0n,
-      GlobalMaxTick,
+      GLOBAL_MAX_TICK,
       liquidityDelta,
       slippageLimit,
       slippageLimit
@@ -153,15 +153,15 @@ describe('limits tests', () => {
   })
 
   test('big deposit and swaps', async () => {
-    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MaxU256)
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MAX_U256)
 
     const user = await getSigner(ONE_ALPH * 1000n, 0)
-    await withdrawTokens(user, [tokenX, MaxU256], [tokenY, MaxU256])
+    await withdrawTokens(user, [tokenX, MAX_U256], [tokenY, MAX_U256])
 
     // 2^177
     const limitAmount = 191561942608236107294793378393788647952342390272950272n
     // 0.6% fee
-    const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
+    const [fee, tickSpacing] = [6n * 10n ** (PERCENTAGE_SCALE - 3n), 1n]
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
@@ -190,8 +190,8 @@ describe('limits tests', () => {
       invariant,
       user,
       poolKey,
-      MaxU256,
-      MaxU256,
+      MAX_U256,
+      MAX_U256,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -205,8 +205,8 @@ describe('limits tests', () => {
         tokenY: await balanceOf(tokenY.contractId, user.address)
       }
       expect(userBalance).toMatchObject({
-        tokenX: MaxU256 - posAmount,
-        tokenY: MaxU256 - y
+        tokenX: MAX_U256 - posAmount,
+        tokenY: MAX_U256 - y
       })
 
       const invariantBalance = await getReserveBalances(invariant, poolKey)
@@ -227,21 +227,21 @@ describe('limits tests', () => {
         n % 2 === 0,
         swapAmount,
         true,
-        n % 2 === 0 ? MinSqrtPrice : MaxSqrtPrice
+        n % 2 === 0 ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
       )
     }
   })
   test('full range with max liquidity', async () => {
-    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MaxU256)
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MAX_U256)
 
     const user = await getSigner(ONE_ALPH * 1000n, 0)
-    await withdrawTokens(user, [tokenX, MaxU256], [tokenY, MaxU256])
+    await withdrawTokens(user, [tokenX, MAX_U256], [tokenY, MAX_U256])
 
     // 2^237
     const liquidityLimitAmount =
       220855883097298041197912187592864814478435487109452369765200775161577472n
     // 0.6% fee
-    const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
+    const [fee, tickSpacing] = [6n * 10n ** (PERCENTAGE_SCALE - 3n), 1n]
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
@@ -261,10 +261,10 @@ describe('limits tests', () => {
       invariant,
       user,
       poolKey,
-      MaxU256,
-      MaxU256,
-      GlobalMinTick,
-      GlobalMaxTick,
+      MAX_U256,
+      MAX_U256,
+      GLOBAL_MIN_TICK,
+      GLOBAL_MAX_TICK,
       liquidityDelta,
       slippageLimit,
       slippageLimit
@@ -280,15 +280,15 @@ describe('limits tests', () => {
 })
 
 const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
-  const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MaxU256)
+  const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, MAX_U256)
 
   const user = await getSigner(ONE_ALPH * 1000n, 0)
-  await withdrawTokens(user, [tokenX, MaxU256], [tokenY, MaxU256])
+  await withdrawTokens(user, [tokenX, MAX_U256], [tokenY, MAX_U256])
 
   // 2^206
   const limitAmount = 102844034832575377634685573909834406561420991602098741459288064n
   // 0.6% fee
-  const [fee, tickSpacing] = [6n * 10n ** (PercentageScale - 3n), 1n]
+  const [fee, tickSpacing] = [6n * 10n ** (PERCENTAGE_SCALE - 3n), 1n]
   const feeTier = await newFeeTier(fee, tickSpacing)
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   await initFeeTier(invariant, admin, feeTier)
@@ -310,8 +310,8 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
     invariant,
     user,
     poolKey,
-    MaxU256,
-    MaxU256,
+    MAX_U256,
+    MAX_U256,
     lowerTick,
     upperTick,
     liquidityDelta,
@@ -344,7 +344,7 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
     xToY,
     limitAmount,
     true,
-    xToY ? MinSqrtPrice : MaxSqrtPrice
+    xToY ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
   )
 
   {

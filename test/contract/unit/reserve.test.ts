@@ -14,7 +14,7 @@ import {
 } from '../../../artifacts/ts'
 import { expectError, expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { balanceOf, waitTxConfirmed } from '../../../src/utils'
-import { ReserveError, VMError } from '../../../src/consts'
+import { RESERVE_ASSET_CAPACITY, ReserveError, VMError } from '../../../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -146,13 +146,13 @@ describe('reserve tests', () => {
     })
   })
 
-  test('reserve panics when storing more than 8 assets', async () => {
+  test('reserve panics when storing more than RESERVE_ASSET_CAPACITY assets', async () => {
     const depositor = await getSigner(ONE_ALPH * 1000n, 0)
     const reserve = await deployReserveWithAuthority(depositor)
     const supply = 1000n
     const deposit = 75n
 
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < RESERVE_ASSET_CAPACITY/2n; i++) {
       const [tokenX, tokenY] = await initTokensXY(depositor, supply)
 
       await withdrawTokens(depositor, [tokenX, supply], [tokenY, supply])
@@ -233,13 +233,13 @@ describe('reserve tests', () => {
       )
     }
   })
-  test('assets counter cannot exceed 8', async () => {
+  test('assets counter cannot exceed RESERVE_ASSET_CAPACITY', async () => {
     const reserveOwner = await getSigner(ONE_ALPH * 1000n, 0)
     const reserve = await deployReserveWithAuthority(reserveOwner)
 
     await IncrementReserveAssets(reserve, reserveOwner, 8n)
     const storedAssets = await getStoredAssets(reserve)
-    expect(storedAssets).toBe(8n)
+    expect(storedAssets).toBe(RESERVE_ASSET_CAPACITY)
 
     await expectError(ReserveError.OverCapacity, IncrementReserveAssets(reserve, reserveOwner, 1n))
   })

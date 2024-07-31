@@ -14,7 +14,7 @@ import {
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
-import { ChunkSize, ChunksPerBatch, GlobalMaxTick, MaxFeeTiers } from './consts'
+import { CHUNK_SIZE, CHUNKS_PER_BATCH, GLOBAL_MAX_TICK, MAX_FEE_TIERS } from './consts'
 import { Network } from './network'
 import { LiquidityTick, Pool, Position } from './types'
 import { getMaxTick, getMinTick } from './math'
@@ -26,7 +26,7 @@ export interface Tickmap {
 }
 
 export const EMPTY_FEE_TIERS: FeeTiers = {
-  feeTiers: new Array<FeeTier>(Number(MaxFeeTiers)).fill({
+  feeTiers: new Array<FeeTier>(Number(MAX_FEE_TIERS)).fill({
     fee: { v: 0n },
     tickSpacing: 0n
   })
@@ -313,7 +313,7 @@ export const getMaxBatch = async (tickSpacing: bigint) => {
   const maxTick = await getMaxTick(tickSpacing)
   const minTick = await getMinTick(tickSpacing)
   const ticksAmount = -minTick + maxTick + 1n
-  const lastBatch = ticksAmount / (ChunkSize * ChunksPerBatch)
+  const lastBatch = ticksAmount / (CHUNK_SIZE * CHUNKS_PER_BATCH)
   return lastBatch
 }
 
@@ -340,7 +340,7 @@ export const signAndSend = async (
 
 export const toByteVecWithOffset = (
   values: bigint[],
-  offset: bigint = GlobalMaxTick,
+  offset: bigint = GLOBAL_MAX_TICK,
   radix: number = 16,
   length: number = 8,
   filler: string = '0'

@@ -1,0 +1,71 @@
+// Error codes should be unique across all contracts for clarity
+
+enum InvariantError {
+    NotAdmin = 0
+    InsufficientLiquidity = 1
+    InvalidTickSpacing = 2
+    InvalidFee = 3
+    FeeTierNotFound = 4
+    TokensAreSame = 5
+    PoolKeyAlreadyExist = 6
+    TickAndSqrtPriceMismatch = 7
+    NotFeeReceiver = 8
+    InvalidTickLiquidity = 9
+    ZeroLiquidity = 10
+    PriceLimitReached = 11
+    InvalidProtocolFee = 12
+    // NotOwner = 13
+    ZeroAmount = 14
+    WrongPriceLimit = 15
+    NoGainSwap = 16
+    // PositionDoesNotExist = 17
+    FeeTierAlreadyExist = 18
+    PoolNotFound = 19
+    PoolAlreadyExist = 20
+    TickAlreadyExist = 21
+    InvalidTickIndex = 22
+    TickAndTickSpacingMismatch = 23
+    TickLimitReached = 24
+    ChunkNotFound = 25
+    InvalidTickmapBit = 26
+    PositionNotFound = 27
+    FeeTierLimitReached = 28
+}
+
+
+enum CLAMMError {
+    InvalidTickIndex = 800
+    InvalidTickSpacing = 801
+}
+
+enum UtilsError {
+    InvalidTickIndex = 900
+    UpperLTCurrentSqrtPrice = 901
+    CurrentLTLowerSqrtPrice = 902
+}
+
+enum DecimalError {
+    TickOverBounds = 1000
+}
+
+enum ReserveError {
+    NotInvariant = 2001
+    OverCapacity = 2002
+}
+
+enum LogError {
+    SqrtPriceOutOfRange = 7001
+}
+
+enum ArithmeticError {
+    CastOverflow = 100001
+    AddOverflow = 100002
+    SubUnderflow = 100003
+    DivNotPositiveDivisor = 100005
+    DivNotPositiveDenominator = 100006
+    MulNotPositiveDenominator = 100007
+}
+
+enum FaucetError {
+    InvalidWithdrawAmount = 200000
+}

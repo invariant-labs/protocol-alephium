@@ -1,7 +1,7 @@
 import { ONE_ALPH, SignerProvider, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { expectError, expectVMError } from '../../../src/testUtils'
-import { ArithmeticError, MaxU256, VMError } from '../../../src/consts'
+import { ArithmeticError, MAX_U256, VMError } from '../../../src/consts'
 import { CLAMMInstance } from '../../../artifacts/ts'
 import { deployCLAMM } from '../../../src/utils'
 
@@ -68,7 +68,7 @@ describe('uints tests', () => {
         higher: 65535383919253714999999999999n,
         lower: 115792089237316195423570985008687907853269984665575028655538330292913129639936n
       }
-      const b = { higher: MaxU256, lower: MaxU256 }
+      const b = { higher: MAX_U256, lower: MAX_U256 }
       const result = (
         await clamm.view.bigDiv512({ args: { dividend: a, divisor: b, divisorDenominator: 1n } })
       ).returns
@@ -99,10 +99,10 @@ describe('uints tests', () => {
       expect(result).toEqual({ higher: 2n, lower: 8n })
     }
     {
-      const v = { higher: MaxU256, lower: MaxU256 }
+      const v = { higher: MAX_U256, lower: MAX_U256 }
       const n = 1n
       const result = (await clamm.view.bigShl({ args: { v, n } })).returns
-      expect(result).toEqual({ higher: MaxU256, lower: MaxU256 - 1n })
+      expect(result).toEqual({ higher: MAX_U256, lower: MAX_U256 - 1n })
     }
   })
 
@@ -159,14 +159,14 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.bigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
@@ -180,14 +180,14 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.newBigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.newBigAdd256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a - 1n })
     }
@@ -195,8 +195,8 @@ describe('uints tests', () => {
 
   test('big add 256 vs new big add 256 comparison', async () => {
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const oldResult = await clamm.view.bigAdd256({ args: { a, b } })
       const newResult = await clamm.view.newBigAdd256({ args: { a, b } })
       console.log('big add 256', oldResult.gasUsed, newResult.gasUsed)
@@ -211,24 +211,24 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 2n
       const result = (await clamm.view.bigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const result = (await clamm.view.bigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const result = (await clamm.view.bigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       })
     }
   })
@@ -241,32 +241,32 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 2n
       const result = (await clamm.view.newBigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const result = (await clamm.view.newBigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const result = (await clamm.view.newBigAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       })
     }
   })
 
   test('big add vs new big add comparison', async () => {
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const oldResult = await clamm.view.bigAdd({ args: { a, b } })
       const newResult = await clamm.view.newBigAdd({ args: { a, b } })
       console.log('big add', oldResult.gasUsed, newResult.gasUsed)
@@ -278,7 +278,7 @@ describe('uints tests', () => {
       const a = { higher: 1n, lower: 0n }
       const b = { higher: 0n, lower: 1n }
       const result = (await clamm.view.bigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 0n, lower: MaxU256 })
+      expect(result).toStrictEqual({ higher: 0n, lower: MAX_U256 })
     }
     {
       const a = { higher: 0n, lower: 1n }
@@ -302,20 +302,20 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
+      const a = { higher: MAX_U256, lower: 0n }
       const b = { higher: 1n, lower: 0n }
       const result = (await clamm.view.bigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 0n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = { higher: 0n, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = { higher: 0n, lower: MAX_U256 }
       const result = (await clamm.view.bigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = { higher: MaxU256, lower: 0n }
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = { higher: MAX_U256, lower: 0n }
       const result = (await clamm.view.bigSub512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
@@ -335,7 +335,7 @@ describe('uints tests', () => {
       const a = { higher: 1n, lower: 0n }
       const b = { higher: 0n, lower: 1n }
       const result = (await clamm.view.newBigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 0n, lower: MaxU256 })
+      expect(result).toStrictEqual({ higher: 0n, lower: MAX_U256 })
     }
     {
       const a = { higher: 0n, lower: 1n }
@@ -355,20 +355,20 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
+      const a = { higher: MAX_U256, lower: 0n }
       const b = { higher: 1n, lower: 0n }
       const result = (await clamm.view.newBigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 0n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = { higher: 0n, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = { higher: 0n, lower: MAX_U256 }
       const result = (await clamm.view.newBigSub512({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = { higher: MaxU256, lower: 0n }
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = { higher: MAX_U256, lower: 0n }
       const result = (await clamm.view.newBigSub512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
@@ -381,8 +381,8 @@ describe('uints tests', () => {
 
   test('big sub 512 vs new big sub 512 comparison', async () => {
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = { higher: MaxU256, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = { higher: MAX_U256, lower: MAX_U256 }
       const oldResult = await clamm.view.bigSub512({ args: { a, b } })
       const newResult = await clamm.view.newBigSub512({ args: { a, b } })
       console.log('big sub 512', oldResult.gasUsed, newResult.gasUsed)
@@ -392,18 +392,18 @@ describe('uints tests', () => {
   test('big add returns an error if number if higher than u512', async () => {
     {
       const a = {
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       }
       const b = 1n
       await expectError(ArithmeticError.AddOverflow, clamm.view.bigAdd({ args: { a, b } }), clamm)
     }
     {
       const a = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 1n
       }
-      const b = MaxU256
+      const b = MAX_U256
       await expectError(ArithmeticError.AddOverflow, clamm.view.bigAdd({ args: { a, b } }), clamm)
     }
   })
@@ -416,27 +416,27 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = { higher: 0n, lower: 2n }
       const result = (await clamm.view.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = { higher: 0n, lower: MAX_U256 }
       const result = (await clamm.view.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       const result = (await clamm.view.bigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       })
     }
   })
@@ -449,27 +449,27 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 3n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = { higher: 0n, lower: 2n }
       const result = (await clamm.view.newBigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = { higher: 0n, lower: MAX_U256 }
       const result = (await clamm.view.newBigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 1n, lower: a.lower - 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       const result = (await clamm.view.newBigAdd512({ args: { a, b } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       })
     }
   })
@@ -477,8 +477,8 @@ describe('uints tests', () => {
   test('big add 512 returns an error if number if higher than u512', async () => {
     {
       const a = {
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       }
       const b = {
         higher: 0n,
@@ -493,10 +493,10 @@ describe('uints tests', () => {
     {
       const a = {
         higher: 1n,
-        lower: MaxU256
+        lower: MAX_U256
       }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       await expectError(
@@ -511,7 +511,7 @@ describe('uints tests', () => {
         lower: 0n
       }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       await expectError(
@@ -525,8 +525,8 @@ describe('uints tests', () => {
   test('new big add 512 returns an error if number if higher than u512', async () => {
     {
       const a = {
-        higher: MaxU256,
-        lower: MaxU256
+        higher: MAX_U256,
+        lower: MAX_U256
       }
       const b = {
         higher: 0n,
@@ -537,10 +537,10 @@ describe('uints tests', () => {
     {
       const a = {
         higher: 1n,
-        lower: MaxU256
+        lower: MAX_U256
       }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       await expectVMError(VMError.ArithmeticError, clamm.view.newBigAdd512({ args: { a, b } }))
@@ -551,7 +551,7 @@ describe('uints tests', () => {
         lower: 0n
       }
       const b = {
-        higher: MaxU256,
+        higher: MAX_U256,
         lower: 0n
       }
       await expectVMError(VMError.ArithmeticError, clamm.view.newBigAdd512({ args: { a, b } }))
@@ -560,8 +560,8 @@ describe('uints tests', () => {
 
   test('big add 512 vs new big add 512 comparison', async () => {
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = { higher: 0n, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = { higher: 0n, lower: MAX_U256 }
       const oldResult = await clamm.view.bigAdd512({ args: { a, b } })
       const newResult = await clamm.view.newBigAdd512({ args: { a, b } })
       console.log('big add 512', oldResult.gasUsed, newResult.gasUsed)
@@ -605,8 +605,8 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -615,8 +615,8 @@ describe('uints tests', () => {
       })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -640,13 +640,13 @@ describe('uints tests', () => {
     }
     {
       const a = { higher: 0n, lower: 0n }
-      const b = MaxU256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: MAX_U256 }
       const b = 1n
       const bDenominator = 100n
       await expectError(
@@ -701,8 +701,8 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -711,8 +711,8 @@ describe('uints tests', () => {
       })
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -736,13 +736,13 @@ describe('uints tests', () => {
     }
     {
       const a = { higher: 0n, lower: 0n }
-      const b = MaxU256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigDiv({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: MAX_U256 }
       const b = 1n
       const bDenominator = 100n
       await expectError(
@@ -762,8 +762,8 @@ describe('uints tests', () => {
 
   test('big div vs new big div comparison', async () => {
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256 - 1n
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256 - 1n
       const bDenominator = 1n
       const oldResult = await clamm.view.bigDiv({ args: { a, b, bDenominator } })
       const newResult = await clamm.view.newBigDiv({ args: { a, b, bDenominator } })
@@ -854,8 +854,8 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       const bDenominator = 1n
       await expectError(
         ArithmeticError.AddOverflow,
@@ -864,8 +864,8 @@ describe('uints tests', () => {
       )
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigDivUp({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -889,7 +889,7 @@ describe('uints tests', () => {
     }
     {
       const a = { higher: 0n, lower: 0n }
-      const b = MaxU256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigDivUp({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -940,8 +940,8 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 2n, lower: 2n })
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       const bDenominator = 1n
       await expectVMError(
         VMError.ArithmeticError,
@@ -949,8 +949,8 @@ describe('uints tests', () => {
       )
     }
     {
-      const a = { higher: MaxU256, lower: 0n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 0n }
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigDivUp({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
@@ -974,7 +974,7 @@ describe('uints tests', () => {
     }
     {
       const a = { higher: 0n, lower: 0n }
-      const b = MaxU256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigDivUp({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -990,8 +990,8 @@ describe('uints tests', () => {
 
   test('big div up vs new big div up comparison', async () => {
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const bDenominator = 1n
       const oldResult = await clamm.view.bigDivUp({ args: { a, b, bDenominator } })
       const newResult = await clamm.view.newBigDivUp({ args: { a, b, bDenominator } })
@@ -1052,19 +1052,19 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.bigMul256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.bigMul256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const result = (await clamm.view.bigMul256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -1085,19 +1085,19 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.newBigMul256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.newBigMul256({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const result = (await clamm.view.newBigMul256({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -1112,8 +1112,8 @@ describe('uints tests', () => {
 
   test('big mul 256 vs new big mul 256 comparison', async () => {
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const oldResult = await clamm.view.bigMul256({ args: { a, b } })
       const newResult = await clamm.view.newBigMul256({ args: { a, b } })
       console.log('big mul 256', oldResult.gasUsed, newResult.gasUsed)
@@ -1128,19 +1128,19 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 2n
       const result = (await clamm.view.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const result = (await clamm.view.bigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 0n
       const result = (await clamm.view.bigMul({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -1161,19 +1161,19 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 2n
       const result = (await clamm.view.newBigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const result = (await clamm.view.newBigMul({ args: { a, b } })).returns
-      expect(result).toStrictEqual({ higher: MaxU256 - 1n, lower: 1n })
+      expect(result).toStrictEqual({ higher: MAX_U256 - 1n, lower: 1n })
     }
     {
-      const a = { higher: 0n, lower: MaxU256 }
+      const a = { higher: 0n, lower: MAX_U256 }
       const b = 0n
       const result = (await clamm.view.newBigMul({ args: { a, b } })).returns
       expect(result).toStrictEqual({ higher: 0n, lower: 0n })
@@ -1188,8 +1188,8 @@ describe('uints tests', () => {
 
   test('big mul vs new big mul comparison', async () => {
     {
-      const a = { higher: 0n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: 0n, lower: MAX_U256 }
+      const b = MAX_U256
       const oldResult = await clamm.view.bigMul({ args: { a, b } })
       const newResult = await clamm.view.newBigMul({ args: { a, b } })
       console.log('big mul', oldResult.gasUsed, newResult.gasUsed)
@@ -1198,30 +1198,30 @@ describe('uints tests', () => {
 
   test('big mul returns an error if number is higher than u512', async () => {
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: MAX_U256 }
       const b = 2n
       await expectError(ArithmeticError.CastOverflow, clamm.view.bigMul({ args: { a, b } }), clamm)
     }
     {
-      const a = { higher: MaxU256, lower: 1n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 1n }
+      const b = MAX_U256
       await expectError(ArithmeticError.CastOverflow, clamm.view.bigMul({ args: { a, b } }), clamm)
     }
     {
-      const a = { higher: MaxU256 - 1n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256 - 1n, lower: MAX_U256 }
+      const b = MAX_U256
       await expectError(ArithmeticError.CastOverflow, clamm.view.bigMul({ args: { a, b } }), clamm)
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       await expectError(ArithmeticError.CastOverflow, clamm.view.bigMul({ args: { a, b } }), clamm)
     }
   })
 
   test('new big mul returns an error if number is higher than u512', async () => {
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
+      const a = { higher: MAX_U256, lower: MAX_U256 }
       const b = 2n
       await expectError(
         ArithmeticError.CastOverflow,
@@ -1230,8 +1230,8 @@ describe('uints tests', () => {
       )
     }
     {
-      const a = { higher: MaxU256, lower: 1n }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: 1n }
+      const b = MAX_U256
       await expectError(
         ArithmeticError.CastOverflow,
         clamm.view.newBigMul({ args: { a, b } }),
@@ -1239,8 +1239,8 @@ describe('uints tests', () => {
       )
     }
     {
-      const a = { higher: MaxU256 - 1n, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256 - 1n, lower: MAX_U256 }
+      const b = MAX_U256
       await expectError(
         ArithmeticError.CastOverflow,
         clamm.view.newBigMul({ args: { a, b } }),
@@ -1248,8 +1248,8 @@ describe('uints tests', () => {
       )
     }
     {
-      const a = { higher: MaxU256, lower: MaxU256 }
-      const b = MaxU256
+      const a = { higher: MAX_U256, lower: MAX_U256 }
+      const b = MAX_U256
       await expectError(
         ArithmeticError.CastOverflow,
         clamm.view.newBigMul({ args: { a, b } }),
@@ -1267,24 +1267,24 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDiv256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256 - 1n,
+        higher: MAX_U256 - 1n,
         lower: 1n
       })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDiv256({ args: { a, b, bDenominator } })).returns
@@ -1312,11 +1312,11 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
-      const bDenominator = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
+      const bDenominator = MAX_U256
       const result = (await clamm.view.bigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 0n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 0n, lower: MAX_U256 - 1n })
     }
   })
 
@@ -1329,24 +1329,24 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDiv256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256 - 1n,
+        higher: MAX_U256 - 1n,
         lower: 1n
       })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDiv256({ args: { a, b, bDenominator } })).returns
@@ -1374,18 +1374,18 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
-      const bDenominator = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
+      const bDenominator = MAX_U256
       const result = (await clamm.view.newBigMulDiv256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 0n, lower: MaxU256 })
+      expect(result).toStrictEqual({ higher: 0n, lower: MAX_U256 })
     }
   })
 
   test('big mul div 256 vs new big mul div 256 comparison', async () => {
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const oldResult = await clamm.view.bigMulDiv256({ args: { a, b, bDenominator } })
       const newResult = await clamm.view.newBigMulDiv256({ args: { a, b, bDenominator } })
@@ -1428,24 +1428,24 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256 - 1n,
+        higher: MAX_U256 - 1n,
         lower: 1n
       })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const bDenominator = 1n
       const result = (await clamm.view.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
@@ -1473,9 +1473,9 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
-      const bDenominator = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
+      const bDenominator = MAX_U256
       const result = (await clamm.view.bigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
         higher: 0n,
@@ -1493,24 +1493,24 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDivUp256({ args: { a, b, bDenominator } })).returns
-      expect(result).toStrictEqual({ higher: 1n, lower: MaxU256 - 1n })
+      expect(result).toStrictEqual({ higher: 1n, lower: MAX_U256 - 1n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
-        higher: MaxU256 - 1n,
+        higher: MAX_U256 - 1n,
         lower: 1n
       })
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const bDenominator = 1n
       const result = (await clamm.view.newBigMulDivUp256({ args: { a, b, bDenominator } })).returns
@@ -1538,21 +1538,21 @@ describe('uints tests', () => {
       expect(result).toStrictEqual({ higher: 0n, lower: 2n })
     }
     {
-      const a = MaxU256
-      const b = MaxU256
-      const bDenominator = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
+      const bDenominator = MAX_U256
       const result = (await clamm.view.newBigMulDivUp256({ args: { a, b, bDenominator } })).returns
       expect(result).toStrictEqual({
         higher: 0n,
-        lower: MaxU256
+        lower: MAX_U256
       })
     }
   })
 
   test('big mul div up 256 vs new big mul div up 256 comparison', async () => {
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const bDenominator = 1n
       const oldResult = await clamm.view.bigMulDivUp256({ args: { a, b, bDenominator } })
       const newResult = await clamm.view.newBigMulDivUp256({ args: { a, b, bDenominator } })
@@ -1594,25 +1594,25 @@ describe('uints tests', () => {
       expect(result).toStrictEqual([3n, 0n])
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.overflowingAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual([1n, 1n])
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.overflowingAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual([MaxU256 - 1n, 1n])
+      expect(result).toStrictEqual([MAX_U256 - 1n, 1n])
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const result = (await clamm.view.overflowingAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual([MaxU256, 0n])
+      expect(result).toStrictEqual([MAX_U256, 0n])
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 1n
       const result = (await clamm.view.overflowingAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual([0n, 1n])
@@ -1627,25 +1627,25 @@ describe('uints tests', () => {
       expect(result).toStrictEqual(3n)
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 2n
       const result = (await clamm.view.wrappingAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual(1n)
     }
     {
-      const a = MaxU256
-      const b = MaxU256
+      const a = MAX_U256
+      const b = MAX_U256
       const result = (await clamm.view.wrappingAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual(MaxU256 - 1n)
+      expect(result).toStrictEqual(MAX_U256 - 1n)
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 0n
       const result = (await clamm.view.wrappingAdd({ args: { a, b } })).returns
-      expect(result).toStrictEqual(MaxU256)
+      expect(result).toStrictEqual(MAX_U256)
     }
     {
-      const a = MaxU256
+      const a = MAX_U256
       const b = 1n
       const result = (await clamm.view.wrappingAdd({ args: { a, b } })).returns
       expect(result).toStrictEqual(0n)

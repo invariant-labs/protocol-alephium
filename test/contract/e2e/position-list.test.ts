@@ -18,7 +18,7 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
-import { InvariantError, MaxSqrtPrice, PercentageScale } from '../../../src/consts'
+import { InvariantError, MAX_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 
@@ -68,7 +68,7 @@ describe('position list tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
     // 0.02%
-    const fee = 2n * 10n ** (PercentageScale - 4n)
+    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
     const tickSpacing = 10n
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
@@ -103,7 +103,7 @@ describe('position list tests', () => {
           upperTickIndex,
           liquiditiyDelta,
           slippageLimitLower,
-          MaxSqrtPrice
+          MAX_SQRT_PRICE
         )
         const newPosition = await getPosition(invariant, positionsOwner.address, n)
         expect(newPosition).toMatchObject({ lowerTickIndex, upperTickIndex })
@@ -157,7 +157,7 @@ describe('position list tests', () => {
           upperTickIndex,
           liquiditiyDelta,
           slippageLimitLower,
-          MaxSqrtPrice
+          MAX_SQRT_PRICE
         )
         const newPosition = await getPosition(
           invariant,
@@ -273,7 +273,7 @@ describe('position list tests', () => {
         maxTick,
         liquiditiyDelta,
         slippageLimitLower,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
     }
     verifyPositionList(invariant, positionsOwner.address, BigInt(minMaxTicks.length), true)
@@ -304,7 +304,7 @@ describe('position list tests', () => {
         tickIndexes[2],
         liquiditiyDelta,
         slippageLimitLower,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
       const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 3n)
       expect(positionExists).toBeTruthy()
@@ -335,7 +335,7 @@ describe('position list tests', () => {
         tickIndexes[1],
         liquiditiyDelta,
         slippageLimitLower,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
       const position = await getPosition(invariant, positionsOwner.address, 0n)
       expect(position).toMatchObject({

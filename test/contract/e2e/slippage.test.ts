@@ -21,7 +21,7 @@ import {
   initTokensXY,
   initPool
 } from '../../../src/testUtils'
-import { InvariantError, MaxSqrtPrice } from '../../../src/consts'
+import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
 import { PoolKey } from '../../../artifacts/ts/types'
 
@@ -111,7 +111,7 @@ describe('Invariant Swap Tests', () => {
     await withdrawTokens(swapper, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const quoteResult = await quote(invariant, poolKey, false, swapAmount, true, MaxSqrtPrice)
+    const quoteResult = await quote(invariant, poolKey, false, swapAmount, true, MAX_SQRT_PRICE)
 
     const targetSqrtPrice = quoteResult.targetSqrtPrice - 1n
 

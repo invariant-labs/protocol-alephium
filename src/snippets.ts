@@ -1,6 +1,6 @@
 import { Address, SignerProvider } from '@alephium/web3'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
-import { MinSqrtPrice, MaxSqrtPrice, PercentageScale } from './consts'
+import { MIN_SQRT_PRICE, MAX_SQRT_PRICE, PERCENTAGE_SCALE } from './consts'
 import { PoolKey } from '../artifacts/ts/types'
 import {
   getPool,
@@ -22,7 +22,7 @@ import { calculateSqrtPrice, toLiquidity, toPercentage } from './math'
 type TokenInstance = TokenFaucetInstance
 
 // 0.6% fee
-const fee = 6n * 10n ** (PercentageScale - 3n)
+const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
 const tickSpacing = 10n
 
 export const getBasicFeeTickSpacing = (): [bigint, bigint] => {
@@ -112,7 +112,7 @@ export const initBasicSwap = async (
   const invariantBeforeBalance = await getReserveBalances(invariant, poolKey)
   expect(invariantBeforeBalance).toMatchObject({ x: 500n, y: 1000n })
 
-  const tx = await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
+  const tx = await initSwap(invariant, swapper, poolKey, true, swapAmount, true, MIN_SQRT_PRICE)
 
   const swapperAfterBalance = {
     tokenX: await balanceOf(tokenX.contractId, swapper.address),
@@ -145,7 +145,7 @@ export const swapExactLimit = async (
   amount: bigint,
   byAmountIn: boolean
 ) => {
-  const sqrtPriceLimit: bigint = xToY ? MinSqrtPrice : MaxSqrtPrice
+  const sqrtPriceLimit: bigint = xToY ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
 
   const quoteResult = await quote(invariant, poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 

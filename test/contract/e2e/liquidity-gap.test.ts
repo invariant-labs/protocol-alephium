@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MinSqrtPrice } from '../../../src/consts'
+import { MIN_SQRT_PRICE } from '../../../src/consts'
 import {
   calculateSqrtPrice,
   getPool,
@@ -83,7 +83,7 @@ describe('liquidity gap tests', () => {
 
     const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
 
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
 
     const { targetSqrtPrice } = await quote(invariant, poolKey, true, amount, true, slippage)
 
@@ -143,7 +143,7 @@ describe('liquidity gap tests', () => {
     const amount = 10067n
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
-    const slippage = MinSqrtPrice
+    const slippage = MIN_SQRT_PRICE
 
     const { targetSqrtPrice } = await quote(invariant, poolKey, true, amount, true, slippage)
 

@@ -16,7 +16,7 @@ struct Pool {
 
 Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
     fn addFee(mut pool: Pool, amount: TokenAmount, inX: Bool, protocolFee: Percentage) -> Pool {
-        let invariantProtocolFee = TokenAmount{v: mulUp(amount.v, protocolFee.v, one(PercentageScale))}
+        let invariantProtocolFee = TokenAmount{v: mulUp(amount.v, protocolFee.v, PERCENTAGE_DENOMINATOR)}
 
         let poolFee = TokenAmount{v: amount.v - invariantProtocolFee.v}
 

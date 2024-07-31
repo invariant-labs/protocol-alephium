@@ -1,0 +1,7 @@
+// structs taken as entrypoint input
+
+struct InvariantConfig { admin: Address, mut protocolFee: Percentage }
+
+struct FeeTiers {
+    mut feeTiers: [FeeTier; 32]
+}

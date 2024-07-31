@@ -1,6 +1,4 @@
 Abstract Contract Reserves() {
-    const MaxAssetsStored = 8
-
     @using(updateFields = true, preapprovedAssets = true)
     fn handleReserves(caller: Address, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec) {
         let deposit = mapEntryDeposit!()
@@ -34,8 +32,8 @@ Abstract Contract Reserves() {
         
         let lastReserve = Reserve(lastReserveId)
         let lastReserveAssets = lastReserve.getAssetsCount()
-        let canStoreTwoAssets = lastReserveAssets + 2 <= MaxAssetsStored
-        let canStoreSingleAsset = lastReserveAssets + 1 <= MaxAssetsStored
+        let canStoreTwoAssets = lastReserveAssets + 2 <= RESERVE_ASSET_CAPACITY
+        let canStoreSingleAsset = lastReserveAssets + 1 <= RESERVE_ASSET_CAPACITY
 
         if (initX && initY) {
             if(canStoreTwoAssets) {

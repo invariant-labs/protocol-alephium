@@ -22,9 +22,8 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import { InvariantError, MaxSqrtPrice, MinSqrtPrice, VMError } from '../../../src/consts'
+import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE, VMError } from '../../../src/consts'
 import { toLiquidity, toPercentage } from '../../../src/math'
-import { Percentage } from '../../../artifacts/ts/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -111,7 +110,7 @@ describe('swap tests', () => {
 
       const poolBefore = await getPool(invariant, poolKey)
 
-      const slippage = MinSqrtPrice
+      const slippage = MIN_SQRT_PRICE
       await initSwap(invariant, swapper, poolKey, true, swapAmount, true, slippage)
 
       // check balances
@@ -224,7 +223,7 @@ describe('swap tests', () => {
         false,
         swapAmount,
         true,
-        MaxSqrtPrice
+        MAX_SQRT_PRICE
       )
       await initSwap(invariant, swapper, poolKey, false, swapAmount, true, slippage)
 
@@ -330,7 +329,7 @@ describe('swap tests', () => {
       // in the particularly unlikely in the real world scenario of only uninitialized chunks
       await expectVMError(
         VMError.OutOfGas,
-        initSwap(invariant, swapper, poolKey, true, swapAmount, true, MinSqrtPrice)
+        initSwap(invariant, swapper, poolKey, true, swapAmount, true, MIN_SQRT_PRICE)
       )
     }
   })
@@ -398,7 +397,7 @@ describe('swap tests', () => {
 
       await expectError(
         InvariantError.TickLimitReached,
-        initSwap(invariant, swapper, poolKey, false, swapAmount, true, MaxSqrtPrice),
+        initSwap(invariant, swapper, poolKey, false, swapAmount, true, MAX_SQRT_PRICE),
         invariant
       )
     }
