@@ -27,7 +27,18 @@ import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { VMError } from './consts'
 import { FeeTier, PoolKey } from '../artifacts/ts/types'
-import { decodePool, decodePosition, decodeTick, Pool, unwrapQuoteResult } from './types'
+import {
+  decodePool,
+  decodePosition,
+  decodeTick,
+  Pool,
+  Position,
+  Tick,
+  unwrapPool,
+  unwrapPosition,
+  unwrapQuoteResult,
+  unwrapTick
+} from './types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -174,7 +185,7 @@ export async function getFeeTiers(invariant: InvariantInstance): Promise<Array<F
   return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
 }
 
-export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
+export async function getPool(invariant: InvariantInstance, poolKey: PoolKey): Promise<Pool> {
   return decodePool(
     (
       await invariant.view.getPool({
@@ -186,7 +197,11 @@ export async function getPool(invariant: InvariantInstance, poolKey: PoolKey) {
   )
 }
 
-export async function getPosition(invariant: InvariantInstance, owner: Address, index: bigint) {
+export async function getPosition(
+  invariant: InvariantInstance,
+  owner: Address,
+  index: bigint
+): Promise<Position> {
   return decodePosition(
     (
       await invariant.view.getPosition({
@@ -197,6 +212,19 @@ export async function getPosition(invariant: InvariantInstance, owner: Address, 
       })
     ).returns
   )
+}
+
+export async function getPositionWithAssociates(
+  invariant: InvariantInstance,
+  owner: Address,
+  index: bigint
+): Promise<[Position, Pool, Tick, Tick]> {
+  const [position, pool, lowerTick, upperTick] = (
+    await invariant.view.getPositionWithAssociates({
+      args: { owner, index }
+    })
+  ).returns
+  return [unwrapPosition(position), unwrapPool(pool), unwrapTick(lowerTick), unwrapTick(upperTick)]
 }
 
 export const changeProtocolFee = async (
@@ -342,7 +370,11 @@ export async function initSwap(
   })
 }
 
-export const getTick = async (invariant: InvariantInstance, poolKey: PoolKey, index: bigint) => {
+export const getTick = async (
+  invariant: InvariantInstance,
+  poolKey: PoolKey,
+  index: bigint
+): Promise<Tick> => {
   return decodeTick(
     (
       await invariant.view.getTick({

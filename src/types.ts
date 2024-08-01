@@ -108,14 +108,14 @@ function createEntityProxy<T>(entity: T, exists: boolean) {
   )
 }
 
-export function decodePool(array: [boolean, _Pool]) {
+export function decodePool(array: [boolean, _Pool]): Pool {
   return createEntityProxy(unwrapPool(array[1]), array[0])
 }
 
-export function decodeTick(array: [boolean, _Tick]) {
+export function decodeTick(array: [boolean, _Tick]): Tick {
   return createEntityProxy(unwrapTick(array[1]), array[0])
 }
 
-export function decodePosition(array: [boolean, _Position]) {
+export function decodePosition(array: [boolean, _Position]): Position {
   return createEntityProxy(unwrapPosition(array[1]), array[0])
 }

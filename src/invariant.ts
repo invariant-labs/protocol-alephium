@@ -26,7 +26,10 @@ import {
   Position,
   QuoteResult,
   Tick,
-  unwrapQuoteResult
+  unwrapPool,
+  unwrapPosition,
+  unwrapQuoteResult,
+  unwrapTick
 } from './types'
 import {
   balanceOf,
@@ -532,6 +535,24 @@ export class Invariant {
 
     return decodePositions(response.returns)
   }
+
+  async getPositionWithAssociates(
+    owner: Address,
+    index: bigint
+  ): Promise<[Position, Pool, Tick, Tick]> {
+    const [position, pool, lowerTick, upperTick] = (
+      await this.instance.view.getPositionWithAssociates({
+        args: { owner, index }
+      })
+    ).returns
+    return [
+      unwrapPosition(position),
+      unwrapPool(pool),
+      unwrapTick(lowerTick),
+      unwrapTick(upperTick)
+    ]
+  }
+
   async getAllPositions(
     owner: string,
     positionsCount?: bigint,
