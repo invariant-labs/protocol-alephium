@@ -1,24 +1,33 @@
-import { DUST_AMOUNT, hexToString, SignerProvider, TransactionBuilder } from '@alephium/web3'
+import {
+  addressFromContractId,
+  DUST_AMOUNT,
+  hexToString,
+  NodeProvider,
+  SignerProvider,
+  TransactionBuilder
+} from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, getNodeUrl, signAndSend, waitTxConfirmed } from './utils'
 import { MAX_U256 } from './consts'
 
-export type TokenMetadata = {
-  name: string
+export type TokenMetaData = {
   symbol: string
+  name: string
   decimals: bigint
+  totalSupply: bigint
 }
 
 export class FungibleToken {
   network: Network
-  nodeUrl: string
+  nodeProvider: NodeProvider
   builder: TransactionBuilder
 
-  constructor(network: Network) {
+  private constructor(network: Network) {
     this.network = network
-    this.nodeUrl = getNodeUrl(network)
-    this.builder = TransactionBuilder.from(this.nodeUrl)
+    const nodeUrl = getNodeUrl(network)
+    this.nodeProvider = new NodeProvider(nodeUrl)
+    this.builder = TransactionBuilder.from(nodeUrl)
   }
 
   static async deploy(
@@ -49,14 +58,15 @@ export class FungibleToken {
       attoAlphAmount: DUST_AMOUNT
     })
 
-    return deployResult.contractInstance.address
+    return deployResult.contractInstance.contractId
   }
 
   static async load(network: Network): Promise<FungibleToken> {
     return new FungibleToken(network)
   }
 
-  async mintTx(signer: SignerProvider, value: bigint, tokenAddress: string) {
+  async mintTx(signer: SignerProvider, value: bigint, tokenId: string) {
+    const tokenAddress = addressFromContractId(tokenId)
     const tokenFaucet = TokenFaucet.at(tokenAddress)
     const bytecode = Withdraw.script.buildByteCodeToDeploy({
       token: tokenFaucet.contractId,
@@ -72,8 +82,8 @@ export class FungibleToken {
     return unsignedTxBuild
   }
 
-  async mint(signer: SignerProvider, value: bigint, tokenAddress: string) {
-    const tx = await this.mintTx(signer, value, tokenAddress)
+  async mint(signer: SignerProvider, value: bigint, tokenId: string) {
+    const tx = await this.mintTx(signer, value, tokenId)
     return await signAndSend(signer, tx)
   }
 
@@ -83,45 +93,35 @@ export class FungibleToken {
     return new Map(tokens.map((token, i) => [token, balances[i]]))
   }
 
-  async getBalanceOf(owner: string, tokenAddress: string): Promise<bigint> {
-    const tokenId = this.getContractId(tokenAddress)
+  async getBalanceOf(owner: string, tokenId: string): Promise<bigint> {
     return balanceOf(tokenId, owner)
   }
 
-  async getTokenMetadataMulti(tokenAddresses: Array<string>): Promise<Map<string, TokenMetadata>> {
-    const metadata = await Promise.all(
-      tokenAddresses.map((tokenAddress, _) => this.getTokenMetadata(tokenAddress))
-    )
+  async getTokenMetaDataMulti(tokenId: Array<string>): Promise<Map<string, TokenMetaData>> {
+    const metadata = await Promise.all(tokenId.map((tokenId, _) => this.getTokenMetadata(tokenId)))
 
-    return new Map(tokenAddresses.map((tokenAddress, i) => [tokenAddress, metadata[i]]))
+    return new Map(tokenId.map((tokenId, i) => [tokenId, metadata[i]]))
   }
 
-  async getTokenMetadata(tokenAddress: string): Promise<TokenMetadata> {
-    const token = TokenFaucet.at(tokenAddress)
-    const result = await token.multicall({ getSymbol: {}, getName: {}, getDecimals: {} })
+  async getTokenMetadata(tokenId: string): Promise<TokenMetaData> {
+    const metadata = await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)
     return {
-      name: hexToString(result.getName.returns),
-      symbol: hexToString(result.getSymbol.returns),
-      decimals: result.getDecimals.returns
+      symbol: hexToString(metadata.symbol),
+      name: hexToString(metadata.name),
+      decimals: BigInt(metadata.decimals),
+      totalSupply: BigInt(metadata.totalSupply)
     }
   }
 
-  async getTokenName(tokenAddress: string): Promise<string> {
-    const token = TokenFaucet.at(tokenAddress)
-    return hexToString((await token.view.getName()).returns)
+  async getTokenName(tokenId: string): Promise<string> {
+    return hexToString((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).name)
   }
 
-  async getTokenSymbol(tokenAddress: string): Promise<string> {
-    const token = TokenFaucet.at(tokenAddress)
-    return hexToString((await token.view.getSymbol()).returns)
+  async getTokenSymbol(tokenId: string): Promise<string> {
+    return hexToString((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).symbol)
   }
 
-  async getTokenDecimals(tokenAddress: string): Promise<bigint> {
-    const token = TokenFaucet.at(tokenAddress)
-    return (await token.view.getDecimals()).returns
-  }
-
-  getContractId(tokenAddress: string): string {
-    return TokenFaucet.at(tokenAddress).contractId
+  async getTokenDecimals(tokenId: string): Promise<bigint> {
+    return BigInt((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).decimals)
   }
 }

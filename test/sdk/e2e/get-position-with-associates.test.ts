@@ -9,30 +9,31 @@ import { toSqrtPrice } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
-const token = new FungibleToken(Network.Local)
+let token: FungibleToken
 describe('get position with associates tests', () => {
+  beforeAll(async () => {
+    token = await FungibleToken.load(Network.Local)
+  })
   test('get position with associates', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
     const initialFee = 0n
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
 
-    const token0Address = await FungibleToken.deploy(deployer, 0n, 'Token0', 'TK0')
-    const token0ContractId = token.getContractId(token0Address)
-    const token1Address = await FungibleToken.deploy(deployer, 0n, 'Token1', 'TK1')
-    const token1ContractId = token.getContractId(token1Address)
+    const token0 = await FungibleToken.deploy(deployer, 0n, 'Token0', 'TK0')
+    const token1 = await FungibleToken.deploy(deployer, 0n, 'Token1', 'TK1')
 
     const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
-    const poolKey = await newPoolKey(token0ContractId, token1ContractId, feeTier)
+    const poolKey = await newPoolKey(token0, token1, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     const supply = 10n ** 10n
-    await token.mint(positionOwner, supply, token0Address)
-    await token.mint(positionOwner, supply, token1Address)
+    await token.mint(positionOwner, supply, token0)
+    await token.mint(positionOwner, supply, token1)
 
     const initSqrtPrice = toSqrtPrice(1n)
-    await invariant.createPool(deployer, token0ContractId, token1ContractId, feeTier, initSqrtPrice)
+    await invariant.createPool(deployer, token0, token1, feeTier, initSqrtPrice)
 
     const [lowerTickIndex, upperTickIndex] = [-20n, 10n]
 
