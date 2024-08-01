@@ -594,4 +594,17 @@ Contract Invariant(
 
         return amount
     }
+
+    pub fn getPositionWithAssociates(owner: Address, index: U256) -> (Position, Pool, Tick, Tick) {
+        let (existPos, position) = wrappedGetPosition(owner, index)
+        assert!(existPos, InvariantError.PositionNotFound)
+        let (existP, pool) = wrappedGetPool(position.poolKey)
+        assert!(existP, InvariantError.PoolNotFound)
+        let (existLT, lowerTick) = wrappedGetTick(position.poolKey, position.lowerTickIndex)
+        assert!(existLT, InvariantError.InvalidTickIndex)
+        let (existUT, upperTick) = wrappedGetTick(position.poolKey, position.upperTickIndex)
+        assert!(existUT, InvariantError.InvalidTickIndex)
+
+        return position, pool, lowerTick, upperTick
+    }
 }
