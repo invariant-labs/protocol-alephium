@@ -602,7 +602,7 @@ export class Invariant {
 
     return pages
   }
-  // async getPoolKeys() {}
+
   async getAllPoolKeys() {
     const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
 
@@ -615,7 +615,6 @@ export class Invariant {
     return [...poolKeys, ...poolKeysEntries.map(([poolKeys]) => poolKeys).flat()]
   }
 
-  // async getPositionTicks() {}
   async getRawTickmap(
     poolKey: PoolKey,
     lowerBatch: bigint,
@@ -672,7 +671,7 @@ export class Invariant {
     const liquidityTicks = await Promise.all(promises)
     return liquidityTicks.flat()
   }
-  // async getUserPositionAmount() {}
+
   async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
     const response = await this.instance.view.getLiquidityTicksAmount({
       args: { poolKey, lowerTick, upperTick }

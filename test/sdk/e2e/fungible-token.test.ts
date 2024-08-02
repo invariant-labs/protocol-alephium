@@ -6,54 +6,52 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
-const token = new FungibleToken(Network.Local)
+let token: FungibleToken
 let admin: PrivateKeyWallet
-let token0Address: string
+let token0: string
 
 describe('fungible token tests', () => {
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
-    token0Address = await FungibleToken.deploy(admin, 1000n, 'Coin', 'COIN', 12n)
+    token = await FungibleToken.load(Network.Local)
+    token0 = await FungibleToken.deploy(admin, 1000n, 'Coin', 'COIN', 12n)
   })
 
   test('set metadata', async () => {
-    expect(await token.getTokenName(token0Address)).toBe('Coin')
-    expect(await token.getTokenSymbol(token0Address)).toBe('COIN')
-    expect(await token.getTokenDecimals(token0Address)).toBe(12n)
+    expect(await token.getTokenName(token0)).toBe('Coin')
+    expect(await token.getTokenSymbol(token0)).toBe('COIN')
+    expect(await token.getTokenDecimals(token0)).toBe(12n)
   })
 
   test('mint tokens', async () => {
-    await token.mint(admin, 500n, token0Address)
-    expect(await token.getBalanceOf(admin.address, token0Address)).toBe(1500n)
+    await token.mint(admin, 500n, token0)
+    expect(await token.getBalanceOf(admin.address, token0)).toBe(1500n)
   })
 
   test('change instance', async () => {
-    const secondTokenAddress = await FungibleToken.deploy(admin, 1000n, 'SecondCoin', 'SCOIN', 12n)
-    const tokenName = await token.getTokenName(secondTokenAddress)
+    const secondToken = await FungibleToken.deploy(admin, 1000n, 'SecondCoin', 'SCOIN', 12n)
+    const tokenName = await token.getTokenName(secondToken)
     expect(tokenName).toBe('SecondCoin')
   })
 
   test('get all balances', async () => {
-    const token0Address = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
-    const token1Address = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
-    const token2Address = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
-    const token3Address = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
+    const token0 = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
+    const token1 = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
+    const token2 = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
+    const token3 = await FungibleToken.deploy(admin, 0n, 'Coin', 'COIN', 12n)
 
-    await token.mint(admin, 100n, token0Address)
-    await token.mint(admin, 200n, token1Address)
-    await token.mint(admin, 300n, token2Address)
-    await token.mint(admin, 400n, token3Address)
+    await token.mint(admin, 100n, token0)
+    await token.mint(admin, 200n, token1)
+    await token.mint(admin, 300n, token2)
+    await token.mint(admin, 400n, token3)
 
-    const balances = await token.getAllBalances(
-      [token0Address, token1Address, token2Address, token3Address],
-      admin.address
-    )
+    const balances = await token.getAllBalances([token0, token1, token2, token3], admin.address)
 
     expect(balances.size).toBe(4)
-    expect(balances.get(token0Address)).toBe(100n)
-    expect(balances.get(token1Address)).toBe(200n)
-    expect(balances.get(token2Address)).toBe(300n)
-    expect(balances.get(token3Address)).toBe(400n)
+    expect(balances.get(token0)).toBe(100n)
+    expect(balances.get(token1)).toBe(200n)
+    expect(balances.get(token2)).toBe(300n)
+    expect(balances.get(token3)).toBe(400n)
   })
 
   test('get metadata for all tokens', async () => {
@@ -63,7 +61,7 @@ describe('fungible token tests', () => {
       await FungibleToken.deploy(admin, 0n, 'CoinTHREE', 'COIN3', 14n),
       await FungibleToken.deploy(admin, 0n, 'CoinFOUR', 'COIN4', 15n)
     ]
-    const metadata = await token.getTokenMetadataMulti(tokenAddresses)
+    const metadata = await token.getTokenMetaDataMulti(tokenAddresses)
 
     expect(metadata.size).toBe(4)
     expect(metadata.get(tokenAddresses[0])).toMatchObject({
