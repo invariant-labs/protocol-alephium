@@ -55,7 +55,7 @@ export async function expectError(
     } catch (e: any) {
       const err = e.toString()
       if (!err.includes(Number(errorCode).toString())) {
-        throw new Error('Invalid Error message')
+        throw new Error(`Invalid Error message: ${err}`)
       }
     }
   }

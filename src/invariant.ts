@@ -26,6 +26,7 @@ import {
   Position,
   QuoteResult,
   Tick,
+  Tickmap,
   unwrapPool,
   unwrapPosition,
   unwrapQuoteResult,
@@ -46,8 +47,7 @@ import {
   decodePositions,
   Page,
   toByteVecWithOffset,
-  decodeLiquidityTicks,
-  Tickmap
+  decodeLiquidityTicks
 } from './utils'
 import {
   CHUNK_SIZE,
@@ -641,8 +641,9 @@ export class Invariant {
 
     const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
     const storedTickmap = new Map<bigint, bigint>(fullResult)
-    return { bitmap: storedTickmap }
+    return storedTickmap
   }
+
   async getLiquidityTicks(poolKey: PoolKey, ticks: bigint[]) {
     const indexes = toByteVecWithOffset(ticks)
     const response = await this.instance.view.getLiquidityTicks({
@@ -651,9 +652,10 @@ export class Invariant {
 
     return decodeLiquidityTicks(response.returns)
   }
+
   async getAllLiquidityTicks(poolKey: PoolKey, tickmap: Tickmap) {
     const tickIndexes: bigint[] = []
-    for (const [chunkIndex, chunk] of tickmap.bitmap.entries()) {
+    for (const [chunkIndex, chunk] of tickmap.entries()) {
       for (let bit = 0n; bit < CHUNK_SIZE; bit++) {
         const checkedBit = chunk & (1n << bit)
         if (checkedBit) {

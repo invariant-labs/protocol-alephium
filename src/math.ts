@@ -191,6 +191,16 @@ export async function getTickAtSqrtPrice(sqrtPrice: bigint, tickSpacing: bigint)
   ).returns
 }
 
+export const tickToPosition = async (
+  tick: bigint,
+  tickSpacing: bigint
+): Promise<[bigint, bigint]> => {
+  const [chunk, bit] = (await Utils.tests.tickToPosition({ testArgs: { tick, tickSpacing } }))
+    .returns
+
+  return [chunk, bit]
+}
+
 export const calculateFee = async (
   pool: Pool,
   position: Position,

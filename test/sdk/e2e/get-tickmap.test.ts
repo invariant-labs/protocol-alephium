@@ -101,11 +101,11 @@ describe('query tickmap tests', () => {
       }
     }
 
-    const tikcmap = await invariant.getFullTickmap(poolKey)
+    const tickmap = await invariant.getFullTickmap(poolKey)
     const maxChunk = await getMaxChunk(tickSpacing)
     const lastChunkInBatch =
       BigInt(Math.ceil(Number(maxChunk) / Number(CHUNKS_PER_BATCH))) * CHUNKS_PER_BATCH
-    expect(tikcmap.bitmap.size).toBe(Number(lastChunkInBatch))
+    expect(tickmap.size).toBe(Number(lastChunkInBatch))
   }, 1000000)
 
   test('get tickmap', async () => {
@@ -125,7 +125,7 @@ describe('query tickmap tests', () => {
     )
 
     const tickmap = await invariant.getFullTickmap(poolKey)
-    for (const [chunkIndex, value] of tickmap.bitmap.entries()) {
+    for (const [chunkIndex, value] of tickmap.entries()) {
       if (chunkIndex === 866n) {
         expect(value).toBe(0x80000000000000010000000000000000n)
       } else {
@@ -167,8 +167,8 @@ describe('query tickmap tests', () => {
     }
     const tickmap = await invariant.getFullTickmap(poolKey)
     const maxChunk = await getMaxChunk(tickSpacing)
-    expect(tickmap.bitmap.get(0n)).toBe(0b11n)
-    expect(tickmap.bitmap.get(maxChunk)).toBe(
+    expect(tickmap.get(0n)).toBe(0b11n)
+    expect(tickmap.get(maxChunk)).toBe(
       0x18000000000000000000000000000000000000000000000000000000000000n
     )
   })
@@ -219,7 +219,7 @@ describe('query tickmap tests', () => {
     const tickmap = await invariant.getFullTickmap(poolKey)
     const maxChunk = await getMaxChunk(tickSpacing)
 
-    expect(tickmap.bitmap.get(0n)).toBe(0b11n)
-    expect(tickmap.bitmap.get(maxChunk)).toBe(0x1800000000000000000000n)
+    expect(tickmap.get(0n)).toBe(0b11n)
+    expect(tickmap.get(maxChunk)).toBe(0x1800000000000000000000n)
   })
 })
