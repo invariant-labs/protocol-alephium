@@ -16,7 +16,6 @@ export const {
   LOG2_NEGATIVE_MAX_LOSE
 } = CLAMM.consts
 
-export const MAX_TICK_CROSS = 8n
 export const MAX_BATCHES_QUERIED = 18n
 export const MAX_POOL_KEYS_QUERIED = 117n
 export const MAX_POSITIONS_QUERIED = 83n

@@ -21,10 +21,6 @@ import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { expectError, expectVMError } from '../../../src/testUtils'
 import {
   ArithmeticError,
-  CLAMMError,
-  DecimalError,
-  GLOBAL_MIN_TICK,
-  InvariantError,
   MAX_SQRT_PRICE,
   MAX_TICK_CROSS,
   MAX_U256,
@@ -48,7 +44,7 @@ describe('simulateInvariantSwap tests', () => {
   const protocolFee = toPercentage(1n, 2n)
   const suppliedAmount = 1000000000n
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     invariant = await Invariant.deploy(deployer, Network.Local, protocolFee)
     feeTier = await newFeeTier(toPercentage(1n, 2n), 1n)
@@ -99,7 +95,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -145,7 +140,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -189,7 +183,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -234,7 +227,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -278,7 +270,6 @@ describe('simulateInvariantSwap tests', () => {
       )
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -333,7 +324,6 @@ describe('simulateInvariantSwap tests', () => {
       )
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -389,7 +379,6 @@ describe('simulateInvariantSwap tests', () => {
       )
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -450,7 +439,6 @@ describe('simulateInvariantSwap tests', () => {
       )
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -534,7 +522,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -588,7 +575,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -641,7 +627,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -705,7 +690,6 @@ describe('simulateInvariantSwap tests', () => {
 
     const simulation = simulateInvariantSwap(
       tickmap,
-      feeTier,
       pool,
       ticks,
       xToY,
@@ -743,7 +727,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -789,7 +772,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -833,7 +815,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,
@@ -879,7 +860,6 @@ describe('simulateInvariantSwap tests', () => {
 
       const simulation = simulateInvariantSwap(
         tickmap,
-        feeTier,
         pool,
         ticks,
         xToY,

@@ -132,7 +132,6 @@ export async function deployTokenFaucet(
 
 export function simulateInvariantSwap(
   tickmap: Tickmap,
-  feeTier: _FeeTier,
   pool: Pool,
   ticks: TickVariant[],
   xToY: boolean,
@@ -140,7 +139,7 @@ export function simulateInvariantSwap(
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ): SimulateSwapResult {
-  return simulateSwap(tickmap, feeTier, pool, ticks, xToY, amount, byAmountIn, sqrtPriceLimit)
+  return simulateSwap(tickmap, pool, ticks, xToY, amount, byAmountIn, sqrtPriceLimit)
 }
 
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {

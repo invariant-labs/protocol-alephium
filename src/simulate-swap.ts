@@ -1,4 +1,3 @@
-import { FeeTier } from '../artifacts/ts/types'
 import {
   CHUNK_SIZE,
   DecimalError,
@@ -30,11 +29,10 @@ import {
   TOKEN_AMOUNT_DENOMINATOR,
   TOKEN_AMOUNT_SCALE
 } from './consts'
-import { Pool, SimulateSwapResult, SwapResult, Tickmap, TickVariant } from './types'
+import { Pool, SimulateSwapResult, SwapResult, Tickmap, TickVariant, unwrapFeeTier } from './types'
 
 export const simulateSwap = (
   tickmap: Tickmap,
-  feeTier: FeeTier,
   pool: Pool,
   ticks: TickVariant[],
   xToY: boolean,
@@ -42,6 +40,8 @@ export const simulateSwap = (
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ): SimulateSwapResult => {
+  const feeTier = unwrapFeeTier(pool.poolKey.feeTier)
+
   if (amount === 0n) {
     throw new Error(String(InvariantError.ZeroAmount))
   }
@@ -76,21 +76,26 @@ export const simulateSwap = (
     const currentTickIndex = pool.currentTickIndex
     const liquidity = pool.liquidity
     sqrtPrice = pool.sqrtPrice
-    const [swapLimit, hasLimitingTick, limitingTickIndex, isInitialized, tickLimitReached] =
-      getCloserLimit(sqrtPriceLimit, xToY, currentTickIndex, tickSpacing, tickmap)
+    const getCloserLimitResult = getCloserLimit(
+      sqrtPriceLimit,
+      xToY,
+      currentTickIndex,
+      tickSpacing,
+      tickmap
+    )
 
-    if (tickLimitReached) {
+    if (getCloserLimitResult.tickLimitReached) {
       globalInsufficientLiquidity = true
       break
     }
 
     const swapResult = computeSwapStep(
       sqrtPrice,
-      swapLimit,
+      getCloserLimitResult.swapLimit,
       liquidity,
       remainingAmount,
       byAmountIn,
-      feeTier.fee.v
+      feeTier.fee
     )
 
     if (byAmountIn) {
@@ -113,9 +118,9 @@ export const simulateSwap = (
     }
 
     let tick: TickVariant | undefined
-    if (hasLimitingTick) {
-      if (isInitialized) {
-        tick = ticks.find(t => t.index === limitingTickIndex)
+    if (getCloserLimitResult.hasLimitingTick) {
+      if (getCloserLimitResult.isInitialized) {
+        tick = ticks.find(t => t.index === getCloserLimitResult.limitingTickIndex)
         // tick not found despite of being reported as initialized - state mismatch
         if (!tick) {
           stateOutdated = true
@@ -124,27 +129,27 @@ export const simulateSwap = (
       }
     }
 
-    const [amountToAdd, amountAfterTickUpdate, hasCrossed, overOrUnderflow] = poolUpdateTick(
+    const poolUpdateTickResult = poolUpdateTick(
       pool,
       tick,
       swapResult.nextSqrtPrice,
-      swapLimit,
+      getCloserLimitResult.swapLimit,
       remainingAmount,
       byAmountIn,
       xToY,
-      hasLimitingTick,
-      isInitialized,
-      limitingTickIndex
+      getCloserLimitResult.hasLimitingTick,
+      getCloserLimitResult.isInitialized,
+      getCloserLimitResult.limitingTickIndex
     )
-    stateOutdated ||= overOrUnderflow
+    stateOutdated ||= poolUpdateTickResult.stateInconsistency
     if (stateOutdated) {
       break
     }
 
-    remainingAmount = amountAfterTickUpdate
-    totalAmountIn += amountToAdd
+    remainingAmount = poolUpdateTickResult.amountAfterTickUpdate
+    totalAmountIn += poolUpdateTickResult.amountToAdd
 
-    if (hasCrossed && tick) {
+    if (poolUpdateTickResult.hasCrossed && tick) {
       ticksCrossed.push(tick)
       if (ticksCrossed.length > MAX_TICK_CROSS) {
         maxTicksCrossed = true
@@ -179,56 +184,77 @@ export const simulateSwap = (
   }
 }
 
+type getCloserLimitResult = {
+  swapLimit: bigint
+  hasLimitingTick: boolean
+  limitingTickIndex: bigint
+  isInitialized: boolean
+  tickLimitReached: boolean
+}
+
 const getCloserLimit = (
   sqrtPriceLimit: bigint,
   xToY: boolean,
   currentTickIndex: bigint,
   tickSpacing: bigint,
   tickmap: Tickmap
-): [bigint, boolean, bigint, boolean, boolean] => {
-  let closestTickBool = false
-  let closestTickIndex = 0n
-
-  if (xToY) {
-    const [closestTickBoolXtoY, closestTickIndexXtoY] = prevInitialized(
-      currentTickIndex,
-      tickSpacing,
-      tickmap
-    )
-    closestTickBool = closestTickBoolXtoY
-    closestTickIndex = closestTickIndexXtoY
-  } else {
-    const [closestTickBoolYtoX, closestTickIndexYtoX] = nextInitialized(
-      currentTickIndex,
-      tickSpacing,
-      tickmap
-    )
-    closestTickBool = closestTickBoolYtoX
-    closestTickIndex = closestTickIndexYtoX
-  }
+): getCloserLimitResult => {
+  const [closestTickBool, closestTickIndex] = xToY
+    ? prevInitialized(currentTickIndex, tickSpacing, tickmap)
+    : nextInitialized(currentTickIndex, tickSpacing, tickmap)
 
   if (closestTickBool) {
     const sqrtPriceExist = calculateSqrtPrice(closestTickIndex)
     if ((xToY && sqrtPriceExist > sqrtPriceLimit) || (!xToY && sqrtPriceExist < sqrtPriceLimit)) {
-      return [sqrtPriceExist, true, closestTickIndex, true, false]
+      return {
+        swapLimit: sqrtPriceExist,
+        hasLimitingTick: true,
+        limitingTickIndex: closestTickIndex,
+        isInitialized: true,
+        tickLimitReached: false
+      }
     } else {
-      return [sqrtPriceLimit, false, 0n, false, false]
+      return {
+        swapLimit: sqrtPriceLimit,
+        hasLimitingTick: false,
+        limitingTickIndex: 0n,
+        isInitialized: false,
+        tickLimitReached: false
+      }
     }
   } else {
     const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
     const sqrtPriceNotExist = calculateSqrtPrice(index)
 
     if (currentTickIndex === index) {
-      return [sqrtPriceLimit, false, 0n, false, true]
+      return {
+        swapLimit: sqrtPriceLimit,
+        hasLimitingTick: false,
+        limitingTickIndex: 0n,
+        isInitialized: false,
+        tickLimitReached: true
+      }
     }
 
     if (
       (xToY && sqrtPriceNotExist > sqrtPriceLimit) ||
       (!xToY && sqrtPriceNotExist < sqrtPriceLimit)
     ) {
-      return [sqrtPriceNotExist, true, index, false, false]
+      return {
+        swapLimit: sqrtPriceNotExist,
+        hasLimitingTick: true,
+        limitingTickIndex: index,
+        isInitialized: false,
+        tickLimitReached: false
+      }
     } else {
-      return [sqrtPriceLimit, false, 0n, false, false]
+      return {
+        swapLimit: sqrtPriceLimit,
+        hasLimitingTick: false,
+        limitingTickIndex: 0n,
+        isInitialized: false,
+        tickLimitReached: false
+      }
     }
   }
 }
@@ -253,8 +279,8 @@ const nextInitialized = (
 
     if (shifted != 0n) {
       while (shifted % 2n == 0n) {
-        shifted = shifted >> 1n
-        bit = bit + 1n
+        shifted >>= 1n
+        bit += 1n
       }
 
       if (chunk < limitingChunk || (chunk == limitingChunk && bit <= limitingBit)) {
@@ -287,8 +313,8 @@ const prevInitialized = (
     const upper = (value >> HALF_CHUNK_SIZE) & 0xffffffffffffffffffffffffffffffffn
     const lower = value & 0xffffffffffffffffffffffffffffffffn
 
-    let part = 0n
-    let part_bit = 0n
+    let part: bigint
+    let part_bit: bigint
 
     if (bit >= HALF_CHUNK_SIZE) {
       part = upper
@@ -300,8 +326,8 @@ const prevInitialized = (
 
     let mask = 1n << part_bit
     while (part_bit > 0n && !(part & mask)) {
-      mask = mask >> 1n
-      part_bit = part_bit - 1n
+      mask >>= 1n
+      part_bit -= 1n
     }
 
     if (part & mask) {
@@ -355,6 +381,9 @@ const tickToPosition = (tick: bigint, tickSpacing: bigint): [bigint, bigint] => 
   if (tick < GLOBAL_MIN_TICK || tick > GLOBAL_MAX_TICK) {
     throw new Error(String(InvariantError.InvalidTickIndex))
   }
+  if (tick % tickSpacing) {
+    throw new Error(String(InvariantError.TickAndTickSpacingMismatch))
+  }
 
   const bitmapIndex = (tick + GLOBAL_MAX_TICK) / tickSpacing
   const chunk = bitmapIndex / CHUNK_SIZE
@@ -366,25 +395,15 @@ const tickToPosition = (tick: bigint, tickSpacing: bigint): [bigint, bigint] => 
 const getSearchLimit = (tick: bigint, tickSpacing: bigint, up: boolean): bigint => {
   const index = tick / tickSpacing
 
-  let limit = 0n
+  let limit: bigint
   if (up) {
     const rangeLimitUp = index + SEARCH_RANGE
     const sqrtPriceLimitUp = GLOBAL_MAX_TICK / tickSpacing
-
-    if (rangeLimitUp < sqrtPriceLimitUp) {
-      limit = rangeLimitUp
-    } else {
-      limit = sqrtPriceLimitUp
-    }
+    limit = rangeLimitUp < sqrtPriceLimitUp ? rangeLimitUp : sqrtPriceLimitUp
   } else {
     const rangeLimitDown = index - SEARCH_RANGE
     const sqrtPriceLimitDown = GLOBAL_MIN_TICK / tickSpacing
-
-    if (rangeLimitDown > sqrtPriceLimitDown) {
-      limit = rangeLimitDown
-    } else {
-      limit = sqrtPriceLimitDown
-    }
+    limit = rangeLimitDown > sqrtPriceLimitDown ? rangeLimitDown : sqrtPriceLimitDown
   }
   return limit * tickSpacing
 }
@@ -408,36 +427,27 @@ const computeSwapStep = (
 
   const xToY = currentSqrtPrice >= targetSqrtPrice
 
-  let nextSqrtPrice = 0n
+  let nextSqrtPrice: bigint
   let amountIn = 0n
   let amountOut = 0n
 
   if (byAmountIn) {
     const amountAfterFee = (amount * (PERCENTAGE_DENOMINATOR - fee)) / PERCENTAGE_DENOMINATOR
-
-    if (xToY) {
-      amountIn = getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
-    } else {
-      amountIn = getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
-    }
-
-    if (amountAfterFee >= amountIn) {
-      nextSqrtPrice = targetSqrtPrice
-    } else {
-      nextSqrtPrice = getNextSqrtPriceFromInput(currentSqrtPrice, liquidity, amountAfterFee, xToY)
-    }
+    amountIn = xToY
+      ? getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
+      : getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
+    nextSqrtPrice =
+      amountAfterFee >= amountIn
+        ? targetSqrtPrice
+        : getNextSqrtPriceFromInput(currentSqrtPrice, liquidity, amountAfterFee, xToY)
   } else {
-    if (xToY) {
-      amountOut = getDeltaY(targetSqrtPrice, currentSqrtPrice, liquidity, false)
-    } else {
-      amountOut = getDeltaX(currentSqrtPrice, targetSqrtPrice, liquidity, false)
-    }
-
-    if (amount >= amountOut) {
-      nextSqrtPrice = targetSqrtPrice
-    } else {
-      nextSqrtPrice = getNextSqrtPriceFromOutput(currentSqrtPrice, liquidity, amount, xToY)
-    }
+    amountOut = xToY
+      ? getDeltaY(targetSqrtPrice, currentSqrtPrice, liquidity, false)
+      : getDeltaX(currentSqrtPrice, targetSqrtPrice, liquidity, false)
+    nextSqrtPrice =
+      amount >= amountOut
+        ? targetSqrtPrice
+        : getNextSqrtPriceFromOutput(currentSqrtPrice, liquidity, amount, xToY)
   }
 
   const notMax = targetSqrtPrice !== nextSqrtPrice
@@ -463,7 +473,7 @@ const computeSwapStep = (
     amountOut = amount
   }
 
-  let feeAmount = 0n
+  let feeAmount: bigint
   if (byAmountIn && nextSqrtPrice !== targetSqrtPrice) {
     feeAmount = amount - amountIn
   } else {
@@ -484,7 +494,7 @@ const getDeltaX = (
   liquidity: bigint,
   roundingUp: boolean
 ): bigint => {
-  let deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
+  const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
 
   const nominator = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
   if (roundingUp) {
@@ -502,9 +512,9 @@ const getDeltaY = (
   liquidity: bigint,
   roundingUp: boolean
 ): bigint => {
-  let deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
+  const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
 
-  let result = 0n
+  let result: bigint
   if (roundingUp) {
     result = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
     result = divUp(result, SQRT_PRICE_DENOMINATOR, 1n)
@@ -554,7 +564,7 @@ const getNextSqrtPriceXUp = (
 
   const deltaSqrtPrice = rescale(liquidity, LIQUIDITY_SCALE, SQRT_PRICE_SCALE)
 
-  let denominator = 0n
+  let denominator: bigint
   if (addX) {
     denominator = deltaSqrtPrice + mulDiv(startingSqrtPrice, x, TOKEN_AMOUNT_DENOMINATOR)
   } else {
@@ -582,6 +592,13 @@ const getNextSqrtPriceYDown = (
   }
 }
 
+type poolUpdateTickResult = {
+  amountToAdd: bigint
+  amountAfterTickUpdate: bigint
+  hasCrossed: boolean
+  stateInconsistency: boolean
+}
+
 // in the OG code, the remainingAmount is declared as mut, but we modify it outside right after the call to this function
 const poolUpdateTick = (
   pool: Pool,
@@ -594,7 +611,7 @@ const poolUpdateTick = (
   hasLimitingTick: boolean,
   isLimitingTickInitialized: boolean,
   limitingTickIndex: bigint
-): [bigint, bigint, boolean, boolean] => {
+): poolUpdateTickResult => {
   let hasCrossed = false
   let stateInconsistency = false
   let totalAmount = 0n
@@ -602,7 +619,12 @@ const poolUpdateTick = (
   // if there's no tick we do not have to check for initialization
   if (!tick || swapLimit !== nextSqrtPrice) {
     pool.currentTickIndex = getTickAtSqrtPrice(nextSqrtPrice, pool.poolKey.feeTier.tickSpacing)
-    return [totalAmount, remainingAmount, hasCrossed, stateInconsistency]
+    return {
+      amountToAdd: totalAmount,
+      amountAfterTickUpdate: remainingAmount,
+      hasCrossed,
+      stateInconsistency
+    }
   }
 
   const isEnoughAmountToCross = isEnoughAmountToChangePrice(
@@ -639,7 +661,12 @@ const poolUpdateTick = (
     pool.currentTickIndex = limitingTickIndex
   }
 
-  return [totalAmount, remainingAmount, hasCrossed, stateInconsistency]
+  return {
+    amountToAdd: totalAmount,
+    amountAfterTickUpdate: remainingAmount,
+    hasCrossed,
+    stateInconsistency
+  }
 }
 
 const isEnoughAmountToChangePrice = (
@@ -654,7 +681,7 @@ const isEnoughAmountToChangePrice = (
     return true
   }
 
-  let nextSqrtPrice = 0n
+  let nextSqrtPrice: bigint
   if (byAmountIn) {
     const amountAfterFee = mulDiv(amount, PERCENTAGE_DENOMINATOR - fee, PERCENTAGE_DENOMINATOR)
     nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
@@ -761,36 +788,36 @@ const rescale = (fromValue: bigint, fromScale: bigint, expectedScale: bigint): b
   }
 }
 
-const divToTokenUp = (nominator: bigint, denominator: bigint): bigint => {
-  let result = nominator * SQRT_PRICE_DENOMINATOR
-  result += denominator - 1n
-  result /= denominator
+const divToTokenUp = (a: bigint, b: bigint): bigint => {
+  let result = a * SQRT_PRICE_DENOMINATOR
+  result += b - 1n
+  result /= b
   result += SQRT_PRICE_DENOMINATOR - 1n
   result /= SQRT_PRICE_DENOMINATOR
   return result
 }
 
-const divToToken = (nominator: bigint, denominator: bigint): bigint => {
-  let result = nominator * SQRT_PRICE_DENOMINATOR
-  result /= denominator
+const divToToken = (a: bigint, b: bigint): bigint => {
+  let result = a * SQRT_PRICE_DENOMINATOR
+  result /= b
   result /= SQRT_PRICE_DENOMINATOR
   return result
 }
 
-const mulDiv = (a: bigint, b: bigint, denominator: bigint): bigint => {
-  return (a * b) / denominator
+const mulDiv = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
+  return (a * b) / bDenominator
 }
 
-const mulDivUp = (a: bigint, b: bigint, denominator: bigint): bigint => {
-  return (denominator - 1n + a * b) / denominator
+const mulDivUp = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
+  return (bDenominator - 1n + a * b) / bDenominator
 }
 
-const div = (a: bigint, b: bigint, denominator: bigint): bigint => {
-  return (a * denominator) / b
+const div = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
+  return (a * bDenominator) / b
 }
 
-const divUp = (a: bigint, b: bigint, denominator: bigint): bigint => {
-  return (b - 1n + a * denominator) / b
+const divUp = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
+  return (b - 1n + a * bDenominator) / b
 }
 
 const getMaxTick = (tickSpacing: bigint): bigint => {
@@ -809,9 +836,9 @@ const getTickAtSqrtPrice = (sqrtPrice: bigint, tickSpacing: bigint): bigint => {
   const sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
   const [log2Sign, log2SqrtPrice] = log2IterativeApproximationX32(sqrtPriceX32)
 
-  let absFloorTick = 0n
-  let nearerTick = 0n
-  let fartherTick = 0n
+  let absFloorTick: bigint
+  let nearerTick: bigint
+  let fartherTick: bigint
   if (log2Sign) {
     absFloorTick = log2SqrtPrice / LOG2_SQRT10001
     nearerTick = absFloorTick
@@ -828,21 +855,15 @@ const getTickAtSqrtPrice = (sqrtPrice: bigint, tickSpacing: bigint): bigint => {
     return nearerTickWithSpacing
   }
 
-  let accurateTick = 0n
+  let accurateTick: bigint
   if (log2Sign) {
     const fartherTickSqrtPriceDecimal = calculateSqrtPrice(fartherTick)
-    if (sqrtPrice >= fartherTickSqrtPriceDecimal) {
-      accurateTick = fartherTickWithSpacing
-    } else {
-      accurateTick = nearerTickWithSpacing
-    }
+    accurateTick =
+      sqrtPrice >= fartherTickSqrtPriceDecimal ? fartherTickWithSpacing : nearerTickWithSpacing
   } else {
     const nearerTickSqrtPriceDecimal = calculateSqrtPrice(nearerTick)
-    if (nearerTickSqrtPriceDecimal <= sqrtPrice) {
-      accurateTick = nearerTickWithSpacing
-    } else {
-      accurateTick = fartherTickWithSpacing
-    }
+    accurateTick =
+      sqrtPrice >= nearerTickSqrtPriceDecimal ? nearerTickWithSpacing : fartherTickWithSpacing
   }
 
   if (tickSpacing > 1n) {
@@ -874,10 +895,10 @@ const log2IterativeApproximationX32 = (sqrtPriceX32: bigint): [boolean, bigint] 
   while (delta > LOG2_ACCURACY) {
     y = (y * y) / LOG2_ONE
     if (y >= LOG2_TWO) {
-      result = result | delta
-      y = y >> 1n
+      result |= delta
+      y >>= 1n
     }
-    delta = delta >> 1n
+    delta >>= 1n
   }
   return [sign, result]
 }
@@ -886,27 +907,27 @@ const log2FloorX32 = (sqrtPriceX32: bigint): bigint => {
   let msb = 0n
 
   if (sqrtPriceX32 >= 1n << 32n) {
-    sqrtPriceX32 = sqrtPriceX32 >> 32n
-    msb = msb | 32n
+    sqrtPriceX32 >>= 32n
+    msb |= 32n
   }
   if (sqrtPriceX32 >= 1n << 16n) {
-    sqrtPriceX32 = sqrtPriceX32 >> 16n
-    msb = msb | 16n
+    sqrtPriceX32 >>= 16n
+    msb |= 16n
   }
   if (sqrtPriceX32 >= 1n << 8n) {
-    sqrtPriceX32 = sqrtPriceX32 >> 8n
-    msb = msb | 8n
+    sqrtPriceX32 >>= 8n
+    msb |= 8n
   }
   if (sqrtPriceX32 >= 1n << 4n) {
-    sqrtPriceX32 = sqrtPriceX32 >> 4n
-    msb = msb | 4n
+    sqrtPriceX32 >>= 4n
+    msb |= 4n
   }
   if (sqrtPriceX32 >= 1n << 2n) {
-    sqrtPriceX32 = sqrtPriceX32 >> 2n
-    msb = msb | 2n
+    sqrtPriceX32 >>= 2n
+    msb |= 2n
   }
   if (sqrtPriceX32 >= 1n << 1n) {
-    msb = msb | 1n
+    msb |= 1n
   }
 
   return msb
@@ -918,10 +939,7 @@ const alignTickToSpacing = (accurateTick: bigint, tickSpacing: bigint): bigint =
   } else {
     const positiveTick = -accurateTick
     const remainder = positiveTick % tickSpacing
-    let substrahend = 0n
-    if (remainder != 0n) {
-      substrahend = tickSpacing - remainder
-    }
+    let substrahend = remainder ? tickSpacing - remainder : 0n
     return accurateTick - substrahend
   }
 }
