@@ -13,20 +13,23 @@ import {
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
-import { CHUNK_SIZE, CHUNKS_PER_BATCH, GLOBAL_MAX_TICK, MAX_FEE_TIERS } from './consts'
+import { FeeTier as _FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
+import {
+  CHUNK_SIZE,
+  CHUNKS_PER_BATCH,
+  GLOBAL_MAX_TICK,
+  MAX_FEE_TIERS,
+  MAX_TICK_CROSS
+} from './consts'
 import { Network } from './network'
-import { LiquidityTick, Pool, Position } from './types'
-import { getMaxTick, getMinTick } from './math'
+import { LiquidityTick, Pool, Position, SimulateSwapResult, Tickmap, TickVariant } from './types'
+import { getMaxTick, getMinTick, tickToPosition } from './math'
+import { simulateSwap } from './simulate-swap'
 
 const BREAK_BYTES = '627265616b'
 
-export interface Tickmap {
-  bitmap: Map<bigint, bigint>
-}
-
 export const EMPTY_FEE_TIERS: FeeTiers = {
-  feeTiers: new Array<FeeTier>(Number(MAX_FEE_TIERS)).fill({
+  feeTiers: new Array<_FeeTier>(Number(MAX_FEE_TIERS)).fill({
     fee: { v: 0n },
     tickSpacing: 0n
   })
@@ -127,6 +130,18 @@ export async function deployTokenFaucet(
   )
 }
 
+export function simulateInvariantSwap(
+  tickmap: Tickmap,
+  pool: Pool,
+  ticks: TickVariant[],
+  xToY: boolean,
+  amount: bigint,
+  byAmountIn: boolean,
+  sqrtPriceLimit: bigint
+): SimulateSwapResult {
+  return simulateSwap(tickmap, pool, ticks, xToY, amount, byAmountIn, sqrtPriceLimit)
+}
+
 export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
   if (tokenId == ALPH_TOKEN_ID) {
@@ -220,7 +235,7 @@ const decodeI256 = (string: string): bigint => {
 export const newPoolKey = async (
   token0: string,
   token1: string,
-  feeTier: FeeTier
+  feeTier: _FeeTier
 ): Promise<PoolKey> => {
   return (
     await Utils.tests.newPoolKey({
@@ -233,7 +248,7 @@ export const newPoolKey = async (
   ).returns
 }
 
-export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeTier> => {
+export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<_FeeTier> => {
   return (
     await Utils.tests.newFeeTier({
       testArgs: {
@@ -360,4 +375,57 @@ export const decodeLiquidityTicks = (string: string): LiquidityTick[] => {
     ticks.push(tick)
   }
   return ticks
+}
+
+export function filterTicks(ticks: TickVariant[], tickIndex: bigint, xToY: boolean): TickVariant[] {
+  const filteredTicks = new Array(...ticks)
+  let tickCount = 0
+
+  for (const [index, tick] of filteredTicks.entries()) {
+    if (tickCount >= MAX_TICK_CROSS) {
+      break
+    }
+
+    if (xToY) {
+      if (tick.index > tickIndex) {
+        filteredTicks.splice(index, 1)
+      }
+    } else {
+      if (tick.index < tickIndex) {
+        filteredTicks.splice(index, 1)
+      }
+    }
+    tickCount++
+  }
+
+  return ticks
+}
+
+export async function filterTickmap(
+  tickmap: Tickmap,
+  tickSpacing: bigint,
+  index: bigint,
+  xToY: boolean
+): Promise<Tickmap> {
+  const filteredTickmap = new Map(tickmap)
+  const [currentChunkIndex] = await tickToPosition(index, tickSpacing)
+  let tickCount = 0
+  for (const [chunkIndex] of filteredTickmap) {
+    if (tickCount >= MAX_TICK_CROSS) {
+      break
+    }
+
+    if (xToY) {
+      if (chunkIndex > currentChunkIndex) {
+        filteredTickmap.delete(chunkIndex)
+      }
+    } else {
+      if (chunkIndex < currentChunkIndex) {
+        filteredTickmap.delete(chunkIndex)
+      }
+    }
+    tickCount++
+  }
+
+  return filteredTickmap
 }

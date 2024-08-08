@@ -8,6 +8,8 @@ import {
   Position as _Position,
   Tick as _Tick,
   FeeTier as _FeeTier,
+  SwapResult as _SwapResult,
+  CalculateSwapResult as _CalculateSwapResult,
   QuoteResult as _QuoteResult,
   LiquidityResult as _LiquidityResult,
   SingleTokenLiquidity as _SingleTokenLiquidity,
@@ -20,14 +22,28 @@ type UnwrapNumbers<T> = {
   [P in keyof T]: T[P] extends WrappedNumber ? bigint : T[P]
 }
 
+export type TickVariant = LiquidityTick | Tick
+
 export type Pool = UnwrapNumbers<_Pool>
 export type Tick = UnwrapNumbers<_Tick>
 export type Position = UnwrapNumbers<_Position>
 export type FeeTier = UnwrapNumbers<_FeeTier>
+export type SwapResult = UnwrapNumbers<_SwapResult>
+export type CalculateSwapResult = UnwrapNumbers<_CalculateSwapResult>
 export type QuoteResult = UnwrapNumbers<_QuoteResult>
 export type LiquidityResult = UnwrapNumbers<_LiquidityResult>
 export type SingleTokenLiquidity = UnwrapNumbers<_SingleTokenLiquidity>
 export type LiquidityTick = UnwrapNumbers<_LiquidityTick>
+
+// stores bitmap chunks of ticks that have been initialized
+export type Tickmap = Map<bigint, bigint>
+
+export type SimulateSwapResult = CalculateSwapResult & {
+  crossedTicks: TickVariant[]
+  globalInsufficientLiquidity: boolean
+  stateOutdated: boolean
+  maxTicksCrossed: boolean
+}
 
 export function unwrapPool(pool: _Pool): Pool {
   const unwrapped = {
