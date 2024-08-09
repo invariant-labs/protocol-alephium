@@ -320,6 +320,8 @@ export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
   return value * 10n ** (SQRT_PRICE_SCALE - offset)
 }
 
+export const toPrice = toSqrtPrice
+
 export const toPercentage = (value: bigint, offset = 0n): bigint => {
   if (offset > PERCENTAGE_SCALE)
     throw new Error(`offset must be less than or equal to ${PERCENTAGE_SCALE}`)
@@ -330,4 +332,9 @@ export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
   if (offset > FEE_GROWTH_SCALE)
     throw new Error(`offset must be less than or equal to ${FEE_GROWTH_SCALE}`)
   return value * 10n ** (FEE_GROWTH_SCALE - offset)
+}
+
+export const toTokenAmount = (value: bigint, decimals: bigint, offset = 0n): bigint => {
+  if (offset > decimals) throw new Error(`offset must be less than or equal to ${decimals}`)
+  return value * 10n ** (decimals - offset)
 }
