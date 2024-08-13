@@ -1,6 +1,6 @@
 {
   "name": "@invariant-labs/alph-sdk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "collaborators": [
     "Invariant Labs"
   ],
@@ -19,7 +19,7 @@
   "license": "GPL",
   "repository": {
     "type": "git",
-    "url": "https://github.com/invariant-labs/protocol-alephium",
+    "url": "git+https://github.com/invariant-labs/protocol-alephium.git",
     "directory": "sdk"
   },
   "scripts": {

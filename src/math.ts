@@ -1,6 +1,7 @@
 import { CLAMM, Utils } from '../artifacts/ts'
 import {
   FEE_GROWTH_SCALE,
+  FIXED_POINT_SCALE,
   LIQUIDITY_SCALE,
   PERCENTAGE_DENOMINATOR,
   PERCENTAGE_SCALE,
@@ -308,6 +309,20 @@ export const calculateSqrtPriceAfterSlippage = (
   return sqrtPriceWithSlippage
 }
 
+export const calculatePriceImpact = (
+  startingSqrtPrice: bigint,
+  endingSqrtPrice: bigint
+): bigint => {
+  const startingPrice = startingSqrtPrice * startingSqrtPrice
+  const endingPrice = endingSqrtPrice * endingSqrtPrice
+  const diff = startingPrice - endingPrice
+
+  const nominator = diff > 0n ? diff : -diff
+  const denominator = startingPrice > endingPrice ? startingPrice : endingPrice
+
+  return (nominator * PERCENTAGE_DENOMINATOR) / denominator
+}
+
 export const toLiquidity = (value: bigint, offset = 0n) => {
   if (offset > LIQUIDITY_SCALE)
     throw new Error(`offset must be less than or equal to ${LIQUIDITY_SCALE}`)
@@ -337,4 +352,10 @@ export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
 export const toTokenAmount = (value: bigint, decimals: bigint, offset = 0n): bigint => {
   if (offset > decimals) throw new Error(`offset must be less than or equal to ${decimals}`)
   return value * 10n ** (decimals - offset)
+}
+
+export const toFixedPoint = (value: bigint, offset = 0n): bigint => {
+  if (offset > FIXED_POINT_SCALE)
+    throw new Error(`offset must be less than or equal to ${FIXED_POINT_SCALE}`)
+  return value * 10n ** (FIXED_POINT_SCALE - offset)
 }
