@@ -1,4 +1,5 @@
 import { CLAMM, Invariant } from '../artifacts/ts'
+import { SQRT_PRICE_DENOMINATOR, SQRT_PRICE_SCALE } from '../artifacts/ts/constants'
 
 export * from '../artifacts/ts/constants'
 
@@ -15,6 +16,9 @@ export const {
   LOG2_SQRT10001,
   LOG2_NEGATIVE_MAX_LOSE
 } = CLAMM.consts
+
+export const PRICE_SCALE = SQRT_PRICE_SCALE
+export const PRICE_DENOMINATOR = SQRT_PRICE_DENOMINATOR
 
 export const MAX_BATCHES_QUERIED = 18n
 export const MAX_POOL_KEYS_QUERIED = 117n
