@@ -3,7 +3,7 @@
     "outDir": "dist",
     "jsx": "react-jsx",
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "CommonJS",
     "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
@@ -14,16 +14,13 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
   },
-  "exclude": ["node_modules"],
+  "exclude": ["test", "stats", "scripts"],
   "include": [
     "src/**/*.ts",
     "src/**/*.tsx",
-    "test/**/*.ts",
-    "scripts/**/*.ts",
     "alephium.config.ts",
-    "artifacts/**/*.ts",
-    "stats/**/*.ts"
+    "artifacts/**/*.ts"
   ]
 }
