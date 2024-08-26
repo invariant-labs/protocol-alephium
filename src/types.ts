@@ -40,9 +40,9 @@ export type Tickmap = Map<bigint, bigint>
 
 export type SimulateSwapResult = CalculateSwapResult & {
   crossedTicks: TickVariant[]
-  globalInsufficientLiquidity: boolean
+  insufficientLiquidity: boolean
   stateOutdated: boolean
-  maxTicksCrossed: boolean
+  swapStepLimitReached: boolean
 }
 
 export function unwrapPool(pool: _Pool): Pool {
