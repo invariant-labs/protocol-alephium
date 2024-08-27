@@ -19,7 +19,7 @@ import {
 } from '../artifacts/ts/types'
 import { InvariantError } from './consts'
 
-type WrappedNumber = FeeGrowth | Liquidity | Percentage | SqrtPrice | TokenAmount
+type WrappedNumber = _FeeGrowth | _Liquidity | _Percentage | _SqrtPrice | _TokenAmount
 
 type UnwrapNumbers<T> = {
   [P in keyof T]: T[P] extends WrappedNumber ? bigint : T[P]
