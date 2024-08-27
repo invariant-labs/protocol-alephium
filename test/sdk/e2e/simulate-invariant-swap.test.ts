@@ -4,6 +4,7 @@ import { Invariant } from '../../../src/invariant'
 import { getSigner } from '@alephium/web3-test'
 import { Network } from '../../../src/network'
 import {
+  calculateSqrtPrice,
   getMaxSqrtPrice,
   getMinSqrtPrice,
   toLiquidity,
@@ -21,10 +22,12 @@ import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { expectError, expectVMError } from '../../../src/testUtils'
 import {
   ArithmeticError,
+  InvariantError,
   MAX_SQRT_PRICE,
-  MAX_TICK_CROSS,
+  MAX_SWAP_STEPS,
   MAX_U256,
   MIN_SQRT_PRICE,
+  SEARCH_RANGE,
   VMError
 } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
@@ -74,7 +77,9 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
 
-      const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
+      const sqrtPriceLimit = await calculateSqrtPrice(
+        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
+      )
 
       const amountIn = 6000n
       const byAmountIn = true
@@ -104,23 +109,26 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation.stateOutdated).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
-      expect(simulation.globalInsufficientLiquidity).toBeTruthy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(1)
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await token.mint(swapper, amountIn, poolKey.tokenX)
 
-      await expectVMError(
-        VMError.OutOfGas,
-        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit, amountIn)
+      await expectError(
+        InvariantError.PriceLimitReached,
+        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit, amountIn),
+        invariant.instance
       )
     })
 
     test('Y to X by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
 
-      const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
+      const sqrtPriceLimit = await calculateSqrtPrice(
+        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
+      )
       const amountIn = 6000n
       const byAmountIn = true
       const xToY = false
@@ -149,22 +157,25 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation.stateOutdated).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
-      expect(simulation.globalInsufficientLiquidity).toBeTruthy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(1)
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await token.mint(swapper, amountIn, poolKey.tokenY)
 
-      await expectVMError(
-        VMError.OutOfGas,
-        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit, amountIn)
+      await expectError(
+        InvariantError.PriceLimitReached,
+        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit, amountIn),
+        invariant.instance
       )
     })
 
     test('Y to X', async () => {
       const pool = await invariant.getPool(poolKey)
-      const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
+      const sqrtPriceLimit = await calculateSqrtPrice(
+        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
+      )
       const amountIn = 5000n
       const byAmountIn = false
       const xToY = false
@@ -192,22 +203,25 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation.stateOutdated).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
-      expect(simulation.globalInsufficientLiquidity).toBeTruthy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(1)
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await token.mint(swapper, amountIn, poolKey.tokenY)
 
-      await expectVMError(
-        VMError.OutOfGas,
-        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit)
+      await expectError(
+        InvariantError.PriceLimitReached,
+        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit),
+        invariant.instance
       )
     })
 
     test('X to Y', async () => {
       const pool = await invariant.getPool(poolKey)
-      const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
+      const sqrtPriceLimit = await calculateSqrtPrice(
+        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
+      )
       const amountIn = 5000n
       const byAmountIn = false
       const xToY = true
@@ -236,16 +250,17 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation.stateOutdated).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
-      expect(simulation.globalInsufficientLiquidity).toBeTruthy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(1)
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
       await token.mint(swapper, amountIn, poolKey.tokenX)
 
-      await expectVMError(
-        VMError.OutOfGas,
-        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit)
+      await expectError(
+        InvariantError.PriceLimitReached,
+        invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, sqrtPriceLimit),
+        invariant.instance
       )
     })
   })
@@ -292,9 +307,9 @@ describe('simulateInvariantSwap tests', () => {
       const tokenXAfter = await token.getBalanceOf(deployer.address, poolKey.tokenX)
 
       const swapResult = {
-        globalInsufficientLiquidity: false,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false,
+        swapStepLimitReached: false,
         amountIn,
         amountOut: await token.getBalanceOf(swapper.address, poolKey.tokenY),
         startSqrtPrice: poolBefore.sqrtPrice,
@@ -345,9 +360,9 @@ describe('simulateInvariantSwap tests', () => {
       const tokenYAfter = await token.getBalanceOf(deployer.address, poolKey.tokenY)
 
       const swapResult = {
-        globalInsufficientLiquidity: false,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false,
+        swapStepLimitReached: false,
         amountIn,
         amountOut: await token.getBalanceOf(swapper.address, poolKey.tokenX),
         startSqrtPrice: poolBefore.sqrtPrice,
@@ -409,9 +424,9 @@ describe('simulateInvariantSwap tests', () => {
       const tokenYAfter = await token.getBalanceOf(deployer.address, poolKey.tokenY)
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: false,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false,
+        swapStepLimitReached: false,
         amountIn: amountMinted - (await token.getBalanceOf(swapper.address, poolKey.tokenY)),
         amountOut: await token.getBalanceOf(swapper.address, poolKey.tokenX),
         startSqrtPrice,
@@ -469,9 +484,9 @@ describe('simulateInvariantSwap tests', () => {
       const tokenXAfter = await token.getBalanceOf(deployer.address, poolKey.tokenX)
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: false,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false,
+        swapStepLimitReached: false,
         amountIn: amountMinted - (await token.getBalanceOf(swapper.address, poolKey.tokenX)),
         amountOut: await token.getBalanceOf(swapper.address, poolKey.tokenY),
         startSqrtPrice,
@@ -530,8 +545,8 @@ describe('simulateInvariantSwap tests', () => {
         sqrtPriceLimit
       )
 
-      expect(simulation.globalInsufficientLiquidity).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeFalsy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
       expect(simulation.stateOutdated).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(0)
     })
@@ -583,8 +598,8 @@ describe('simulateInvariantSwap tests', () => {
         sqrtPriceLimit
       )
 
-      expect(simulation.globalInsufficientLiquidity).toBeFalsy()
-      expect(simulation.maxTicksCrossed).toBeFalsy()
+      expect(simulation.insufficientLiquidity).toBeFalsy()
+      expect(simulation.swapStepLimitReached).toBeFalsy()
       expect(simulation.stateOutdated).toBeTruthy()
       expect(simulation.crossedTicks.length).toBe(0)
     })
@@ -636,9 +651,9 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: false,
+        insufficientLiquidity: false,
         stateOutdated: true,
-        maxTicksCrossed: false
+        swapStepLimitReached: false
       })
       expect(simulation.crossedTicks.length).toBe(1)
     })
@@ -699,11 +714,11 @@ describe('simulateInvariantSwap tests', () => {
     )
 
     expect(simulation).toMatchObject({
-      globalInsufficientLiquidity: false,
+      insufficientLiquidity: false,
       stateOutdated: false,
-      maxTicksCrossed: true
+      swapStepLimitReached: true
     })
-    expect(simulation.crossedTicks.length).toBe(Number(MAX_TICK_CROSS) + 1)
+    expect(simulation.crossedTicks.length).toBe(Number(MAX_SWAP_STEPS) + 1)
   })
   describe('max token amount', () => {
     test('X to Y by amount in', async () => {
@@ -736,9 +751,9 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: true,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false
+        swapStepLimitReached: true
       })
       expect(simulation.crossedTicks.length).toBe(1)
 
@@ -780,9 +795,9 @@ describe('simulateInvariantSwap tests', () => {
         MIN_SQRT_PRICE
       )
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: true,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false
+        swapStepLimitReached: true
       })
       expect(simulation.crossedTicks.length).toBe(1)
 
@@ -824,9 +839,9 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: true,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false
+        swapStepLimitReached: true
       })
       expect(simulation.crossedTicks.length).toBe(1)
 
@@ -869,9 +884,9 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       expect(simulation).toMatchObject({
-        globalInsufficientLiquidity: true,
+        insufficientLiquidity: false,
         stateOutdated: false,
-        maxTicksCrossed: false
+        swapStepLimitReached: true
       })
       expect(simulation.crossedTicks.length).toBe(1)
 

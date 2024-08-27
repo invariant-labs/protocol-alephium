@@ -64,7 +64,7 @@ export {
   SEARCH_RANGE,
   InvariantError,
   MAX_FEE_TIERS,
-  MAX_TICK_CROSS,
+  MAX_SWAP_STEPS,
   MAX_U256
 } from './consts'
 

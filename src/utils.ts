@@ -19,7 +19,7 @@ import {
   CHUNKS_PER_BATCH,
   GLOBAL_MAX_TICK,
   MAX_FEE_TIERS,
-  MAX_TICK_CROSS
+  MAX_SWAP_STEPS
 } from './consts'
 import { Network } from './network'
 import { LiquidityTick, Pool, Position, SimulateSwapResult, Tickmap, TickVariant } from './types'
@@ -382,7 +382,7 @@ export function filterTicks(ticks: TickVariant[], tickIndex: bigint, xToY: boole
   let tickCount = 0
 
   for (const [index, tick] of filteredTicks.entries()) {
-    if (tickCount >= MAX_TICK_CROSS) {
+    if (tickCount >= MAX_SWAP_STEPS) {
       break
     }
 
@@ -411,7 +411,7 @@ export async function filterTickmap(
   const [currentChunkIndex] = await tickToPosition(index, tickSpacing)
   let tickCount = 0
   for (const [chunkIndex] of filteredTickmap) {
-    if (tickCount >= MAX_TICK_CROSS) {
+    if (tickCount >= MAX_SWAP_STEPS) {
       break
     }
 

@@ -19,7 +19,7 @@ import {
   LOG2_TWO,
   LogError,
   MAX_SQRT_PRICE,
-  MAX_TICK_CROSS,
+  MAX_SWAP_STEPS,
   MAX_U256,
   MIN_SQRT_PRICE,
   PERCENTAGE_DENOMINATOR,
@@ -61,10 +61,11 @@ export const simulateSwap = (
 
   const tickLimit = xToY ? getMinTick(tickSpacing) : getMaxTick(tickSpacing)
 
-  let globalInsufficientLiquidity = false
+  let insufficientLiquidity = false
   let stateOutdated = false
-  let maxTicksCrossed = false
+  let swapStepLimitReached = false
   let ticksCrossed: Array<TickVariant> = []
+  let swapSteps = 0
 
   let totalAmountIn = 0n
   let totalAmountOut = 0n
@@ -85,7 +86,7 @@ export const simulateSwap = (
     )
 
     if (getCloserLimitResult.tickLimitReached) {
-      globalInsufficientLiquidity = true
+      insufficientLiquidity = true
       break
     }
 
@@ -97,6 +98,7 @@ export const simulateSwap = (
       byAmountIn,
       feeTier.fee
     )
+    swapSteps += 1
 
     if (byAmountIn) {
       remainingAmount -= swapResult.amountIn + swapResult.feeAmount
@@ -113,7 +115,7 @@ export const simulateSwap = (
 
     // fail if price would go over swap limit
     if (swapResult.nextSqrtPrice === sqrtPriceLimit && remainingAmount != 0n) {
-      globalInsufficientLiquidity = true
+      insufficientLiquidity = true
       break
     }
 
@@ -151,10 +153,6 @@ export const simulateSwap = (
 
     if (poolUpdateTickResult.hasCrossed && tick) {
       ticksCrossed.push(tick)
-      if (ticksCrossed.length > MAX_TICK_CROSS) {
-        maxTicksCrossed = true
-        break
-      }
     }
 
     const reachedTickLimit = xToY
@@ -162,7 +160,12 @@ export const simulateSwap = (
       : pool.currentTickIndex >= tickLimit
 
     if (reachedTickLimit) {
-      globalInsufficientLiquidity = true
+      insufficientLiquidity = true
+      break
+    }
+
+    if (swapSteps > MAX_SWAP_STEPS) {
+      swapStepLimitReached = true
       break
     }
   }
@@ -178,9 +181,9 @@ export const simulateSwap = (
     targetSqrtPrice: pool.sqrtPrice,
     fee: eventFeeAmount,
     crossedTicks: ticksCrossed,
-    globalInsufficientLiquidity,
+    insufficientLiquidity,
     stateOutdated,
-    maxTicksCrossed
+    swapStepLimitReached
   }
 }
 
