@@ -1,10 +1,16 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { ChangeFeeReceiver, InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError } from '../../../src/consts'
-import { expectError, getPool, initFeeTier, withdrawProtocolFee } from '../../../src/testUtils'
+import {
+  changeFeeReceiver,
+  expectError,
+  getPool,
+  initFeeTier,
+  withdrawProtocolFee
+} from '../../../src/testUtils'
 import {
   getBasicFeeTickSpacing,
   initBasicPool,
@@ -12,7 +18,7 @@ import {
   initBasicSwap,
   initDexAndTokens
 } from '../../../src/snippets'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -62,7 +68,7 @@ describe('protocol fee tests', () => {
   test('not admin', async () => {
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
-    expectError(
+    await expectError(
       InvariantError.NotFeeReceiver,
       withdrawProtocolFee(invariant, notAdmin, poolKey),
       invariant
@@ -73,13 +79,7 @@ describe('protocol fee tests', () => {
     const poolBefore = await getPool(invariant, poolKey)
     const newFeeReceiver = await getSigner(ONE_ALPH * 1000n, 0)
 
-    await ChangeFeeReceiver.execute(admin, {
-      initialFields: {
-        invariant: invariant.contractId,
-        poolKey,
-        newFeeReceiver: newFeeReceiver.address
-      }
-    })
+    await changeFeeReceiver(invariant, admin, poolKey, newFeeReceiver.address)
     await expectError(
       InvariantError.NotFeeReceiver,
       withdrawProtocolFee(invariant, admin, poolKey),

@@ -16,18 +16,18 @@ import {
   removePosition,
   getPosition,
   expectError,
-  getReserveBalances
+  getReserveBalances,
+  changeFeeReceiver
 } from '../../../src/testUtils'
 import {
-  ChangeFeeReceiver,
   ClaimFee,
   InvariantInstance,
   TokenFaucetInstance,
   TransferPosition,
   WithdrawProtocolFee
 } from '../../../artifacts/ts'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { toLiquidity } from '../../../src/math'
+import { FeeTier, PoolKey, wrapPoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -157,13 +157,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(yAfter - yBefore).toBe(0n)
   })
   test('change fee receiver', async () => {
-    await ChangeFeeReceiver.execute(admin, {
-      initialFields: {
-        invariant: invariant.contractId,
-        poolKey,
-        newFeeReceiver: feeReceiver.address
-      }
-    })
+    await changeFeeReceiver(invariant, admin, poolKey, feeReceiver.address)
     const pool = await getPool(invariant, poolKey)
     expect(pool.feeReceiver).toBe(feeReceiver.address)
   })
@@ -174,7 +168,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     await WithdrawProtocolFee.execute(feeReceiver, {
       initialFields: {
         invariant: invariant.contractId,
-        poolKey
+        poolKey: wrapPoolKey(poolKey)
       },
       attoAlphAmount: DUST_AMOUNT
     })
@@ -223,7 +217,6 @@ describe('interaction with pool on removed fee tiers tests', () => {
     })
 
     const transferedPosition = await getPosition(invariant, recipient.address, 0n)
-    expect(transferedPosition.exists).toBe(true)
     expect(transferedPosition.liquidity).toBe(liquidityDelta)
     expect(transferedPosition.lowerTickIndex).toBe(lowerTickIndex)
     expect(transferedPosition.upperTickIndex).toBe(upperTickIndex)

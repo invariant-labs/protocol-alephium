@@ -7,7 +7,6 @@ import {
   initBasicPosition,
   initDexAndTokens
 } from '../../../src/snippets'
-import { newFeeTier, newPoolKey } from '../../../src/utils'
 import {
   expectError,
   getPool,
@@ -17,7 +16,7 @@ import {
   initFeeTier
 } from '../../../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
-import { InvariantError } from '../../../src'
+import { InvariantError, newFeeTier, newPoolKey } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -46,13 +45,9 @@ describe('get position with associates tests', () => {
     const [lowerTickIndex, upperTickIndex] = [-20n, 10n]
 
     const positionRegular = await getPosition(invariant, positionOwner.address, 0n)
-    delete positionRegular.exists
     const poolRegular = await getPool(invariant, poolKey)
-    delete poolRegular.exists
     const lowerTickRegular = await getTick(invariant, poolKey, lowerTickIndex)
-    delete lowerTickRegular.exists
     const upperTickRegular = await getTick(invariant, poolKey, upperTickIndex)
-    delete upperTickRegular.exists
 
     const [position, pool, lowerTick, upperTick] = await getPositionWithAssociates(
       invariant,

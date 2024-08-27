@@ -10,7 +10,7 @@ import {
   initFeeTier,
   removeFeeTier
 } from '../../../src/testUtils'
-import { FeeTier } from '../../../artifacts/ts/types'
+import { FeeTier } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -39,7 +39,7 @@ describe('remove fee tier tests', () => {
     expect(tierExists).toBeFalsy()
 
     const feeTiers = await getFeeTiers(invariant)
-    expect(feeTiers[0]).toStrictEqual({ fee: { v: fee }, tickSpacing: tickSpacings[1] })
+    expect(feeTiers[0]).toStrictEqual({ fee, tickSpacing: tickSpacings[1] })
     expect(feeTiers.length).toBe(1)
   })
 
@@ -50,7 +50,7 @@ describe('remove fee tier tests', () => {
     const [tierExists] = await feeTierExists(invariant, feeTier2TS)
     expect(tierExists).toBeFalsy()
 
-    expectError(
+    await expectError(
       InvariantError.FeeTierNotFound,
       removeFeeTier(invariant, admin, feeTier2TS),
       invariant
@@ -65,6 +65,10 @@ describe('remove fee tier tests', () => {
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
-    expectError(InvariantError.NotAdmin, removeFeeTier(invariant, notAdmin, feeTier1TS), invariant)
+    await expectError(
+      InvariantError.NotAdmin,
+      removeFeeTier(invariant, notAdmin, feeTier1TS),
+      invariant
+    )
   })
 })

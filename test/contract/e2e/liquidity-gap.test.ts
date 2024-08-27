@@ -3,9 +3,10 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MIN_SQRT_PRICE } from '../../../src/consts'
+import { InvariantError, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
   calculateSqrtPrice,
+  expectError,
   getPool,
   getPosition,
   getReserveBalances,
@@ -18,8 +19,8 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -153,12 +154,10 @@ describe('liquidity gap tests', () => {
     const firstPosition = await getPosition(invariant, positionOwner.address, 0n)
     const secondPosition = await getPosition(invariant, positionOwner.address, 1n)
 
-    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, -50n)
-    const { exists: currentInMap } = await getTick(invariant, poolKey, -60n)
-    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, -10n)
+    const lowerTick = await getTick(invariant, poolKey, -50n)
+    const upperTick = await getTick(invariant, poolKey, -10n)
 
     const expectedFirstPosition = {
-      exists: true,
       liquidity: 2000600000000n,
       lowerTickIndex: -10n,
       upperTickIndex: 10n,
@@ -169,7 +168,6 @@ describe('liquidity gap tests', () => {
       owner: positionOwner.address
     }
     const expectedSecondPosition = {
-      exists: true,
       liquidity: 2000800000000n,
       lowerTickIndex: -90n,
       upperTickIndex: -50n,
@@ -182,9 +180,7 @@ describe('liquidity gap tests', () => {
     expect(firstPosition).toMatchObject(expectedFirstPosition)
     expect(secondPosition).toMatchObject(expectedSecondPosition)
 
-    expect(lowerInMap).toBeTruthy()
-    expect(currentInMap).toBeFalsy()
-    expect(upperInMap).toBeTruthy()
+    await expectError(InvariantError.InvalidTickIndex, getTick(invariant, poolKey, -60n))
 
     const expectedLowerTick = {
       sign: false,
@@ -209,7 +205,6 @@ describe('liquidity gap tests', () => {
     expect(upperTick).toMatchObject(expectedUpperTick)
 
     const expectedPool = {
-      exists: true,
       poolKey,
       liquidity: secondPosition.liquidity,
       currentTickIndex: -60n,

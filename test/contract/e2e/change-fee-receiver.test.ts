@@ -1,11 +1,11 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { getPool, expectError, initTokensXY, initFeeTier, initPool } from '../../../src/testUtils'
-import { ChangeFeeReceiver, InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { getPool, expectError, initTokensXY, initFeeTier, initPool, changeFeeReceiver } from '../../../src/testUtils'
+import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError } from '../../../src/consts'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -37,13 +37,7 @@ describe('change fee receiver tests', () => {
   test('change fee receiver', async () => {
     const newFeeReceiver = await getSigner(ONE_ALPH * 10n, 0)
 
-    await ChangeFeeReceiver.execute(admin, {
-      initialFields: {
-        invariant: invariant.contractId,
-        poolKey,
-        newFeeReceiver: newFeeReceiver.address
-      }
-    })
+    await changeFeeReceiver(invariant, admin, poolKey, newFeeReceiver.address)
 
     const pool = await getPool(invariant, poolKey)
 
@@ -55,14 +49,7 @@ describe('change fee receiver tests', () => {
 
     await expectError(
       InvariantError.NotAdmin,
-
-      ChangeFeeReceiver.execute(notAdmin, {
-        initialFields: {
-          invariant: invariant.contractId,
-          poolKey,
-          newFeeReceiver: notAdmin.address
-        }
-      }),
+      changeFeeReceiver(invariant, notAdmin, poolKey, notAdmin.address),
       invariant
     )
   })

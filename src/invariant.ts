@@ -13,7 +13,6 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
 import { bitPositionToTick, calculateSqrtPriceAfterSlippage, calculateTick } from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
@@ -21,16 +20,22 @@ import {
   decodePool,
   decodePosition,
   decodeTick,
+  FeeTier,
   LiquidityTick,
   Pool,
+  PoolKey,
   Position,
   QuoteResult,
   Tick,
   Tickmap,
+  unwrapFeeTier,
   unwrapPool,
+  unwrapPoolKey,
   unwrapPosition,
   unwrapQuoteResult,
-  unwrapTick
+  unwrapTick,
+  wrapFeeTier,
+  wrapPoolKey
 } from './types'
 import {
   balanceOf,
@@ -110,7 +115,7 @@ export class Invariant {
   async addFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
     const txBytecode = AddFeeTier.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      feeTier
+      feeTier: wrapFeeTier(feeTier)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
     const tx = await this.builder.buildExecuteScriptTx(
@@ -128,7 +133,7 @@ export class Invariant {
   async removeFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
     const txBytecode = RemoveFeeTier.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      feeTier
+      feeTier: wrapFeeTier(feeTier)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
     const tx = await this.builder.buildExecuteScriptTx(
@@ -155,7 +160,7 @@ export class Invariant {
       invariant: this.instance.contractId,
       token0: token0Id,
       token1: token1Id,
-      feeTier,
+      feeTier: wrapFeeTier(feeTier),
       initSqrtPrice: { v: initSqrtPrice },
       initTick
     })
@@ -181,7 +186,7 @@ export class Invariant {
   async withdrawProtocolFeeTx(signer: SignerProvider, poolKey: PoolKey) {
     const txBytecode = WithdrawProtocolFee.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      poolKey
+      poolKey: wrapPoolKey(poolKey)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
     const tx = await this.builder.buildExecuteScriptTx(
@@ -199,7 +204,7 @@ export class Invariant {
   async changeFeeReceiverTx(signer: SignerProvider, poolKey: PoolKey, newFeeReceiver: Address) {
     const txBytecode = ChangeFeeReceiver.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      poolKey,
+      poolKey: wrapPoolKey(poolKey),
       newFeeReceiver
     })
     const { address, publicKey } = await signer.getSelectedAccount()
@@ -249,7 +254,7 @@ export class Invariant {
   ) {
     const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      poolKey,
+      poolKey: wrapPoolKey(poolKey),
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidityDelta },
@@ -374,7 +379,7 @@ export class Invariant {
     const tokenId = xToY ? poolKey.tokenX : poolKey.tokenY
     const txBytecode = Swap.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      poolKey,
+      poolKey: wrapPoolKey(poolKey),
       xToY,
       amount: { v: amount },
       byAmountIn,
@@ -461,16 +466,21 @@ export class Invariant {
   }
 
   async feeTierExist(feeTier: FeeTier): Promise<boolean> {
-    return (await this.instance.view.feeTierExist({ args: { feeTier } })).returns
+    return (await this.instance.view.feeTierExist({ args: { feeTier: wrapFeeTier(feeTier) } }))
+      .returns
   }
 
   async getFeeTiers(): Promise<FeeTier[]> {
     const state = await this.instance.fetchState()
-    return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
+    return state.fields.feeTiers.feeTiers
+      .slice(0, Number(state.fields.feeTierCount))
+      .map(unwrapFeeTier)
   }
 
   async getPool(poolKey: PoolKey): Promise<Pool> {
-    return decodePool((await this.instance.view.getPool({ args: { poolKey } })).returns)
+    return decodePool(
+      (await this.instance.view.getPool({ args: { poolKey: wrapPoolKey(poolKey) } })).returns
+    )
   }
 
   async getPosition(owner: Address, index: bigint): Promise<Position> {
@@ -489,7 +499,7 @@ export class Invariant {
     const quoteResult = (
       await this.instance.view.quote({
         args: {
-          poolKey,
+          poolKey: wrapPoolKey(poolKey),
           xToY,
           amount: { v: amount },
           byAmountIn,
@@ -501,11 +511,15 @@ export class Invariant {
   }
 
   async getTick(poolKey: PoolKey, index: bigint): Promise<Tick> {
-    return decodeTick((await this.instance.view.getTick({ args: { poolKey, index } })).returns)
+    return decodeTick(
+      (await this.instance.view.getTick({ args: { poolKey: wrapPoolKey(poolKey), index } })).returns
+    )
   }
 
   async isTickInitialized(poolKey: PoolKey, index: bigint): Promise<boolean> {
-    return (await this.instance.view.isTickInitialized({ args: { poolKey, index } })).returns
+    return (
+      await this.instance.view.isTickInitialized({ args: { poolKey: wrapPoolKey(poolKey), index } })
+    ).returns
   }
 
   async getReserveBalances(poolKey: PoolKey): Promise<{ x: bigint; y: bigint }> {
@@ -622,7 +636,7 @@ export class Invariant {
     xToY: boolean
   ): Promise<[bigint, bigint][]> {
     const response = await this.instance.view.getTickmapSlice({
-      args: { poolKey, lowerBatch, upperBatch, xToY }
+      args: { poolKey: wrapPoolKey(poolKey), lowerBatch, upperBatch, xToY }
     })
 
     return constructTickmap(response.returns)
@@ -647,7 +661,7 @@ export class Invariant {
   async getLiquidityTicks(poolKey: PoolKey, ticks: bigint[]) {
     const indexes = toByteVecWithOffset(ticks)
     const response = await this.instance.view.getLiquidityTicks({
-      args: { poolKey, indexes, length: BigInt(ticks.length) }
+      args: { poolKey: wrapPoolKey(poolKey), indexes, length: BigInt(ticks.length) }
     })
 
     return decodeLiquidityTicks(response.returns)
@@ -676,7 +690,7 @@ export class Invariant {
 
   async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
     const response = await this.instance.view.getLiquidityTicksAmount({
-      args: { poolKey, lowerTick, upperTick }
+      args: { poolKey: wrapPoolKey(poolKey), lowerTick, upperTick }
     })
     return response.returns
   }

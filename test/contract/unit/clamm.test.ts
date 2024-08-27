@@ -670,7 +670,13 @@ describe('clamm tests', () => {
     })
 
     it('can be zero', async () => {
-      const result = await getDeltaY(clamm, MAX_SQRT_PRICE, MAX_SQRT_PRICE - 1n, minLiquidity, false)
+      const result = await getDeltaY(
+        clamm,
+        MAX_SQRT_PRICE,
+        MAX_SQRT_PRICE - 1n,
+        minLiquidity,
+        false
+      )
 
       expect(result).toStrictEqual(0n)
     })

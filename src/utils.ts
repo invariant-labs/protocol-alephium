@@ -13,7 +13,7 @@ import {
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
-import { FeeTier as _FeeTier, FeeTiers, PoolKey } from '../artifacts/ts/types'
+import { FeeTier as _FeeTier, FeeTiers, PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
   CHUNK_SIZE,
   CHUNKS_PER_BATCH,
@@ -22,7 +22,19 @@ import {
   MAX_SWAP_STEPS
 } from './consts'
 import { Network } from './network'
-import { LiquidityTick, Pool, Position, SimulateSwapResult, Tickmap, TickVariant } from './types'
+import {
+  FeeTier,
+  LiquidityTick,
+  Pool,
+  PoolKey,
+  Position,
+  SimulateSwapResult,
+  Tickmap,
+  TickVariant,
+  unwrapFeeTier,
+  unwrapPoolKey,
+  wrapFeeTier
+} from './types'
 import { getMaxTick, getMinTick, tickToPosition } from './math'
 import { simulateSwap } from './simulate-swap'
 
@@ -177,7 +189,7 @@ export function decodePools(string: string): Array<Pool> {
         tokenX: parts[i],
         tokenY: parts[i + 1],
         feeTier: {
-          fee: { v: decodeU256(parts[i + 2]) },
+          fee: decodeU256(parts[i + 2]),
           tickSpacing: decodeU256(parts[i + 3])
         }
       },
@@ -192,8 +204,7 @@ export function decodePools(string: string): Array<Pool> {
       lastTimestamp: decodeU256(parts[i + 12]),
       feeReceiver: AddressFromByteVec(parts[i + 13]),
       reserveX: parts[i + 14],
-      reserveY: parts[i + 15],
-      exists: true
+      reserveY: parts[i + 15]
     }
     pools.push(pool)
   }
@@ -208,7 +219,7 @@ export const decodePoolKeys = (string: string): Array<PoolKey> => {
     const poolKey: PoolKey = {
       tokenX: parts[i],
       tokenY: parts[i + 1],
-      feeTier: { fee: { v: decodeU256(parts[i + 2]) }, tickSpacing: decodeU256(parts[i + 3]) }
+      feeTier: { fee: decodeU256(parts[i + 2]), tickSpacing: decodeU256(parts[i + 3]) }
     }
     poolKeys.push(poolKey)
   }
@@ -235,28 +246,32 @@ const decodeI256 = (string: string): bigint => {
 export const newPoolKey = async (
   token0: string,
   token1: string,
-  feeTier: _FeeTier
+  feeTier: FeeTier
 ): Promise<PoolKey> => {
-  return (
-    await Utils.tests.newPoolKey({
-      testArgs: {
-        token0,
-        token1,
-        feeTier
-      }
-    })
-  ).returns
+  return unwrapPoolKey(
+    (
+      await Utils.tests.newPoolKey({
+        testArgs: {
+          token0,
+          token1,
+          feeTier: wrapFeeTier(feeTier)
+        }
+      })
+    ).returns
+  )
 }
 
-export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<_FeeTier> => {
-  return (
-    await Utils.tests.newFeeTier({
-      testArgs: {
-        fee: { v: fee },
-        tickSpacing
-      }
-    })
-  ).returns
+export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeTier> => {
+  return unwrapFeeTier(
+    (
+      await Utils.tests.newFeeTier({
+        testArgs: {
+          fee: { v: fee },
+          tickSpacing
+        }
+      })
+    ).returns
+  )
 }
 
 export const constructTickmap = async (string: string): Promise<[bigint, bigint][]> => {
@@ -280,7 +295,7 @@ export const decodePositions = (string: string): [[Position, Pool][], bigint] =>
         tokenX: parts[i],
         tokenY: parts[i + 1],
         feeTier: {
-          fee: { v: decodeU256(parts[i + 2]) },
+          fee: decodeU256(parts[i + 2]),
           tickSpacing: decodeU256(parts[i + 3])
         }
       },
@@ -299,7 +314,7 @@ export const decodePositions = (string: string): [[Position, Pool][], bigint] =>
         tokenX: parts[i + 13],
         tokenY: parts[i + 14],
         feeTier: {
-          fee: { v: decodeU256(parts[i + 15]) },
+          fee: decodeU256(parts[i + 15]),
           tickSpacing: decodeU256(parts[i + 16])
         }
       },

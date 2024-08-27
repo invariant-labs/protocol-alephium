@@ -152,7 +152,7 @@ describe('reserve tests', () => {
     const supply = 1000n
     const deposit = 75n
 
-    for (let i = 0; i < RESERVE_ASSET_CAPACITY/2n; i++) {
+    for (let i = 0; i < RESERVE_ASSET_CAPACITY / 2n; i++) {
       const [tokenX, tokenY] = await initTokensXY(depositor, supply)
 
       await withdrawTokens(depositor, [tokenX, supply], [tokenY, supply])

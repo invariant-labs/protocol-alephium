@@ -6,8 +6,8 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

@@ -29,7 +29,7 @@ import {
   TOKEN_AMOUNT_DENOMINATOR,
   TOKEN_AMOUNT_SCALE
 } from './consts'
-import { Pool, SimulateSwapResult, SwapResult, Tickmap, TickVariant, unwrapFeeTier } from './types'
+import { Pool, SimulateSwapResult, SwapResult, Tickmap, TickVariant } from './types'
 
 export const simulateSwap = (
   tickmap: Tickmap,
@@ -40,7 +40,7 @@ export const simulateSwap = (
   byAmountIn: boolean,
   sqrtPriceLimit: bigint
 ): SimulateSwapResult => {
-  const feeTier = unwrapFeeTier(pool.poolKey.feeTier)
+  const feeTier = pool.poolKey.feeTier
 
   if (amount === 0n) {
     throw new Error(String(InvariantError.ZeroAmount))
@@ -634,7 +634,7 @@ const poolUpdateTick = (
     remainingAmount,
     nextSqrtPrice,
     pool.liquidity,
-    pool.poolKey.feeTier.fee.v,
+    pool.poolKey.feeTier.fee,
     byAmountIn,
     xToY
   )

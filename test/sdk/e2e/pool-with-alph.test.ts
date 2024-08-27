@@ -5,11 +5,11 @@ import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { Invariant } from '../../../src/invariant'
 import { Network } from '../../../src/network'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { toLiquidity } from '../../../src/math'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -66,8 +66,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
       feeProtocolTokenY: 0n,
       liquidity: 0n,
       poolKey,
-      feeReceiver: admin.address,
-      exists: true
+      feeReceiver: admin.address
     }
     expect(pool).toMatchObject(expectedPool)
   })

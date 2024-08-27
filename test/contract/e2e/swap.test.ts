@@ -143,13 +143,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
+      expect(lowerTick).toMatchObject({ feeGrowthOutsideX: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideX: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ feeGrowthOutsideX: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideX: 0n })
+      expect(upperTick).toMatchObject({ feeGrowthOutsideX: 0n })
     }
   })
 
@@ -256,13 +256,13 @@ describe('swap tests', () => {
 
       // check ticks
       const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
-      expect(lowerTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
+      expect(lowerTick).toMatchObject({ feeGrowthOutsideY: 0n })
 
       const middleTick = await getTick(invariant, poolKey, middleTickIndex)
-      expect(middleTick).toMatchObject({ exists: true, feeGrowthOutsideY: 3n * 10n ** 22n })
+      expect(middleTick).toMatchObject({ feeGrowthOutsideY: 3n * 10n ** 22n })
 
       const upperTick = await getTick(invariant, poolKey, upperTickIndex)
-      expect(upperTick).toMatchObject({ exists: true, feeGrowthOutsideY: 0n })
+      expect(upperTick).toMatchObject({ feeGrowthOutsideY: 0n })
     }
   })
   test('not enough liquidity token x', async () => {

@@ -32,6 +32,7 @@ export type {
   Pool,
   Position,
   FeeTier,
+  PoolKey,
   QuoteResult,
   SimulateSwapResult,
   LiquidityResult,
@@ -41,7 +42,6 @@ export type {
   Tickmap,
   TickVariant
 } from './types'
-export type { FeeTier as _FeeTier, PoolKey } from '../artifacts/ts/types'
 export { unwrapFeeTier } from './types'
 
 export {

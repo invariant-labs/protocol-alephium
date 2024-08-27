@@ -13,9 +13,9 @@ import {
 } from '../../../src/testUtils'
 import { MAX_SQRT_PRICE, MIN_SQRT_PRICE, SEARCH_RANGE } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { toLiquidity } from '../../../src/math'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

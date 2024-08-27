@@ -52,13 +52,9 @@ describe('get position with associates tests', () => {
     )
 
     const positionRegular = await invariant.getPosition(positionOwner.address, 0n)
-    delete positionRegular.exists
     const poolRegular = await invariant.getPool(poolKey)
-    delete poolRegular.exists
     const lowerTickRegular = await invariant.getTick(poolKey, lowerTickIndex)
-    delete lowerTickRegular.exists
     const upperTickRegular = await invariant.getTick(poolKey, upperTickIndex)
-    delete upperTickRegular.exists
 
     const [position, pool, lowerTick, upperTick] = await invariant.getPositionWithAssociates(
       positionOwner.address,

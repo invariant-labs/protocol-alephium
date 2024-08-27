@@ -5,9 +5,9 @@ import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
-import { PoolKey } from '../../../artifacts/ts/types'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_POOL_KEYS_QUERIED, VMError } from '../../../src/consts'
+import { PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -80,7 +80,7 @@ describe('get pool keys test', () => {
 
     const [poolKeys] = await invariant.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
     expect(poolKeys.length).toBe(Number(MAX_POOL_KEYS_QUERIED))
-  }, 150000)
+  })
   test('runs out of gas over the limit for single query, querying all passes', async () => {
     const overSingleLimit = MAX_POOL_KEYS_QUERIED + 1n
     const feeTier = await newFeeTier(1n, 1n)
@@ -108,5 +108,5 @@ describe('get pool keys test', () => {
     poolKeys.map((poolKey, index) => {
       expect(poolKey).toStrictEqual(expectedPoolKeys[index])
     })
-  }, 150000)
+  })
 })
