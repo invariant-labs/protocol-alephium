@@ -24,7 +24,7 @@ import {
   ArithmeticError,
   InvariantError,
   MAX_SQRT_PRICE,
-  MAX_TICK_CROSS,
+  MAX_SWAP_STEPS,
   MAX_U256,
   MIN_SQRT_PRICE,
   SEARCH_RANGE,
@@ -78,7 +78,7 @@ describe('simulateInvariantSwap tests', () => {
       const pool = await invariant.getPool(poolKey)
 
       const sqrtPriceLimit = await calculateSqrtPrice(
-        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_TICK_CROSS
+        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
 
       const amountIn = 6000n
@@ -127,7 +127,7 @@ describe('simulateInvariantSwap tests', () => {
       const pool = await invariant.getPool(poolKey)
 
       const sqrtPriceLimit = await calculateSqrtPrice(
-        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_TICK_CROSS
+        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
       const amountIn = 6000n
       const byAmountIn = true
@@ -174,7 +174,7 @@ describe('simulateInvariantSwap tests', () => {
     test('Y to X', async () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await calculateSqrtPrice(
-        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_TICK_CROSS
+        pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
       const amountIn = 5000n
       const byAmountIn = false
@@ -220,7 +220,7 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y', async () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await calculateSqrtPrice(
-        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_TICK_CROSS
+        pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
       const amountIn = 5000n
       const byAmountIn = false
@@ -718,7 +718,7 @@ describe('simulateInvariantSwap tests', () => {
       stateOutdated: false,
       swapStepLimitReached: true
     })
-    expect(simulation.crossedTicks.length).toBe(Number(MAX_TICK_CROSS) + 1)
+    expect(simulation.crossedTicks.length).toBe(Number(MAX_SWAP_STEPS) + 1)
   })
   describe('max token amount', () => {
     test('X to Y by amount in', async () => {

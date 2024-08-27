@@ -19,7 +19,7 @@ import {
   LOG2_TWO,
   LogError,
   MAX_SQRT_PRICE,
-  MAX_TICK_CROSS,
+  MAX_SWAP_STEPS,
   MAX_U256,
   MIN_SQRT_PRICE,
   PERCENTAGE_DENOMINATOR,
@@ -164,7 +164,7 @@ export const simulateSwap = (
       break
     }
 
-    if (swapSteps > MAX_TICK_CROSS) {
+    if (swapSteps > MAX_SWAP_STEPS) {
       swapStepLimitReached = true
       break
     }
