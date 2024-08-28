@@ -23,7 +23,7 @@ import {
 } from '../../../src/testUtils'
 import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
-import { PoolKey } from '../../../artifacts/ts/types'
+import { PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet

@@ -18,7 +18,7 @@ import {
   initBasicSwap,
   initDexAndTokens
 } from '../../../src/snippets'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -75,7 +75,7 @@ describe('claim tests', () => {
 
   test('not owner', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    expectError(
+    await expectError(
       InvariantError.PositionNotFound,
       ClaimFee.execute(notOwner, {
         initialFields: {

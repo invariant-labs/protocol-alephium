@@ -18,7 +18,6 @@ import {
   newPoolKey,
   simulateInvariantSwap
 } from '../../../src/utils'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { expectError, expectVMError } from '../../../src/testUtils'
 import {
   ArithmeticError,
@@ -31,6 +30,7 @@ import {
   VMError
 } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

@@ -13,7 +13,7 @@ import { expectError } from '../../../src/testUtils'
 import { UtilsError } from '../../../src/consts'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
-import { Pool, Position, Tick } from '../../../src/types'
+import { Pool, Position, Tick, wrapPoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

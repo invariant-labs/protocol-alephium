@@ -20,25 +20,31 @@ import {
   WithdrawProtocolFee,
   CreatePosition,
   TransferPosition,
-  CLAMMInstance
+  CLAMMInstance,
+  ChangeFeeReceiver
 } from '../artifacts/ts'
 import { deployTokenFaucet, balanceOf } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { VMError } from './consts'
-import { FeeTier, PoolKey } from '../artifacts/ts/types'
+import { InvariantError, VMError } from './consts'
 import {
   decodePool,
   decodePosition,
   decodeTick,
+  FeeTier,
   Pool,
+  PoolKey,
   Position,
   Tick,
+  unwrapFeeTier,
   unwrapPool,
   unwrapPosition,
   unwrapQuoteResult,
-  unwrapTick
+  unwrapTick,
+  wrapFeeTier,
+  wrapPoolKey
 } from './types'
+import { wrap } from 'module'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -96,7 +102,7 @@ export async function initFeeTier(
   return await AddFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      feeTier
+      feeTier: wrapFeeTier(feeTier)
     },
     attoAlphAmount: MAP_ENTRY_DEPOSIT
   })
@@ -108,7 +114,7 @@ export async function feeTierExists(invariant: InvariantInstance, ...feeTiers: F
     tierStatus.push(
       (
         await invariant.view.feeTierExist({
-          args: { feeTier }
+          args: { feeTier: wrapFeeTier(feeTier) }
         })
       ).returns
     )
@@ -124,7 +130,7 @@ export const removeFeeTier = async (
   return await RemoveFeeTier.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      feeTier
+      feeTier: wrapFeeTier(feeTier)
     }
   })
 }
@@ -143,7 +149,7 @@ export async function initPool(
       invariant: invariant.contractId,
       token0: token0.contractId,
       token1: token1.contractId,
-      feeTier,
+      feeTier: wrapFeeTier(feeTier),
       initSqrtPrice: { v: initSqrtPrice },
       initTick
     },
@@ -159,7 +165,7 @@ export const withdrawProtocolFee = async (
   return await WithdrawProtocolFee.execute(signer, {
     initialFields: {
       invariant: invariant.address,
-      poolKey
+      poolKey: wrapPoolKey(poolKey)
     },
     attoAlphAmount: DUST_AMOUNT
   })
@@ -182,7 +188,9 @@ export async function withdrawTokens(
 
 export async function getFeeTiers(invariant: InvariantInstance): Promise<Array<FeeTier>> {
   const state = await invariant.fetchState()
-  return state.fields.feeTiers.feeTiers.slice(0, Number(state.fields.feeTierCount))
+  return state.fields.feeTiers.feeTiers
+    .slice(0, Number(state.fields.feeTierCount))
+    .map(unwrapFeeTier)
 }
 
 export async function getPool(invariant: InvariantInstance, poolKey: PoolKey): Promise<Pool> {
@@ -190,7 +198,7 @@ export async function getPool(invariant: InvariantInstance, poolKey: PoolKey): P
     (
       await invariant.view.getPool({
         args: {
-          poolKey
+          poolKey: wrapPoolKey(poolKey)
         }
       })
     ).returns
@@ -259,7 +267,7 @@ export async function initPosition(
   return await CreatePosition.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      poolKey,
+      poolKey: wrapPoolKey(poolKey),
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidityDelta },
@@ -286,7 +294,7 @@ export const quote = async (
     (
       await invariant.view.quote({
         args: {
-          poolKey,
+          poolKey: wrapPoolKey(poolKey),
           xToY,
           amount: { v: amount },
           byAmountIn,
@@ -334,13 +342,11 @@ export const verifyPositionList = async (
   isWhole = false
 ) => {
   for (let n = 0n; n < length; ++n) {
-    const { exists: positionExists } = await getPosition(invariant, owner, n)
-    expect(positionExists).toBeTruthy()
+    await getPosition(invariant, owner, n)
   }
 
   if (isWhole) {
-    const { exists: positionExists } = await getPosition(invariant, owner, length)
-    expect(positionExists).toBeFalsy()
+    expectError(InvariantError.PositionNotFound, getPosition(invariant, owner, length))
   }
 }
 
@@ -359,7 +365,7 @@ export async function initSwap(
   return await Swap.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
-      poolKey,
+      poolKey: wrapPoolKey(poolKey),
       xToY,
       amount: { v: amount },
       byAmountIn,
@@ -379,12 +385,27 @@ export const getTick = async (
     (
       await invariant.view.getTick({
         args: {
-          poolKey,
+          poolKey: wrapPoolKey(poolKey),
           index
         }
       })
     ).returns
   )
+}
+
+export const changeFeeReceiver = async (
+  invariant: InvariantInstance,
+  signer: SignerProvider,
+  poolKey: PoolKey,
+  newFeeReceiver: Address
+) => {
+  return await ChangeFeeReceiver.execute(signer, {
+    initialFields: {
+      invariant: invariant.contractId,
+      poolKey: wrapPoolKey(poolKey),
+      newFeeReceiver: newFeeReceiver
+    }
+  })
 }
 
 export const isTickInitialized = async (
@@ -395,7 +416,7 @@ export const isTickInitialized = async (
   return (
     await invariant.view.isTickInitialized({
       args: {
-        poolKey,
+        poolKey: wrapPoolKey(poolKey),
         index
       }
     })

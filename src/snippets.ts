@@ -1,7 +1,6 @@
 import { Address, SignerProvider } from '@alephium/web3'
 import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
 import { MIN_SQRT_PRICE, MAX_SQRT_PRICE, PERCENTAGE_SCALE } from './consts'
-import { PoolKey } from '../artifacts/ts/types'
 import {
   getPool,
   getReserveBalances,
@@ -18,6 +17,7 @@ import {
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { calculateSqrtPrice, toLiquidity, toPercentage } from './math'
+import { PoolKey, Position } from './types'
 
 type TokenInstance = TokenFaucetInstance
 
@@ -53,7 +53,7 @@ export const initBasicPool = async (
   const tx = await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
   const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   const pool = await getPool(invariant, poolKey)
-  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice, exists: true })
+  expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice })
   return tx
 }
 
@@ -146,7 +146,6 @@ export const swapExactLimit = async (
   byAmountIn: boolean
 ) => {
   const sqrtPriceLimit: bigint = xToY ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
-
   const quoteResult = await quote(invariant, poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 
   await initSwap(invariant, signer, poolKey, xToY, amount, byAmountIn, quoteResult.targetSqrtPrice)
@@ -172,7 +171,10 @@ export const transferAndVerifyPosition = async (
   const ownerLastPositionBefore = await getPosition(invariant, owner.address, ownerListLength)
   await transferPosition(invariant, owner, index, recipient)
   const transferredPosition = await getPosition(invariant, recipient, recipientListLength)
-  const ownerAtIndexPositionAfter = await getPosition(invariant, owner.address, index)
+  let ownerAtIndexPositionAfter: undefined | Position
+  try {
+    ownerAtIndexPositionAfter = await getPosition(invariant, owner.address, index)
+  } catch (e) {}
 
   expect(transferredPosition).toStrictEqual({ owner: recipient, ...toTransfer })
   if (index != ownerListLength) {

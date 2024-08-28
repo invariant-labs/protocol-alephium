@@ -17,7 +17,7 @@ import {
 } from '../../../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { calculateSqrtPrice, getLiquidity } from '../../../src/math'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet

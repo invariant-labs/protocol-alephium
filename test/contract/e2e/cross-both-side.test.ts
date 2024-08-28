@@ -2,7 +2,6 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing, initBasicPool, initDexAndTokens } from '../../../src/snippets'
-import { newFeeTier, newPoolKey } from '../../../src/utils'
 import {
   expectError,
   getPool,
@@ -15,6 +14,7 @@ import {
 import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE } from '../../../src/consts'
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

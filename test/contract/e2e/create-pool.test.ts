@@ -12,7 +12,7 @@ import {
   calculateSqrtPrice
 } from '../../../src/testUtils'
 import { CLAMM, Invariant } from '../../../artifacts/ts'
-import { PoolKey } from '../../../artifacts/ts/types'
+import { PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -50,8 +50,7 @@ describe('create pool tests', () => {
       feeProtocolTokenY: 0n,
       liquidity: 0n,
       poolKey,
-      feeReceiver: admin.address,
-      exists: true
+      feeReceiver: admin.address
     }
     expect(pool).toMatchObject(expectedPool)
   })

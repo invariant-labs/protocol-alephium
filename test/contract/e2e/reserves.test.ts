@@ -12,13 +12,13 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { InvariantInstance } from '../../../artifacts/ts'
-import { FeeTier } from '../../../artifacts/ts/types'
 import {
   getBasicFeeTickSpacing,
   initBasicPool,
   initBasicPosition,
   initBasicSwap
 } from '../../../src/snippets'
+import { FeeTier } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -61,8 +61,7 @@ describe('reserves tests - manage multiple tokens', () => {
         feeProtocolTokenY: 0n,
         liquidity: 0n,
         poolKey,
-        feeReceiver: admin.address,
-        exists: true
+        feeReceiver: admin.address
       }
       expect(pool).toMatchObject(expectedPool)
       const lowerTickIndex = -10n

@@ -6,9 +6,9 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_POSITIONS_QUERIED } from '../../../src/consts'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -112,7 +112,7 @@ describe('get all positions test', () => {
         expect(expectedPool).toMatchObject(pool)
       }
     }
-  }, 27500)
+  })
   test('get all positions with skip pages', async () => {
     for (let i = 1n; i <= 4n * MAX_POSITIONS_QUERIED; i++) {
       const { sqrtPrice } = await invariant.getPool(poolKey)
@@ -145,7 +145,7 @@ describe('get all positions test', () => {
         expect(expectedPool).toMatchObject(pool)
       }
     }
-  }, 100000)
+  })
   test('get all positions with positions per page and skip pages', async () => {
     for (let i = 1n; i <= 50n; i++) {
       const { sqrtPrice } = await invariant.getPool(poolKey)

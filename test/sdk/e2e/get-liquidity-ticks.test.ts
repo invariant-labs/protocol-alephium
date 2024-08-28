@@ -6,9 +6,9 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
-import { FeeTier, PoolKey } from '../../../artifacts/ts/types'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_LIQUIDITY_TICKS_QUERIED, VMError } from '../../../src/consts'
+import { FeeTier, PoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -210,7 +210,7 @@ describe('query liquidity ticks tests', () => {
     const flattenTicks = ticks.flat()
     const liquidityTicks = await invariant.getLiquidityTicks(poolKey, flattenTicks)
     expect(liquidityTicks.length).toBe(Number(MAX_LIQUIDITY_TICKS_QUERIED - 1n))
-  }, 100000)
+  })
 
   test('find query limit', async () => {
     const { sqrtPrice } = await invariant.getPool(poolKey)
@@ -261,7 +261,7 @@ describe('query liquidity ticks tests', () => {
     for (const [index, liquidityTick] of singleQueryLiquidityTicks.entries()) {
       expect(liquidityTick).toMatchObject(getAllLiquidityTicks[index])
     }
-  }, 200000)
+  })
   test('query over limit fails in single call - passes in multiple', async () => {
     const { sqrtPrice } = await invariant.getPool(poolKey)
 
@@ -296,5 +296,5 @@ describe('query liquidity ticks tests', () => {
       const tick = await invariant.getTick(poolKey, liquidityTick.index)
       expect(tick).toMatchObject(liquidityTick)
     }
-  }, 200000)
+  })
 })

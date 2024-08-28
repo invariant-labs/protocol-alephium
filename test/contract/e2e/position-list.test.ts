@@ -306,14 +306,15 @@ describe('position list tests', () => {
         slippageLimitLower,
         MAX_SQRT_PRICE
       )
-      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 3n)
-      expect(positionExists).toBeTruthy()
+      await getPosition(invariant, positionsOwner.address, 3n)
     }
     // remove last position
     {
       await removePosition(invariant, positionsOwner, 3n)
-      const { exists: positionExists } = await getPosition(invariant, positionsOwner.address, 3n)
-      expect(positionExists).toBeFalsy()
+      await expectError(
+        InvariantError.PositionNotFound,
+        getPosition(invariant, positionsOwner.address, 3n)
+      )
     }
     // remove all positions
     {
@@ -339,21 +340,26 @@ describe('position list tests', () => {
       )
       const position = await getPosition(invariant, positionsOwner.address, 0n)
       expect(position).toMatchObject({
-        exists: true,
         poolKey,
         lowerTickIndex: tickIndexes[0],
         upperTickIndex: tickIndexes[1],
         liquidity: liquiditiyDelta,
         owner: positionsOwner.address
       })
-      const { exists: secondExists } = await getPosition(invariant, positionsOwner.address, 1n)
-      expect(secondExists).toBeFalsy()
+      await expectError(
+        InvariantError.PositionNotFound,
+        getPosition(invariant, positionsOwner.address, 1n)
+      )
     }
   })
 
   test('only owner can modify position list', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    expectError(InvariantError.PositionNotFound, removePosition(invariant, notOwner, 3n), invariant)
+    await expectError(
+      InvariantError.PositionNotFound,
+      removePosition(invariant, notOwner, 3n),
+      invariant
+    )
   })
 
   test('transfer position ownership', async () => {
@@ -412,7 +418,7 @@ describe('position list tests', () => {
 
   test('only owner can transfer position', async () => {
     const notOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    expectError(
+    await expectError(
       InvariantError.PositionNotFound,
       transferPosition(invariant, notOwner, 1n, notOwner.address),
       invariant

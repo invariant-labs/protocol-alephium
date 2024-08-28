@@ -19,7 +19,12 @@ import {
   removePosition,
   withdrawTokens
 } from '../../../src/testUtils'
-import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import {
+  InvariantError,
+  MAX_SQRT_PRICE,
+  MIN_SQRT_PRICE,
+  PERCENTAGE_SCALE
+} from '../../../src/consts'
 import { toLiquidity } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -70,7 +75,6 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 0n)
     const expectedPosition = {
-      exists: true,
       liquidity: 10n,
       lowerTickIndex: -10n,
       upperTickIndex: 10n,
@@ -176,7 +180,6 @@ describe('position tests', () => {
 
       const position = await getPosition(invariant, positionOwner.address, 0n)
       const expectedPosition = {
-        exists: true,
         liquidity: liquidityDelta,
         lowerTickIndex,
         upperTickIndex,
@@ -214,7 +217,6 @@ describe('position tests', () => {
 
       const position = await getPosition(invariant, positionOwner.address, 1n)
       const expectedPosition = {
-        exists: true,
         liquidity: liquidityDelta,
         lowerTickIndex: incorrectLowerTickIndex,
         upperTickIndex: incorrectUpperTickIndex,
@@ -241,7 +243,6 @@ describe('position tests', () => {
     const poolAfter = await getPool(invariant, poolKey)
 
     const expectedPool = {
-      exists: true,
       poolKey,
       liquidity: poolBefore.liquidity,
       currentTickIndex: -10n,
@@ -263,11 +264,9 @@ describe('position tests', () => {
     await removePosition(invariant, positionOwner, 0n)
 
     const pool = await getPool(invariant, poolKey)
-    const { exists: lowerInMap } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exists: upperInMap } = await getTick(invariant, poolKey, upperTickIndex)
+
     const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
-
     const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedWithdrawnX = 499n
     const expectedWithdrawnY = 999n
@@ -275,8 +274,8 @@ describe('position tests', () => {
 
     expect(dexXBefore - dexX).toBe(expectedWithdrawnX + expectedFeeX)
     expect(dexYBefore - dexY).toBe(expectedWithdrawnY)
-    expect(lowerInMap).toBeFalsy()
-    expect(upperInMap).toBeFalsy()
+    await expectError(InvariantError.InvalidTickIndex, getTick(invariant, poolKey, lowerTickIndex))
+    await expectError(InvariantError.InvalidTickIndex, getTick(invariant, poolKey, upperTickIndex))
     expect(lowerBit).toBeFalsy()
     expect(upperBit).toBeFalsy()
     expect(pool.liquidity).toBe(100000000000000000n)
@@ -327,21 +326,19 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
-    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
+    const upperTick = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedXIncrease = 317n
     const expectedYIncrease = 32n
 
-    expect(lowerInMap).toBeTruthy()
     expect(lowerTick.index).toBe(lowerTickIndex)
     expect(lowerTick.liquidityGross).toBe(liquidityDelta)
     expect(lowerTick.liquidityChange).toBe(liquidityDelta)
     expect(lowerTick.sign).toBeTruthy()
 
-    expect(upperInMap).toBeTruthy()
     expect(upperTick.index).toBe(upperTickIndex)
     expect(upperTick.liquidityGross).toBe(liquidityDelta)
     expect(upperTick.liquidityChange).toBe(liquidityDelta)
@@ -351,7 +348,6 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,
@@ -413,8 +409,8 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
-    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
+    const upperTick = await getTick(invariant, poolKey, upperTickIndex)
     const lowerBit = await isTickInitialized(invariant, poolKey, lowerTickIndex)
     const upperBit = await isTickInitialized(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -423,14 +419,12 @@ describe('position tests', () => {
     const expectedXIncrease = 0n
     const expectedYIncrease = 2162n
 
-    expect(lowerInMap).toBeTruthy()
     expect(lowerTick.index).toBe(lowerTickIndex)
     expect(lowerTick.liquidityGross).toBe(liquidityDelta)
     expect(lowerTick.liquidityChange).toBe(liquidityDelta)
     expect(lowerTick.sign).toBeTruthy()
     expect(lowerBit).toBeTruthy()
 
-    expect(upperInMap).toBeTruthy()
     expect(upperTick.index).toBe(upperTickIndex)
     expect(upperTick.liquidityGross).toBe(liquidityDelta)
     expect(upperTick.liquidityChange).toBe(liquidityDelta)
@@ -441,7 +435,6 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,
@@ -503,21 +496,19 @@ describe('position tests', () => {
 
     const position = await getPosition(invariant, positionOwner.address, 0n)
     const pool = await getPool(invariant, poolKey)
-    const { exists: lowerInMap, ...lowerTick } = await getTick(invariant, poolKey, lowerTickIndex)
-    const { exists: upperInMap, ...upperTick } = await getTick(invariant, poolKey, upperTickIndex)
+    const lowerTick = await getTick(invariant, poolKey, lowerTickIndex)
+    const upperTick = await getTick(invariant, poolKey, upperTickIndex)
     const ownerX = await balanceOf(tokenX.contractId, positionOwner.address)
     const ownerY = await balanceOf(tokenY.contractId, positionOwner.address)
     const { x: dexX, y: dexY } = await getReserveBalances(invariant, poolKey)
     const expectedXIncrease = 21549n
     const expectedYIncrease = 0n
 
-    expect(lowerInMap).toBeTruthy()
     expect(lowerTick.index).toBe(lowerTickIndex)
     expect(lowerTick.liquidityGross).toBe(liquidityDelta)
     expect(lowerTick.liquidityChange).toBe(liquidityDelta)
     expect(lowerTick.sign).toBeTruthy()
 
-    expect(upperInMap).toBeTruthy()
     expect(upperTick.index).toBe(upperTickIndex)
     expect(upperTick.liquidityGross).toBe(liquidityDelta)
     expect(upperTick.liquidityChange).toBe(liquidityDelta)
@@ -527,7 +518,6 @@ describe('position tests', () => {
     expect(pool.currentTickIndex).toBe(initTick)
 
     const expectedPosition = {
-      exists: true,
       liquidity: liquidityDelta,
       lowerTickIndex,
       upperTickIndex,

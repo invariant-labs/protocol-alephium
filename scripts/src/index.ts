@@ -119,12 +119,11 @@ const main = async () => {
       feeGrowthInsideX: 0n,
       feeGrowthInsideY: 0n,
       tokensOwedX: 0n,
-      tokensOwedY: 0n,
-      exists: true
+      tokensOwedY: 0n
     })
 
     expect(position.poolKey.feeTier).to.deep.include({
-      fee: { v: 10000000000n },
+      fee: 10000000000n,
       tickSpacing: 1n
     })
   }
