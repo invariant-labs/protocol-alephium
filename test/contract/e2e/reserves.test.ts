@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MAX_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import { MAX_SQRT_PRICE } from '../../../src/consts'
 import {
   getPool,
   initPool,
@@ -18,7 +18,8 @@ import {
   initBasicPosition,
   initBasicSwap
 } from '../../../src/snippets'
-import { FeeTier } from '../../../src/types'
+import { FeeTier, Liquidity, SqrtPrice, TokenAmount } from '../../../src/types'
+import { toPercentage, toSqrtPrice } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -26,7 +27,7 @@ let positionOwner: PrivateKeyWallet
 let swapper: PrivateKeyWallet
 let invariant: InvariantInstance
 describe('reserves tests - manage multiple tokens', () => {
-  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
+  const protocolFee = toPercentage(1n, 2n)
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   let feeTier: FeeTier
 
@@ -41,14 +42,14 @@ describe('reserves tests - manage multiple tokens', () => {
   })
   test('init 5 pools and open position on each of them, invariant manages 10 assets', async () => {
     for (let i = 0n; i < 5n; i++) {
-      const supply = 100n
+      const supply = 100n as TokenAmount
       const [tokenX, tokenY] = await initTokensXY(admin, supply)
       const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
       await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
       const initTick = 0n
-      const initSqrtPrice = 10n ** 24n
+      const initSqrtPrice = toSqrtPrice(1n)
       await initPool(invariant, positionOwner, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
       const pool = await getPool(invariant, poolKey)
@@ -66,7 +67,7 @@ describe('reserves tests - manage multiple tokens', () => {
       expect(pool).toMatchObject(expectedPool)
       const lowerTickIndex = -10n
       const upperTickIndex = 10n
-      const liquidityDelta = 100n
+      const liquidityDelta = 100n as Liquidity
 
       await initPosition(
         invariant,
@@ -77,13 +78,13 @@ describe('reserves tests - manage multiple tokens', () => {
         lowerTickIndex,
         upperTickIndex,
         liquidityDelta,
-        0n,
+        0n as SqrtPrice,
         MAX_SQRT_PRICE
       )
     }
   })
   test('pool where assets are stored in different reserves', async () => {
-    const supply = 1000000n
+    const supply = 1000000n as TokenAmount
     let firstReserveId: string = ''
     // Perform operations on 2 pools - 4 Tokens in Reserve
     for (let i = 0n; i < 2n; i++) {

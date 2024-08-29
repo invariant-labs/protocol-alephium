@@ -15,6 +15,7 @@ import {
 import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
 import { InvariantError } from '../../../src/consts'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { Percentage, SqrtPrice, TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -26,7 +27,7 @@ let tokenY: TokenFaucetInstance
 
 describe('position slippage tests', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-  const approvedTokens = 10n ** 10n
+  const approvedTokens = (10n ** 10n) as TokenAmount
   const liquidityDelta = toLiquidity(1_000_000n)
   const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
 
@@ -35,11 +36,11 @@ describe('position slippage tests', () => {
   })
 
   beforeEach(async () => {
-    invariant = await deployInvariant(admin, 0n)
+    invariant = await deployInvariant(admin, 0n as Percentage)
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
-    const tokenSupply = 10n ** 23n
+    const tokenSupply = (10n ** 23n) as TokenAmount
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await withdrawTokens(positionOwner, [tokenX, tokenSupply], [tokenY, tokenSupply])
@@ -95,8 +96,8 @@ describe('position slippage tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const slippageLimitLower = 994734637981406576896367n
-    const slippageLimitUpper = 1025038048074314166333500n
+    const slippageLimitLower = 994734637981406576896367n as SqrtPrice
+    const slippageLimitUpper = 1025038048074314166333500n as SqrtPrice
     await initPosition(
       invariant,
       positionOwner,
@@ -114,8 +115,8 @@ describe('position slippage tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const slippageLimitLower = 1014432353584998786339859n
-    const slippageLimitUpper = 1045335831204498605270797n
+    const slippageLimitLower = 1014432353584998786339859n as SqrtPrice
+    const slippageLimitUpper = 1045335831204498605270797n as SqrtPrice
 
     await expectError(
       InvariantError.PriceLimitReached,
@@ -139,8 +140,8 @@ describe('position slippage tests', () => {
     const feeTier = await newFeeTier(fee, tickSpacing)
     const poolKey = await newPoolKey(tokenX.address, tokenY.address, feeTier)
 
-    const slippageLimitLower = 955339206774222158009382n
-    const slippageLimitUpper = 984442481813945288458906n
+    const slippageLimitLower = 955339206774222158009382n as SqrtPrice
+    const slippageLimitUpper = 984442481813945288458906n as SqrtPrice
 
     await expectError(
       InvariantError.PriceLimitReached,

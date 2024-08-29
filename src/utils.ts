@@ -23,14 +23,19 @@ import {
 } from './consts'
 import { Network } from './network'
 import {
+  FeeGrowth,
   FeeTier,
+  Liquidity,
   LiquidityTick,
+  Percentage,
   Pool,
   PoolKey,
   Position,
   SimulateSwapResult,
+  SqrtPrice,
   Tickmap,
   TickVariant,
+  TokenAmount,
   unwrapFeeTier,
   unwrapPoolKey,
   wrapFeeTier
@@ -79,7 +84,7 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
 
 export async function deployInvariant(
   signer: SignerProvider,
-  protocolFee: bigint
+  protocolFee: Percentage
 ): Promise<InvariantInstance> {
   const account = await signer.getSelectedAccount()
   const clamm = await deployCLAMM(signer)
@@ -126,7 +131,7 @@ export async function deployTokenFaucet(
   name: string,
   symbol: string,
   decimals: bigint,
-  supply: bigint
+  supply: TokenAmount
 ) {
   return await waitTxConfirmed(
     TokenFaucet.deploy(signer, {
@@ -147,20 +152,20 @@ export function simulateInvariantSwap(
   pool: Pool,
   ticks: TickVariant[],
   xToY: boolean,
-  amount: bigint,
+  amount: TokenAmount,
   byAmountIn: boolean,
-  sqrtPriceLimit: bigint
+  sqrtPriceLimit: SqrtPrice
 ): SimulateSwapResult {
   return simulateSwap(tickmap, pool, ticks, xToY, amount, byAmountIn, sqrtPriceLimit)
 }
 
-export async function balanceOf(tokenId: string, address: string): Promise<bigint> {
+export async function balanceOf(tokenId: string, address: string): Promise<TokenAmount> {
   const balances = await web3.getCurrentNodeProvider().addresses.getAddressesAddressBalance(address)
   if (tokenId == ALPH_TOKEN_ID) {
-    return BigInt(balances.balance)
+    return BigInt(balances.balance) as TokenAmount
   }
   const balance = balances.tokenBalances?.find(t => t.id === tokenId)
-  return balance === undefined ? 0n : BigInt(balance.amount)
+  return (balance === undefined ? 0n : BigInt(balance.amount)) as TokenAmount
 }
 
 export function decodeFeeTiers(string: string) {
@@ -189,17 +194,17 @@ export function decodePools(string: string): Array<Pool> {
         tokenX: parts[i],
         tokenY: parts[i + 1],
         feeTier: {
-          fee: decodeU256(parts[i + 2]),
+          fee: decodeU256(parts[i + 2]) as Percentage,
           tickSpacing: decodeU256(parts[i + 3])
         }
       },
-      liquidity: decodeU256(parts[i + 4]),
-      sqrtPrice: decodeU256(parts[i + 5]),
+      liquidity: decodeU256(parts[i + 4]) as Liquidity,
+      sqrtPrice: decodeU256(parts[i + 5]) as SqrtPrice,
       currentTickIndex: decodeI256(parts[i + 6]),
-      feeGrowthGlobalX: decodeU256(parts[i + 7]),
-      feeGrowthGlobalY: decodeU256(parts[i + 8]),
-      feeProtocolTokenX: decodeU256(parts[i + 9]),
-      feeProtocolTokenY: decodeU256(parts[i + 10]),
+      feeGrowthGlobalX: decodeU256(parts[i + 7]) as FeeGrowth,
+      feeGrowthGlobalY: decodeU256(parts[i + 8]) as FeeGrowth,
+      feeProtocolTokenX: decodeU256(parts[i + 9]) as TokenAmount,
+      feeProtocolTokenY: decodeU256(parts[i + 10]) as TokenAmount,
       startTimestamp: decodeU256(parts[i + 11]),
       lastTimestamp: decodeU256(parts[i + 12]),
       feeReceiver: AddressFromByteVec(parts[i + 13]),
@@ -219,7 +224,10 @@ export const decodePoolKeys = (string: string): Array<PoolKey> => {
     const poolKey: PoolKey = {
       tokenX: parts[i],
       tokenY: parts[i + 1],
-      feeTier: { fee: decodeU256(parts[i + 2]), tickSpacing: decodeU256(parts[i + 3]) }
+      feeTier: {
+        fee: decodeU256(parts[i + 2]) as Percentage,
+        tickSpacing: decodeU256(parts[i + 3])
+      }
     }
     poolKeys.push(poolKey)
   }
@@ -261,7 +269,7 @@ export const newPoolKey = async (
   )
 }
 
-export const newFeeTier = async (fee: bigint, tickSpacing: bigint): Promise<FeeTier> => {
+export const newFeeTier = async (fee: Percentage, tickSpacing: bigint): Promise<FeeTier> => {
   return unwrapFeeTier(
     (
       await Utils.tests.newFeeTier({
@@ -295,18 +303,18 @@ export const decodePositions = (string: string): [[Position, Pool][], bigint] =>
         tokenX: parts[i],
         tokenY: parts[i + 1],
         feeTier: {
-          fee: decodeU256(parts[i + 2]),
+          fee: decodeU256(parts[i + 2]) as Percentage,
           tickSpacing: decodeU256(parts[i + 3])
         }
       },
-      liquidity: decodeU256(parts[i + 4]),
+      liquidity: decodeU256(parts[i + 4]) as Liquidity,
       lowerTickIndex: decodeI256(parts[i + 5]),
       upperTickIndex: decodeI256(parts[i + 6]),
-      feeGrowthInsideX: decodeU256(parts[i + 7]),
-      feeGrowthInsideY: decodeU256(parts[i + 8]),
+      feeGrowthInsideX: decodeU256(parts[i + 7]) as FeeGrowth,
+      feeGrowthInsideY: decodeU256(parts[i + 8]) as FeeGrowth,
       lastBlockNumber: decodeU256(parts[i + 9]),
-      tokensOwedX: decodeU256(parts[i + 10]),
-      tokensOwedY: decodeU256(parts[i + 11]),
+      tokensOwedX: decodeU256(parts[i + 10]) as TokenAmount,
+      tokensOwedY: decodeU256(parts[i + 11]) as TokenAmount,
       owner: AddressFromByteVec(parts[i + 12])
     }
     const pool: Pool = {
@@ -314,17 +322,17 @@ export const decodePositions = (string: string): [[Position, Pool][], bigint] =>
         tokenX: parts[i + 13],
         tokenY: parts[i + 14],
         feeTier: {
-          fee: decodeU256(parts[i + 15]),
+          fee: decodeU256(parts[i + 15]) as Percentage,
           tickSpacing: decodeU256(parts[i + 16])
         }
       },
-      liquidity: decodeU256(parts[i + 17]),
-      sqrtPrice: decodeU256(parts[i + 18]),
+      liquidity: decodeU256(parts[i + 17]) as Liquidity,
+      sqrtPrice: decodeU256(parts[i + 18]) as SqrtPrice,
       currentTickIndex: decodeI256(parts[i + 19]),
-      feeGrowthGlobalX: decodeU256(parts[i + 20]),
-      feeGrowthGlobalY: decodeU256(parts[i + 21]),
-      feeProtocolTokenX: decodeU256(parts[i + 22]),
-      feeProtocolTokenY: decodeU256(parts[i + 23]),
+      feeGrowthGlobalX: decodeU256(parts[i + 20]) as FeeGrowth,
+      feeGrowthGlobalY: decodeU256(parts[i + 21]) as FeeGrowth,
+      feeProtocolTokenX: decodeU256(parts[i + 22]) as TokenAmount,
+      feeProtocolTokenY: decodeU256(parts[i + 23]) as TokenAmount,
       startTimestamp: decodeU256(parts[i + 24]),
       lastTimestamp: decodeU256(parts[i + 25]),
       feeReceiver: AddressFromByteVec(parts[i + 26]),
@@ -384,7 +392,7 @@ export const decodeLiquidityTicks = (string: string): LiquidityTick[] => {
   for (let i = 0; i < parts.length - 1; i += 3) {
     const tick: LiquidityTick = {
       index: decodeI256(parts[i]),
-      liquidityChange: decodeU256(parts[i + 1]),
+      liquidityChange: decodeU256(parts[i + 1]) as Liquidity,
       sign: decodeBool(hexToBytes(parts[i + 2]))
     }
     ticks.push(tick)

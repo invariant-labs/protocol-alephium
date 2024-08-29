@@ -2,7 +2,7 @@ import { DUST_AMOUNT, MAP_ENTRY_DEPOSIT, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { InvariantError, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import { InvariantError, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
   getPool,
   initPool,
@@ -26,8 +26,8 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../../../artifacts/ts'
-import { toLiquidity } from '../../../src/math'
-import { FeeTier, PoolKey, wrapPoolKey } from '../../../src/types'
+import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
+import { FeeTier, PoolKey, TokenAmount, wrapPoolKey } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -41,15 +41,15 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('interaction with pool on removed fee tiers tests', () => {
-  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
-  const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
+  const protocolFee = toPercentage(1n, 2n)
+  const fee = toPercentage(6n, 3n)
   const tickSpacing = 10n
   const initTick = 0n
-  const initSqrtPrice = 10n ** 24n
-  const supply = 10n ** 18n
+  const initSqrtPrice = toSqrtPrice(1n)
+  const supply = (10n ** 18n) as TokenAmount
   const lowerTickIndex = -20n
   const upperTickIndex = 10n
-  const mint = 10n ** 10n
+  const mint = (10n ** 10n) as TokenAmount
   const liquidityDelta = toLiquidity(1000000n)
   let feeTier: FeeTier
   let poolKey: PoolKey
@@ -109,7 +109,7 @@ describe('interaction with pool on removed fee tiers tests', () => {
     expect(poolAfter.liquidity).toBe(liquidityDelta)
   })
   test('init swap', async () => {
-    const amount = 1000n
+    const amount = 1000n as TokenAmount
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
     const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)

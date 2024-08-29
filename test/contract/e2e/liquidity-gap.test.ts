@@ -20,12 +20,12 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('liquidity gap tests', () => {
-  const mintAmount = 10n ** 10n
+  const mintAmount = (10n ** 10n) as TokenAmount
   let deployer: PrivateKeyWallet
   let positionOwner: PrivateKeyWallet
   let swapper: PrivateKeyWallet
@@ -53,7 +53,7 @@ describe('liquidity gap tests', () => {
     await initPool(invariant, deployer, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
   })
   test('init position', async () => {
-    const amount = 10n ** 6n
+    const amount = (10n ** 6n) as TokenAmount
     const lowerTick = -10n
     const upperTick = 10n
     const liquidityDelta = toLiquidity(20006000n)
@@ -79,7 +79,7 @@ describe('liquidity gap tests', () => {
     expect(poolAfter.liquidity).toEqual(liquidityDelta)
   })
   test('init swap', async () => {
-    const amount = 10067n
+    const amount = 10067n as TokenAmount
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
     const { x: dexXBefore, y: dexYBefore } = await getReserveBalances(invariant, poolKey)
@@ -120,7 +120,7 @@ describe('liquidity gap tests', () => {
     const lowerTick = -90n
     const upperTick = -50n
     const liquidityDelta = toLiquidity(20008000n)
-    const amount = 10n ** 6n
+    const amount = (10n ** 6n) as TokenAmount
     await withdrawTokens(positionOwner, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, poolKey)
@@ -141,7 +141,7 @@ describe('liquidity gap tests', () => {
     )
   })
   test('should skip gap and then swap', async () => {
-    const amount = 10067n
+    const amount = 10067n as TokenAmount
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
     const slippage = MIN_SQRT_PRICE

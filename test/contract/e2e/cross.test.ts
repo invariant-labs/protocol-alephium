@@ -19,6 +19,7 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { toLiquidity } from '../../../src/math'
+import { TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -28,7 +29,7 @@ describe('cross tests', () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
   })
   test('cross', async () => {
-    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, 10n ** 23n)
+    const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, (10n ** 23n) as TokenAmount)
     const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
     await initFeeTier(invariant, admin, feeTier)
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
@@ -41,7 +42,7 @@ describe('cross tests', () => {
     const liquidityDelta = toLiquidity(1_000_000n)
     {
       // definitely enough for the given liquidity/ticks
-      const approvedAmount = liquidityDelta
+      const approvedAmount = BigInt(liquidityDelta) as TokenAmount
       await withdrawTokens(positionsOwner, [tokenX, approvedAmount], [tokenY, approvedAmount])
       const [lowerTick, upperTick] = [-40n, -10n]
 
@@ -68,7 +69,7 @@ describe('cross tests', () => {
     // cross swap
     {
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const approvedAmount = 1000n
+      const approvedAmount = 1000n as TokenAmount
       await withdrawTokens(swapper, [tokenX, approvedAmount])
 
       {

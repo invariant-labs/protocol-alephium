@@ -21,13 +21,17 @@ import {
   decodePosition,
   decodeTick,
   FeeTier,
+  Liquidity,
   LiquidityTick,
+  Percentage,
   Pool,
   PoolKey,
   Position,
   QuoteResult,
+  SqrtPrice,
   Tick,
   Tickmap,
+  TokenAmount,
   unwrapFeeTier,
   unwrapPool,
   unwrapPoolKey,
@@ -86,7 +90,7 @@ export class Invariant {
   static async deploy(
     signer: SignerProvider,
     network: Network,
-    protocolFee: bigint = 0n
+    protocolFee: Percentage = 0n as Percentage
   ): Promise<Invariant> {
     const account = await signer.getSelectedAccount()
     const clamm = await deployCLAMM(signer)
@@ -153,7 +157,7 @@ export class Invariant {
     token0Id: string,
     token1Id: string,
     feeTier: FeeTier,
-    initSqrtPrice: bigint
+    initSqrtPrice: SqrtPrice
   ) {
     const initTick = await calculateTick(initSqrtPrice, feeTier.tickSpacing)
     const txBytecode = CreatePool.script.buildByteCodeToDeploy({
@@ -177,7 +181,7 @@ export class Invariant {
     token0Id: string,
     token1Id: string,
     feeTier: FeeTier,
-    initSqrtPrice: bigint
+    initSqrtPrice: SqrtPrice
   ): Promise<string> {
     const tx = await this.createPoolTx(signer, token0Id, token1Id, feeTier, initSqrtPrice)
     return await signAndSend(signer, tx)
@@ -246,11 +250,11 @@ export class Invariant {
     poolKey: PoolKey,
     lowerTick: bigint,
     upperTick: bigint,
-    liquidityDelta: bigint,
-    approvedTokensX: bigint,
-    approvedTokensY: bigint,
-    slippageLimitLower: bigint,
-    slippageLimitUpper: bigint
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    slippageLimitLower: SqrtPrice,
+    slippageLimitUpper: SqrtPrice
   ) {
     const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
@@ -289,11 +293,11 @@ export class Invariant {
     poolKey: PoolKey,
     lowerTick: bigint,
     upperTick: bigint,
-    liquidityDelta: bigint,
-    approvedTokensX: bigint,
-    approvedTokensY: bigint,
-    slippageLimitLower: bigint,
-    slippageLimitUpper: bigint
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    slippageLimitLower: SqrtPrice,
+    slippageLimitUpper: SqrtPrice
   ): Promise<string> {
     const tx = await this.createPositionTx(
       signer,
@@ -371,9 +375,9 @@ export class Invariant {
     signer: SignerProvider,
     poolKey: PoolKey,
     xToY: boolean,
-    amount: bigint,
+    amount: TokenAmount,
     byAmountIn: boolean,
-    sqrtPriceLimit: bigint,
+    sqrtPriceLimit: SqrtPrice,
     approvedAmount = amount
   ) {
     const tokenId = xToY ? poolKey.tokenX : poolKey.tokenY
@@ -402,9 +406,9 @@ export class Invariant {
     signer: SignerProvider,
     poolKey: PoolKey,
     xToY: boolean,
-    amount: bigint,
+    amount: TokenAmount,
     byAmountIn: boolean,
-    sqrtPriceLimit: bigint,
+    sqrtPriceLimit: SqrtPrice,
     approvedAmount = amount
   ): Promise<string> {
     const tx = await this.swapTx(
@@ -423,10 +427,10 @@ export class Invariant {
     signer: SignerProvider,
     poolKey: PoolKey,
     xToY: boolean,
-    amount: bigint,
+    amount: TokenAmount,
     byAmountIn: boolean,
-    estimatedSqrtPrice: bigint,
-    slippage: bigint
+    estimatedSqrtPrice: SqrtPrice,
+    slippage: Percentage
   ) {
     const sqrtPriceAfterSlippage = calculateSqrtPriceAfterSlippage(
       estimatedSqrtPrice,
@@ -440,7 +444,7 @@ export class Invariant {
       xToY,
       amount,
       byAmountIn,
-      xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n
+      (xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n) as SqrtPrice
     )
   }
 
@@ -448,10 +452,10 @@ export class Invariant {
     signer: SignerProvider,
     poolKey: PoolKey,
     xToY: boolean,
-    amount: bigint,
+    amount: TokenAmount,
     byAmountIn: boolean,
-    estimatedSqrtPrice: bigint,
-    slippage: bigint
+    estimatedSqrtPrice: SqrtPrice,
+    slippage: Percentage
   ): Promise<string> {
     const tx = await this.swapWithSlippageTx(
       signer,

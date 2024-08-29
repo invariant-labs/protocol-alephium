@@ -5,6 +5,7 @@ import {
   LIQUIDITY_SCALE,
   PERCENTAGE_DENOMINATOR,
   PERCENTAGE_SCALE,
+  PRICE_SCALE,
   SQRT_PRICE_DENOMINATOR,
   SQRT_PRICE_SCALE
 } from './consts'
@@ -15,22 +16,29 @@ import {
   LiquidityResult,
   unwrapLiquidityResult,
   SingleTokenLiquidity,
-  unwrapSingleTokenLiquidity
+  unwrapSingleTokenLiquidity,
+  FixedPoint,
+  TokenAmount,
+  FeeGrowth,
+  Percentage,
+  SqrtPrice,
+  Liquidity,
+  Price
 } from './types'
 
-export const calculateSqrtPrice = async (tickIndex: bigint): Promise<bigint> => {
+export const calculateSqrtPrice = async (tickIndex: bigint): Promise<SqrtPrice> => {
   return (
     await Utils.tests.calculateSqrtPrice({
       testArgs: { tickIndex }
     })
-  ).returns.v
+  ).returns.v as SqrtPrice
 }
 
 export const getLiquidityByX = async (
-  x: bigint,
+  x: TokenAmount,
   lowerTick: bigint,
   upperTick: bigint,
-  currentSqrtPrice: bigint,
+  currentSqrtPrice: SqrtPrice,
   roundingUp: boolean
 ): Promise<SingleTokenLiquidity> => {
   return unwrapSingleTokenLiquidity(
@@ -49,10 +57,10 @@ export const getLiquidityByX = async (
 }
 
 export const getLiquidityByY = async (
-  y: bigint,
+  y: TokenAmount,
   lowerTick: bigint,
   upperTick: bigint,
-  currentSqrtPrice: bigint,
+  currentSqrtPrice: SqrtPrice,
   roundingUp: boolean
 ): Promise<SingleTokenLiquidity> => {
   return unwrapSingleTokenLiquidity(
@@ -71,11 +79,11 @@ export const getLiquidityByY = async (
 }
 
 export const getLiquidity = async (
-  x: bigint,
-  y: bigint,
+  x: TokenAmount,
+  y: TokenAmount,
   lowerTick: bigint,
   upperTick: bigint,
-  currentSqrtPrice: bigint,
+  currentSqrtPrice: SqrtPrice,
   roundingUp: boolean
 ): Promise<LiquidityResult> => {
   return unwrapLiquidityResult(
@@ -95,11 +103,11 @@ export const getLiquidity = async (
 }
 
 export const getDeltaY = async (
-  sqrtPriceA: bigint,
-  sqrtPriceB: bigint,
-  liquidity: bigint,
+  sqrtPriceA: SqrtPrice,
+  sqrtPriceB: SqrtPrice,
+  liquidity: Liquidity,
   roundingUp: boolean
-): Promise<bigint> => {
+): Promise<TokenAmount> => {
   return (
     await CLAMM.tests.getDeltaY({
       testArgs: {
@@ -109,7 +117,7 @@ export const getDeltaY = async (
         roundingUp
       }
     })
-  ).returns.v
+  ).returns.v as TokenAmount
 }
 
 export const getMaxTick = async (tickSpacing: bigint): Promise<bigint> => {
@@ -142,7 +150,7 @@ export const getMaxChunk = async (tickSpacing: bigint): Promise<bigint> => {
   ).returns
 }
 
-export const calculateTick = async (sqrtPrice: bigint, tickSpacing: bigint): Promise<bigint> => {
+export const calculateTick = async (sqrtPrice: SqrtPrice, tickSpacing: bigint): Promise<bigint> => {
   return (
     await Utils.tests.getTickAtSqrtPrice({
       testArgs: {
@@ -153,24 +161,24 @@ export const calculateTick = async (sqrtPrice: bigint, tickSpacing: bigint): Pro
   ).returns
 }
 
-export const getMaxSqrtPrice = async (tickSpacing: bigint): Promise<bigint> => {
+export const getMaxSqrtPrice = async (tickSpacing: bigint): Promise<SqrtPrice> => {
   return (
     await Utils.tests.getMaxSqrtPrice({
       testArgs: {
         tickSpacing
       }
     })
-  ).returns.v
+  ).returns.v as SqrtPrice
 }
 
-export const getMinSqrtPrice = async (tickSpacing: bigint): Promise<bigint> => {
+export const getMinSqrtPrice = async (tickSpacing: bigint): Promise<SqrtPrice> => {
   return (
     await Utils.tests.getMinSqrtPrice({
       testArgs: {
         tickSpacing
       }
     })
-  ).returns.v
+  ).returns.v as SqrtPrice
 }
 
 export const isTokenX = async (candidate: string, compareTo: string): Promise<boolean> => {
@@ -184,7 +192,10 @@ export const isTokenX = async (candidate: string, compareTo: string): Promise<bo
   ).returns
 }
 
-export async function getTickAtSqrtPrice(sqrtPrice: bigint, tickSpacing: bigint): Promise<bigint> {
+export async function getTickAtSqrtPrice(
+  sqrtPrice: SqrtPrice,
+  tickSpacing: bigint
+): Promise<bigint> {
   return (
     await CLAMM.tests.getTickAtSqrtPrice({
       testArgs: { sqrtPrice: { v: sqrtPrice }, tickSpacing }
@@ -207,7 +218,7 @@ export const calculateFee = async (
   position: Position,
   lowerTick: Tick,
   upperTick: Tick
-): Promise<[bigint, bigint]> => {
+): Promise<[TokenAmount, TokenAmount]> => {
   const [{ v: tokensOwedX }, { v: tokensOwedY }] = (
     await Utils.tests.calculateFee({
       testArgs: {
@@ -227,13 +238,13 @@ export const calculateFee = async (
     })
   ).returns
 
-  return [tokensOwedX, tokensOwedY]
+  return [tokensOwedX as TokenAmount, tokensOwedY as TokenAmount]
 }
 
 export const calculateTokenAmounts = async (
   pool: Pool,
   position: Position
-): Promise<[bigint, bigint, boolean]> => {
+): Promise<[TokenAmount, TokenAmount, boolean]> => {
   const [{ v: amountX }, { v: amountY }, updateLiquidity] = (
     await CLAMM.tests.calculateAmountDelta({
       testArgs: {
@@ -246,7 +257,7 @@ export const calculateTokenAmounts = async (
       }
     })
   ).returns
-  return [amountX, amountY, updateLiquidity]
+  return [amountX as TokenAmount, amountY as TokenAmount, updateLiquidity]
 }
 
 export const bitPositionToTick = async (
@@ -284,35 +295,35 @@ const newtonIteration = (n: bigint, x0: bigint): bigint => {
   return newtonIteration(n, x1)
 }
 
-export const sqrtPriceToPrice = (sqrtPrice: bigint): bigint => {
-  return (sqrtPrice * sqrtPrice) / SQRT_PRICE_DENOMINATOR
+export const sqrtPriceToPrice = (sqrtPrice: SqrtPrice): Price => {
+  return ((sqrtPrice * sqrtPrice) / SQRT_PRICE_DENOMINATOR) as Price
 }
 
-export const priceToSqrtPrice = (price: bigint): bigint => {
-  return sqrt(price * SQRT_PRICE_DENOMINATOR)
+export const priceToSqrtPrice = (price: Price): SqrtPrice => {
+  return sqrt(price * SQRT_PRICE_DENOMINATOR) as SqrtPrice
 }
 
 export const calculateSqrtPriceAfterSlippage = (
-  sqrtPrice: bigint,
-  slippage: bigint,
+  sqrtPrice: SqrtPrice,
+  slippage: Percentage,
   up: boolean
-): bigint => {
+): SqrtPrice => {
   if (slippage === 0n) {
     return sqrtPrice
   }
 
   const multiplier = PERCENTAGE_DENOMINATOR + (up ? slippage : -slippage)
   const price = sqrtPriceToPrice(sqrtPrice)
-  const priceWithSlippage = price * multiplier * PERCENTAGE_DENOMINATOR
+  const priceWithSlippage = (price * multiplier * PERCENTAGE_DENOMINATOR) as Price
   const sqrtPriceWithSlippage = priceToSqrtPrice(priceWithSlippage) / PERCENTAGE_DENOMINATOR
 
-  return sqrtPriceWithSlippage
+  return sqrtPriceWithSlippage as SqrtPrice
 }
 
 export const calculatePriceImpact = (
-  startingSqrtPrice: bigint,
-  endingSqrtPrice: bigint
-): bigint => {
+  startingSqrtPrice: SqrtPrice,
+  endingSqrtPrice: SqrtPrice
+): Percentage => {
   const startingPrice = startingSqrtPrice * startingSqrtPrice
   const endingPrice = endingSqrtPrice * endingSqrtPrice
   const diff = startingPrice - endingPrice
@@ -320,42 +331,45 @@ export const calculatePriceImpact = (
   const nominator = diff > 0n ? diff : -diff
   const denominator = startingPrice > endingPrice ? startingPrice : endingPrice
 
-  return (nominator * PERCENTAGE_DENOMINATOR) / denominator
+  return ((nominator * PERCENTAGE_DENOMINATOR) / denominator) as Percentage
 }
 
-export const toLiquidity = (value: bigint, offset = 0n) => {
+export const toLiquidity = (value: bigint, offset = 0n): Liquidity => {
   if (offset > LIQUIDITY_SCALE)
     throw new Error(`offset must be less than or equal to ${LIQUIDITY_SCALE}`)
-  return value * 10n ** (LIQUIDITY_SCALE - offset)
+  return (value * 10n ** (LIQUIDITY_SCALE - offset)) as Liquidity
 }
 
-export const toSqrtPrice = (value: bigint, offset = 0n): bigint => {
+export const toSqrtPrice = (value: bigint, offset = 0n): SqrtPrice => {
   if (offset > SQRT_PRICE_SCALE)
     throw new Error(`offset must be less than or equal to ${SQRT_PRICE_SCALE}`)
-  return value * 10n ** (SQRT_PRICE_SCALE - offset)
+  return (value * 10n ** (SQRT_PRICE_SCALE - offset)) as SqrtPrice
 }
 
-export const toPrice = toSqrtPrice
+export const toPrice = (value: bigint, offset = 0n): Price => {
+  if (offset > PRICE_SCALE) throw new Error(`offset must be less than or equal to ${PRICE_SCALE}`)
+  return (value * 10n ** (PRICE_SCALE - offset)) as Price
+}
 
-export const toPercentage = (value: bigint, offset = 0n): bigint => {
+export const toPercentage = (value: bigint, offset = 0n): Percentage => {
   if (offset > PERCENTAGE_SCALE)
     throw new Error(`offset must be less than or equal to ${PERCENTAGE_SCALE}`)
-  return value * 10n ** (PERCENTAGE_SCALE - offset)
+  return (value * 10n ** (PERCENTAGE_SCALE - offset)) as Percentage
 }
 
-export const toFeeGrowth = (value: bigint, offset = 0n): bigint => {
+export const toFeeGrowth = (value: bigint, offset = 0n): FeeGrowth => {
   if (offset > FEE_GROWTH_SCALE)
     throw new Error(`offset must be less than or equal to ${FEE_GROWTH_SCALE}`)
-  return value * 10n ** (FEE_GROWTH_SCALE - offset)
+  return (value * 10n ** (FEE_GROWTH_SCALE - offset)) as FeeGrowth
 }
 
-export const toTokenAmount = (value: bigint, decimals: bigint, offset = 0n): bigint => {
+export const toTokenAmount = (value: bigint, decimals: bigint, offset = 0n): TokenAmount => {
   if (offset > decimals) throw new Error(`offset must be less than or equal to ${decimals}`)
-  return value * 10n ** (decimals - offset)
+  return (value * 10n ** (decimals - offset)) as TokenAmount
 }
 
-export const toFixedPoint = (value: bigint, offset = 0n): bigint => {
+export const toFixedPoint = (value: bigint, offset = 0n): FixedPoint => {
   if (offset > FIXED_POINT_SCALE)
     throw new Error(`offset must be less than or equal to ${FIXED_POINT_SCALE}`)
-  return value * 10n ** (FIXED_POINT_SCALE - offset)
+  return (value * 10n ** (FIXED_POINT_SCALE - offset)) as FixedPoint
 }

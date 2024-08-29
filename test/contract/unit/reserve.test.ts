@@ -15,18 +15,19 @@ import {
 import { expectError, expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { balanceOf, waitTxConfirmed } from '../../../src/utils'
 import { RESERVE_ASSET_CAPACITY, ReserveError, VMError } from '../../../src/consts'
+import { TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('reserve tests', () => {
+  const supply = 1000n as TokenAmount
   test('deposit single asset', async () => {
     const depositor = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
     const [tokenX] = await initTokensXY(depositor, supply)
     const reserve = await deployReserveWithAuthority(depositor)
     await withdrawTokens(depositor, [tokenX, supply])
 
-    const deposit = 50n
+    const deposit = 50n as TokenAmount
     await depositSingleAsset(reserve, depositor, tokenX, deposit)
 
     const reserveBalance = await balanceOf(tokenX.contractId, reserve.address)
@@ -35,12 +36,11 @@ describe('reserve tests', () => {
 
   test('deposit two assets', async () => {
     const depositor = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
     const [tokenX, tokenY] = await initTokensXY(depositor, supply)
     const reserve = await deployReserveWithAuthority(depositor)
     await withdrawTokens(depositor, [tokenX, supply], [tokenY, supply])
 
-    const deposit = 75n
+    const deposit = 75n as TokenAmount
     await depositTwoAssets(reserve, depositor, tokenX, deposit, tokenY, deposit)
 
     const reserveBalance = {
@@ -55,12 +55,11 @@ describe('reserve tests', () => {
 
   test('withdraw single asset', async () => {
     const withdrawer = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
     const [tokenX] = await initTokensXY(withdrawer, supply)
     const reserve = await deployReserveWithAuthority(withdrawer)
     await withdrawTokens(withdrawer, [tokenX, supply])
 
-    const deposit = 50n
+    const deposit = 50n as TokenAmount
     await depositSingleAsset(reserve, withdrawer, tokenX, deposit)
 
     const withdraw = 25n
@@ -75,7 +74,6 @@ describe('reserve tests', () => {
 
   test('withdraw two assets', async () => {
     const withdrawer = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
     const [tokenX, tokenY] = await initTokensXY(withdrawer, supply)
     const reserve = await deployReserveWithAuthority(withdrawer)
     await withdrawTokens(withdrawer, [tokenX, supply], [tokenY, supply])
@@ -107,8 +105,7 @@ describe('reserve tests', () => {
 
   test('swap assets', async () => {
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
-    const deposit = 75n
+    const deposit = 75n as TokenAmount
 
     const [tokenX, tokenY] = await initTokensXY(swapper, supply)
     const reserve = await deployReserveWithAuthority(swapper)
@@ -116,7 +113,7 @@ describe('reserve tests', () => {
 
     await depositTwoAssets(reserve, swapper, tokenX, deposit, tokenY, deposit)
 
-    const amountIn = 10n
+    const amountIn = 10n as TokenAmount
     const outAmount = 20n
     await withdrawTokens(swapper, [tokenX, amountIn])
 
@@ -149,8 +146,7 @@ describe('reserve tests', () => {
   test('reserve panics when storing more than RESERVE_ASSET_CAPACITY assets', async () => {
     const depositor = await getSigner(ONE_ALPH * 1000n, 0)
     const reserve = await deployReserveWithAuthority(depositor)
-    const supply = 1000n
-    const deposit = 75n
+    const deposit = 75n as TokenAmount
 
     for (let i = 0; i < RESERVE_ASSET_CAPACITY / 2n; i++) {
       const [tokenX, tokenY] = await initTokensXY(depositor, supply)
@@ -180,14 +176,13 @@ describe('reserve tests', () => {
   test('entrypoints prevent an unauthorized user to perform a transfers', async () => {
     const reserveOwner = await getSigner(ONE_ALPH * 1000n, 0)
     const unauthorizedUser = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 1000n
     const reserve = await deployReserveWithAuthority(reserveOwner)
 
     // deposits
     {
       const [tokenX, tokenY] = await initTokensXY(reserveOwner, supply)
 
-      const deposit = 75n
+      const deposit = 75n as TokenAmount
       await withdrawTokens(unauthorizedUser, [tokenX, deposit], [tokenY, deposit])
       await expectError(
         ReserveError.NotInvariant,
@@ -202,7 +197,7 @@ describe('reserve tests', () => {
     {
       const [tokenX, tokenY] = await initTokensXY(reserveOwner, supply)
 
-      const deposit = 75n
+      const deposit = 75n as TokenAmount
       await withdrawTokens(reserveOwner, [tokenX, deposit], [tokenY, deposit])
       await depositTwoAssets(reserve, reserveOwner, tokenX, deposit, tokenY, deposit)
 
@@ -219,12 +214,12 @@ describe('reserve tests', () => {
     {
       const [tokenX, tokenY] = await initTokensXY(reserveOwner, supply)
 
-      const deposit = 75n
+      const deposit = 75n as TokenAmount
       await withdrawTokens(reserveOwner, [tokenX, deposit], [tokenY, deposit])
       await depositTwoAssets(reserve, reserveOwner, tokenX, deposit, tokenY, deposit)
 
-      const amountIn = 10n
-      const amountOut = 20n
+      const amountIn = 10n as TokenAmount
+      const amountOut = 20n as TokenAmount
       await withdrawTokens(unauthorizedUser, [tokenX, amountIn], [tokenY, amountOut])
 
       await expectError(

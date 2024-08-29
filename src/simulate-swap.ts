@@ -29,16 +29,27 @@ import {
   TOKEN_AMOUNT_DENOMINATOR,
   TOKEN_AMOUNT_SCALE
 } from './consts'
-import { Pool, SimulateSwapResult, SwapResult, Tickmap, TickVariant } from './types'
+import {
+  FixedPoint,
+  Liquidity,
+  Percentage,
+  Pool,
+  SimulateSwapResult,
+  SqrtPrice,
+  SwapResult,
+  Tickmap,
+  TickVariant,
+  TokenAmount
+} from './types'
 
 export const simulateSwap = (
   tickmap: Tickmap,
   pool: Pool,
   ticks: TickVariant[],
   xToY: boolean,
-  amount: bigint,
+  amount: TokenAmount,
   byAmountIn: boolean,
-  sqrtPriceLimit: bigint
+  sqrtPriceLimit: SqrtPrice
 ): SimulateSwapResult => {
   const feeTier = pool.poolKey.feeTier
 
@@ -67,10 +78,10 @@ export const simulateSwap = (
   let ticksCrossed: Array<TickVariant> = []
   let swapSteps = 0
 
-  let totalAmountIn = 0n
-  let totalAmountOut = 0n
-  let eventFeeAmount = 0n
-  let remainingAmount: bigint = amount
+  let totalAmountIn = 0n as TokenAmount
+  let totalAmountOut = 0n as TokenAmount
+  let eventFeeAmount = 0n as TokenAmount
+  let remainingAmount: TokenAmount = amount
   const eventStartSqrtPrice = sqrtPrice
 
   while (remainingAmount != 0n) {
@@ -101,17 +112,18 @@ export const simulateSwap = (
     swapSteps += 1
 
     if (byAmountIn) {
-      remainingAmount -= swapResult.amountIn + swapResult.feeAmount
+      remainingAmount = (remainingAmount -
+        (swapResult.amountIn + swapResult.feeAmount)) as TokenAmount
     } else {
-      remainingAmount -= swapResult.amountOut
+      remainingAmount = (remainingAmount - swapResult.amountOut) as TokenAmount
     }
 
     // pool = await AddFee(pool, swapResult.feeAmount, xToY, protocolFee)
     pool.sqrtPrice = swapResult.nextSqrtPrice
 
-    totalAmountIn += swapResult.amountIn + swapResult.feeAmount
-    totalAmountOut += swapResult.amountOut
-    eventFeeAmount += swapResult.feeAmount
+    totalAmountIn = (totalAmountIn + swapResult.amountIn + swapResult.feeAmount) as TokenAmount
+    totalAmountOut = (totalAmountOut + swapResult.amountOut) as TokenAmount
+    eventFeeAmount = (eventFeeAmount + swapResult.feeAmount) as TokenAmount
 
     // fail if price would go over swap limit
     if (swapResult.nextSqrtPrice === sqrtPriceLimit && remainingAmount != 0n) {
@@ -149,7 +161,7 @@ export const simulateSwap = (
     }
 
     remainingAmount = poolUpdateTickResult.amountAfterTickUpdate
-    totalAmountIn += poolUpdateTickResult.amountToAdd
+    totalAmountIn = (totalAmountIn + poolUpdateTickResult.amountToAdd) as TokenAmount
 
     if (poolUpdateTickResult.hasCrossed && tick) {
       ticksCrossed.push(tick)
@@ -188,7 +200,7 @@ export const simulateSwap = (
 }
 
 type getCloserLimitResult = {
-  swapLimit: bigint
+  swapLimit: SqrtPrice
   hasLimitingTick: boolean
   limitingTickIndex: bigint
   isInitialized: boolean
@@ -196,7 +208,7 @@ type getCloserLimitResult = {
 }
 
 const getCloserLimit = (
-  sqrtPriceLimit: bigint,
+  sqrtPriceLimit: SqrtPrice,
   xToY: boolean,
   currentTickIndex: bigint,
   tickSpacing: bigint,
@@ -412,30 +424,31 @@ const getSearchLimit = (tick: bigint, tickSpacing: bigint, up: boolean): bigint 
 }
 
 const computeSwapStep = (
-  currentSqrtPrice: bigint,
-  targetSqrtPrice: bigint,
-  liquidity: bigint,
-  amount: bigint,
+  currentSqrtPrice: SqrtPrice,
+  targetSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  amount: TokenAmount,
   byAmountIn: boolean,
-  fee: bigint
+  fee: Percentage
 ): SwapResult => {
   if (liquidity === 0n) {
     return {
       nextSqrtPrice: targetSqrtPrice,
-      amountIn: 0n,
-      amountOut: 0n,
-      feeAmount: 0n
+      amountIn: 0n as TokenAmount,
+      amountOut: 0n as TokenAmount,
+      feeAmount: 0n as TokenAmount
     }
   }
 
   const xToY = currentSqrtPrice >= targetSqrtPrice
 
-  let nextSqrtPrice: bigint
-  let amountIn = 0n
-  let amountOut = 0n
+  let nextSqrtPrice: SqrtPrice
+  let amountIn = 0n as TokenAmount
+  let amountOut = 0n as TokenAmount
 
   if (byAmountIn) {
-    const amountAfterFee = (amount * (PERCENTAGE_DENOMINATOR - fee)) / PERCENTAGE_DENOMINATOR
+    const amountAfterFee = ((amount * (PERCENTAGE_DENOMINATOR - fee)) /
+      PERCENTAGE_DENOMINATOR) as TokenAmount
     amountIn = xToY
       ? getDeltaX(targetSqrtPrice, currentSqrtPrice, liquidity, true)
       : getDeltaY(currentSqrtPrice, targetSqrtPrice, liquidity, true)
@@ -476,11 +489,12 @@ const computeSwapStep = (
     amountOut = amount
   }
 
-  let feeAmount: bigint
+  let feeAmount: TokenAmount
   if (byAmountIn && nextSqrtPrice !== targetSqrtPrice) {
-    feeAmount = amount - amountIn
+    feeAmount = (amount - amountIn) as TokenAmount
   } else {
-    feeAmount = (PERCENTAGE_DENOMINATOR - 1n + amountIn * fee) / PERCENTAGE_DENOMINATOR
+    feeAmount = ((PERCENTAGE_DENOMINATOR - 1n + amountIn * fee) /
+      PERCENTAGE_DENOMINATOR) as TokenAmount
   }
 
   return {
@@ -492,11 +506,11 @@ const computeSwapStep = (
 }
 
 const getDeltaX = (
-  sqrtPriceA: bigint,
-  sqrtPriceB: bigint,
-  liquidity: bigint,
+  sqrtPriceA: SqrtPrice,
+  sqrtPriceB: SqrtPrice,
+  liquidity: Liquidity,
   roundingUp: boolean
-): bigint => {
+): TokenAmount => {
   const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
 
   const nominator = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
@@ -510,31 +524,31 @@ const getDeltaX = (
 }
 
 const getDeltaY = (
-  sqrtPriceA: bigint,
-  sqrtPriceB: bigint,
-  liquidity: bigint,
+  sqrtPriceA: SqrtPrice,
+  sqrtPriceB: SqrtPrice,
+  liquidity: Liquidity,
   roundingUp: boolean
-): bigint => {
+): TokenAmount => {
   const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
 
   let result: bigint
   if (roundingUp) {
     result = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
     result = divUp(result, SQRT_PRICE_DENOMINATOR, 1n)
-    return result
+    return result as TokenAmount
   } else {
     result = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
     result = div(result, SQRT_PRICE_DENOMINATOR, 1n)
-    return result
+    return result as TokenAmount
   }
 }
 
 const getNextSqrtPriceFromInput = (
-  startingSqrtPrice: bigint,
-  liquidity: bigint,
-  amount: bigint,
+  startingSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  amount: TokenAmount,
   xToY: boolean
-): bigint => {
+): SqrtPrice => {
   if (xToY) {
     return getNextSqrtPriceXUp(startingSqrtPrice, liquidity, amount, true)
   } else {
@@ -543,11 +557,11 @@ const getNextSqrtPriceFromInput = (
 }
 
 const getNextSqrtPriceFromOutput = (
-  startingSqrtPrice: bigint,
-  liquidity: bigint,
-  amount: bigint,
+  startingSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  amount: TokenAmount,
   xToY: boolean
-): bigint => {
+): SqrtPrice => {
   if (xToY) {
     return getNextSqrtPriceYDown(startingSqrtPrice, liquidity, amount, false)
   } else {
@@ -556,11 +570,11 @@ const getNextSqrtPriceFromOutput = (
 }
 
 const getNextSqrtPriceXUp = (
-  startingSqrtPrice: bigint,
-  liquidity: bigint,
-  x: bigint,
+  startingSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  x: TokenAmount,
   addX: Boolean
-): bigint => {
+): SqrtPrice => {
   if (x === 0n) {
     return startingSqrtPrice
   }
@@ -576,28 +590,28 @@ const getNextSqrtPriceXUp = (
 
   const nominator = mulDivUp(startingSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
 
-  return divUp(nominator, denominator, SQRT_PRICE_DENOMINATOR)
+  return divUp(nominator, denominator, SQRT_PRICE_DENOMINATOR) as SqrtPrice
 }
 
 const getNextSqrtPriceYDown = (
-  startingSqrtPrice: bigint,
-  liquidity: bigint,
-  y: bigint,
+  startingSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  y: TokenAmount,
   addY: Boolean
-): bigint => {
+): SqrtPrice => {
   const numerator = rescale(y, TOKEN_AMOUNT_SCALE, SQRT_PRICE_SCALE)
   const denominator = rescale(liquidity, LIQUIDITY_SCALE, SQRT_PRICE_SCALE)
 
   if (addY) {
-    return startingSqrtPrice + div(numerator, denominator, SQRT_PRICE_DENOMINATOR)
+    return (startingSqrtPrice + div(numerator, denominator, SQRT_PRICE_DENOMINATOR)) as SqrtPrice
   } else {
-    return startingSqrtPrice - divUp(numerator, denominator, SQRT_PRICE_DENOMINATOR)
+    return (startingSqrtPrice - divUp(numerator, denominator, SQRT_PRICE_DENOMINATOR)) as SqrtPrice
   }
 }
 
 type poolUpdateTickResult = {
-  amountToAdd: bigint
-  amountAfterTickUpdate: bigint
+  amountToAdd: TokenAmount
+  amountAfterTickUpdate: TokenAmount
   hasCrossed: boolean
   stateInconsistency: boolean
 }
@@ -606,9 +620,9 @@ type poolUpdateTickResult = {
 const poolUpdateTick = (
   pool: Pool,
   tick: TickVariant | undefined,
-  nextSqrtPrice: bigint,
-  swapLimit: bigint,
-  remainingAmount: bigint,
+  nextSqrtPrice: SqrtPrice,
+  swapLimit: SqrtPrice,
+  remainingAmount: TokenAmount,
   byAmountIn: boolean,
   xToY: boolean,
   hasLimitingTick: boolean,
@@ -617,7 +631,7 @@ const poolUpdateTick = (
 ): poolUpdateTickResult => {
   let hasCrossed = false
   let stateInconsistency = false
-  let totalAmount = 0n
+  let totalAmount = 0n as TokenAmount
 
   // if there's no tick we do not have to check for initialization
   if (!tick || swapLimit !== nextSqrtPrice) {
@@ -653,7 +667,7 @@ const poolUpdateTick = (
           //   await poolAddFee(pool, remainingAmount, xToY, protocolFee)
           totalAmount = remainingAmount
         }
-        remainingAmount = 0n
+        remainingAmount = 0n as TokenAmount
       }
     }
   }
@@ -673,10 +687,10 @@ const poolUpdateTick = (
 }
 
 const isEnoughAmountToChangePrice = (
-  amount: bigint,
-  startingSqrtPrice: bigint,
-  liquidity: bigint,
-  fee: bigint,
+  amount: TokenAmount,
+  startingSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  fee: Percentage,
   byAmountIn: boolean,
   xToY: boolean
 ): boolean => {
@@ -684,9 +698,13 @@ const isEnoughAmountToChangePrice = (
     return true
   }
 
-  let nextSqrtPrice: bigint
+  let nextSqrtPrice: SqrtPrice
   if (byAmountIn) {
-    const amountAfterFee = mulDiv(amount, PERCENTAGE_DENOMINATOR - fee, PERCENTAGE_DENOMINATOR)
+    const amountAfterFee = mulDiv(
+      amount,
+      PERCENTAGE_DENOMINATOR - fee,
+      PERCENTAGE_DENOMINATOR
+    ) as TokenAmount
     nextSqrtPrice = getNextSqrtPriceFromInput(startingSqrtPrice, liquidity, amountAfterFee, xToY)
   } else {
     nextSqrtPrice = getNextSqrtPriceFromOutput(startingSqrtPrice, liquidity, amount, xToY)
@@ -695,89 +713,89 @@ const isEnoughAmountToChangePrice = (
   return startingSqrtPrice !== nextSqrtPrice
 }
 
-const cross = (tick: TickVariant, currentTick: bigint): [boolean, bigint] => {
+const cross = (tick: TickVariant, currentTick: bigint): [boolean, Liquidity] => {
   const isBelowCurrent = currentTick >= tick.index
 
   return [(isBelowCurrent && !tick.sign) || (!isBelowCurrent && tick.sign), tick.liquidityChange]
 }
 
-const poolCrossLiquidityUpdate = (pool: Pool, add: boolean, liquidityDelta: bigint) => {
+const poolCrossLiquidityUpdate = (pool: Pool, add: boolean, liquidityDelta: Liquidity) => {
   if (add) {
-    pool.liquidity += liquidityDelta
+    pool.liquidity = (pool.liquidity + liquidityDelta) as Liquidity
   } else {
-    pool.liquidity -= liquidityDelta
+    pool.liquidity = (pool.liquidity - liquidityDelta) as Liquidity
   }
 }
 
-const calculateSqrtPrice = (tickIndex: bigint): bigint => {
+const calculateSqrtPrice = (tickIndex: bigint): SqrtPrice => {
   const tickIndexAbs = tickIndex < 0n ? -tickIndex : tickIndex
 
-  let sqrtPrice = FIXED_POINT_DENOMINATOR
+  let sqrtPrice = FIXED_POINT_DENOMINATOR as FixedPoint
 
   if (tickIndexAbs > GLOBAL_MAX_TICK) {
     throw new Error(String(DecimalError.TickOverBounds))
   }
 
   if (tickIndexAbs & 0x1n) {
-    sqrtPrice = (sqrtPrice * 1000049998750n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1000049998750n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x2n) {
-    sqrtPrice = (sqrtPrice * 1000100000000n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1000100000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x4n) {
-    sqrtPrice = (sqrtPrice * 1000200010000n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1000200010000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x8n) {
-    sqrtPrice = (sqrtPrice * 1000400060004n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1000400060004n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x10n) {
-    sqrtPrice = (sqrtPrice * 1000800280056n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1000800280056n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x20n) {
-    sqrtPrice = (sqrtPrice * 1001601200560n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1001601200560n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x40n) {
-    sqrtPrice = (sqrtPrice * 1003204964963n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1003204964963n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x80n) {
-    sqrtPrice = (sqrtPrice * 1006420201726n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1006420201726n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x100n) {
-    sqrtPrice = (sqrtPrice * 1012881622442n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1012881622442n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x200n) {
-    sqrtPrice = (sqrtPrice * 1025929181080n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1025929181080n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x400n) {
-    sqrtPrice = (sqrtPrice * 1052530684591n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1052530684591n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x800n) {
-    sqrtPrice = (sqrtPrice * 1107820842005n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1107820842005n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x1000n) {
-    sqrtPrice = (sqrtPrice * 1227267017980n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1227267017980n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x2000n) {
-    sqrtPrice = (sqrtPrice * 1506184333421n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 1506184333421n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x4000n) {
-    sqrtPrice = (sqrtPrice * 2268591246242n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 2268591246242n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x8000n) {
-    sqrtPrice = (sqrtPrice * 5146506242525n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 5146506242525n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x00010000n) {
-    sqrtPrice = (sqrtPrice * 26486526504348n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 26486526504348n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
   if (tickIndexAbs & 0x00020000n) {
-    sqrtPrice = (sqrtPrice * 701536086265529n) / FIXED_POINT_DENOMINATOR
+    sqrtPrice = ((sqrtPrice * 701536086265529n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
 
   if (tickIndex >= 0n) {
-    return rescale(sqrtPrice, FIXED_POINT_SCALE, SQRT_PRICE_SCALE)
+    return rescale(sqrtPrice, FIXED_POINT_SCALE, SQRT_PRICE_SCALE) as SqrtPrice
   } else {
     let sqrtPriceInFixedPointScale = (FIXED_POINT_DENOMINATOR * FIXED_POINT_DENOMINATOR) / sqrtPrice
-    return rescale(sqrtPriceInFixedPointScale, FIXED_POINT_SCALE, SQRT_PRICE_SCALE)
+    return rescale(sqrtPriceInFixedPointScale, FIXED_POINT_SCALE, SQRT_PRICE_SCALE) as SqrtPrice
   }
 }
 
@@ -791,20 +809,20 @@ const rescale = (fromValue: bigint, fromScale: bigint, expectedScale: bigint): b
   }
 }
 
-const divToTokenUp = (a: bigint, b: bigint): bigint => {
+const divToTokenUp = (a: bigint, b: bigint): TokenAmount => {
   let result = a * SQRT_PRICE_DENOMINATOR
   result += b - 1n
   result /= b
   result += SQRT_PRICE_DENOMINATOR - 1n
   result /= SQRT_PRICE_DENOMINATOR
-  return result
+  return result as TokenAmount
 }
 
-const divToToken = (a: bigint, b: bigint): bigint => {
+const divToToken = (a: bigint, b: bigint): TokenAmount => {
   let result = a * SQRT_PRICE_DENOMINATOR
   result /= b
   result /= SQRT_PRICE_DENOMINATOR
-  return result
+  return result as TokenAmount
 }
 
 const mulDiv = (a: bigint, b: bigint, bDenominator: bigint): bigint => {

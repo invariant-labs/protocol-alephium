@@ -30,7 +30,7 @@ import {
   VMError
 } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { FeeTier, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -45,7 +45,7 @@ let poolKey: PoolKey
 
 describe('simulateInvariantSwap tests', () => {
   const protocolFee = toPercentage(1n, 2n)
-  const suppliedAmount = 1000000000n
+  const suppliedAmount = 1000000000n as TokenAmount
 
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
@@ -61,14 +61,15 @@ describe('simulateInvariantSwap tests', () => {
     await invariant.createPool(deployer, token0, token1, feeTier, toSqrtPrice(1n))
     poolKey = await newPoolKey(token0, token1, feeTier)
 
+    const positionAmount = (suppliedAmount / 2n) as TokenAmount
     await invariant.createPosition(
       deployer,
       poolKey,
       -10n,
       10n,
       toLiquidity(10000000n),
-      suppliedAmount / 2n,
-      suppliedAmount / 2n,
+      positionAmount,
+      positionAmount,
       toSqrtPrice(1n),
       toSqrtPrice(1n)
     )
@@ -81,7 +82,7 @@ describe('simulateInvariantSwap tests', () => {
         pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
 
-      const amountIn = 6000n
+      const amountIn = 6000n as TokenAmount
       const byAmountIn = true
       const xToY = true
 
@@ -129,7 +130,7 @@ describe('simulateInvariantSwap tests', () => {
       const sqrtPriceLimit = await calculateSqrtPrice(
         pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
-      const amountIn = 6000n
+      const amountIn = 6000n as TokenAmount
       const byAmountIn = true
       const xToY = false
 
@@ -176,7 +177,7 @@ describe('simulateInvariantSwap tests', () => {
       const sqrtPriceLimit = await calculateSqrtPrice(
         pool.currentTickIndex + feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
-      const amountIn = 5000n
+      const amountIn = 5000n as TokenAmount
       const byAmountIn = false
       const xToY = false
       const tickmap = await filterTickmap(
@@ -222,7 +223,7 @@ describe('simulateInvariantSwap tests', () => {
       const sqrtPriceLimit = await calculateSqrtPrice(
         pool.currentTickIndex - feeTier.tickSpacing * SEARCH_RANGE * MAX_SWAP_STEPS
       )
-      const amountIn = 5000n
+      const amountIn = 5000n as TokenAmount
       const byAmountIn = false
       const xToY = true
 
@@ -269,7 +270,7 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
-      const amountIn = 4999n
+      const amountIn = 4999n as TokenAmount
       const byAmountIn = true
       const xToY = true
       const tickmap = await filterTickmap(
@@ -323,7 +324,7 @@ describe('simulateInvariantSwap tests', () => {
     test('Y to X by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
-      const amountIn = 4999n
+      const amountIn = 4999n as TokenAmount
       const byAmountIn = true
       const xToY = false
       const tickmap = await filterTickmap(
@@ -377,7 +378,7 @@ describe('simulateInvariantSwap tests', () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
 
-      const amountOut = 4888n
+      const amountOut = 4888n as TokenAmount
       const byAmountIn = false
       const xToY = false
 
@@ -403,7 +404,7 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const amountMinted = amountOut * 2n
+      const amountMinted = (amountOut * 2n) as TokenAmount
       await token.mint(swapper, amountMinted, poolKey.tokenY)
 
       const { sqrtPrice: startSqrtPrice } = await invariant.getPool(poolKey)
@@ -438,7 +439,7 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y', async () => {
       const pool = await invariant.getPool(poolKey)
       const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
-      const amountOut = 4888n
+      const amountOut = 4888n as TokenAmount
       const byAmountIn = false
       const xToY = true
       const tickmap = await filterTickmap(
@@ -463,7 +464,7 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-      const amountMinted = amountOut * 2n
+      const amountMinted = (amountOut * 2n) as TokenAmount
       await token.mint(swapper, amountMinted, poolKey.tokenX)
 
       const { sqrtPrice: startSqrtPrice } = await invariant.getPool(poolKey)
@@ -502,12 +503,12 @@ describe('simulateInvariantSwap tests', () => {
       const pool = await invariant.getPool(poolKey)
 
       const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
-      const amountIn = 6000n
+      const amountIn = 6000n as TokenAmount
       const byAmountIn = true
       const xToY = false
 
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-      const suppliedAmount = 1000000n
+      const suppliedAmount = 1000000n as TokenAmount
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenX)
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenY)
       await invariant.createPosition(
@@ -555,7 +556,7 @@ describe('simulateInvariantSwap tests', () => {
       const pool = await invariant.getPool(poolKey)
 
       const sqrtPriceLimit = await getMaxSqrtPrice(feeTier.tickSpacing)
-      const amountIn = 6000n
+      const amountIn = 6000n as TokenAmount
       const byAmountIn = true
       const xToY = false
 
@@ -567,7 +568,7 @@ describe('simulateInvariantSwap tests', () => {
       )
 
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-      const suppliedAmount = 1000000n
+      const suppliedAmount = 1000000n as TokenAmount
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenX)
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenY)
       await invariant.createPosition(
@@ -606,12 +607,12 @@ describe('simulateInvariantSwap tests', () => {
 
     test('ticks', async () => {
       const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
-      const amountIn = 20000n
+      const amountIn = 20000n as TokenAmount
       const byAmountIn = true
       const xToY = true
 
       const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-      const suppliedAmount = 1000000n
+      const suppliedAmount = 1000000n as TokenAmount
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenX)
       await token.mint(positionOwner, suppliedAmount, poolKey.tokenY)
       await invariant.createPosition(
@@ -660,11 +661,11 @@ describe('simulateInvariantSwap tests', () => {
   })
   it('max ticks crossed', async function () {
     const sqrtPriceLimit = await getMinSqrtPrice(feeTier.tickSpacing)
-    const amountIn = 1000000n
+    const amountIn = 1000000n as TokenAmount
     const byAmountIn = true
     const xToY = true
 
-    const mintAmount = 1n << 120n
+    const mintAmount = (1n << 120n) as TokenAmount
     await token.mint(deployer, mintAmount, token0)
     await token.mint(deployer, mintAmount, token1)
 
@@ -724,7 +725,7 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
 
-      const amountIn = MAX_U256
+      const amountIn = MAX_U256 as TokenAmount
       const byAmountIn = true
       const xToY = true
 
@@ -769,7 +770,7 @@ describe('simulateInvariantSwap tests', () => {
     test('X to Y by amount out', async () => {
       const pool = await invariant.getPool(poolKey)
 
-      const amountIn = MAX_U256
+      const amountIn = MAX_U256 as TokenAmount
       const byAmountIn = false
       const xToY = true
 
@@ -812,7 +813,7 @@ describe('simulateInvariantSwap tests', () => {
 
     test('Y to X by amount in', async () => {
       const pool = await invariant.getPool(poolKey)
-      const amountIn = MAX_U256
+      const amountIn = MAX_U256 as TokenAmount
       const byAmountIn = true
       const xToY = false
 
@@ -857,7 +858,7 @@ describe('simulateInvariantSwap tests', () => {
     it('Y to X by amount out', async () => {
       const pool = await invariant.getPool(poolKey)
 
-      const amountIn = MAX_U256
+      const amountIn = MAX_U256 as TokenAmount
       const byAmountIn = false
       const xToY = false
 

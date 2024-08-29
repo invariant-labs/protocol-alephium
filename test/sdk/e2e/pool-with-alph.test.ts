@@ -2,25 +2,25 @@ import { ALPH_TOKEN_ID, ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import { MIN_SQRT_PRICE } from '../../../src/consts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { Invariant } from '../../../src/invariant'
 import { Network } from '../../../src/network'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
-import { toLiquidity } from '../../../src/math'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
+import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('create pool with ALP token as swappable asset tests', () => {
-  const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
+  const protocolFee = toPercentage(1n, 2n)
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-  const positionOwnerMint = 3000n
-  const swapperMint = 10n ** 15n
-  const supply = positionOwnerMint + swapperMint
+  const positionOwnerMint = 3000n as TokenAmount
+  const swapperMint = (10n ** 15n) as TokenAmount
+  const supply = (positionOwnerMint + swapperMint) as TokenAmount
   const initTick = 0n
-  const initSqrtPrice = 10n ** 24n
+  const initSqrtPrice = toSqrtPrice(1n)
   const lowerTick = -20n
   const upperTick = 10n
   const liquidityDelta = toLiquidity(1000000n)
@@ -81,7 +81,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      1000n,
+      1000n as TokenAmount,
       tokenYBalance,
       sqrtPrice,
       sqrtPrice
@@ -91,7 +91,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
     expect(pool.liquidity).toBe(liquidityDelta)
   })
   test('swap alph token', async () => {
-    const swapAmount = 1000n
+    const swapAmount = 1000n as TokenAmount
 
     const swapperBalanceBefore = {
       alph: await balanceOf(poolKey.tokenX, swapper.address),

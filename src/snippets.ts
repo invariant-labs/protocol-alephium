@@ -12,28 +12,27 @@ import {
   transferPosition,
   verifyPositionList,
   withdrawTokens,
-  quote
+  quote,
+  TokenInstance
 } from './testUtils'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { calculateSqrtPrice, toLiquidity, toPercentage } from './math'
-import { PoolKey, Position } from './types'
-
-type TokenInstance = TokenFaucetInstance
+import { Percentage, PoolKey, Position, TokenAmount } from './types'
 
 // 0.6% fee
-const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
+const fee = (6n * 10n ** (PERCENTAGE_SCALE - 3n)) as Percentage
 const tickSpacing = 10n
 
-export const getBasicFeeTickSpacing = (): [bigint, bigint] => {
+export const getBasicFeeTickSpacing = (): [Percentage, bigint] => {
   return [fee, tickSpacing]
 }
 
 /**  Tokens are already ordered. */
 export const initDexAndTokens = async (
   admin: SignerProvider,
-  supply = 1000000n
-): Promise<[InvariantInstance, TokenFaucetInstance, TokenFaucetInstance]> => {
+  supply = 1000000n as TokenAmount
+): Promise<[InvariantInstance, TokenInstance, TokenInstance]> => {
   // 1%
   const protocolFee = toPercentage(1n, 2n)
   const invariant = await deployInvariant(admin, protocolFee)
@@ -64,7 +63,7 @@ export const initBasicPosition = async (
   tokenX: TokenInstance,
   tokenY: TokenInstance
 ) => {
-  const withdrawAmount = 1000n
+  const withdrawAmount = 1000n as TokenAmount
   await withdrawTokens(positionOwner, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
 
   const feeTier = await newFeeTier(fee, tickSpacing)
@@ -103,7 +102,7 @@ export const initBasicSwap = async (
 
   const poolBefore = await getPool(invariant, poolKey)
 
-  const swapAmount = 1000n
+  const swapAmount = 1000n as TokenAmount
   await withdrawTokens(swapper, [tokenX, swapAmount])
 
   const swapperTokenXBalanceBefore = await balanceOf(tokenX.contractId, swapper.address)
@@ -142,10 +141,10 @@ export const swapExactLimit = async (
   signer: SignerProvider,
   poolKey: PoolKey,
   xToY: boolean,
-  amount: bigint,
+  amount: TokenAmount,
   byAmountIn: boolean
 ) => {
-  const sqrtPriceLimit: bigint = xToY ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
+  const sqrtPriceLimit = xToY ? MIN_SQRT_PRICE : MAX_SQRT_PRICE
   const quoteResult = await quote(invariant, poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 
   await initSwap(invariant, signer, poolKey, xToY, amount, byAmountIn, quoteResult.targetSqrtPrice)

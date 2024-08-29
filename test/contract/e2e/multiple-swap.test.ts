@@ -2,7 +2,7 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MAX_SQRT_PRICE, MIN_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import { MAX_SQRT_PRICE, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
   feeTierExists,
   getPool,
@@ -16,8 +16,8 @@ import {
   withdrawTokens
 } from '../../../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
-import { calculateSqrtPrice, getLiquidity } from '../../../src/math'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { calculateSqrtPrice, getLiquidity, toPercentage } from '../../../src/math'
+import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
 
 let admin: PrivateKeyWallet
 let positionOwner: PrivateKeyWallet
@@ -27,15 +27,15 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('multiple swap tests', () => {
-  const fee = 10n ** (PERCENTAGE_SCALE - 3n)
+  const fee = toPercentage(1n, 3n)
   const tickSpacing = 1n
   const initTick = 0n
   const [lowerTick, upperTick] = [-953n, 953n]
-  const approvedAmount = 100n
+  const approvedAmount = 100n as TokenAmount
   let feeTier: FeeTier
   let poolKey: PoolKey
 
-  const mintSwapper = 100n
+  const mintSwapper = 100n as TokenAmount
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
@@ -44,11 +44,11 @@ describe('multiple swap tests', () => {
   })
 
   beforeEach(async () => {
-    const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
+    const protocolFee = toPercentage(1n, 2n)
     invariant = await deployInvariant(admin, protocolFee)
 
-    const mintPosition = 10n ** 10n
-    ;[tokenX, tokenY] = await initTokensXY(admin, mintPosition + mintSwapper)
+    const mintPosition = (10n ** 10n) as TokenAmount
+    ;[tokenX, tokenY] = await initTokensXY(admin, (mintPosition + mintSwapper) as TokenAmount)
 
     feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
@@ -97,7 +97,7 @@ describe('multiple swap tests', () => {
     // swaps
     {
       await withdrawTokens(swapper, [tokenX, mintSwapper])
-      const swapAmount = 10n
+      const swapAmount = 10n as TokenAmount
       const sqrtPriceLimit = MIN_SQRT_PRICE
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(
@@ -149,7 +149,7 @@ describe('multiple swap tests', () => {
     // swaps
     {
       await withdrawTokens(swapper, [tokenY, mintSwapper])
-      const swapAmount = 10n
+      const swapAmount = 10n as TokenAmount
       const sqrtPriceLimit = MAX_SQRT_PRICE
       for (let n = 0; n < 10; n++) {
         const { targetSqrtPrice } = await quote(

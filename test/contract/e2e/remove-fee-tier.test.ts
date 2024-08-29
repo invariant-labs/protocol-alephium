@@ -2,7 +2,7 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { deployInvariant, newFeeTier } from '../../../src/utils'
-import { InvariantError, PERCENTAGE_SCALE } from '../../../src/consts'
+import { InvariantError } from '../../../src/consts'
 import {
   expectError,
   feeTierExists,
@@ -10,7 +10,8 @@ import {
   initFeeTier,
   removeFeeTier
 } from '../../../src/testUtils'
-import { FeeTier } from '../../../src/types'
+import { FeeTier, Percentage } from '../../../src/types'
+import { toPercentage } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -18,7 +19,7 @@ let admin: PrivateKeyWallet
 
 describe('remove fee tier tests', () => {
   // 0.02%
-  const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+  const fee = toPercentage(2n, 4n)
   const tickSpacings = [1n, 2n]
   let feeTier1TS: FeeTier
   let feeTier2TS: FeeTier
@@ -30,7 +31,7 @@ describe('remove fee tier tests', () => {
   })
 
   test('remove fee tier', async () => {
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
 
     await initFeeTier(invariant, admin, feeTier1TS)
     await initFeeTier(invariant, admin, feeTier2TS)
@@ -44,7 +45,7 @@ describe('remove fee tier tests', () => {
   })
 
   test('non existing', async () => {
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
     await initFeeTier(invariant, admin, feeTier1TS)
 
     const [tierExists] = await feeTierExists(invariant, feeTier2TS)
@@ -58,7 +59,7 @@ describe('remove fee tier tests', () => {
   })
 
   test('not admin', async () => {
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
 
     await initFeeTier(invariant, admin, feeTier1TS)
     await initFeeTier(invariant, admin, feeTier2TS)

@@ -29,6 +29,13 @@ export {
 } from './math'
 
 export type {
+  SqrtPrice,
+  Price,
+  FeeGrowth,
+  Liquidity,
+  TokenAmount,
+  Percentage,
+  FixedPoint,
   Pool,
   Position,
   FeeTier,

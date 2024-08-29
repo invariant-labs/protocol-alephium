@@ -1,11 +1,6 @@
 import { Address, HexString } from '@alephium/web3'
 import {
   PoolKey as _PoolKey,
-  FeeGrowth as _FeeGrowth,
-  Liquidity as _Liquidity,
-  Percentage as _Percentage,
-  SqrtPrice as _SqrtPrice,
-  TokenAmount as _TokenAmount,
   Pool as _Pool,
   Position as _Position,
   Tick as _Tick,
@@ -19,17 +14,18 @@ import {
 } from '../artifacts/ts/types'
 import { InvariantError } from './consts'
 
-type WrappedNumber = _FeeGrowth | _Liquidity | _Percentage | _SqrtPrice | _TokenAmount
-
-type UnwrapNumbers<T> = {
-  [P in keyof T]: T[P] extends WrappedNumber ? bigint : T[P]
-}
+export type SqrtPrice = bigint & { readonly brand: unique symbol }
+export type Price = bigint & { readonly brand: unique symbol }
+export type FeeGrowth = bigint & { readonly brand: unique symbol }
+export type Liquidity = bigint & { readonly brand: unique symbol }
+export type TokenAmount = bigint & { readonly brand: unique symbol }
+export type Percentage = bigint & { readonly brand: unique symbol }
+export type FixedPoint = bigint & { readonly brand: unique symbol }
 
 export type TickVariant = LiquidityTick | Tick
 
 export interface FeeTier {
-  // percentage
-  fee: bigint
+  fee: Percentage
   tickSpacing: bigint
 }
 
@@ -41,48 +37,81 @@ export type PoolKey = {
 
 export interface Pool {
   poolKey: PoolKey
-  // liquidity
-  liquidity: bigint
-  sqrtPrice: bigint
+  liquidity: Liquidity
+  sqrtPrice: SqrtPrice
   currentTickIndex: bigint
-  // feeGrowth x2
-  feeGrowthGlobalX: bigint
-  feeGrowthGlobalY: bigint
-  // tokenAmount x2
-  feeProtocolTokenX: bigint
-  feeProtocolTokenY: bigint
+  feeGrowthGlobalX: FeeGrowth
+  feeGrowthGlobalY: FeeGrowth
+  feeProtocolTokenX: TokenAmount
+  feeProtocolTokenY: TokenAmount
   startTimestamp: bigint
   lastTimestamp: bigint
-  // address
   feeReceiver: Address
-  // hexString
   reserveX: HexString
   reserveY: HexString
 }
 
 export interface Position {
   poolKey: PoolKey
-  // liquidity
-  liquidity: bigint
+  liquidity: Liquidity
   lowerTickIndex: bigint
   upperTickIndex: bigint
-  // feeGrowth x2
-  feeGrowthInsideX: bigint
-  feeGrowthInsideY: bigint
+  feeGrowthInsideX: FeeGrowth
+  feeGrowthInsideY: FeeGrowth
   lastBlockNumber: bigint
-  // tokenAmount x2
-  tokensOwedX: bigint
-  tokensOwedY: bigint
+  tokensOwedX: TokenAmount
+  tokensOwedY: TokenAmount
   owner: Address
 }
 
-export type Tick = UnwrapNumbers<_Tick>
-export type SwapResult = UnwrapNumbers<_SwapResult>
-export type CalculateSwapResult = UnwrapNumbers<_CalculateSwapResult>
-export type QuoteResult = UnwrapNumbers<_QuoteResult>
-export type LiquidityResult = UnwrapNumbers<_LiquidityResult>
-export type SingleTokenLiquidity = UnwrapNumbers<_SingleTokenLiquidity>
-export type LiquidityTick = UnwrapNumbers<_LiquidityTick>
+export interface Tick {
+  sign: boolean
+  index: bigint
+  liquidityChange: Liquidity
+  liquidityGross: Liquidity
+  sqrtPrice: SqrtPrice
+  feeGrowthOutsideX: FeeGrowth
+  feeGrowthOutsideY: FeeGrowth
+  secondsOutside: bigint
+}
+
+export interface SwapResult {
+  nextSqrtPrice: SqrtPrice
+  amountIn: TokenAmount
+  amountOut: TokenAmount
+  feeAmount: TokenAmount
+}
+
+export interface CalculateSwapResult {
+  amountIn: TokenAmount
+  amountOut: TokenAmount
+  startSqrtPrice: SqrtPrice
+  targetSqrtPrice: SqrtPrice
+  fee: TokenAmount
+}
+
+export interface QuoteResult {
+  amountIn: TokenAmount
+  amountOut: TokenAmount
+  targetSqrtPrice: SqrtPrice
+}
+
+export interface LiquidityResult {
+  x: TokenAmount
+  y: TokenAmount
+  l: Liquidity
+}
+
+export interface SingleTokenLiquidity {
+  l: Liquidity
+  amount: TokenAmount
+}
+
+export interface LiquidityTick {
+  index: bigint
+  liquidityChange: Liquidity
+  sign: boolean
+}
 
 // stores bitmap chunks of ticks that have been initialized
 export type Tickmap = Map<bigint, bigint>
@@ -103,7 +132,7 @@ export function wrapPoolKey(poolKey: PoolKey): _PoolKey {
 }
 
 export function unwrapFeeTier(feeTier: _FeeTier): FeeTier {
-  return { ...feeTier, fee: feeTier.fee.v }
+  return { ...feeTier, fee: feeTier.fee.v as Percentage }
 }
 
 export function unwrapPoolKey(poolKey: _PoolKey): PoolKey {
@@ -113,12 +142,12 @@ export function unwrapPoolKey(poolKey: _PoolKey): PoolKey {
 export function unwrapPool(pool: _Pool): Pool {
   const unwrapped = {
     poolKey: unwrapPoolKey(pool.poolKey),
-    liquidity: pool.liquidity.v,
-    sqrtPrice: pool.sqrtPrice.v,
-    feeGrowthGlobalX: pool.feeGrowthGlobalX.v,
-    feeGrowthGlobalY: pool.feeGrowthGlobalY.v,
-    feeProtocolTokenX: pool.feeProtocolTokenX.v,
-    feeProtocolTokenY: pool.feeProtocolTokenY.v
+    liquidity: pool.liquidity.v as Liquidity,
+    sqrtPrice: pool.sqrtPrice.v as SqrtPrice,
+    feeGrowthGlobalX: pool.feeGrowthGlobalX.v as FeeGrowth,
+    feeGrowthGlobalY: pool.feeGrowthGlobalY.v as FeeGrowth,
+    feeProtocolTokenX: pool.feeProtocolTokenX.v as TokenAmount,
+    feeProtocolTokenY: pool.feeProtocolTokenY.v as TokenAmount
   }
 
   return { ...pool, ...unwrapped }
@@ -126,11 +155,11 @@ export function unwrapPool(pool: _Pool): Pool {
 
 export function unwrapTick(tick: _Tick): Tick {
   const unwrapped = {
-    liquidityChange: tick.liquidityChange.v,
-    liquidityGross: tick.liquidityGross.v,
-    sqrtPrice: tick.sqrtPrice.v,
-    feeGrowthOutsideX: tick.feeGrowthOutsideX.v,
-    feeGrowthOutsideY: tick.feeGrowthOutsideY.v
+    liquidityChange: tick.liquidityChange.v as Liquidity,
+    liquidityGross: tick.liquidityGross.v as Liquidity,
+    sqrtPrice: tick.sqrtPrice.v as SqrtPrice,
+    feeGrowthOutsideX: tick.feeGrowthOutsideX.v as FeeGrowth,
+    feeGrowthOutsideY: tick.feeGrowthOutsideY.v as FeeGrowth
   }
 
   return { ...tick, ...unwrapped }
@@ -139,11 +168,11 @@ export function unwrapTick(tick: _Tick): Tick {
 export function unwrapPosition(position: _Position): Position {
   const unwrapped = {
     poolKey: unwrapPoolKey(position.poolKey),
-    liquidity: position.liquidity.v,
-    feeGrowthInsideX: position.feeGrowthInsideX.v,
-    feeGrowthInsideY: position.feeGrowthInsideY.v,
-    tokensOwedX: position.tokensOwedX.v,
-    tokensOwedY: position.tokensOwedY.v
+    liquidity: position.liquidity.v as Liquidity,
+    feeGrowthInsideX: position.feeGrowthInsideX.v as FeeGrowth,
+    feeGrowthInsideY: position.feeGrowthInsideY.v as FeeGrowth,
+    tokensOwedX: position.tokensOwedX.v as TokenAmount,
+    tokensOwedY: position.tokensOwedY.v as TokenAmount
   }
 
   return { ...position, ...unwrapped }
@@ -151,9 +180,9 @@ export function unwrapPosition(position: _Position): Position {
 
 export function unwrapQuoteResult(quote: _QuoteResult): QuoteResult {
   const unwrapped = {
-    amountIn: quote.amountIn.v,
-    amountOut: quote.amountOut.v,
-    targetSqrtPrice: quote.targetSqrtPrice.v
+    amountIn: quote.amountIn.v as TokenAmount,
+    amountOut: quote.amountOut.v as TokenAmount,
+    targetSqrtPrice: quote.targetSqrtPrice.v as SqrtPrice
   }
 
   return { ...quote, ...unwrapped }
@@ -161,20 +190,23 @@ export function unwrapQuoteResult(quote: _QuoteResult): QuoteResult {
 
 export function unwrapLiquidityResult(liquidityResult: _LiquidityResult): LiquidityResult {
   return {
-    x: liquidityResult.x.v,
-    y: liquidityResult.y.v,
-    l: liquidityResult.l.v
+    x: liquidityResult.x.v as TokenAmount,
+    y: liquidityResult.y.v as TokenAmount,
+    l: liquidityResult.l.v as Liquidity
   }
 }
 
 export function unwrapSingleTokenLiquidity(
   singleTokenLiquidity: _SingleTokenLiquidity
 ): SingleTokenLiquidity {
-  return { l: singleTokenLiquidity.l.v, amount: singleTokenLiquidity.amount.v }
+  return {
+    l: singleTokenLiquidity.l.v as Liquidity,
+    amount: singleTokenLiquidity.amount.v as TokenAmount
+  }
 }
 
 export function unwrapLiquidityTick(liquidityTick: _LiquidityTick): LiquidityTick {
-  return { ...liquidityTick, liquidityChange: liquidityTick.liquidityChange.v }
+  return { ...liquidityTick, liquidityChange: liquidityTick.liquidityChange.v as Liquidity }
 }
 
 function existsOnly<T>(entity: T, exists: boolean, errorCode: bigint): T {
