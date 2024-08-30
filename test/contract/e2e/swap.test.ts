@@ -24,6 +24,7 @@ import {
 } from '../../../src/testUtils'
 import { InvariantError, MAX_SQRT_PRICE, MIN_SQRT_PRICE, VMError } from '../../../src/consts'
 import { toLiquidity, toPercentage } from '../../../src/math'
+import { TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -51,9 +52,12 @@ describe('swap tests', () => {
   test('x to y', async () => {
     const invariant = await deployInvariant(admin, protocolFee)
 
-    const positionsAmount = 2n * 10n ** 10n
-    const swapAmount = 1000n
-    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
+    const positionsAmount = (2n * 10n ** 10n) as TokenAmount
+    const swapAmount = 1000n as TokenAmount
+    const [tokenX, tokenY] = await initTokensXY(
+      admin,
+      (positionsAmount + swapAmount) as TokenAmount
+    )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
     const feeTier = await newFeeTier(fee, tickSpacing)
@@ -72,7 +76,7 @@ describe('swap tests', () => {
       const slippageLimit = poolBefore.sqrtPrice
       const liquidityDelta = toLiquidity(1000000n)
 
-      const positionAmount = positionsAmount / 2n
+      const positionAmount = (positionsAmount / 2n) as TokenAmount
 
       await initPosition(
         invariant,
@@ -156,9 +160,12 @@ describe('swap tests', () => {
   test('y to x', async () => {
     const invariant = await deployInvariant(admin, protocolFee)
 
-    const positionsAmount = 2n * 10n ** 10n
-    const swapAmount = 1000n
-    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
+    const positionsAmount = (2n * 10n ** 10n) as TokenAmount
+    const swapAmount = 1000n as TokenAmount
+    const [tokenX, tokenY] = await initTokensXY(
+      admin,
+      (positionsAmount + swapAmount) as TokenAmount
+    )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
@@ -178,7 +185,7 @@ describe('swap tests', () => {
       const slippageLimit = poolBefore.sqrtPrice
       const liquidityDelta = toLiquidity(1000000n)
 
-      const positionAmount = positionsAmount / 2n
+      const positionAmount = (positionsAmount / 2n) as TokenAmount
 
       await initPosition(
         invariant,
@@ -268,9 +275,12 @@ describe('swap tests', () => {
   test('not enough liquidity token x', async () => {
     const invariant = await deployInvariant(admin, protocolFee)
 
-    const positionsAmount = 2n * 10n ** 10n
-    const swapAmount = 1000n
-    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
+    const positionsAmount = (2n * 10n ** 10n) as TokenAmount
+    const swapAmount = 1000n as TokenAmount
+    const [tokenX, tokenY] = await initTokensXY(
+      admin,
+      (positionsAmount + swapAmount) as TokenAmount
+    )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
@@ -290,7 +300,7 @@ describe('swap tests', () => {
       const slippageLimit = poolBefore.sqrtPrice
       const liquidityDelta = toLiquidity(1000000n)
 
-      const positionAmount = positionsAmount / 2n
+      const positionAmount = (positionsAmount / 2n) as TokenAmount
 
       await initPosition(
         invariant,
@@ -337,9 +347,12 @@ describe('swap tests', () => {
   test('not enough liquidity token y', async () => {
     const invariant = await deployInvariant(admin, protocolFee)
 
-    const positionsAmount = 2n * 10n ** 10n
-    const swapAmount = 1000n
-    const [tokenX, tokenY] = await initTokensXY(admin, positionsAmount + swapAmount)
+    const positionsAmount = (2n * 10n ** 10n) as TokenAmount
+    const swapAmount = 1000n as TokenAmount
+    const [tokenX, tokenY] = await initTokensXY(
+      admin,
+      (positionsAmount + swapAmount) as TokenAmount
+    )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
     const feeTier = await newFeeTier(fee, tickSpacing)
@@ -358,7 +371,7 @@ describe('swap tests', () => {
       const slippageLimit = poolBefore.sqrtPrice
       const liquidityDelta = toLiquidity(1000000n)
 
-      const positionAmount = positionsAmount / 2n
+      const positionAmount = (positionsAmount / 2n) as TokenAmount
 
       await initPosition(
         invariant,

@@ -4,7 +4,15 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../../../artifacts/ts'
 import { deployCLAMM } from '../../../src/utils'
 import { calculateSqrtPrice, expectError, getTickAtSqrtPrice } from '../../../src/testUtils'
-import { DecimalError, GLOBAL_MAX_TICK, GLOBAL_MIN_TICK } from '../../../src/consts'
+import {
+  DecimalError,
+  GLOBAL_MAX_TICK,
+  GLOBAL_MIN_TICK,
+  MAX_SQRT_PRICE,
+  MIN_SQRT_PRICE
+} from '../../../src/consts'
+import { SqrtPrice } from '../../../src/types'
+import { toSqrtPrice } from '../../../src/math'
 
 const sqrtPriceToX32 = async (clamm: CLAMMInstance, val: bigint): Promise<bigint> => {
   return (
@@ -89,16 +97,14 @@ describe('log tests', () => {
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) - 1', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, -19999n)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, -19999n)) - 1n) as SqrtPrice
       const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
       const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
       expect(result).toStrictEqual([false, 6195642368n])
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) + 1', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, 19999n)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, 19999n)) - 1n) as SqrtPrice
       const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
       const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
       expect(result).toStrictEqual([true, 6195642368n])
@@ -107,19 +113,19 @@ describe('log tests', () => {
 
   describe('get tick at sqrt price', () => {
     test('around 0 tick / get tick at 1', async () => {
-      const sqrtPriceDecimal = 1_000000000000000000000000n
+      const sqrtPriceDecimal = toSqrtPrice(1n)
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(0n)
     })
 
     test('around 0 tick / get tick slightly below 1', async () => {
-      const sqrtPriceDecimal = 1_000000000000000000000000n - 1n
+      const sqrtPriceDecimal = (1_000000000000000000000000n - 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-1n)
     })
 
     test('around 0 tick / get tick slightly above 1', async () => {
-      const sqrtPriceDecimal = 1_000000000000000000000000n + 1n
+      const sqrtPriceDecimal = (1_000000000000000000000000n + 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(0n)
     })
@@ -131,14 +137,14 @@ describe('log tests', () => {
     })
 
     test('around 1 tick / get tick slightly below sqrt(1.0001)', async () => {
-      const sqrtPriceDecimal = await calculateSqrtPrice(clamm, 1n)
-      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
+      const sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, 1n)) - 1n) as SqrtPrice
+      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(0n)
     })
 
     test('around 1 tick / get tick slightly above sqrt(1.0001)', async () => {
-      const sqrtPriceDecimal = await calculateSqrtPrice(clamm, 1n)
-      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
+      const sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, 1n)) + 1n) as SqrtPrice
+      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(1n)
     })
 
@@ -149,14 +155,14 @@ describe('log tests', () => {
     })
 
     test('around -1 tick / get tick slightly below sqrt(1.0001 ^ (-1))', async () => {
-      const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -1n)
-      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
+      const sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, -1n)) - 1n) as SqrtPrice
+      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-2n)
     })
 
     test('around -1 tick / get tick slightly above sqrt(1.0001 ^ (-1))', async () => {
-      const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -1n)
-      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
+      const sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, -1n)) + 1n) as SqrtPrice
+      const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-1n)
     })
 
@@ -167,15 +173,15 @@ describe('log tests', () => {
     })
 
     test('around max - 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)) -
+        1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(221818n - 2n)
     })
 
     test('around max - 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)
-      sqrtPriceDecimal += 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)) +
+        1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(221818n - 1n)
     })
@@ -187,22 +193,21 @@ describe('log tests', () => {
     })
 
     test('around min + 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)) -
+        1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-221818n)
     })
 
     test('around min + 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)
-      sqrtPriceDecimal += 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)) +
+        1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-(221818n - 1n))
     })
 
     test('get tick slightly below at max tick', async () => {
-      const maxSqrtPrice = 65535383934512647000000000000n
-      const sqrtPriceDecimal = maxSqrtPrice - 1n
+      const sqrtPriceDecimal = (MAX_SQRT_PRICE - 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(221818n - 1n)
     })
@@ -216,16 +221,14 @@ describe('log tests', () => {
 
     test('around 19999 tick / get tick slightly below sqrt(1.0001^19999)', async () => {
       const tickIndex = 19999n
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, tickIndex)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, tickIndex)) - 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(tickIndex - 1n)
     })
 
     test('around 19999 tick / get tick slightly above sqrt(1.0001^19999)', async () => {
       const tickIndex = 19999n
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, tickIndex)
-      sqrtPriceDecimal += 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, tickIndex)) + 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(tickIndex)
     })
@@ -250,23 +253,20 @@ describe('log tests', () => {
 
     test('around -19999 tick / get tick slightly below sqrt(1.0001^-19999)', async () => {
       const tickIndex = -19999n
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, tickIndex)
-      sqrtPriceDecimal -= 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, tickIndex)) - 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(tickIndex - 1n)
     })
 
     test('around -19999 tick / get tick slightly above sqrt(1.0001^-19999)', async () => {
       const tickIndex = -19999n
-      let sqrtPriceDecimal = await calculateSqrtPrice(clamm, tickIndex)
-      sqrtPriceDecimal += 1n
+      let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, tickIndex)) + 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(tickIndex)
     })
 
     test('get tick slightly above at min tick', async () => {
-      const minSqrtPrice = await calculateSqrtPrice(clamm, -221818n)
-      const sqrtPriceDecimal = minSqrtPrice + 1n
+      const sqrtPriceDecimal = (MIN_SQRT_PRICE + 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
       expect(result).toBe(-221818n)
     })
@@ -365,96 +365,112 @@ describe('log tests', () => {
   })
 
   describe('all ticks', () => {
-    test('all positive ticks', async () => {
-      //   for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
-      //     const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
-      //     {
-      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      //       expect(tick).toBe(i)
-      //     }
-      //     {
-      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
-      //       expect(tick).toBe(i - 1n)
-      //     }
-      //     {
-      //       const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
-      //       expect(tick).toBe(i)
-      //     }
-      //   }
+    test.skip('all positive ticks', async () => {
+      for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
+        {
+          const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
+          expect(tick).toBe(i)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(clamm, (sqrtPriceDecimal - 1n) as SqrtPrice, 1n)
+          expect(tick).toBe(i - 1n)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(clamm, (sqrtPriceDecimal + 1n) as SqrtPrice, 1n)
+          expect(tick).toBe(i)
+        }
+      }
     }, 3600000)
 
-    test('all negative ticks', async () => {
-      // for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
-      //   const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      //     expect(tick).toBe(-i)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, 1n)
-      //     expect(tick).toBe(-i - 1n)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, 1n)
-      //     expect(tick).toBe(-i)
-      //   }
-      // }
+    test.skip('all negative ticks', async () => {
+      for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
+        {
+          const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
+          expect(tick).toBe(-i)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(clamm, (sqrtPriceDecimal - 1n) as SqrtPrice, 1n)
+          expect(tick).toBe(-i - 1n)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(clamm, (sqrtPriceDecimal + 1n) as SqrtPrice, 1n)
+          expect(tick).toBe(-i)
+        }
+      }
     }, 3600000)
 
-    test('all positive ticks, tick spacing greater than 1', async () => {
-      // const tickSpacing = 3n
-      // for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
-      //   const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
-      //     const expectedTick = (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, tickSpacing)
-      //     const expectedTick = (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, tickSpacing)
-      //     const expectedTick = (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      // }
+    test.skip('all positive ticks, tick spacing greater than 1', async () => {
+      const tickSpacing = 3n
+      for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
+        {
+          const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
+          const expectedTick = (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(
+            clamm,
+            (sqrtPriceDecimal - 1n) as SqrtPrice,
+            tickSpacing
+          )
+          const expectedTick = (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: i - 1n, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(
+            clamm,
+            (sqrtPriceDecimal + 1n) as SqrtPrice,
+            tickSpacing
+          )
+          const expectedTick = (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: i, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+      }
     }, 3600000)
 
-    test('all negative ticks, tick spacing greater than 1', async () => {
-      // const tickSpacing = 4n
-      // for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
-      //   const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
-      //     const expectedTick = (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal - 1n, tickSpacing)
-      //     const expectedTick = await (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      //   {
-      //     const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal + 1n, tickSpacing)
-      //     const expectedTick = (
-      //       await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
-      //     ).returns
-      //     expect(tick).toBe(expectedTick)
-      //   }
-      // }
+    test.skip('all negative ticks, tick spacing greater than 1', async () => {
+      const tickSpacing = 4n
+      for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
+        {
+          const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
+          const expectedTick = (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(
+            clamm,
+            (sqrtPriceDecimal - 1n) as SqrtPrice,
+            tickSpacing
+          )
+          const expectedTick = await (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: -i - 1n, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+        {
+          const tick = await getTickAtSqrtPrice(
+            clamm,
+            (sqrtPriceDecimal + 1n) as SqrtPrice,
+            tickSpacing
+          )
+          const expectedTick = (
+            await clamm.view.alignTickToSpacing({ args: { accurateTick: -i, tickSpacing } })
+          ).returns
+          expect(tick).toBe(expectedTick)
+        }
+      }
     }, 3600000)
   })
 })

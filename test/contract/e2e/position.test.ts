@@ -1,7 +1,6 @@
-import { ONE_ALPH, addressFromContractId, fetchContractState, web3 } from '@alephium/web3'
+import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { CLAMM, Invariant } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import {
   calculateSqrtPrice,
@@ -25,7 +24,8 @@ import {
   MIN_SQRT_PRICE,
   PERCENTAGE_SCALE
 } from '../../../src/consts'
-import { toLiquidity } from '../../../src/math'
+import { toLiquidity, toPercentage } from '../../../src/math'
+import { Liquidity, Percentage, SqrtPrice, TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -38,11 +38,11 @@ describe('position tests', () => {
 
   test('create basic position', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 500n
-    const fee = 0n
+    const supply = 500n as TokenAmount
+    const fee = 0n as Percentage
     const tickSpacing = 1n
 
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const feeTier = await newFeeTier(fee, tickSpacing)
@@ -58,7 +58,7 @@ describe('position tests', () => {
 
     const lowerTickIndex = -10n
     const upperTickIndex = 10n
-    const liquidityDelta = 10n
+    const liquidityDelta = 10n as Liquidity
 
     await initPosition(
       invariant,
@@ -69,7 +69,7 @@ describe('position tests', () => {
       lowerTickIndex,
       upperTickIndex,
       liquidityDelta,
-      0n,
+      0n as SqrtPrice,
       MAX_SQRT_PRICE
     )
 
@@ -90,11 +90,11 @@ describe('position tests', () => {
   })
   test('create with equal lower and upper tick', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 500n
-    const fee = 0n
+    const supply = 500n as TokenAmount
+    const fee = 0n as Percentage
     const tickSpacing = 1n
 
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
@@ -109,11 +109,7 @@ describe('position tests', () => {
 
     const tickIndex = 10n
 
-    const liquidityDelta = 10n
-
-    const clamm = CLAMM.at(
-      addressFromContractId((await fetchContractState(Invariant, invariant)).fields.clamm)
-    )
+    const liquidityDelta = 10n as Liquidity
 
     await expectError(
       InvariantError.InvalidTickIndex,
@@ -126,7 +122,7 @@ describe('position tests', () => {
         tickIndex,
         tickIndex,
         liquidityDelta,
-        0n,
+        0n as SqrtPrice,
         MAX_SQRT_PRICE
       ),
       invariant
@@ -134,10 +130,10 @@ describe('position tests', () => {
   })
   test('remove', async () => {
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 10n ** 20n + 1000n
-    const mint = 10n ** 10n
-    const protocolFee = 10n ** (PERCENTAGE_SCALE - 2n)
-    const fee = 6n * 10n ** (PERCENTAGE_SCALE - 3n)
+    const supply = (10n ** 20n + 1000n) as TokenAmount
+    const mint = (10n ** 10n) as TokenAmount
+    const protocolFee = toPercentage(1n, 2n)
+    const fee = toPercentage(6n, 3n)
     const tickSpacing = 10n
 
     const invariant = await deployInvariant(admin, protocolFee)
@@ -232,7 +228,7 @@ describe('position tests', () => {
     }
 
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
-    const amount = 1000n
+    const amount = 1000n as TokenAmount
     await withdrawTokens(swapper, [tokenX, amount], [tokenY, amount])
 
     const poolBefore = await getPool(invariant, poolKey)
@@ -286,9 +282,9 @@ describe('position tests', () => {
     const maxTick = 177450n
     const minTick = -maxTick
     const initTick = -23028n
-    const initialBalance = 100000000n
-    const protocolFee = 0n
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const initialBalance = 100000000n as TokenAmount
+    const protocolFee = 0n as Percentage
+    const fee = toPercentage(2n, 4n)
 
     const positionOwner = await getSigner(ONE_ALPH * 1001n, 0)
 
@@ -367,9 +363,9 @@ describe('position tests', () => {
   })
   test('create below current tick', async () => {
     const initTick = -23028n
-    const initialBalance = 10000000000n
-    const protocolFee = 0n
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const initialBalance = 10000000000n as TokenAmount
+    const protocolFee = 0n as Percentage
+    const fee = (2n * 10n ** (PERCENTAGE_SCALE - 4n)) as Percentage
     const tickSpacing = 4n
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -454,9 +450,9 @@ describe('position tests', () => {
   })
   test('create above current tick', async () => {
     const initTick = -23028n
-    const initialBalance = 10000000000n
-    const protocolFee = 0n
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const initialBalance = 10000000000n as TokenAmount
+    const protocolFee = 0n as Percentage
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 4n
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)

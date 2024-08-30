@@ -15,7 +15,7 @@ import { MAX_SQRT_PRICE, MIN_SQRT_PRICE, SEARCH_RANGE } from '../../../src/const
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { toLiquidity } from '../../../src/math'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { FeeTier, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -23,9 +23,9 @@ describe('max tick cross spec', () => {
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const searchLimit = SEARCH_RANGE * tickSpacing
   const txGasLimit = 5000000n
-  const positionOwnerMint = 1n << 128n
-  const swapperMint = 1n << 30n
-  const supply = positionOwnerMint + swapperMint
+  const positionOwnerMint = (1n << 128n) as TokenAmount
+  const swapperMint = (1n << 30n) as TokenAmount
+  const supply = (positionOwnerMint + swapperMint) as TokenAmount
   const liquidityDelta = toLiquidity(10000000n)
   let admin: PrivateKeyWallet
   let positionOwner: PrivateKeyWallet
@@ -40,7 +40,7 @@ describe('max tick cross spec', () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     swapper = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await deployInvariant(admin, 0n)
+    invariant = await deployInvariant(admin, 0n as Percentage)
     ;[tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, positionOwnerMint], [tokenY, positionOwnerMint])
     feeTier = await newFeeTier(fee, tickSpacing)
@@ -51,7 +51,7 @@ describe('max tick cross spec', () => {
 
   test('max tick cross swap xToY and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
-    const amount = 40282n
+    const amount = 40282n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
@@ -96,7 +96,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, no liquidity gap between positions', async () => {
     const lastInitializedTick = 120n
-    const amount = 44998n
+    const amount = 44998n as TokenAmount
     const xToY = false
     const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
@@ -142,7 +142,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountIn, liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
-    const amount = 35250n
+    const amount = 35250n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
@@ -186,7 +186,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, liquidity gap between positions', async () => {
     const lastInitializedTick = 240n
-    const amount = 40000n
+    const amount = 40000n as TokenAmount
     const xToY = false
     const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
@@ -231,7 +231,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = -35000n
-    const amount = 13569916n
+    const amount = 13569916n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = true
@@ -274,7 +274,7 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountIn, positions between search limit range', async () => {
     const lastInitializedTick = 25000n
-    const amount = 17947500n
+    const amount = 17947500n as TokenAmount
     const xToY = false
     const slippage = MAX_SQRT_PRICE
     const byAmountIn = true
@@ -317,8 +317,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, no liquidity gap between positions', async () => {
     const lastInitializedTick = -250n
-    const mintAmount = 60000n
-    const swapAmount = 44500n
+    const mintAmount = 60000n as TokenAmount
+    const swapAmount = 44500n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
@@ -372,8 +372,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, no liquidity gap between positions', async () => {
     const lastInitializedTick = 120n
-    const mintAmount = 60000n
-    const swapAmount = 39000n
+    const mintAmount = 60000n as TokenAmount
+    const swapAmount = 39000n as TokenAmount
 
     const xToY = false
     const slippage = MAX_SQRT_PRICE
@@ -427,8 +427,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, liquidity gap between positions', async () => {
     const lastInitializedTick = -500n
-    const mintAmount = 60000n
-    const swapAmount = 39500n
+    const mintAmount = 60000n as TokenAmount
+    const swapAmount = 39500n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
@@ -482,8 +482,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, liquidity gap between positions', async () => {
     const lastInitializedTick = 360n
-    const mintAmount = 60000n
-    const swapAmount = 39000n
+    const mintAmount = 60000n as TokenAmount
+    const swapAmount = 39000n as TokenAmount
 
     const xToY = false
     const slippage = MAX_SQRT_PRICE
@@ -537,8 +537,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap xToY and ByAmountOut, positions between search limit range', async () => {
     const lastInitializedTick = -25000n
-    const mintAmount = 20000000n
-    const swapAmount = 6050000n
+    const mintAmount = 20000000n as TokenAmount
+    const swapAmount = 6050000n as TokenAmount
     const xToY = true
     const slippage = MIN_SQRT_PRICE
     const byAmountIn = false
@@ -591,8 +591,8 @@ describe('max tick cross spec', () => {
   }, 100000)
   test('max tick cross swap yToX and ByAmountOut, positions between search limit range', async () => {
     const lastInitializedTick = 25000n
-    const mintAmount = 20000000n
-    const swapAmount = 6408000n
+    const mintAmount = 20000000n as TokenAmount
+    const swapAmount = 6408000n as TokenAmount
     const xToY = false
     const slippage = MAX_SQRT_PRICE
     const byAmountIn = false

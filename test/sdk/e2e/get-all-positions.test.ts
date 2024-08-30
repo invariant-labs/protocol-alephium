@@ -8,7 +8,8 @@ import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_POSITIONS_QUERIED } from '../../../src/consts'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { FeeTier, Liquidity, Percentage, PoolKey, TokenAmount } from '../../../src/types'
+import { toSqrtPrice } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -21,11 +22,11 @@ let feeTier: FeeTier
 let poolKey: PoolKey
 
 describe('get all positions test', () => {
-  const initialFee = 0n
+  const initialFee = 0n as Percentage
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
-  const initSqrtPrice = 10n ** 24n
-  const supply = 10n ** 10n
-  const liquidityDelta = 10n
+  const initSqrtPrice = toSqrtPrice(1n)
+  const supply = 10n ** 10n as TokenAmount
+  const liquidityDelta = 10n as Liquidity
 
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)

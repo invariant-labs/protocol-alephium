@@ -7,7 +7,8 @@ import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_POOL_KEYS_QUERIED, VMError } from '../../../src/consts'
-import { PoolKey } from '../../../src/types'
+import { Percentage, PoolKey, TokenAmount } from '../../../src/types'
+import { toSqrtPrice } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -18,10 +19,10 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 
 describe('get pool keys test', () => {
-  const initialFee = 0n
+  const initialFee = 0n as Percentage
 
-  const initSqrtPrice = 10n ** 24n
-  const supply = 10n ** 10n
+  const initSqrtPrice = toSqrtPrice(1n)
+  const supply = (10n ** 10n) as TokenAmount
 
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
@@ -37,7 +38,9 @@ describe('get pool keys test', () => {
   })
   test('get all pool keys', async () => {
     const feeTiers = await Promise.all(
-      Array.from(Array(10).keys()).map(async i => await newFeeTier(BigInt(i + 1), BigInt(i + 1)))
+      Array.from(Array(10).keys()).map(
+        async i => await newFeeTier(BigInt(i + 1) as Percentage, BigInt(i + 1))
+      )
     )
     const expectedPoolKeys: PoolKey[] = []
     for (const feeTier of feeTiers) {
@@ -62,7 +65,7 @@ describe('get pool keys test', () => {
     })
   })
   test('find max query limit', async () => {
-    const feeTier = await newFeeTier(1n, 1n)
+    const feeTier = await newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
     const expectedPoolKeys: PoolKey[] = []
     for (let i = 0n; i < MAX_POOL_KEYS_QUERIED; i++) {
@@ -83,7 +86,7 @@ describe('get pool keys test', () => {
   })
   test('runs out of gas over the limit for single query, querying all passes', async () => {
     const overSingleLimit = MAX_POOL_KEYS_QUERIED + 1n
-    const feeTier = await newFeeTier(1n, 1n)
+    const feeTier = await newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
 
     const expectedPoolKeys: PoolKey[] = []

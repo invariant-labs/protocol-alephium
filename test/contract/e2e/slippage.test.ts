@@ -22,8 +22,8 @@ import {
   initPool
 } from '../../../src/testUtils'
 import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
-import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
-import { PoolKey } from '../../../src/types'
+import { calculateSqrtPrice, toLiquidity, toPercentage } from '../../../src/math'
+import { PoolKey, SqrtPrice, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let admin: PrivateKeyWallet
@@ -34,21 +34,21 @@ let tokenY: TokenFaucetInstance
 let poolKey: PoolKey
 
 describe('Invariant Swap Tests', () => {
-  const swapAmount = 10n ** 8n
+  const swapAmount = (10n ** 8n) as TokenAmount
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
-  const withdrawAmount = 10n ** 10n
+  const withdrawAmount = (10n ** 10n) as TokenAmount
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
   })
 
   beforeEach(async () => {
-    invariant = await deployInvariant(admin, 10n ** 10n)
+    invariant = await deployInvariant(admin, toPercentage(1n, 2n))
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
-    const tokenSupply = 10n ** 23n
+    const tokenSupply = (10n ** 23n) as TokenAmount
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await withdrawTokens(positionOwner, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
@@ -91,10 +91,10 @@ describe('Invariant Swap Tests', () => {
   test('test_basic_slippage', async () => {
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
-    const swapAmount = 10n ** 8n
+    const swapAmount = (10n ** 8n) as TokenAmount
     await withdrawTokens(swapper, [tokenY, swapAmount])
 
-    const targetSqrtPrice = 1009940000000000000000001n
+    const targetSqrtPrice = 1009940000000000000000001n as SqrtPrice
     await initSwap(invariant, swapper, poolKey, false, swapAmount, true, targetSqrtPrice)
 
     let expectedSqrtPrice = 1009940000000000000000000n
@@ -113,7 +113,7 @@ describe('Invariant Swap Tests', () => {
 
     const quoteResult = await quote(invariant, poolKey, false, swapAmount, true, MAX_SQRT_PRICE)
 
-    const targetSqrtPrice = quoteResult.targetSqrtPrice - 1n
+    const targetSqrtPrice = (quoteResult.targetSqrtPrice - 1n) as SqrtPrice
 
     await expectError(
       InvariantError.PriceLimitReached,
@@ -123,8 +123,8 @@ describe('Invariant Swap Tests', () => {
   })
 
   test('test_swap_exact_limit', async () => {
-    invariant = await deployInvariant(admin, 10n ** 10n)
-    const tokenSupply = 10n ** 23n
+    invariant = await deployInvariant(admin, toPercentage(1n, 2n))
+    const tokenSupply = (10n ** 23n) as TokenAmount
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
     const feeTier = await newFeeTier(fee, tickSpacing)
@@ -134,7 +134,7 @@ describe('Invariant Swap Tests', () => {
 
     await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
 
-    const swapAmount = 1000n
+    const swapAmount = 1000n as TokenAmount
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
     await withdrawTokens(swapper, [tokenX, swapAmount])

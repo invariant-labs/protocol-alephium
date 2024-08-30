@@ -18,6 +18,7 @@ import {
   priceToSqrtPrice,
   simulateInvariantSwap,
   Tick,
+  TokenAmount,
   toPercentage,
   toPrice,
   toTokenAmount
@@ -32,8 +33,9 @@ let TOKEN1_ID: string
 async function setupEssentials() {
   account = await getSigner(1000n * ONE_ALPH)
   INVARIANT_ADDRESS = (await Invariant.deploy(account, Network.Local)).address
-  TOKEN0_ID = await FungibleToken.deploy(account, 10n ** 30n, 'Coin', 'COIN', 12n)
-  TOKEN1_ID = await FungibleToken.deploy(account, 10n ** 30n, 'Coin', 'COIN', 12n)
+  const initMint = (10n ** 30n) as TokenAmount
+  TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
+  TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
 }
 
 const main = async () => {
@@ -290,8 +292,9 @@ const usingAlphAsToken = async () => {
 
 const usingFungibleToken = async () => {
   // deploy token, it will return token ids
-  const TOKEN0_ID = await FungibleToken.deploy(account, 500n, 'CoinA', 'ACOIN', 12n)
-  const TOKEN1_ID = await FungibleToken.deploy(account, 500n, 'CoinB', 'BCOIN', 12n)
+  const initMint = 500n as TokenAmount
+  const TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'CoinA', 'ACOIN', 12n)
+  const TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'CoinB', 'BCOIN', 12n)
 
   // load token by passing its address (you can use existing one), it allows you to interact with it
   const token = await FungibleToken.load(Network.Local)

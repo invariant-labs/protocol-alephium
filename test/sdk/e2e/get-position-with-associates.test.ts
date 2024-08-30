@@ -6,6 +6,7 @@ import { Network } from '../../../src/network'
 import { Invariant } from '../../../src/invariant'
 import { FungibleToken } from '../../../src/fungible-token'
 import { toSqrtPrice } from '../../../src/math'
+import { Liquidity, Percentage, TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -16,11 +17,11 @@ describe('get position with associates tests', () => {
   })
   test('get position with associates', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
-    const initialFee = 0n
+    const initialFee = 0n as Percentage
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
 
-    const token0 = await FungibleToken.deploy(deployer, 0n, 'Token0', 'TK0')
-    const token1 = await FungibleToken.deploy(deployer, 0n, 'Token1', 'TK1')
+    const token0 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token0', 'TK0')
+    const token1 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token1', 'TK1')
 
     const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
     const poolKey = await newPoolKey(token0, token1, feeTier)
@@ -28,7 +29,7 @@ describe('get position with associates tests', () => {
     await invariant.addFeeTier(deployer, feeTier)
 
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const supply = 10n ** 10n
+    const supply = (10n ** 10n) as TokenAmount
     await token.mint(positionOwner, supply, token0)
     await token.mint(positionOwner, supply, token1)
 
@@ -44,7 +45,7 @@ describe('get position with associates tests', () => {
       poolKey,
       lowerTickIndex,
       upperTickIndex,
-      10n,
+      10n as Liquidity,
       supply,
       supply,
       sqrtPrice,

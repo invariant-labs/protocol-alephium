@@ -10,12 +10,13 @@ import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, getNodeUrl, signAndSend, waitTxConfirmed } from './utils'
 import { MAX_U256 } from './consts'
+import { TokenAmount } from './types'
 
 export type TokenMetaData = {
   symbol: string
   name: string
   decimals: bigint
-  totalSupply: bigint
+  totalSupply: TokenAmount
 }
 
 export class FungibleToken {
@@ -32,7 +33,7 @@ export class FungibleToken {
 
   static async deploy(
     signer: SignerProvider,
-    supply: bigint = 0n,
+    supply = 0n as TokenAmount,
     name: string = '',
     symbol: string = '',
     decimals: bigint = 0n
@@ -65,7 +66,7 @@ export class FungibleToken {
     return new FungibleToken(network)
   }
 
-  async mintTx(signer: SignerProvider, value: bigint, tokenId: string) {
+  async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
     const tokenAddress = addressFromContractId(tokenId)
     const tokenFaucet = TokenFaucet.at(tokenAddress)
     const bytecode = Withdraw.script.buildByteCodeToDeploy({
@@ -82,7 +83,7 @@ export class FungibleToken {
     return unsignedTxBuild
   }
 
-  async mint(signer: SignerProvider, value: bigint, tokenId: string) {
+  async mint(signer: SignerProvider, value: TokenAmount, tokenId: string) {
     const tx = await this.mintTx(signer, value, tokenId)
     return await signAndSend(signer, tx)
   }
@@ -109,7 +110,7 @@ export class FungibleToken {
       symbol: hexToString(metadata.symbol),
       name: hexToString(metadata.name),
       decimals: BigInt(metadata.decimals),
-      totalSupply: BigInt(metadata.totalSupply)
+      totalSupply: BigInt(metadata.totalSupply) as TokenAmount
     }
   }
 

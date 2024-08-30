@@ -13,14 +13,23 @@ import { expectError } from '../../../src/testUtils'
 import { UtilsError } from '../../../src/consts'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
-import { Pool, Position, Tick, wrapPoolKey } from '../../../src/types'
+import {
+  FeeGrowth,
+  Liquidity,
+  Pool,
+  Position,
+  SqrtPrice,
+  Tick,
+  TokenAmount,
+  wrapPoolKey
+} from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('math spec', () => {
   describe('get liquidity by tests', () => {
     test('by x', async () => {
-      const x = 430000n
+      const x = 430000n as TokenAmount
       const currentSqrtPrice = await calculateSqrtPrice(100n)
 
       // Bellow current tick
@@ -61,7 +70,7 @@ describe('math spec', () => {
       }
     })
     test('by y', async () => {
-      const y = 47600000000n
+      const y = 47600000000n as TokenAmount
       const currentSqrtPrice = await calculateSqrtPrice(-20000n)
       // Below current tick
       {
@@ -107,12 +116,12 @@ describe('math spec', () => {
       }
     })
     test('get liquidity', async () => {
-      const y = 47600000000n
+      const y = 47600000000n as TokenAmount
       const currentSqrtPrice = await calculateSqrtPrice(-20000n)
       // Below current tick
       {
         const expectedL = 278905227910392327n
-        const expectedX = 0n
+        const expectedX = 0n as TokenAmount
         const lowerTick = -22000n
         const upperTick = -21000n
         const expectedResult = { l: expectedL, x: expectedX, y }
@@ -139,8 +148,8 @@ describe('math spec', () => {
       }
       // In current tick
       {
-        const expectedXUp = 77539808126n
-        const expectedXDown = 77539808125n
+        const expectedXUp = 77539808126n as TokenAmount
+        const expectedXDown = 77539808125n as TokenAmount
         const expectedLUp = 58494529055434693n
         const expectedLDown = 58494529055291192n
         const lowerTick = -25000n
@@ -173,8 +182,8 @@ describe('math spec', () => {
         const lowerTick = 150n
         const upperTick = 800n
 
-        const x = 430000000n
-        const expectedY = 0n
+        const x = 430000000n as TokenAmount
+        const expectedY = 0n as TokenAmount
         const expectedResult = { l: 1354882631162385n, y: expectedY }
 
         const resultUp = await getLiquidity(
@@ -211,13 +220,13 @@ describe('math spec', () => {
       )
       const pool: Pool = {
         poolKey,
-        liquidity: 10000000000000n,
-        sqrtPrice: 999505344804856076727628n,
+        liquidity: 10000000000000n as Liquidity,
+        sqrtPrice: 999505344804856076727628n as SqrtPrice,
         currentTickIndex: -10n,
-        feeGrowthGlobalX: 49000000000000000000000n,
-        feeGrowthGlobalY: 0n,
-        feeProtocolTokenX: 1n,
-        feeProtocolTokenY: 0n,
+        feeGrowthGlobalX: 49000000000000000000000n as FeeGrowth,
+        feeGrowthGlobalY: 0n as FeeGrowth,
+        feeProtocolTokenX: 1n as TokenAmount,
+        feeProtocolTokenY: 0n as TokenAmount,
         startTimestamp: 1720687408546n,
         lastTimestamp: 1720687408644n,
         feeReceiver: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
@@ -226,34 +235,34 @@ describe('math spec', () => {
       }
       const position: Position = {
         poolKey,
-        liquidity: 10000000000000n,
+        liquidity: 10000000000000n as Liquidity,
         lowerTickIndex: -10n,
         upperTickIndex: 10n,
-        feeGrowthInsideX: 0n,
-        feeGrowthInsideY: 0n,
+        feeGrowthInsideX: 0n as FeeGrowth,
+        feeGrowthInsideY: 0n as FeeGrowth,
         lastBlockNumber: 51n,
-        tokensOwedX: 0n,
-        tokensOwedY: 0n,
+        tokensOwedX: 0n as TokenAmount,
+        tokensOwedY: 0n as TokenAmount,
         owner: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY'
       }
       const lowerTick: Tick = {
         index: -10n,
         sign: true,
-        liquidityChange: 10000000000000n,
-        liquidityGross: 10000000000000n,
-        sqrtPrice: 999500149965000000000000n,
-        feeGrowthOutsideX: 0n,
-        feeGrowthOutsideY: 0n,
+        liquidityChange: 10000000000000n as Liquidity,
+        liquidityGross: 10000000000000n as Liquidity,
+        sqrtPrice: 999500149965000000000000n as SqrtPrice,
+        feeGrowthOutsideX: 0n as FeeGrowth,
+        feeGrowthOutsideY: 0n as FeeGrowth,
         secondsOutside: 98n
       }
       const upperTick: Tick = {
         index: 10n,
         sign: false,
-        liquidityChange: 10000000000000n,
-        liquidityGross: 10000000000000n,
-        sqrtPrice: 1000500100010000000000000n,
-        feeGrowthOutsideX: 0n,
-        feeGrowthOutsideY: 0n,
+        liquidityChange: 10000000000000n as Liquidity,
+        liquidityGross: 10000000000000n as Liquidity,
+        sqrtPrice: 1000500100010000000000000n as SqrtPrice,
+        feeGrowthOutsideX: 0n as FeeGrowth,
+        feeGrowthOutsideY: 0n as FeeGrowth,
         secondsOutside: 0n
       }
       const [x, y] = await calculateFee(pool, position, lowerTick, upperTick)

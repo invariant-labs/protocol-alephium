@@ -3,6 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { Withdraw } from '../../../artifacts/ts'
 import { balanceOf, deployTokenFaucet } from '../../../src/utils'
+import { TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
@@ -13,7 +14,7 @@ describe('token tests', () => {
   })
 
   test('withdraw', async () => {
-    let initAmount = 100n
+    let initAmount = 100n as TokenAmount
     let amount = 25n
 
     const result = await deployTokenFaucet(sender, '', '', 0n, initAmount)

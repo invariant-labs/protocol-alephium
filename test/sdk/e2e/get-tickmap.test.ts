@@ -8,9 +8,9 @@ import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { GLOBAL_MAX_TICK, GLOBAL_MIN_TICK } from '../../../src'
-import { FeeTier, PoolKey } from '../../../src/types'
+import { FeeTier, Liquidity, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 import { CHUNK_SIZE, CHUNKS_PER_BATCH } from '../../../src/consts'
-import { getMaxChunk, getMaxTick, getMinTick, toLiquidity } from '../../../src/math'
+import { getMaxChunk, getMaxTick, getMinTick, toLiquidity, toSqrtPrice } from '../../../src/math'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -23,11 +23,11 @@ let feeTier: FeeTier
 let poolKey: PoolKey
 
 describe('query tickmap tests', () => {
-  const initialFee = 0n
+  const initialFee = 0n as Percentage
   const [fee] = getBasicFeeTickSpacing()
   const tickSpacing = 1n
-  const initSqrtPrice = 10n ** 24n
-  const supply = 10n ** 10n
+  const initSqrtPrice = toSqrtPrice(1n)
+  const supply = (10n ** 10n) as TokenAmount
   const lowerTickIndex = GLOBAL_MIN_TICK
   const upperTickIndex = GLOBAL_MAX_TICK
   const ticks = [-221818n, -221817n, -58n, 5n, 221817n, 221818n]
@@ -77,7 +77,7 @@ describe('query tickmap tests', () => {
           poolKey,
           i,
           i + 1n,
-          10n,
+          10n as Liquidity,
           approveX,
           approveY,
           pool.sqrtPrice,
@@ -92,7 +92,7 @@ describe('query tickmap tests', () => {
           poolKey,
           i + 2n,
           i + 3n,
-          10n,
+          10n as Liquidity,
           approveX,
           approveY,
           pool.sqrtPrice,
@@ -117,7 +117,7 @@ describe('query tickmap tests', () => {
       poolKey,
       ticks[2],
       ticks[3],
-      10n,
+      10n as Liquidity,
       approveX,
       approveY,
       sqrtPrice,
@@ -143,7 +143,7 @@ describe('query tickmap tests', () => {
         poolKey,
         ticks[0],
         ticks[1],
-        10n,
+        10n as Liquidity,
         approveX,
         approveY,
         sqrtPrice,
@@ -158,7 +158,7 @@ describe('query tickmap tests', () => {
         poolKey,
         ticks[4],
         ticks[5],
-        10n,
+        10n as Liquidity,
         approveX,
         approveY,
         sqrtPrice,
@@ -194,7 +194,7 @@ describe('query tickmap tests', () => {
         poolKey,
         await getMinTick(tickSpacing),
         (await getMinTick(tickSpacing)) + tickSpacing,
-        10n,
+        10n as Liquidity,
         approveX,
         approveY,
         sqrtPrice,
@@ -209,7 +209,7 @@ describe('query tickmap tests', () => {
         poolKey,
         (await getMaxTick(tickSpacing)) - tickSpacing,
         await getMaxTick(tickSpacing),
-        10n,
+        10n as Liquidity,
         approveX,
         approveY,
         sqrtPrice,

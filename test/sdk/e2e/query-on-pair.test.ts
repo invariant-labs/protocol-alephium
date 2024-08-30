@@ -5,14 +5,15 @@ import { Network } from '../../../src/network'
 import { initTokensXY } from '../../../src/testUtils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
+import { Percentage, TokenAmount, toSqrtPrice } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 describe('query on token pair tests', () => {
-  const initialFee = 0n
+  const initialFee = 0n as Percentage
   const [fee] = getBasicFeeTickSpacing()
-  const initSqrtPrice = 10n ** 24n
-  const supply = 10n ** 10n
+  const initSqrtPrice = toSqrtPrice(1n)
+  const supply = (10n ** 10n) as TokenAmount
 
   test('query on pools', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)

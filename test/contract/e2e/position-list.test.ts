@@ -17,18 +17,19 @@ import {
   verifyPositionList,
   withdrawTokens
 } from '../../../src/testUtils'
-import { calculateSqrtPrice, toLiquidity } from '../../../src/math'
-import { InvariantError, MAX_SQRT_PRICE, PERCENTAGE_SCALE } from '../../../src/consts'
+import { calculateSqrtPrice, toLiquidity, toPercentage } from '../../../src/math'
+import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
 import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
+import { Liquidity, Percentage, TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
 let admin: PrivateKeyWallet
 
-const tokenSupply = 10n ** 10n
+const tokenSupply = (10n ** 10n) as TokenAmount
 // the value just has to be >= available tokens during every deposit
-const approvedTokens = tokenSupply / 4n
+const approvedTokens = (tokenSupply / 4n) as TokenAmount
 
 describe('position list tests', () => {
   beforeAll(async () => {
@@ -36,8 +37,8 @@ describe('position list tests', () => {
   })
 
   test('remove position from an empty list', async () => {
-    const invariant = await deployInvariant(admin, 0n)
-    const [tokenX, tokenY] = await initTokensXY(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
+    const [tokenX, tokenY] = await initTokensXY(admin, 0n as TokenAmount)
     const withoutPositions = await getSigner(ONE_ALPH * 1000n, 0)
 
     const [fee] = getBasicFeeTickSpacing()
@@ -64,11 +65,11 @@ describe('position list tests', () => {
   })
 
   test('multiple positions on the same tick', async () => {
-    const invariant = await deployInvariant(admin, 0n)
+    const invariant = await deployInvariant(admin, 0n as Percentage)
     const [tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
     // 0.02%
-    const fee = 2n * 10n ** (PERCENTAGE_SCALE - 4n)
+    const fee = toPercentage(2n, 4n)
     const tickSpacing = 10n
     const feeTier = await newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
@@ -88,7 +89,7 @@ describe('position list tests', () => {
 
     const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     const { sqrtPrice: slippageLimitLower } = await getPool(invariant, poolKey)
-    const liquiditiyDelta = 100n
+    const liquiditiyDelta = 100n as Liquidity
     // all 3 exact same ticks
     {
       const [lowerTickIndex, upperTickIndex] = [-10n, 10n]
@@ -229,7 +230,7 @@ describe('position list tests', () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
   })
   beforeEach(async () => {
-    invariant = await deployInvariant(admin, 0n)
+    invariant = await deployInvariant(admin, 0n as Percentage)
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
     const feeTier = await newFeeTier(getBasicFeeTickSpacing()[0], 3n)
