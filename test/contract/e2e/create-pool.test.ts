@@ -9,11 +9,10 @@ import {
   initFeeTier,
   initTokensXY,
   expectError,
-  calculateSqrtPrice,
   TokenInstance
 } from '../../../src/testUtils'
 import { CLAMM, Invariant, InvariantInstance } from '../../../artifacts/ts'
-import { toPercentage, toSqrtPrice } from '../../../src/math'
+import { calculateSqrtPrice, toPercentage, toSqrtPrice } from '../../../src/math'
 import { SqrtPrice, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -38,10 +37,10 @@ describe('create pool tests', () => {
   })
   test('create pool', async () => {
     const tickSpacing = 100n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
     const initSqrtPrice = toSqrtPrice(1n)
@@ -63,12 +62,12 @@ describe('create pool tests', () => {
   })
   test('x to y and y to x', async () => {
     const tickSpacing = 100n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
     const initSqrtPrice = toSqrtPrice(1n)
@@ -84,7 +83,7 @@ describe('create pool tests', () => {
   })
   test('with same tokens', async () => {
     const tickSpacing = 100n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
@@ -101,7 +100,7 @@ describe('create pool tests', () => {
   })
   test('fee tier not added', async () => {
     const tickSpacing = 100n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
@@ -117,14 +116,14 @@ describe('create pool tests', () => {
   })
   test('init tick not divided by tick spacing', async () => {
     const tickSpacing = 3n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
     const initTick = 2n
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     const clamm = CLAMM.at(
       addressFromContractId((await fetchContractState(Invariant, invariant)).fields.clamm)
@@ -137,15 +136,15 @@ describe('create pool tests', () => {
   })
   test('init sqrt price minimal difference from tick', async () => {
     const tickSpacing = 3n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice = ((await calculateSqrtPrice(invariant, initTick)) + 1n) as SqrtPrice
+    const initSqrtPrice = (calculateSqrtPrice(initTick) + 1n) as SqrtPrice
     await initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const pool = await getPool(invariant, poolKey)
@@ -153,12 +152,12 @@ describe('create pool tests', () => {
   })
   test('init sqrt price has closer init tick', async () => {
     const tickSpacing = 1n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 2n
     const initSqrtPrice = 1000175003749000000000000n as SqrtPrice
@@ -176,12 +175,12 @@ describe('create pool tests', () => {
   })
   test('init sqrt price has closer init tick with tick spacing over one', async () => {
     const tickSpacing = 3n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const supply = (10n ** 6n + 1000n) as TokenAmount
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
     const initSqrtPrice = 1000225003749000000000000n as SqrtPrice

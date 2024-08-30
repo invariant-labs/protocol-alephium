@@ -43,7 +43,7 @@ describe('position list tests', () => {
 
     const [fee] = getBasicFeeTickSpacing()
     const tickSpacing = 3n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const initTick = -23028n
@@ -53,7 +53,7 @@ describe('position list tests', () => {
       tokenX,
       tokenY,
       feeTier,
-      await calculateSqrtPrice(initTick),
+      calculateSqrtPrice(initTick),
       initTick
     )
 
@@ -71,7 +71,7 @@ describe('position list tests', () => {
     // 0.02%
     const fee = toPercentage(2n, 4n)
     const tickSpacing = 10n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     const positionsOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -83,11 +83,11 @@ describe('position list tests', () => {
       tokenX,
       tokenY,
       feeTier,
-      await calculateSqrtPrice(initTick),
+      calculateSqrtPrice(initTick),
       initTick
     )
 
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     const { sqrtPrice: slippageLimitLower } = await getPool(invariant, poolKey)
     const liquiditiyDelta = 100n as Liquidity
     // all 3 exact same ticks
@@ -233,7 +233,7 @@ describe('position list tests', () => {
     invariant = await deployInvariant(admin, 0n as Percentage)
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
 
-    const feeTier = await newFeeTier(getBasicFeeTickSpacing()[0], 3n)
+    const feeTier = newFeeTier(getBasicFeeTickSpacing()[0], 3n)
     await initFeeTier(invariant, admin, feeTier)
 
     positionsOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -246,11 +246,11 @@ describe('position list tests', () => {
       tokenX,
       tokenY,
       feeTier,
-      await calculateSqrtPrice(initTick),
+      calculateSqrtPrice(initTick),
       initTick
     )
 
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const { sqrtPrice: slippageLimitLower } = await getPool(invariant, poolKey)
 
@@ -280,8 +280,8 @@ describe('position list tests', () => {
     verifyPositionList(invariant, positionsOwner.address, BigInt(minMaxTicks.length), true)
   })
   test('add and remove multiple positions', async () => {
-    const feeTier = await newFeeTier(getBasicFeeTickSpacing()[0], 3n)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(getBasicFeeTickSpacing()[0], 3n)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     const { sqrtPrice: slippageLimitLower } = await getPool(invariant, poolKey)
 
     // remove middle position

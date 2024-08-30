@@ -30,7 +30,7 @@ describe('invariant tests', () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await invariant.addFeeTier(deployer, feeTier)
     const exists = await invariant.feeTierExist(feeTier)
     expect(exists).toBeTruthy()

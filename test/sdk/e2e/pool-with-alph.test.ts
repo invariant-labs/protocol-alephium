@@ -41,10 +41,10 @@ describe('create pool with ALP token as swappable asset tests', () => {
     swapper = await getSigner(ONE_ALPH * 1000n, 0)
     recipient = await getSigner(ONE_ALPH * 1000n, 0)
     invariant = await Invariant.deploy(admin, Network.Local, protocolFee)
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     tokenY = (await initTokensXY(admin, supply))[0]
     await withdrawTokens(positionOwner, [tokenY, positionOwnerMint])
-    poolKey = await newPoolKey(tokenY.contractId, ALPH_TOKEN_ID, feeTier)
+    poolKey = newPoolKey(tokenY.contractId, ALPH_TOKEN_ID, feeTier)
     await invariant.addFeeTier(admin, feeTier)
   })
   test('create pool', async () => {

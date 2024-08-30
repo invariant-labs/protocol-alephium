@@ -43,10 +43,10 @@ describe('max tick cross spec', () => {
     invariant = await deployInvariant(admin, 0n as Percentage)
     ;[tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, positionOwnerMint], [tokenY, positionOwnerMint])
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   })
 
   test('max tick cross swap xToY and ByAmountIn, no liquidity gap between positions', async () => {

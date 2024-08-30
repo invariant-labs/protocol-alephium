@@ -1,15 +1,18 @@
 import { web3 } from '@alephium/web3'
 import {
   calculateFee,
+  calculatePriceImpact,
   calculateSqrtPrice,
   calculateSqrtPriceAfterSlippage,
   getLiquidity,
   getLiquidityByX,
   getLiquidityByY,
+  priceToSqrtPrice,
+  sqrtPriceToPrice,
   toPercentage,
+  toPrice,
   toSqrtPrice
 } from '../../../src/math'
-import { expectError } from '../../../src/testUtils'
 import { UtilsError } from '../../../src/consts'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
@@ -20,8 +23,7 @@ import {
   Position,
   SqrtPrice,
   Tick,
-  TokenAmount,
-  wrapPoolKey
+  TokenAmount
 } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -30,19 +32,17 @@ describe('math spec', () => {
   describe('get liquidity by tests', () => {
     test('by x', async () => {
       const x = 430000n as TokenAmount
-      const currentSqrtPrice = await calculateSqrtPrice(100n)
+      const currentSqrtPrice = calculateSqrtPrice(100n)
 
-      // Bellow current tick
+      // Below current tick
       {
         const lowerTick = -50n
         const upperTick = 10n
-        await expectError(
-          UtilsError.UpperLTCurrentSqrtPrice,
-          getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
+        expect(() => getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)).toThrow(
+          UtilsError.UpperLTCurrentSqrtPrice.toString()
         )
-        await expectError(
-          UtilsError.UpperLTCurrentSqrtPrice,
-          getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
+        expect(() => getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)).toThrow(
+          UtilsError.UpperLTCurrentSqrtPrice.toString()
         )
       }
       // In current tick
@@ -52,8 +52,8 @@ describe('math spec', () => {
         const expectedYDown = 434321n
         const lowerTick = 80n
         const upperTick = 120n
-        const resultUp = await getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
-        const resultDown = await getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
+        const resultUp = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
         expect(resultUp).toMatchObject({ l: expectedL, amount: expectedYUp })
         expect(resultDown).toMatchObject({ l: expectedL, amount: expectedYDown })
       }
@@ -63,15 +63,15 @@ describe('math spec', () => {
         const upperTick = 800n
         const expectedResult = { l: 1354882631162n, amount: 0n }
 
-        const resultUp = await getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
-        const resultDown = await getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
+        const resultUp = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
         expect(resultUp).toMatchObject(expectedResult)
         expect(resultDown).toMatchObject(expectedResult)
       }
     })
     test('by y', async () => {
       const y = 47600000000n as TokenAmount
-      const currentSqrtPrice = await calculateSqrtPrice(-20000n)
+      const currentSqrtPrice = calculateSqrtPrice(-20000n)
       // Below current tick
       {
         const expectedL = 278905227910392327n
@@ -80,8 +80,8 @@ describe('math spec', () => {
         const upperTick = -21000n
         const expectedResult = { l: expectedL, amount: expectedX }
 
-        const resultUp = await getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
-        const resultDown = await getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
+        const resultUp = getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
 
         expect(resultUp).toMatchObject(expectedResult)
         expect(resultDown).toMatchObject(expectedResult)
@@ -94,8 +94,8 @@ describe('math spec', () => {
         const lowerTick = -25000n
         const upperTick = -19000n
 
-        const resultUp = await getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
-        const resultDown = await getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
+        const resultUp = getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
 
         expect(resultUp).toMatchObject({ l: expectedL, amount: expectedXUp })
         expect(resultDown).toMatchObject({ l: expectedL, amount: expectedXDown })
@@ -105,19 +105,17 @@ describe('math spec', () => {
         const lowerTick = -10000n
         const upperTick = 0n
 
-        await expectError(
-          UtilsError.CurrentLTLowerSqrtPrice,
-          getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
+        expect(() => getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)).toThrow(
+          UtilsError.CurrentLTLowerSqrtPrice.toString()
         )
-        await expectError(
-          UtilsError.CurrentLTLowerSqrtPrice,
-          getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)
+        expect(() => getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, false)).toThrow(
+          UtilsError.CurrentLTLowerSqrtPrice.toString()
         )
       }
     })
     test('get liquidity', async () => {
       const y = 47600000000n as TokenAmount
-      const currentSqrtPrice = await calculateSqrtPrice(-20000n)
+      const currentSqrtPrice = calculateSqrtPrice(-20000n)
       // Below current tick
       {
         const expectedL = 278905227910392327n
@@ -126,22 +124,8 @@ describe('math spec', () => {
         const upperTick = -21000n
         const expectedResult = { l: expectedL, x: expectedX, y }
 
-        const resultUp = await getLiquidity(
-          expectedX,
-          y,
-          lowerTick,
-          upperTick,
-          currentSqrtPrice,
-          true
-        )
-        const resultDown = await getLiquidity(
-          expectedX,
-          y,
-          lowerTick,
-          upperTick,
-          currentSqrtPrice,
-          false
-        )
+        const resultUp = getLiquidity(expectedX, y, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidity(expectedX, y, lowerTick, upperTick, currentSqrtPrice, false)
 
         expect(resultUp).toMatchObject(expectedResult)
         expect(resultDown).toMatchObject(expectedResult)
@@ -157,15 +141,8 @@ describe('math spec', () => {
         const expectedResultUp = { l: expectedLUp, x: expectedXUp }
         const expectedResultDown = { l: expectedLDown, x: expectedXDown }
 
-        const resultUp = await getLiquidity(
-          expectedXUp,
-          y,
-          lowerTick,
-          upperTick,
-          currentSqrtPrice,
-          true
-        )
-        const resultDown = await getLiquidity(
+        const resultUp = getLiquidity(expectedXUp, y, lowerTick, upperTick, currentSqrtPrice, true)
+        const resultDown = getLiquidity(
           expectedXDown,
           y,
           lowerTick,
@@ -186,23 +163,9 @@ describe('math spec', () => {
         const expectedY = 0n as TokenAmount
         const expectedResult = { l: 1354882631162385n, y: expectedY }
 
-        const resultUp = await getLiquidity(
-          x,
-          expectedY,
-          lowerTick,
-          upperTick,
-          currentSqrtPrice,
-          true
-        )
+        const resultUp = getLiquidity(x, expectedY, lowerTick, upperTick, currentSqrtPrice, true)
 
-        const resultDown = await getLiquidity(
-          x,
-          expectedY,
-          lowerTick,
-          upperTick,
-          currentSqrtPrice,
-          false
-        )
+        const resultDown = getLiquidity(x, expectedY, lowerTick, upperTick, currentSqrtPrice, false)
 
         expect(resultUp).toMatchObject(expectedResult)
         expect(resultDown).toMatchObject(expectedResult)
@@ -212,8 +175,8 @@ describe('math spec', () => {
   describe('calculateFee tests', () => {
     test('returns correct amounts', async () => {
       const [fee, tickSpacing] = getBasicFeeTickSpacing()
-      const feeTier = await newFeeTier(fee, tickSpacing)
-      const poolKey = await newPoolKey(
+      const feeTier = newFeeTier(fee, tickSpacing)
+      const poolKey = newPoolKey(
         '55cd8e663fecd454071a2bf9937bf306a58e344694a16009b5d87421b06f7000',
         '55cd8e663fecd454071a2bf9937bf306a58e344694a16009b5d87421b06e7000',
         feeTier
@@ -265,7 +228,7 @@ describe('math spec', () => {
         feeGrowthOutsideY: 0n as FeeGrowth,
         secondsOutside: 0n
       }
-      const [x, y] = await calculateFee(pool, position, lowerTick, upperTick)
+      const [x, y] = calculateFee(pool, position, lowerTick, upperTick)
       expect(x).toBe(490n)
       expect(y).toBe(0n)
     })
@@ -346,6 +309,65 @@ describe('math spec', () => {
       const expected = 0n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
       expect(limitSqrt).toBe(expected)
+    })
+  })
+
+  describe('calculatePriceImpact tests', () => {
+    it('increasing price', () => {
+      // price change       120 -> 599
+      // real price impact  79.96661101836...%
+      const startingSqrtPrice = 10954451150103322269139395n as SqrtPrice
+      const endingSqrtPrice = 24474476501040834315678144n as SqrtPrice
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      expect(priceImpact).toBe(799666110183n)
+    })
+
+    it('decreasing price', () => {
+      // price change       0.367 -> 1.0001^(-221818)
+      // real price impact  99.9999999365...%
+      const startingSqrtPrice = 605805249234438377196232n as SqrtPrice
+      const endingSqrtPrice = 15258932449895975601n as SqrtPrice
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      expect(priceImpact).toBe(999999999365n)
+    })
+  })
+
+  describe('sqrt price and price conversion', () => {
+    it('price of 1.00', () => {
+      // 1.00 = sqrt(1.00)
+      const sqrtPrice = priceToSqrtPrice(toPrice(1n))
+      const expectedSqrtPrice = 1000000000000000000000000n
+      expect(sqrtPrice).toBe(expectedSqrtPrice)
+    })
+    it('price of 2.00', () => {
+      // 1.414213562373095048801688... = sqrt(2.00)
+      const sqrtPrice = priceToSqrtPrice(toPrice(2n))
+      const expectedSqrtPrice = 1414213562373095048801688n
+      expect(sqrtPrice).toBe(expectedSqrtPrice)
+    })
+    it('price of 0.25', () => {
+      // 0.5 = sqrt(0.25)
+      const sqrtPrice = priceToSqrtPrice(toPrice(25n, 2n))
+      const expectedSqrtPrice = 500000000000000000000000n
+      expect(sqrtPrice).toBe(expectedSqrtPrice)
+    })
+    it('sqrt price of 1.00', () => {
+      // sqrt(1.00) = 1.00
+      const price = sqrtPriceToPrice(toSqrtPrice(1n))
+      const expectedPrice = 1000000000000000000000000n
+      expect(price).toBe(expectedPrice)
+    })
+    it('sqrt price of 2.00', () => {
+      // sqrt(1.414213562373095048801688...) = 2.00
+      const price = sqrtPriceToPrice(1414213562373095048801688n as SqrtPrice)
+      const expectedPrice = 1999999999999999999999997n
+      expect(price).toBe(expectedPrice)
+    })
+    it('sqrt price of 0.25', () => {
+      // sqrt(0.25) = 0.5
+      const price = sqrtPriceToPrice(toSqrtPrice(5n, 1n))
+      const expectedPrice = 250000000000000000000000n
+      expect(price).toBe(expectedPrice)
     })
   })
 })

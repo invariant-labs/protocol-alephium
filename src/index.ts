@@ -21,6 +21,7 @@ export {
   getMinTick,
   getMaxTick,
   toFeeGrowth,
+  toFixedPoint,
   toLiquidity,
   toPercentage,
   toPrice,
@@ -70,6 +71,7 @@ export {
   GLOBAL_MIN_TICK,
   SEARCH_RANGE,
   InvariantError,
+  CHUNK_SIZE,
   MAX_FEE_TIERS,
   MAX_SWAP_STEPS,
   MAX_U256

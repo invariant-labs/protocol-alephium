@@ -55,26 +55,26 @@ describe('limits tests', () => {
     const limitAmount = 95780971304118053647396689196894323976171195136475136n as TokenAmount
     // 0.6% fee
     const [fee, tickSpacing] = [toPercentage(6n, 3n), 1n]
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice = await calculateSqrtPrice(initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const [lowerTick, upperTick] = [-tickSpacing, tickSpacing]
     const { sqrtPrice } = await getPool(invariant, poolKey)
 
-    const { l: liquidityDelta } = await getLiquidityByX(
+    const { l: liquidityDelta } = getLiquidityByX(
       limitAmount,
       lowerTick,
       upperTick,
       sqrtPrice,
       true
     )
-    const y = await getDeltaY(await calculateSqrtPrice(lowerTick), sqrtPrice, liquidityDelta, true)
+    const y = await getDeltaY(calculateSqrtPrice(lowerTick), sqrtPrice, liquidityDelta, true)
     const slippageLimit = initSqrtPrice
 
     await initPosition(
@@ -116,12 +116,12 @@ describe('limits tests', () => {
     const limitAmount = 110427941548649020598956093796432407239217743554726184882600387580788736n
     // 0.6% fee
     const [fee, tickSpacing] = [toPercentage(6n, 3n), 1n]
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
 
-    const initTick = await getMaxTick(tickSpacing)
-    const initSqrtPrice = await calculateSqrtPrice(initTick)
+    const initTick = getMaxTick(tickSpacing)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
@@ -130,7 +130,7 @@ describe('limits tests', () => {
     expect(sqrtPrice).toBe(initSqrtPrice)
 
     const positionAmount = (limitAmount - 1n) as TokenAmount
-    const { l: liquidityDelta } = await getLiquidityByY(
+    const { l: liquidityDelta } = getLiquidityByY(
       positionAmount,
       0n,
       GLOBAL_MAX_TICK,
@@ -164,12 +164,12 @@ describe('limits tests', () => {
     const limitAmount = 191561942608236107294793378393788647952342390272950272n
     // 0.6% fee
     const [fee, tickSpacing] = [toPercentage(6n, 3n), 1n]
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice = await calculateSqrtPrice(initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
@@ -177,15 +177,9 @@ describe('limits tests', () => {
     const { sqrtPrice } = await getPool(invariant, poolKey)
 
     const posAmount = (limitAmount / 2n) as TokenAmount
-    const { l: liquidityDelta } = await getLiquidityByX(
-      posAmount,
-      lowerTick,
-      upperTick,
-      sqrtPrice,
-      false
-    )
+    const { l: liquidityDelta } = getLiquidityByX(posAmount, lowerTick, upperTick, sqrtPrice, false)
 
-    const y = await getDeltaY(await calculateSqrtPrice(lowerTick), sqrtPrice, liquidityDelta, true)
+    const y = getDeltaY(calculateSqrtPrice(lowerTick), sqrtPrice, liquidityDelta, true)
 
     const slippageLimit = initSqrtPrice
     await initPosition(
@@ -244,12 +238,12 @@ describe('limits tests', () => {
       220855883097298041197912187592864814478435487109452369765200775161577472n as Liquidity
     // 0.6% fee
     const [fee, tickSpacing] = [toPercentage(6n, 3n), 1n]
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
 
-    const initTick = await getMaxTick(tickSpacing)
-    const initSqrtPrice = await calculateSqrtPrice(initTick)
+    const initTick = getMaxTick(tickSpacing)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
     const { currentTickIndex, sqrtPrice } = await getPool(invariant, poolKey)
@@ -292,12 +286,12 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
     102844034832575377634685573909834406561420991602098741459288064n as TokenAmount
   // 0.6% fee
   const [fee, tickSpacing] = [toPercentage(6n, 3n), 1n]
-  const feeTier = await newFeeTier(fee, tickSpacing)
-  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  const feeTier = newFeeTier(fee, tickSpacing)
+  const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   await initFeeTier(invariant, admin, feeTier)
 
   const initTick = 0n
-  const initSqrtPrice = await calculateSqrtPrice(initTick)
+  const initSqrtPrice = calculateSqrtPrice(initTick)
 
   await initPool(invariant, user, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
@@ -305,8 +299,8 @@ const bigDepositOneAndSwapTheOther = async (xToY: boolean) => {
   const { sqrtPrice } = await getPool(invariant, poolKey)
 
   const { l: liquidityDelta } = xToY
-    ? await getLiquidityByY(limitAmount, lowerTick, upperTick, sqrtPrice, true)
-    : await getLiquidityByX(limitAmount, lowerTick, upperTick, sqrtPrice, true)
+    ? getLiquidityByY(limitAmount, lowerTick, upperTick, sqrtPrice, true)
+    : getLiquidityByX(limitAmount, lowerTick, upperTick, sqrtPrice, true)
   const slippageLimit = initSqrtPrice
 
   await initPosition(

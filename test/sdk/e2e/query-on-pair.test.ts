@@ -20,14 +20,14 @@ describe('query on token pair tests', () => {
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    const feeTier10TS = await newFeeTier(fee, 10n)
-    const feeTier20TS = await newFeeTier(fee, 20n)
+    const feeTier10TS = newFeeTier(fee, 10n)
+    const feeTier20TS = newFeeTier(fee, 20n)
 
     await invariant.addFeeTier(deployer, feeTier10TS)
     await invariant.addFeeTier(deployer, feeTier20TS)
 
-    const poolKey0 = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier10TS)
-    const poolKey1 = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier20TS)
+    const poolKey0 = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier10TS)
+    const poolKey1 = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier20TS)
 
     await invariant.createPool(
       deployer,
@@ -59,7 +59,7 @@ describe('query on token pair tests', () => {
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     for (let tickSpacing = 1n; tickSpacing <= 32n; tickSpacing++) {
-      const feeTier = await newFeeTier(fee, tickSpacing)
+      const feeTier = newFeeTier(fee, tickSpacing)
       await invariant.addFeeTier(deployer, feeTier)
       await invariant.createPool(
         deployer,

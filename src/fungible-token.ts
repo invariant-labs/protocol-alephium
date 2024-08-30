@@ -62,7 +62,7 @@ export class FungibleToken {
     return deployResult.contractInstance.contractId
   }
 
-  static async load(network: Network): Promise<FungibleToken> {
+  static load(network: Network): FungibleToken {
     return new FungibleToken(network)
   }
 

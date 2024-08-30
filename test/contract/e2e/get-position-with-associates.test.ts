@@ -31,7 +31,7 @@ describe('get position with associates tests', () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
+    const feeTier = newFeeTier(...getBasicFeeTickSpacing())
 
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, positionOwner, tokenX, tokenY)
@@ -39,8 +39,8 @@ describe('get position with associates tests', () => {
   })
 
   test('get position with associates', async () => {
-    const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(...getBasicFeeTickSpacing())
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const [lowerTickIndex, upperTickIndex] = [-20n, 10n]
 

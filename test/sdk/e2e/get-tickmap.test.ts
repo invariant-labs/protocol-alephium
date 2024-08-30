@@ -38,8 +38,8 @@ describe('query tickmap tests', () => {
     invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
     await invariant.createPool(
@@ -102,7 +102,7 @@ describe('query tickmap tests', () => {
     }
 
     const tickmap = await invariant.getFullTickmap(poolKey)
-    const maxChunk = await getMaxChunk(tickSpacing)
+    const maxChunk = getMaxChunk(tickSpacing)
     const lastChunkInBatch =
       BigInt(Math.ceil(Number(maxChunk) / Number(CHUNKS_PER_BATCH))) * CHUNKS_PER_BATCH
     expect(tickmap.size).toBe(Number(lastChunkInBatch))
@@ -166,7 +166,7 @@ describe('query tickmap tests', () => {
       )
     }
     const tickmap = await invariant.getFullTickmap(poolKey)
-    const maxChunk = await getMaxChunk(tickSpacing)
+    const maxChunk = getMaxChunk(tickSpacing)
     expect(tickmap.get(0n)).toBe(0b11n)
     expect(tickmap.get(maxChunk)).toBe(
       0x18000000000000000000000000000000000000000000000000000000000000n
@@ -174,8 +174,8 @@ describe('query tickmap tests', () => {
   })
   test('get tickmap edge tick initialized on tick spacing equal 100', async () => {
     const tickSpacing = 100n
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
     await invariant.createPool(
@@ -192,8 +192,8 @@ describe('query tickmap tests', () => {
       await invariant.createPosition(
         positionOwner,
         poolKey,
-        await getMinTick(tickSpacing),
-        (await getMinTick(tickSpacing)) + tickSpacing,
+        getMinTick(tickSpacing),
+        getMinTick(tickSpacing) + tickSpacing,
         10n as Liquidity,
         approveX,
         approveY,
@@ -207,8 +207,8 @@ describe('query tickmap tests', () => {
       await invariant.createPosition(
         positionOwner,
         poolKey,
-        (await getMaxTick(tickSpacing)) - tickSpacing,
-        await getMaxTick(tickSpacing),
+        getMaxTick(tickSpacing) - tickSpacing,
+        getMaxTick(tickSpacing),
         10n as Liquidity,
         approveX,
         approveY,
@@ -217,7 +217,7 @@ describe('query tickmap tests', () => {
       )
     }
     const tickmap = await invariant.getFullTickmap(poolKey)
-    const maxChunk = await getMaxChunk(tickSpacing)
+    const maxChunk = getMaxChunk(tickSpacing)
 
     expect(tickmap.get(0n)).toBe(0b11n)
     expect(tickmap.get(maxChunk)).toBe(0x1800000000000000000000n)

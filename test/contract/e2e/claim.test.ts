@@ -36,8 +36,8 @@ describe('claim tests', () => {
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)

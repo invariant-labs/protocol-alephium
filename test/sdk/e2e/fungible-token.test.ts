@@ -14,7 +14,7 @@ let token0: string
 describe('fungible token tests', () => {
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
-    token = await FungibleToken.load(Network.Local)
+    token = FungibleToken.load(Network.Local)
     token0 = await FungibleToken.deploy(admin, 1000n as TokenAmount, 'Coin', 'COIN', 12n)
   })
 

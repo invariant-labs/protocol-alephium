@@ -34,8 +34,8 @@ describe('query liquidity ticks tests', () => {
     invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
     await invariant.createPool(
@@ -83,11 +83,11 @@ describe('query liquidity ticks tests', () => {
   })
 
   test('different tick spacing', async () => {
-    const feeTier2TS = await newFeeTier(fee, 2n)
-    const feeTier10TS = await newFeeTier(fee, 10n)
+    const feeTier2TS = newFeeTier(fee, 2n)
+    const feeTier10TS = newFeeTier(fee, 10n)
 
-    const poolKey2TS = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier2TS)
-    const poolKey10TS = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier10TS)
+    const poolKey2TS = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier2TS)
+    const poolKey10TS = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier10TS)
 
     await invariant.addFeeTier(deployer, feeTier2TS)
     await invariant.addFeeTier(deployer, feeTier10TS)

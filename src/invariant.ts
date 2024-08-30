@@ -34,7 +34,6 @@ import {
   TokenAmount,
   unwrapFeeTier,
   unwrapPool,
-  unwrapPoolKey,
   unwrapPosition,
   unwrapQuoteResult,
   unwrapTick,
@@ -159,7 +158,7 @@ export class Invariant {
     feeTier: FeeTier,
     initSqrtPrice: SqrtPrice
   ) {
-    const initTick = await calculateTick(initSqrtPrice, feeTier.tickSpacing)
+    const initTick = calculateTick(initSqrtPrice, feeTier.tickSpacing)
     const txBytecode = CreatePool.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       token0: token0Id,
@@ -648,7 +647,7 @@ export class Invariant {
 
   async getFullTickmap(poolKey: PoolKey): Promise<Tickmap> {
     const promises: Promise<[bigint, bigint][]>[] = []
-    const maxBatch = await getMaxBatch(poolKey.feeTier.tickSpacing)
+    const maxBatch = getMaxBatch(poolKey.feeTier.tickSpacing)
     let currentBatch = 0n
 
     while (currentBatch <= maxBatch) {
@@ -677,7 +676,7 @@ export class Invariant {
       for (let bit = 0n; bit < CHUNK_SIZE; bit++) {
         const checkedBit = chunk & (1n << bit)
         if (checkedBit) {
-          const tickIndex = await bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
+          const tickIndex = bitPositionToTick(chunkIndex, bit, poolKey.feeTier.tickSpacing)
           tickIndexes.push(tickIndex)
         }
       }

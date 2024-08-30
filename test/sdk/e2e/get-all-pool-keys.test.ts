@@ -38,15 +38,15 @@ describe('get pool keys test', () => {
   })
   test('get all pool keys', async () => {
     const feeTiers = await Promise.all(
-      Array.from(Array(10).keys()).map(
-        async i => await newFeeTier(BigInt(i + 1) as Percentage, BigInt(i + 1))
+      Array.from(Array(10).keys()).map(async i =>
+        newFeeTier(BigInt(i + 1) as Percentage, BigInt(i + 1))
       )
     )
     const expectedPoolKeys: PoolKey[] = []
     for (const feeTier of feeTiers) {
       await invariant.addFeeTier(deployer, feeTier)
 
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
       await invariant.createPool(
         deployer,
@@ -65,12 +65,12 @@ describe('get pool keys test', () => {
     })
   })
   test('find max query limit', async () => {
-    const feeTier = await newFeeTier(1n as Percentage, 1n)
+    const feeTier = newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
     const expectedPoolKeys: PoolKey[] = []
     for (let i = 0n; i < MAX_POOL_KEYS_QUERIED; i++) {
       const [tokenX, tokenY] = await initTokensXY(deployer, supply)
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
       await invariant.createPool(
         deployer,
@@ -86,13 +86,13 @@ describe('get pool keys test', () => {
   })
   test('runs out of gas over the limit for single query, querying all passes', async () => {
     const overSingleLimit = MAX_POOL_KEYS_QUERIED + 1n
-    const feeTier = await newFeeTier(1n as Percentage, 1n)
+    const feeTier = newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
 
     const expectedPoolKeys: PoolKey[] = []
     for (let i = 0n; i < overSingleLimit; i++) {
       const [tokenX, tokenY] = await initTokensXY(deployer, supply)
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
       await invariant.createPool(
         deployer,

@@ -5,7 +5,6 @@ import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
-  calculateSqrtPrice,
   expectError,
   getPool,
   getPosition,
@@ -19,7 +18,7 @@ import {
   quote,
   withdrawTokens
 } from '../../../src/testUtils'
-import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
+import { calculateSqrtPrice, toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
 import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -47,9 +46,9 @@ describe('liquidity gap tests', () => {
     const protocolFee = toPercentage(1n, 2n)
     invariant = await deployInvariant(deployer, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, mintAmount)
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, deployer, feeTier)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initPool(invariant, deployer, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
   })
   test('init position', async () => {
@@ -91,7 +90,7 @@ describe('liquidity gap tests', () => {
     await initSwap(invariant, swapper, poolKey, true, amount, true, targetSqrtPrice)
 
     const pool = await getPool(invariant, poolKey)
-    const expectedSqrtPrice = await calculateSqrtPrice(invariant, -10n)
+    const expectedSqrtPrice = calculateSqrtPrice(-10n)
     const expectedYAmountOut = 9999n
     const liquidityDelta = toLiquidity(20006000n)
     const lowerTick = -10n
@@ -187,7 +186,7 @@ describe('liquidity gap tests', () => {
       index: -50n,
       liquidityChange: secondPosition.liquidity,
       liquidityGross: secondPosition.liquidity,
-      sqrtPrice: await calculateSqrtPrice(invariant, -50n),
+      sqrtPrice: calculateSqrtPrice(-50n),
       feeGrowthOutsideX: 0n,
       feeGrowthOutsideY: 0n
     }
@@ -196,7 +195,7 @@ describe('liquidity gap tests', () => {
       index: -10n,
       liquidityChange: firstPosition.liquidity,
       liquidityGross: firstPosition.liquidity,
-      sqrtPrice: await calculateSqrtPrice(invariant, -10n),
+      sqrtPrice: calculateSqrtPrice(-10n),
       feeGrowthOutsideX: 29991002699190242927121n,
       feeGrowthOutsideY: 0n
     }
