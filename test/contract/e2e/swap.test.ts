@@ -40,7 +40,7 @@ describe('swap tests', () => {
   test('swap', async () => {
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
     const [invariant, tokenX, tokenY] = await initDexAndTokens(admin)
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
     const positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
@@ -60,8 +60,8 @@ describe('swap tests', () => {
     )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initFeeTier(invariant, admin, feeTier)
 
@@ -169,8 +169,8 @@ describe('swap tests', () => {
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initFeeTier(invariant, admin, feeTier)
 
@@ -284,8 +284,8 @@ describe('swap tests', () => {
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
@@ -355,8 +355,8 @@ describe('swap tests', () => {
     )
 
     const [fee, tickSpacing] = getBasicFeeTickSpacing()
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initFeeTier(invariant, admin, feeTier)
 

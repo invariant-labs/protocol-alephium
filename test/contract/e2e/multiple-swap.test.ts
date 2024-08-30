@@ -50,15 +50,15 @@ describe('multiple swap tests', () => {
     const mintPosition = (10n ** 10n) as TokenAmount
     ;[tokenX, tokenY] = await initTokensXY(admin, (mintPosition + mintSwapper) as TokenAmount)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     // pool, fee 0.1%
     {
       const [exists] = await feeTierExists(invariant, feeTier)
       expect(exists).toBeTruthy()
-      const initSqrtPrice = await calculateSqrtPrice(initTick)
+      const initSqrtPrice = calculateSqrtPrice(initTick)
 
       await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
     }
@@ -69,7 +69,7 @@ describe('multiple swap tests', () => {
 
       const pool = await getPool(invariant, poolKey)
 
-      const { l: liquidity } = await getLiquidity(
+      const { l: liquidity } = getLiquidity(
         approvedAmount,
         approvedAmount,
         lowerTick,
@@ -124,12 +124,12 @@ describe('multiple swap tests', () => {
 
       const pool = await getPool(invariant, poolKey)
 
-      const { l: liquidity } = await getLiquidity(
+      const { l: liquidity } = getLiquidity(
         approvedAmount,
         approvedAmount,
         lowerTick,
         upperTick,
-        await calculateSqrtPrice(initTick),
+        calculateSqrtPrice(initTick),
         true
       )
 
@@ -177,12 +177,12 @@ describe('multiple swap tests', () => {
 
       let pool = await getPool(invariant, poolKey)
 
-      const { l: liquidity } = await getLiquidity(
+      const { l: liquidity } = getLiquidity(
         approvedAmount,
         approvedAmount,
         lowerTick,
         upperTick,
-        await calculateSqrtPrice(initTick),
+        calculateSqrtPrice(initTick),
         true
       )
 

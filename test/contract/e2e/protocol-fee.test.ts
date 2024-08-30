@@ -36,8 +36,8 @@ describe('protocol fee tests', () => {
   beforeEach(async () => {
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initFeeTier(invariant, admin, feeTier)
     await initBasicPool(invariant, admin, tokenX, tokenY)
 

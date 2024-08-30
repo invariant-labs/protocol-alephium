@@ -1,23 +1,11 @@
 import {
   CHUNK_SIZE,
-  DecimalError,
-  FIXED_POINT_DENOMINATOR,
-  FIXED_POINT_SCALE,
   GLOBAL_MAX_TICK,
   GLOBAL_MIN_TICK,
   HALF_CHUNK_SIZE,
   InvariantError,
   LIQUIDITY_DENOMINATOR,
   LIQUIDITY_SCALE,
-  LOG2_ACCURACY,
-  LOG2_DOUBLE_ONE,
-  LOG2_HALF,
-  LOG2_NEGATIVE_MAX_LOSE,
-  LOG2_ONE,
-  LOG2_SCALE,
-  LOG2_SQRT10001,
-  LOG2_TWO,
-  LogError,
   MAX_SQRT_PRICE,
   MAX_SWAP_STEPS,
   MAX_U256,
@@ -30,7 +18,16 @@ import {
   TOKEN_AMOUNT_SCALE
 } from './consts'
 import {
-  FixedPoint,
+  calculateSqrtPrice,
+  getDeltaX,
+  getDeltaY,
+  getMaxTick,
+  getMinTick,
+  getTickAtSqrtPrice,
+  rescale,
+  tickToPosition
+} from './math'
+import {
   Liquidity,
   Percentage,
   Pool,
@@ -392,21 +389,6 @@ const prevInitialized = (
   return [false, 0n]
 }
 
-const tickToPosition = (tick: bigint, tickSpacing: bigint): [bigint, bigint] => {
-  if (tick < GLOBAL_MIN_TICK || tick > GLOBAL_MAX_TICK) {
-    throw new Error(String(InvariantError.InvalidTickIndex))
-  }
-  if (tick % tickSpacing) {
-    throw new Error(String(InvariantError.TickAndTickSpacingMismatch))
-  }
-
-  const bitmapIndex = (tick + GLOBAL_MAX_TICK) / tickSpacing
-  const chunk = bitmapIndex / CHUNK_SIZE
-  const bit = bitmapIndex % CHUNK_SIZE
-
-  return [chunk, bit]
-}
-
 const getSearchLimit = (tick: bigint, tickSpacing: bigint, up: boolean): bigint => {
   const index = tick / tickSpacing
 
@@ -502,44 +484,6 @@ const computeSwapStep = (
     amountIn: amountIn,
     amountOut: amountOut,
     feeAmount: feeAmount
-  }
-}
-
-const getDeltaX = (
-  sqrtPriceA: SqrtPrice,
-  sqrtPriceB: SqrtPrice,
-  liquidity: Liquidity,
-  roundingUp: boolean
-): TokenAmount => {
-  const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
-
-  const nominator = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
-  if (roundingUp) {
-    const denominator = mulDiv(sqrtPriceA, sqrtPriceB, SQRT_PRICE_DENOMINATOR)
-    return divToTokenUp(nominator, denominator)
-  } else {
-    const denominatorUp = mulDivUp(sqrtPriceA, sqrtPriceB, SQRT_PRICE_DENOMINATOR)
-    return divToToken(nominator, denominatorUp)
-  }
-}
-
-const getDeltaY = (
-  sqrtPriceA: SqrtPrice,
-  sqrtPriceB: SqrtPrice,
-  liquidity: Liquidity,
-  roundingUp: boolean
-): TokenAmount => {
-  const deltaSqrtPrice = sqrtPriceA > sqrtPriceB ? sqrtPriceA - sqrtPriceB : sqrtPriceB - sqrtPriceA
-
-  let result: bigint
-  if (roundingUp) {
-    result = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
-    result = divUp(result, SQRT_PRICE_DENOMINATOR, 1n)
-    return result as TokenAmount
-  } else {
-    result = mulDiv(deltaSqrtPrice, liquidity, LIQUIDITY_DENOMINATOR)
-    result = div(result, SQRT_PRICE_DENOMINATOR, 1n)
-    return result as TokenAmount
   }
 }
 
@@ -727,104 +671,6 @@ const poolCrossLiquidityUpdate = (pool: Pool, add: boolean, liquidityDelta: Liqu
   }
 }
 
-const calculateSqrtPrice = (tickIndex: bigint): SqrtPrice => {
-  const tickIndexAbs = tickIndex < 0n ? -tickIndex : tickIndex
-
-  let sqrtPrice = FIXED_POINT_DENOMINATOR as FixedPoint
-
-  if (tickIndexAbs > GLOBAL_MAX_TICK) {
-    throw new Error(String(DecimalError.TickOverBounds))
-  }
-
-  if (tickIndexAbs & 0x1n) {
-    sqrtPrice = ((sqrtPrice * 1000049998750n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x2n) {
-    sqrtPrice = ((sqrtPrice * 1000100000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x4n) {
-    sqrtPrice = ((sqrtPrice * 1000200010000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x8n) {
-    sqrtPrice = ((sqrtPrice * 1000400060004n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x10n) {
-    sqrtPrice = ((sqrtPrice * 1000800280056n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x20n) {
-    sqrtPrice = ((sqrtPrice * 1001601200560n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x40n) {
-    sqrtPrice = ((sqrtPrice * 1003204964963n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x80n) {
-    sqrtPrice = ((sqrtPrice * 1006420201726n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x100n) {
-    sqrtPrice = ((sqrtPrice * 1012881622442n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x200n) {
-    sqrtPrice = ((sqrtPrice * 1025929181080n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x400n) {
-    sqrtPrice = ((sqrtPrice * 1052530684591n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x800n) {
-    sqrtPrice = ((sqrtPrice * 1107820842005n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x1000n) {
-    sqrtPrice = ((sqrtPrice * 1227267017980n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x2000n) {
-    sqrtPrice = ((sqrtPrice * 1506184333421n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x4000n) {
-    sqrtPrice = ((sqrtPrice * 2268591246242n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x8000n) {
-    sqrtPrice = ((sqrtPrice * 5146506242525n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x00010000n) {
-    sqrtPrice = ((sqrtPrice * 26486526504348n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-  if (tickIndexAbs & 0x00020000n) {
-    sqrtPrice = ((sqrtPrice * 701536086265529n) / FIXED_POINT_DENOMINATOR) as FixedPoint
-  }
-
-  if (tickIndex >= 0n) {
-    return rescale(sqrtPrice, FIXED_POINT_SCALE, SQRT_PRICE_SCALE) as SqrtPrice
-  } else {
-    let sqrtPriceInFixedPointScale = (FIXED_POINT_DENOMINATOR * FIXED_POINT_DENOMINATOR) / sqrtPrice
-    return rescale(sqrtPriceInFixedPointScale, FIXED_POINT_SCALE, SQRT_PRICE_SCALE) as SqrtPrice
-  }
-}
-
-const rescale = (fromValue: bigint, fromScale: bigint, expectedScale: bigint): bigint => {
-  if (expectedScale > fromScale) {
-    const multiplierScale = expectedScale - fromScale
-    return fromValue * 10n ** multiplierScale
-  } else {
-    const denominatorScale = fromScale - expectedScale
-    return fromValue / 10n ** denominatorScale
-  }
-}
-
-const divToTokenUp = (a: bigint, b: bigint): TokenAmount => {
-  let result = a * SQRT_PRICE_DENOMINATOR
-  result += b - 1n
-  result /= b
-  result += SQRT_PRICE_DENOMINATOR - 1n
-  result /= SQRT_PRICE_DENOMINATOR
-  return result as TokenAmount
-}
-
-const divToToken = (a: bigint, b: bigint): TokenAmount => {
-  let result = a * SQRT_PRICE_DENOMINATOR
-  result /= b
-  result /= SQRT_PRICE_DENOMINATOR
-  return result as TokenAmount
-}
-
 const mulDiv = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
   return (a * b) / bDenominator
 }
@@ -839,128 +685,4 @@ const div = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
 
 const divUp = (a: bigint, b: bigint, bDenominator: bigint): bigint => {
   return (b - 1n + a * bDenominator) / b
-}
-
-const getMaxTick = (tickSpacing: bigint): bigint => {
-  return (GLOBAL_MAX_TICK / tickSpacing) * tickSpacing
-}
-
-const getMinTick = (tickSpacing: bigint): bigint => {
-  return (GLOBAL_MIN_TICK / tickSpacing) * tickSpacing
-}
-
-const getTickAtSqrtPrice = (sqrtPrice: bigint, tickSpacing: bigint): bigint => {
-  if (sqrtPrice > MAX_SQRT_PRICE || sqrtPrice < MIN_SQRT_PRICE) {
-    throw new Error(String(LogError.SqrtPriceOutOfRange))
-  }
-
-  const sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
-  const [log2Sign, log2SqrtPrice] = log2IterativeApproximationX32(sqrtPriceX32)
-
-  let absFloorTick: bigint
-  let nearerTick: bigint
-  let fartherTick: bigint
-  if (log2Sign) {
-    absFloorTick = log2SqrtPrice / LOG2_SQRT10001
-    nearerTick = absFloorTick
-    fartherTick = absFloorTick + 1n
-  } else {
-    absFloorTick = (log2SqrtPrice + LOG2_NEGATIVE_MAX_LOSE) / LOG2_SQRT10001
-    nearerTick = -absFloorTick
-    fartherTick = -absFloorTick - 1n
-  }
-
-  const nearerTickWithSpacing = alignTickToSpacing(nearerTick, tickSpacing)
-  const fartherTickWithSpacing = alignTickToSpacing(fartherTick, tickSpacing)
-  if (fartherTickWithSpacing === nearerTickWithSpacing) {
-    return nearerTickWithSpacing
-  }
-
-  let accurateTick: bigint
-  if (log2Sign) {
-    const fartherTickSqrtPriceDecimal = calculateSqrtPrice(fartherTick)
-    accurateTick =
-      sqrtPrice >= fartherTickSqrtPriceDecimal ? fartherTickWithSpacing : nearerTickWithSpacing
-  } else {
-    const nearerTickSqrtPriceDecimal = calculateSqrtPrice(nearerTick)
-    accurateTick =
-      sqrtPrice >= nearerTickSqrtPriceDecimal ? nearerTickWithSpacing : fartherTickWithSpacing
-  }
-
-  if (tickSpacing > 1n) {
-    return alignTickToSpacing(accurateTick, tickSpacing)
-  } else {
-    return accurateTick
-  }
-}
-
-const sqrtPriceToX32 = (val: bigint): bigint => {
-  return (val * LOG2_ONE) / SQRT_PRICE_DENOMINATOR
-}
-
-const log2IterativeApproximationX32 = (sqrtPriceX32: bigint): [boolean, bigint] => {
-  let sign = true
-  if (sqrtPriceX32 < LOG2_ONE) {
-    sign = false
-    sqrtPriceX32 = LOG2_DOUBLE_ONE / (sqrtPriceX32 + 1n)
-  }
-
-  const log2Floor = log2FloorX32(sqrtPriceX32 >> LOG2_SCALE)
-  let result = log2Floor << LOG2_SCALE
-  let y = sqrtPriceX32 >> log2Floor
-
-  if (y == LOG2_ONE) {
-    return [sign, result]
-  }
-  let delta = LOG2_HALF
-  while (delta > LOG2_ACCURACY) {
-    y = (y * y) / LOG2_ONE
-    if (y >= LOG2_TWO) {
-      result |= delta
-      y >>= 1n
-    }
-    delta >>= 1n
-  }
-  return [sign, result]
-}
-
-const log2FloorX32 = (sqrtPriceX32: bigint): bigint => {
-  let msb = 0n
-
-  if (sqrtPriceX32 >= 1n << 32n) {
-    sqrtPriceX32 >>= 32n
-    msb |= 32n
-  }
-  if (sqrtPriceX32 >= 1n << 16n) {
-    sqrtPriceX32 >>= 16n
-    msb |= 16n
-  }
-  if (sqrtPriceX32 >= 1n << 8n) {
-    sqrtPriceX32 >>= 8n
-    msb |= 8n
-  }
-  if (sqrtPriceX32 >= 1n << 4n) {
-    sqrtPriceX32 >>= 4n
-    msb |= 4n
-  }
-  if (sqrtPriceX32 >= 1n << 2n) {
-    sqrtPriceX32 >>= 2n
-    msb |= 2n
-  }
-  if (sqrtPriceX32 >= 1n << 1n) {
-    msb |= 1n
-  }
-
-  return msb
-}
-
-const alignTickToSpacing = (accurateTick: bigint, tickSpacing: bigint): bigint => {
-  if (accurateTick > 0n) {
-    return accurateTick - (accurateTick % tickSpacing)
-  } else {
-    const positiveTick = -accurateTick
-    const remainder = positiveTick % tickSpacing
-    let substrahend = remainder ? tickSpacing - remainder : 0n
-    return accurateTick - substrahend
-  }
 }

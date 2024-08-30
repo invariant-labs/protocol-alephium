@@ -26,8 +26,8 @@ describe('remove fee tier tests', () => {
 
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
-    feeTier1TS = await newFeeTier(fee, tickSpacings[0])
-    feeTier2TS = await newFeeTier(fee, tickSpacings[1])
+    feeTier1TS = newFeeTier(fee, tickSpacings[0])
+    feeTier2TS = newFeeTier(fee, tickSpacings[1])
   })
 
   test('remove fee tier', async () => {

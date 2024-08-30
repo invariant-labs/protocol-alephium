@@ -65,10 +65,10 @@ describe('interaction with pool on removed fee tiers tests', () => {
   test('create pool', async () => {
     invariant = await deployInvariant(admin, protocolFee)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
     ;[tokenX, tokenY] = await initTokensXY(admin, supply)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await initPool(invariant, poolCreator, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 

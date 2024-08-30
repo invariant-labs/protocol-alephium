@@ -30,9 +30,9 @@ describe('cross tests', () => {
   })
   test('cross', async () => {
     const [invariant, tokenX, tokenY] = await initDexAndTokens(admin, (10n ** 23n) as TokenAmount)
-    const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
+    const feeTier = newFeeTier(...getBasicFeeTickSpacing())
     await initFeeTier(invariant, admin, feeTier)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const positionsOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await initBasicPool(invariant, positionsOwner, tokenX, tokenY)

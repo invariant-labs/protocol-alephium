@@ -1,5 +1,5 @@
 import { Address, SignerProvider } from '@alephium/web3'
-import { InvariantInstance, TokenFaucetInstance } from '../artifacts/ts'
+import { InvariantInstance } from '../artifacts/ts'
 import { MIN_SQRT_PRICE, MAX_SQRT_PRICE, PERCENTAGE_SCALE } from './consts'
 import {
   getPool,
@@ -47,10 +47,10 @@ export const initBasicPool = async (
   tokenY: TokenInstance
 ) => {
   const initTick = 0n
-  const initSqrtPrice = await calculateSqrtPrice(initTick)
-  const feeTier = await newFeeTier(fee, tickSpacing)
+  const initSqrtPrice = calculateSqrtPrice(initTick)
+  const feeTier = newFeeTier(fee, tickSpacing)
   const tx = await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, 0n)
-  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   const pool = await getPool(invariant, poolKey)
   expect(pool).toMatchObject({ poolKey, sqrtPrice: initSqrtPrice })
   return tx
@@ -66,8 +66,8 @@ export const initBasicPosition = async (
   const withdrawAmount = 1000n as TokenAmount
   await withdrawTokens(positionOwner, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
 
-  const feeTier = await newFeeTier(fee, tickSpacing)
-  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  const feeTier = newFeeTier(fee, tickSpacing)
+  const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
   const poolBefore = await getPool(invariant, poolKey)
   const liquidityDelta = toLiquidity(1000000n)
@@ -97,8 +97,8 @@ export const initBasicSwap = async (
   tokenX: TokenInstance,
   tokenY: TokenInstance
 ) => {
-  const feeTier = await newFeeTier(fee, tickSpacing)
-  const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+  const feeTier = newFeeTier(fee, tickSpacing)
+  const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
   const poolBefore = await getPool(invariant, poolKey)
 

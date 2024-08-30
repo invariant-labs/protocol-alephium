@@ -37,14 +37,14 @@ describe('reserves tests - manage multiple tokens', () => {
     swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
     invariant = await deployInvariant(admin, protocolFee)
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
   })
   test('init 5 pools and open position on each of them, invariant manages 10 assets', async () => {
     for (let i = 0n; i < 5n; i++) {
       const supply = 100n as TokenAmount
       const [tokenX, tokenY] = await initTokensXY(admin, supply)
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
       await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
@@ -89,7 +89,7 @@ describe('reserves tests - manage multiple tokens', () => {
     // Perform operations on 2 pools - 4 Tokens in Reserve
     for (let i = 0n; i < 2n; i++) {
       const [tokenX, tokenY] = await initTokensXY(admin, supply)
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       await initBasicPool(invariant, admin, tokenX, tokenY)
       await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
       await initBasicSwap(invariant, swapper, tokenX, tokenY)
@@ -102,7 +102,7 @@ describe('reserves tests - manage multiple tokens', () => {
       const [tokenZ] = await initTokensXY(admin, supply)
       // Init 3rd pool - 6 Tokens in Reserve
       {
-        const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+        const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
         await initBasicPool(invariant, admin, tokenX, tokenY)
         await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
         await initBasicSwap(invariant, swapper, tokenX, tokenY)
@@ -111,7 +111,7 @@ describe('reserves tests - manage multiple tokens', () => {
       }
       // Init 4th pool - 7 tokens in Reserve
       {
-        const poolKey = await newPoolKey(tokenX.contractId, tokenZ.contractId, feeTier)
+        const poolKey = newPoolKey(tokenX.contractId, tokenZ.contractId, feeTier)
         await initBasicPool(invariant, admin, tokenX, tokenZ)
         await initBasicPosition(invariant, positionOwner, tokenX, tokenZ)
         const pool = await getPool(invariant, poolKey)
@@ -121,7 +121,7 @@ describe('reserves tests - manage multiple tokens', () => {
     // Init 5th Pool where assets are stored in different reserves
     {
       const [tokenX, tokenY] = await initTokensXY(admin, supply)
-      const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       await initBasicPool(invariant, admin, tokenX, tokenY)
       await initBasicPosition(invariant, positionOwner, tokenX, tokenY)
       await initBasicSwap(invariant, swapper, tokenX, tokenY)

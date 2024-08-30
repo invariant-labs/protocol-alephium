@@ -3,7 +3,6 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
 import {
-  calculateSqrtPrice,
   expectError,
   getPool,
   getPosition,
@@ -24,7 +23,7 @@ import {
   MIN_SQRT_PRICE,
   PERCENTAGE_SCALE
 } from '../../../src/consts'
-import { toLiquidity, toPercentage } from '../../../src/math'
+import { calculateSqrtPrice, toLiquidity, toPercentage } from '../../../src/math'
 import { Liquidity, Percentage, SqrtPrice, TokenAmount } from '../../../src'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
@@ -45,13 +44,13 @@ describe('position tests', () => {
     const invariant = await deployInvariant(admin, 0n as Percentage)
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
     const initTick = 10n
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -98,11 +97,11 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 10n
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -140,11 +139,11 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, supply)
     await withdrawTokens(positionOwner, [tokenX, mint], [tokenY, mint])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const initTick = 0n
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -292,10 +291,10 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -374,10 +373,10 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
@@ -461,10 +460,10 @@ describe('position tests', () => {
     const [tokenX, tokenY] = await initTokensXY(admin, initialBalance)
     await withdrawTokens(positionOwner, [tokenX, initialBalance], [tokenY, initialBalance])
 
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
-    const initSqrtPrice = await calculateSqrtPrice(invariant, initTick)
+    const initSqrtPrice = calculateSqrtPrice(initTick)
 
     await initFeeTier(invariant, admin, feeTier)
     await initPool(invariant, admin, tokenX, tokenY, feeTier, initSqrtPrice, initTick)

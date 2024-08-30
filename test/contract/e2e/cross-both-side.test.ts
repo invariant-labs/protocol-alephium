@@ -33,9 +33,9 @@ describe('cross tests', () => {
   })
   beforeEach(async () => {
     ;[invariant, tokenX, tokenY] = await initDexAndTokens(admin, (10n ** 24n) as TokenAmount)
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     positionsOwner = await getSigner(ONE_ALPH * 1000n, 0)
     await initBasicPool(invariant, positionsOwner, tokenX, tokenY)
@@ -101,14 +101,14 @@ describe('cross tests', () => {
 
     expect(await getPool(invariant, poolKey)).toMatchObject({
       currentTickIndex: -10n,
-      sqrtPrice: await calculateSqrtPrice(-10n),
+      sqrtPrice: calculateSqrtPrice(-10n),
       liquidity: beforeLiquidity
     })
   })
 
   test('both sides', async () => {
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const minAmountToCrossFromTickPrice = 3n as TokenAmount
     await withdrawTokens(
@@ -209,8 +209,8 @@ describe('cross tests', () => {
   })
 
   test('both sides do not cross', async () => {
-    const feeTier = await newFeeTier(fee, tickSpacing)
-    const poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    const feeTier = newFeeTier(fee, tickSpacing)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const notCrossAmount = 1n as TokenAmount
     await withdrawTokens(swapper, [tokenX, notCrossAmount])

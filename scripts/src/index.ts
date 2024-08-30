@@ -43,10 +43,10 @@ const main = async () => {
   // load invariant contract
   const invariant = await Invariant.load(INVARIANT_ADDRESS, Network.Local)
   // load token contract
-  const token = await FungibleToken.load(Network.Local)
+  const token = FungibleToken.load(Network.Local)
 
   // set fee tier, make sure that fee tier with specified parameters exists
-  const feeTier = await newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
+  const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
 
   // if the fee tier does not exists, you have to add it
   const isAdded = await invariant.feeTierExist(feeTier)
@@ -60,7 +60,7 @@ const main = async () => {
   const initSqrtPrice = priceToSqrtPrice(price)
 
   // set pool key, make sure that pool for these tokens does not exist already
-  const poolKey = await newPoolKey(TOKEN0_ID, TOKEN1_ID, feeTier)
+  const poolKey = newPoolKey(TOKEN0_ID, TOKEN1_ID, feeTier)
 
   const createPoolTransactionId = await invariant.createPool(
     account,
@@ -80,7 +80,7 @@ const main = async () => {
   const [lowerTickIndex, upperTickIndex] = [-10n, 10n]
 
   // calculate the amount of token x we need to open position
-  const { amount: tokenXAmount, l: positionLiquidity } = await getLiquidityByY(
+  const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
     tokenYAmount,
     lowerTickIndex,
     upperTickIndex,
@@ -140,7 +140,13 @@ const main = async () => {
   // get estimated result of swap - there are 2 ways to do it
   // 1. use the quote method
   // due to it being computed using blockchain, thus having a latency and being subjected to gas limit, we recommend the second method
-  // const quoteResult = await invariant.quote(poolKey, true, amount, true, await getMinSqrtPrice(feeTier.tickSpacing))
+  const quoteResult = await invariant.quote(
+    poolKey,
+    true,
+    amount,
+    true,
+    getMinSqrtPrice(feeTier.tickSpacing)
+  )
 
   // 2. use local simulation of a swap [PREFERRED]
   {
@@ -149,7 +155,7 @@ const main = async () => {
 
     // filtering only serves to reduce the amount of ticks we have to simulate, it is not necessary
     // filter tickmap to only have ticks of interest for our swap
-    const tickmap = await filterTickmap(
+    const tickmap = filterTickmap(
       await invariant.getFullTickmap(poolKey),
       poolKey.feeTier.tickSpacing,
       pool.currentTickIndex,
@@ -171,7 +177,7 @@ const main = async () => {
       true,
       amount,
       true,
-      await getMinSqrtPrice(feeTier.tickSpacing)
+      getMinSqrtPrice(feeTier.tickSpacing)
     )
 
     // you can now use the result of the simulation to make a decision whether to swap or not
@@ -223,7 +229,7 @@ const main = async () => {
   const upperTick: Tick = await invariant.getTick(poolKey, position.upperTickIndex)
 
   // check amount of tokens you are able to claim
-  const fees = await calculateFee(pool, position, lowerTick, upperTick)
+  const fees = calculateFee(pool, position, lowerTick, upperTick)
 
   // print amount of unclaimed x and y tokens
   console.log(fees)
@@ -283,7 +289,7 @@ const usingAlphAsToken = async () => {
   // ALPH just like any other token has a Contract Id (Token Id), so it can be used in the same way
 
   // load token contract
-  const token = await FungibleToken.load(Network.Local)
+  const token = FungibleToken.load(Network.Local)
 
   // get balance of account
   const accountBalance = await token.getBalanceOf(account.address, ALPH_TOKEN_ID)
@@ -297,7 +303,7 @@ const usingFungibleToken = async () => {
   const TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'CoinB', 'BCOIN', 12n)
 
   // load token by passing its address (you can use existing one), it allows you to interact with it
-  const token = await FungibleToken.load(Network.Local)
+  const token = FungibleToken.load(Network.Local)
 
   // interact with token 0
   const account0Balance = await token.getBalanceOf(account.address, TOKEN0_ID)

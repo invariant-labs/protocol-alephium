@@ -28,46 +28,46 @@ describe('add fee tier tests', () => {
     {
       const tiersExist = await feeTierExists(
         invariant,
-        await newFeeTier(fee, tickSpacing1),
-        await newFeeTier(fee, tickSpacing2),
-        await newFeeTier(fee, tickSpacing3)
+        newFeeTier(fee, tickSpacing1),
+        newFeeTier(fee, tickSpacing2),
+        newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([false, false, false])
     }
 
     {
-      const feeTier = await newFeeTier(fee, tickSpacing1)
+      const feeTier = newFeeTier(fee, tickSpacing1)
       await initFeeTier(invariant, admin, feeTier)
     }
 
     {
       const tiersExist = await feeTierExists(
         invariant,
-        await newFeeTier(fee, tickSpacing1),
-        await newFeeTier(fee, tickSpacing2),
-        await newFeeTier(fee, tickSpacing3)
+        newFeeTier(fee, tickSpacing1),
+        newFeeTier(fee, tickSpacing2),
+        newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([true, false, false])
     }
 
     {
-      const feeTier = await newFeeTier(fee, tickSpacing2)
+      const feeTier = newFeeTier(fee, tickSpacing2)
       await initFeeTier(invariant, admin, feeTier)
     }
 
     {
       const tiersExist = await feeTierExists(
         invariant,
-        await newFeeTier(fee, tickSpacing1),
-        await newFeeTier(fee, tickSpacing2),
-        await newFeeTier(fee, tickSpacing3)
+        newFeeTier(fee, tickSpacing1),
+        newFeeTier(fee, tickSpacing2),
+        newFeeTier(fee, tickSpacing3)
       )
       expect(tiersExist).toStrictEqual([true, true, false])
     }
 
     {
       {
-        const feeTier = await newFeeTier(fee, tickSpacing3)
+        const feeTier = newFeeTier(fee, tickSpacing3)
         await initFeeTier(invariant, admin, feeTier)
       }
     }
@@ -85,7 +85,7 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = toPercentage(2n, 4n)
     const tickSpacing = 1n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
 
     await initFeeTier(invariant, admin, feeTier)
 
@@ -102,7 +102,7 @@ describe('add fee tier tests', () => {
     // 0.02%
     const fee = toPercentage(2n, 4n)
     const tickSpacing = 1n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
 
     const notAdmin = await getSigner(ONE_ALPH * 1000n, 0)
 
@@ -114,7 +114,7 @@ describe('add fee tier tests', () => {
 
     const fee = 0n as Percentage
     const tickSpacing = 10n
-    const feeTier = await newFeeTier(fee, tickSpacing)
+    const feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
   })
 

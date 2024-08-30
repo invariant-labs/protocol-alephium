@@ -34,8 +34,8 @@ describe('get positions test', () => {
     invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
     await invariant.createPool(

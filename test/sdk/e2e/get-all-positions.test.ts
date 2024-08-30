@@ -25,7 +25,7 @@ describe('get all positions test', () => {
   const initialFee = 0n as Percentage
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
   const initSqrtPrice = toSqrtPrice(1n)
-  const supply = 10n ** 10n as TokenAmount
+  const supply = (10n ** 10n) as TokenAmount
   const liquidityDelta = 10n as Liquidity
 
   beforeEach(async () => {
@@ -34,8 +34,8 @@ describe('get all positions test', () => {
     invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
-    feeTier = await newFeeTier(fee, tickSpacing)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    feeTier = newFeeTier(fee, tickSpacing)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
     await invariant.createPool(

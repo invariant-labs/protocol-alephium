@@ -35,11 +35,11 @@ describe('change fee receiver tests', () => {
   beforeEach(async () => {
     invariant = await deployInvariant(admin, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(admin, 0n as TokenAmount)
-    feeTier = await newFeeTier(fee, tickSpacing)
+    feeTier = newFeeTier(fee, tickSpacing)
     await initFeeTier(invariant, admin, feeTier)
 
     await initPool(invariant, admin, tokenX, tokenY, feeTier, SQRT_PRICE_DENOMINATOR, 0n)
-    poolKey = await newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
   })
 
   test('change fee receiver', async () => {

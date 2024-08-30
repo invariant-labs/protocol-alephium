@@ -11,15 +11,17 @@ import {
   ALPH_TOKEN_ID,
   decodeBool
 } from '@alephium/web3'
-import { CLAMM, Invariant, InvariantInstance, Reserve, Utils } from '../artifacts/ts'
+import { CLAMM, Invariant, InvariantInstance, Reserve } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier as _FeeTier, FeeTiers, PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
   CHUNK_SIZE,
   CHUNKS_PER_BATCH,
   GLOBAL_MAX_TICK,
+  InvariantError,
   MAX_FEE_TIERS,
-  MAX_SWAP_STEPS
+  MAX_SWAP_STEPS,
+  PERCENTAGE_DENOMINATOR
 } from './consts'
 import { Network } from './network'
 import {
@@ -35,12 +37,9 @@ import {
   SqrtPrice,
   Tickmap,
   TickVariant,
-  TokenAmount,
-  unwrapFeeTier,
-  unwrapPoolKey,
-  wrapFeeTier
+  TokenAmount
 } from './types'
-import { getMaxTick, getMinTick, tickToPosition } from './math'
+import { getMaxTick, getMinTick, isTokenX, tickToPosition } from './math'
 import { simulateSwap } from './simulate-swap'
 
 const BREAK_BYTES = '627265616b'
@@ -251,38 +250,29 @@ const decodeI256 = (string: string): bigint => {
   return codec.compactSignedIntCodec.decodeI256(hexToBytes(string))
 }
 
-export const newPoolKey = async (
-  token0: string,
-  token1: string,
-  feeTier: FeeTier
-): Promise<PoolKey> => {
-  return unwrapPoolKey(
-    (
-      await Utils.tests.newPoolKey({
-        testArgs: {
-          token0,
-          token1,
-          feeTier: wrapFeeTier(feeTier)
-        }
-      })
-    ).returns
-  )
+export const newPoolKey = (token0: string, token1: string, feeTier: FeeTier): PoolKey => {
+  const [tokenX, tokenY] = isTokenX(token0, token1) ? [token0, token1] : [token1, token0]
+  return {
+    tokenX,
+    tokenY,
+    feeTier
+  }
 }
 
-export const newFeeTier = async (fee: Percentage, tickSpacing: bigint): Promise<FeeTier> => {
-  return unwrapFeeTier(
-    (
-      await Utils.tests.newFeeTier({
-        testArgs: {
-          fee: { v: fee },
-          tickSpacing
-        }
-      })
-    ).returns
-  )
+export const newFeeTier = (fee: Percentage, tickSpacing: bigint): FeeTier => {
+  if (tickSpacing <= 0 || tickSpacing > 100) {
+    throw new Error(InvariantError.InvalidTickSpacing.toString())
+  }
+  if (fee >= PERCENTAGE_DENOMINATOR) {
+    throw new Error(InvariantError.InvalidFee.toString())
+  }
+  return {
+    fee,
+    tickSpacing
+  }
 }
 
-export const constructTickmap = async (string: string): Promise<[bigint, bigint][]> => {
+export const constructTickmap = (string: string): [bigint, bigint][] => {
   const parts = string.split(BREAK_BYTES)
   const chunks: any[] = []
 
@@ -347,9 +337,9 @@ export const decodePositions = (string: string): [[Position, Pool][], bigint] =>
   return [positions, totalPositions]
 }
 
-export const getMaxBatch = async (tickSpacing: bigint) => {
-  const maxTick = await getMaxTick(tickSpacing)
-  const minTick = await getMinTick(tickSpacing)
+export const getMaxBatch = (tickSpacing: bigint): bigint => {
+  const maxTick = getMaxTick(tickSpacing)
+  const minTick = getMinTick(tickSpacing)
   const ticksAmount = -minTick + maxTick + 1n
   const lastBatch = ticksAmount / (CHUNK_SIZE * CHUNKS_PER_BATCH)
   return lastBatch
@@ -424,14 +414,14 @@ export function filterTicks(ticks: TickVariant[], tickIndex: bigint, xToY: boole
   return ticks
 }
 
-export async function filterTickmap(
+export function filterTickmap(
   tickmap: Tickmap,
   tickSpacing: bigint,
   index: bigint,
   xToY: boolean
-): Promise<Tickmap> {
+): Tickmap {
   const filteredTickmap = new Map(tickmap)
-  const [currentChunkIndex] = await tickToPosition(index, tickSpacing)
+  const [currentChunkIndex] = tickToPosition(index, tickSpacing)
   let tickCount = 0
   for (const [chunkIndex] of filteredTickmap) {
     if (tickCount >= MAX_SWAP_STEPS) {

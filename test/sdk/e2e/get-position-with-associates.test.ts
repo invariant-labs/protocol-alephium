@@ -13,7 +13,7 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let token: FungibleToken
 describe('get position with associates tests', () => {
   beforeAll(async () => {
-    token = await FungibleToken.load(Network.Local)
+    token = FungibleToken.load(Network.Local)
   })
   test('get position with associates', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
@@ -23,8 +23,8 @@ describe('get position with associates tests', () => {
     const token0 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token0', 'TK0')
     const token1 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token1', 'TK1')
 
-    const feeTier = await newFeeTier(...getBasicFeeTickSpacing())
-    const poolKey = await newPoolKey(token0, token1, feeTier)
+    const feeTier = newFeeTier(...getBasicFeeTickSpacing())
+    const poolKey = newPoolKey(token0, token1, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
 
