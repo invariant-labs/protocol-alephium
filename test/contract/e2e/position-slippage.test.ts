@@ -76,7 +76,7 @@ describe('position slippage tests', () => {
 
   test('zero slippage', async () => {
     const feeTier = newFeeTier(fee, tickSpacing)
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const { sqrtPrice: knownSqrtPrice } = await getPool(invariant, poolKey)
     await initPosition(
@@ -94,7 +94,7 @@ describe('position slippage tests', () => {
   })
   test('inside range', async () => {
     const feeTier = newFeeTier(fee, tickSpacing)
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const slippageLimitLower = 994734637981406576896367n as SqrtPrice
     const slippageLimitUpper = 1025038048074314166333500n as SqrtPrice
@@ -113,7 +113,7 @@ describe('position slippage tests', () => {
   })
   test('below range', async () => {
     const feeTier = newFeeTier(fee, tickSpacing)
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const slippageLimitLower = 1014432353584998786339859n as SqrtPrice
     const slippageLimitUpper = 1045335831204498605270797n as SqrtPrice
@@ -138,7 +138,7 @@ describe('position slippage tests', () => {
 
   test('above range', async () => {
     const feeTier = newFeeTier(fee, tickSpacing)
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const slippageLimitLower = 955339206774222158009382n as SqrtPrice
     const slippageLimitUpper = 984442481813945288458906n as SqrtPrice

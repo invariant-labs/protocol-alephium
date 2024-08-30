@@ -33,7 +33,7 @@ let tokenX: TokenFaucetInstance
 let tokenY: TokenFaucetInstance
 let poolKey: PoolKey
 
-describe('Invariant Swap Tests', () => {
+describe('slippage tests', () => {
   const swapAmount = (10n ** 8n) as TokenAmount
   const [fee, tickSpacing] = getBasicFeeTickSpacing()
 
@@ -56,7 +56,7 @@ describe('Invariant Swap Tests', () => {
     const initTick = 0n
     const initSqrtPrice = calculateSqrtPrice(initTick)
 
-    poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
     await initPool(invariant, positionOwner, tokenX, tokenY, feeTier, initSqrtPrice, initTick)
 
     const [lowerTick, upperTick] = [-1000n, 1000n]
@@ -88,7 +88,7 @@ describe('Invariant Swap Tests', () => {
     })
   })
 
-  test('test_basic_slippage', async () => {
+  test('basic slippage', async () => {
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
 
     const swapAmount = (10n ** 8n) as TokenAmount
@@ -104,12 +104,12 @@ describe('Invariant Swap Tests', () => {
     expect(pool.sqrtPrice).toBe(expectedSqrtPrice)
   })
 
-  test('test_swap_close_to_limit', async () => {
+  test('swap close to limit', async () => {
     const feeTier = newFeeTier(fee, tickSpacing)
 
     const swapper = await getSigner(ONE_ALPH * 1000n, 0)
     await withdrawTokens(swapper, [tokenX, withdrawAmount], [tokenY, withdrawAmount])
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     const quoteResult = await quote(invariant, poolKey, false, swapAmount, true, MAX_SQRT_PRICE)
 
@@ -122,7 +122,7 @@ describe('Invariant Swap Tests', () => {
     )
   })
 
-  test('test_swap_exact_limit', async () => {
+  test('swap exact limit', async () => {
     invariant = await deployInvariant(admin, toPercentage(1n, 2n))
     const tokenSupply = (10n ** 23n) as TokenAmount
     ;[tokenX, tokenY] = await initTokensXY(admin, tokenSupply)
@@ -139,7 +139,7 @@ describe('Invariant Swap Tests', () => {
 
     await withdrawTokens(swapper, [tokenX, swapAmount])
 
-    const poolKey = newPoolKey(tokenX.address, tokenY.address, feeTier)
+    const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await swapExactLimit(invariant, swapper, poolKey, true, swapAmount, true)
   })

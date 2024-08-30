@@ -28,8 +28,7 @@ import {
   PRICE_SCALE,
   SQRT_PRICE_DENOMINATOR,
   SQRT_PRICE_SCALE,
-  UtilsError,
-  VMError
+  UtilsError
 } from './consts'
 import {
   Pool,
@@ -412,6 +411,12 @@ export const isTokenX = (candidate: string, compareTo: string): boolean => {
   if (candidate === compareTo) {
     throw new Error(InvariantError.TokensAreSame.toString())
   }
+
+  if (candidate.length != 64 || candidate.length !== compareTo.length) {
+    throw new Error(
+      'Invalid Contract ID length [required 64]: ' + candidate.length + ' or ' + compareTo.length
+    )
+  }
   return candidate < compareTo
 }
 
@@ -696,7 +701,7 @@ export const bitPositionToTick = (chunk: bigint, bit: bigint, tickSpacing: bigin
   return chunk * CHUNK_SIZE * tickSpacing + bit * tickSpacing - tickRangeLimit
 }
 
-export const sqrt = (value: bigint): bigint => {
+const sqrt = (value: bigint): bigint => {
   if (value < 0n) {
     throw 'square root of negative numbers is not supported'
   }

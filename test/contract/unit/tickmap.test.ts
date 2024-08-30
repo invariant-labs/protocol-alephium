@@ -9,8 +9,8 @@ import { Percentage, PoolKey, TokenAmount, wrapPoolKey } from '../../../src/type
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let sender: PrivateKeyWallet
-let token0Addr: string
-let token1Addr: string
+let token0Id: string
+let token1Id: string
 
 const tickToPosition = async (invariant: InvariantInstance, tick: bigint, tickSpacing: bigint) => {
   return (await invariant.view.tickToPosition({ args: { tick, tickSpacing } })).returns
@@ -93,10 +93,10 @@ const protocolFee = 100n as Percentage
 describe('tickmap tests', () => {
   beforeAll(async () => {
     sender = await getSigner(ONE_ALPH * 1000n, 0)
-    token0Addr = (await deployTokenFaucet(sender, '', '', 0n, 0n as TokenAmount)).contractInstance
-      .address
-    token1Addr = (await deployTokenFaucet(sender, '', '', 0n, 0n as TokenAmount)).contractInstance
-      .address
+    token0Id = (await deployTokenFaucet(sender, '', '', 0n, 0n as TokenAmount)).contractInstance
+      .contractId
+    token1Id = (await deployTokenFaucet(sender, '', '', 0n, 0n as TokenAmount)).contractInstance
+      .contractId
   })
 
   test('flip bit', async () => {
@@ -111,7 +111,7 @@ describe('tickmap tests', () => {
     ]
     for (const { tick, tickSpacing } of params) {
       const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-      const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+      const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
       const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -134,7 +134,7 @@ describe('tickmap tests', () => {
     const tickSpacing = 1n
 
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -152,7 +152,7 @@ describe('tickmap tests', () => {
     const tick100 = 100n
     const tickSpacing = 10n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     {
       const [chunkIndex] = await tickToPosition(invariant, tick50, tickSpacing)
@@ -183,7 +183,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 10n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -199,7 +199,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -221,7 +221,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -237,7 +237,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MAX_TICK - 10n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -253,7 +253,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MAX_TICK - 22n
     const tickSpacing = 4n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [isSome] = await nextInitialized(invariant, tick, tickSpacing, poolKey)
     expect(isSome).toBeFalsy()
@@ -263,7 +263,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MAX_TICK - 2n
     const tickSpacing = 4n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [isSome] = await nextInitialized(invariant, tick, tickSpacing, poolKey)
     expect(isSome).toBeFalsy()
@@ -273,7 +273,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MAX_TICK - 255n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -295,7 +295,7 @@ describe('tickmap tests', () => {
     const tick = -5n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -313,7 +313,7 @@ describe('tickmap tests', () => {
     const tick100 = -100n
     const tickSpacing = 10n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
     {
       const [chunkIndex] = await tickToPosition(invariant, tick50, tickSpacing)
 
@@ -344,7 +344,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 10n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -361,7 +361,7 @@ describe('tickmap tests', () => {
     const tick = 10n
     const tickSpacing = 10n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -377,7 +377,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -399,7 +399,7 @@ describe('tickmap tests', () => {
     const tick = 0n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -415,7 +415,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MIN_TICK + 1n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -431,7 +431,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MIN_TICK + 255n
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -453,7 +453,7 @@ describe('tickmap tests', () => {
     const tick = GLOBAL_MIN_TICK
     const tickSpacing = 1n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-    const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+    const poolKey = newPoolKey(token0Id, token1Id, feeTier)
 
     const [chunkIndex] = await tickToPosition(invariant, tick, tickSpacing)
 
@@ -530,7 +530,7 @@ describe('tickmap tests', () => {
     // initialized edges
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
       const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-      const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+      const poolKey = newPoolKey(token0Id, token1Id, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GLOBAL_MAX_TICK - (GLOBAL_MAX_TICK % tickSpacing)
@@ -572,7 +572,7 @@ describe('tickmap tests', () => {
     }
     for (let tickSpacing = 1n; tickSpacing <= 10n; tickSpacing++) {
       const feeTier = newFeeTier(0n as Percentage, tickSpacing)
-      const poolKey = newPoolKey(token0Addr, token1Addr, feeTier)
+      const poolKey = newPoolKey(token0Id, token1Id, feeTier)
       const invariant = await deployInvariant(sender, protocolFee)
 
       const maxIndex = GLOBAL_MAX_TICK - (GLOBAL_MAX_TICK % tickSpacing)

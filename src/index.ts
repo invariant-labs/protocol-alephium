@@ -21,6 +21,7 @@ export {
   getMinTick,
   getMaxTick,
   toFeeGrowth,
+  toFixedPoint,
   toLiquidity,
   toPercentage,
   toPrice,
