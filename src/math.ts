@@ -760,6 +760,98 @@ export const calculatePriceImpact = (
   return ((nominator * PERCENTAGE_DENOMINATOR) / denominator) as Percentage
 }
 
+export const calculateTickDelta = (
+  tickSpacing: bigint,
+  minimumRange: number,
+  concentration: number
+) => {
+  const tickSpacingN = Number(tickSpacing)
+  const base = Math.pow(1.0001, -(tickSpacingN / 4))
+  const logArg =
+    (1 - 1 / (concentration * CONCENTRATION_FACTOR)) /
+    Math.pow(1.0001, (-tickSpacingN * minimumRange) / 4)
+
+  return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
+}
+
+export const calculateTokenAmountsWithSlippage = (
+  tickSpacing: bigint,
+  currentSqrtPrice: SqrtPrice,
+  liquidity: Liquidity,
+  lowerTickIndex: bigint,
+  upperTickIndex: bigint,
+  slippage: Percentage,
+  roundingUp: boolean
+): [bigint, bigint] => {
+  const lowerBound = calculateSqrtPriceAfterSlippage(currentSqrtPrice, slippage, false)
+  const upperBound = calculateSqrtPriceAfterSlippage(currentSqrtPrice, slippage, true)
+
+  const currentTickIndex = calculateTick(currentSqrtPrice, tickSpacing)
+
+  const [lowerX, lowerY] = calculateAmountDelta(
+    currentTickIndex,
+    lowerBound,
+    liquidity,
+    roundingUp,
+    upperTickIndex,
+    lowerTickIndex
+  )
+  const [upperX, upperY] = calculateAmountDelta(
+    currentTickIndex,
+    upperBound,
+    liquidity,
+    roundingUp,
+    upperTickIndex,
+    lowerTickIndex
+  )
+
+  const x = lowerX > upperX ? lowerX : upperX
+  const y = lowerY > upperY ? lowerY : upperY
+  return [x, y]
+}
+
+/// get in name, but does computation
+export const getConcentrationArray = (
+  tickSpacing: bigint,
+  minimumRange: number,
+  currentTick: number
+): number[] => {
+  const concentrations: number[] = []
+  const tickSpacingN = Number(tickSpacing)
+  let counter = 0
+  let concentration = 0
+  let lastConcentration = calculateConcentration(tickSpacingN, minimumRange, counter) + 1
+  let concentrationDelta = 1
+
+  while (concentrationDelta >= 1) {
+    concentration = calculateConcentration(tickSpacingN, minimumRange, counter)
+    concentrations.push(concentration)
+    concentrationDelta = lastConcentration - concentration
+    lastConcentration = concentration
+    counter++
+  }
+  concentration = Math.ceil(concentrations[concentrations.length - 1])
+
+  while (concentration > 1) {
+    concentrations.push(concentration)
+    concentration--
+  }
+  const maxTick = Number(alignTickToSpacing(getMaxTick(1n), tickSpacing))
+  if ((minimumRange / 2) * tickSpacingN > maxTick - Math.abs(currentTick)) {
+    throw new Error(String(InvariantError.TickLimitReached))
+  }
+  const limitIndex =
+    (maxTick - Math.abs(currentTick) - (minimumRange / 2) * tickSpacingN) / tickSpacingN
+
+  return concentrations.slice(0, limitIndex)
+}
+
+const CONCENTRATION_FACTOR = 1.00001526069123
+const calculateConcentration = (tickSpacing: number, minimumRange: number, n: number) => {
+  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (minimumRange + 2 * n)) / 4))
+  return concentration / CONCENTRATION_FACTOR
+}
+
 export const toLiquidity = (value: bigint, offset = 0n): Liquidity => {
   if (offset > LIQUIDITY_SCALE)
     throw new Error(`offset must be less than or equal to ${LIQUIDITY_SCALE}`)
