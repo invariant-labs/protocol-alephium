@@ -6,7 +6,6 @@ export {
   calculateTick,
   getLiquidityByX,
   getLiquidityByY,
-  getMaxChunk,
   getMaxSqrtPrice,
   getMinSqrtPrice,
   isTokenX,
@@ -15,11 +14,13 @@ export {
   calculateFee,
   calculatePriceImpact,
   calculateSqrtPriceAfterSlippage,
-  // calculateTickDelta,
+  calculateTokenAmountsWithSlippage,
+  calculateTickDelta,
   calculateTokenAmounts,
   sqrtPriceToPrice,
   getMinTick,
   getMaxTick,
+  getConcentrationArray,
   toFeeGrowth,
   toFixedPoint,
   toLiquidity,
@@ -77,13 +78,14 @@ export {
   MAX_U256
 } from './consts'
 
+export { FEE_TIERS } from './computed-consts'
+
 export {
   filterTickmap,
   filterTicks,
   newFeeTier,
   newPoolKey,
   getMaxBatch,
-  // getCodeHash,
   waitTxConfirmed,
   signAndSend,
   simulateInvariantSwap

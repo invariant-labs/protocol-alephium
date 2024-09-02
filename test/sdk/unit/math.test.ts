@@ -4,11 +4,14 @@ import {
   calculatePriceImpact,
   calculateSqrtPrice,
   calculateSqrtPriceAfterSlippage,
+  calculateTokenAmountsWithSlippage,
+  getConcentrationArray,
   getLiquidity,
   getLiquidityByX,
   getLiquidityByY,
   priceToSqrtPrice,
   sqrtPriceToPrice,
+  toLiquidity,
   toPercentage,
   toPrice,
   toSqrtPrice
@@ -249,66 +252,102 @@ describe('math spec', () => {
     test('slippage of 1% up', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(1n, 2n)
-      // sqrt(1) * sqrt(1 + 0.01) = 1.0049876
-      const expected = 1004987562112089027021926n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 + 0.01) = 1.0049876
+      expect(limitSqrt).toBe(1004987562112089027021926n)
     })
     test('slippage of 1% down', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(1n, 2n)
-      // sqrt(1) * sqrt(1 - 0.01) = 0.99498744
-      const expected = 994987437106619954734479n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 - 0.01) = 0.99498744
+      expect(limitSqrt).toBe(994987437106619954734479n)
     })
     test('slippage of 0.5% up', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(5n, 3n)
-      // sqrt(1) * sqrt(1 - 0.005) = 1.00249688
-      const expected = 1002496882788171067537936n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 - 0.005) = 1.00249688
+      expect(limitSqrt).toBe(1002496882788171067537936n)
     })
     test('slippage of 0.5% down', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(5n, 3n)
-      // sqrt(1) * sqrt(1 - 0.005) = 0.997496867
-      const expected = 997496867163000166582694n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 - 0.005) = 0.997496867
+      expect(limitSqrt).toBe(997496867163000166582694n)
     })
     test('slippage of 0.00003% up', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(3n, 7n)
-      // sqrt(1) * sqrt(1 + 0.0000003) = 1.00000015
-      const expected = 1000000149999988750001687n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 + 0.0000003) = 1.00000015
+      expect(limitSqrt).toBe(1000000149999988750001687n)
     })
     test('slippage of 0.00003% down', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(3n, 7n)
-      // sqrt(1) * sqrt(1 - 0.0000003) = 0.99999985
-      const expected = 999999849999988749998312n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 - 0.0000003) = 0.99999985
+      expect(limitSqrt).toBe(999999849999988749998312n)
     })
     test('slippage of 100% up', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(1n, 0n)
-      // sqrt(1) * sqrt(1 + 1) = 1.414213562373095048801688...
-      const expected = 1414213562373095048801688n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, true)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 + 1) = 1.414213562373095048801688...
+      expect(limitSqrt).toBe(1414213562373095048801688n)
     })
     test('slippage of 100% down', () => {
       const sqrtPrice = toSqrtPrice(1n, 0n)
       const slippage = toPercentage(1n, 0n)
-      // sqrt(1) * sqrt(1 - 1) = 0
-      const expected = 0n
       const limitSqrt = calculateSqrtPriceAfterSlippage(sqrtPrice, slippage, false)
-      expect(limitSqrt).toBe(expected)
+      // sqrt(1) * sqrt(1 - 1) = 0
+      expect(limitSqrt).toBe(0n)
+    })
+  })
+  describe('calculateTokensWithSlippage tests', () => {
+    const liquidity = toLiquidity(100000000n, 0n)
+
+    it('tick Spacing = 1, currentPrice = 1000000000000000000000000, slippage = 1%, [-10, 10] range', () => {
+      const tickSpacing = 1n
+      const currentSqrtPrice = toSqrtPrice(1n, 0n) //1000000000000000000000000
+      const slippage = toPercentage(1n, 2n)
+      const lowerTickIndex = -10n
+      const upperTickIndex = 10n
+      const [x, y] = calculateTokenAmountsWithSlippage(
+        tickSpacing,
+        currentSqrtPrice,
+        liquidity,
+        lowerTickIndex,
+        upperTickIndex,
+        slippage,
+        true
+      )
+
+      expect(x).toBe(553767n)
+      expect(y).toBe(548742n)
+    })
+    it('tickSpacing = 5n, current price = 1001501050455000000000000, slippage = 1%, [0, 75] range', () => {
+      const tickSpacing = 5n
+      const currentTickIndex = 30n
+      const currentSqrtPrice = calculateSqrtPrice(currentTickIndex) //1001501050455000000000000
+      const slippage = toPercentage(1n, 2n)
+      const lowerTickIndex = 0n
+      const upperTickIndex = 75n
+
+      const [x, y] = calculateTokenAmountsWithSlippage(
+        tickSpacing,
+        currentSqrtPrice,
+        liquidity,
+        lowerTickIndex,
+        upperTickIndex,
+        slippage,
+        true
+      )
+
+      expect(x).toBe(727426n)
+      expect(y).toBe(649610n)
     })
   })
 
@@ -329,6 +368,34 @@ describe('math spec', () => {
       const endingSqrtPrice = 15258932449895975601n as SqrtPrice
       const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
       expect(priceImpact).toBe(999999999365n)
+    })
+  })
+
+  describe('getConcentrationArray tests', () => {
+    it('high current tick ', async () => {
+      const tickSpacing = 4n
+      const maxConcentration = 10
+      const expectedResult = 11
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
+
+      expect(result.length).toBe(expectedResult)
+    })
+    it('middle current tick ', async () => {
+      const tickSpacing = 4n
+      const maxConcentration = 10
+      const expectedResult = 124
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221300)
+      expect(result.length).toBe(expectedResult)
+    })
+    it('low current tick ', async () => {
+      const tickSpacing = 4n
+      const maxConcentration = 10
+      const expectedResult = 137
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
+      expect(result.length).toBe(expectedResult)
     })
   })
 
