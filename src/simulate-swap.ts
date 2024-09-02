@@ -600,7 +600,12 @@ const poolUpdateTick = (
   if (tick && hasLimitingTick && isLimitingTickInitialized) {
     if (!xToY || isEnoughAmountToCross) {
       const [add, liquidityDelta] = cross(tick, pool.currentTickIndex)
-      poolCrossLiquidityUpdate(pool, add, liquidityDelta)
+      // liquidity update
+      if (add) {
+        pool.liquidity = (pool.liquidity + liquidityDelta) as Liquidity
+      } else {
+        pool.liquidity = (pool.liquidity - liquidityDelta) as Liquidity
+      }
       hasCrossed = true
       if (pool.liquidity < 0n || pool.liquidity > MAX_U256) {
         stateInconsistency = true
@@ -661,14 +666,6 @@ const cross = (tick: TickVariant, currentTick: bigint): [boolean, Liquidity] => 
   const isBelowCurrent = currentTick >= tick.index
 
   return [(isBelowCurrent && !tick.sign) || (!isBelowCurrent && tick.sign), tick.liquidityChange]
-}
-
-const poolCrossLiquidityUpdate = (pool: Pool, add: boolean, liquidityDelta: Liquidity) => {
-  if (add) {
-    pool.liquidity = (pool.liquidity + liquidityDelta) as Liquidity
-  } else {
-    pool.liquidity = (pool.liquidity - liquidityDelta) as Liquidity
-  }
 }
 
 const mulDiv = (a: bigint, b: bigint, bDenominator: bigint): bigint => {

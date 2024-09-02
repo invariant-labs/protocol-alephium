@@ -51,13 +51,6 @@ Abstract Contract Decimal() {
         return 10 ** scale
     }
 
-    pub fn sqrtPriceFromTick(
-        tickIndex: I256
-    ) -> SqrtPrice {
-        let sqrtPrice = calculateSqrtPrice(tickIndex)
-        return sqrtPrice
-    }
-
     pub fn calculateSqrtPrice(
         tickIndex: I256
     ) -> SqrtPrice {

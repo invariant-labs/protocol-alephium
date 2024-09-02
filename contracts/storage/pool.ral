@@ -80,20 +80,21 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
                 let tickKey = poolKeyBytes(pool.poolKey) ++ toByteVec!(limitingTickIndex)
                 let tick = ticks[tickKey]
                 let (add, liquidityDelta) = cross(pool.poolKey, tick, pool.feeGrowthGlobalX, pool.feeGrowthGlobalY, pool.currentTickIndex)
-                pool = crossLiquidityUpdate(pool, add, liquidityDelta)
-                hasCrossed = true
-            } else if (remainingAmount.v != 0) {
-                if (byAmountIn) {
-                    pool = addFee(pool, remainingAmount, xToY, protocolFee)
-                    totalAmount = remainingAmount
+                // liquidity update
+                if (add) {
+                    pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
+                } else {
+                    pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
                 }
-                remainingAmount.v = 0
-            } else {
-                // do nothing
-            }
-        } else {
-            // do nothing
-        }
+                hasCrossed = true
+            } else { 
+                if (remainingAmount.v != 0) {
+                    if (byAmountIn) {
+                        pool = addFee(pool, remainingAmount, xToY, protocolFee)
+                        totalAmount = remainingAmount
+                    }
+                    remainingAmount.v = 0
+        }}}
 
         if(xToY && isEnoughAmountToCross) {
             pool.currentTickIndex = limitingTickIndex - toI256!(pool.poolKey.feeTier.tickSpacing)
@@ -102,15 +103,6 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         }
 
         return totalAmount, remainingAmount, hasCrossed, pool
-    }
-
-    pub fn crossLiquidityUpdate(mut pool: Pool, add: Bool, liquidityDelta: Liquidity) -> Pool {
-        if (add) {
-            pool.liquidity.v = pool.liquidity.v + liquidityDelta.v
-        } else {
-            pool.liquidity.v = pool.liquidity.v - liquidityDelta.v
-        }
-        return pool
     }
 
     fn rewritePool(pool: Pool) -> () {

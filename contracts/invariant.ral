@@ -478,8 +478,9 @@ Contract Invariant(
 
     pub fn getTickmapSlice(poolKey: PoolKey, lowerBatch: U256, upperBatch: U256, xToY: Bool) -> ByteVec {
         let mut slice = #
+        let mut batchIndex = 0
         if (xToY) {
-            for(let mut batchIndex = lowerBatch; batchIndex < upperBatch; batchIndex = batchIndex + 1) {
+            for(batchIndex = lowerBatch; batchIndex < upperBatch; batchIndex = batchIndex + 1) {
                 slice = slice ++ getSingleBatch(poolKey, batchIndex)
             }
         } else {
@@ -559,7 +560,7 @@ Contract Invariant(
         let maxBatch = maxChunkIndex / CHUNKS_PER_BATCH
 
         let mut amount = 0
-
+        let mut i = 0
         if(minBatch == maxBatch) {
             let key = poolKeyBytes(poolKey) ++ toByteVec!(minBatch)
 
@@ -577,7 +578,7 @@ Contract Invariant(
             }
 
             amount = countActiveBitsInChunk(batch[minIndexInBatch], minBit, CHUNK_SIZE - 1)    
-            for(let mut i = minIndexInBatch + 1; i < maxIndexInBatch; i = i + 1) {
+            for(i = minIndexInBatch + 1; i < maxIndexInBatch; i = i + 1) {
                 amount = amount + countOnes(batch[i])
             }
             

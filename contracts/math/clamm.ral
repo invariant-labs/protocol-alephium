@@ -227,20 +227,20 @@ Contract CLAMM() extends Uints(), Log(){
 
         if (currentTickIndex < lowerTick) {
             amountX = getDeltaX(
-                sqrtPriceFromTick(lowerTick),
-                sqrtPriceFromTick(upperTick),
+                calculateSqrtPrice(lowerTick),
+                calculateSqrtPrice(upperTick),
                 liquidityDelta,
                 liquiditySign
             )
         } else if (currentTickIndex < upperTick) {
             amountX = getDeltaX(
                 currentSqrtPrice,
-                sqrtPriceFromTick(upperTick),
+                calculateSqrtPrice(upperTick),
                 liquidityDelta,
                 liquiditySign
             )
             amountY = getDeltaY(
-                sqrtPriceFromTick(lowerTick),
+                calculateSqrtPrice(lowerTick),
                 currentSqrtPrice,
                 liquidityDelta,
                 liquiditySign
@@ -248,8 +248,8 @@ Contract CLAMM() extends Uints(), Log(){
             updateLiquidity = true
         } else {
             amountY = getDeltaY(
-                sqrtPriceFromTick(lowerTick),
-                sqrtPriceFromTick(upperTick),
+                calculateSqrtPrice(lowerTick),
+                calculateSqrtPrice(upperTick),
                 liquidityDelta,
                 liquiditySign
             )
@@ -314,14 +314,14 @@ Contract CLAMM() extends Uints(), Log(){
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: SqrtPrice) -> Bool {
         if (tickIndex + toI256!(tickSpacing) > GLOBAL_MAX_TICK) {
             let maxTick = getMaxTick(tickSpacing)
-            let localMaxSqrtPrice = sqrtPriceFromTick(maxTick)
+            let localMaxSqrtPrice = calculateSqrtPrice(maxTick)
             
             if (sqrtPrice.v != localMaxSqrtPrice.v) {
                 return false
             }
         } else {
-            let lowerBound = sqrtPriceFromTick(tickIndex)
-            let upperBound = sqrtPriceFromTick(tickIndex + toI256!(tickSpacing))
+            let lowerBound = calculateSqrtPrice(tickIndex)
+            let upperBound = calculateSqrtPrice(tickIndex + toI256!(tickSpacing))
 
             if (sqrtPrice.v >= upperBound.v || sqrtPrice.v < lowerBound.v) {
                 return false
