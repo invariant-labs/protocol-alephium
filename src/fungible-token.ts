@@ -4,6 +4,7 @@ import {
   hexToString,
   NodeProvider,
   SignerProvider,
+  stringToHex,
   TransactionBuilder
 } from '@alephium/web3'
 import { Network } from './network'
@@ -41,8 +42,8 @@ export class FungibleToken {
     const deployResult = await waitTxConfirmed(
       TokenFaucet.deploy(signer, {
         initialFields: {
-          name: Buffer.from(name, 'utf8').toString('hex'),
-          symbol: Buffer.from(symbol, 'utf8').toString('hex'),
+          name: stringToHex(name),
+          symbol: stringToHex(symbol),
           decimals,
           supply: MAX_U256,
           balance: MAX_U256

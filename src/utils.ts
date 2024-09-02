@@ -9,7 +9,8 @@ import {
   bs58,
   hexToBinUnsafe,
   ALPH_TOKEN_ID,
-  decodeBool
+  stringToHex,
+  HexString
 } from '@alephium/web3'
 import { CLAMM, Invariant, InvariantInstance, Reserve } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
@@ -135,8 +136,8 @@ export async function deployTokenFaucet(
   return await waitTxConfirmed(
     TokenFaucet.deploy(signer, {
       initialFields: {
-        name: Buffer.from(name, 'utf8').toString('hex'),
-        symbol: Buffer.from(symbol, 'utf8').toString('hex'),
+        name: stringToHex(name),
+        symbol: stringToHex(symbol),
         decimals,
         supply,
         balance: supply
@@ -238,16 +239,21 @@ export const AddressFromByteVec = (string: string) => {
   return address
 }
 
-function hexToBytes(hex: string): Uint8Array {
+function hexToBytes(hex: HexString): Uint8Array {
+  // codec.byteStringCodec
   return new Uint8Array(hex.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || [])
 }
 
-export function decodeU256(string: string): bigint {
-  return codec.compactUnsignedIntCodec.decodeU256(hexToBytes(string))
+export function decodeU256(string: HexString): bigint {
+  return codec.u256Codec.decode(hexToBytes(string))
 }
 
-const decodeI256 = (string: string): bigint => {
-  return codec.compactSignedIntCodec.decodeI256(hexToBytes(string))
+const decodeI256 = (string: HexString): bigint => {
+  return codec.i256Codec.decode(hexToBytes(string))
+}
+
+const decodeBool = (string: HexString): boolean => {
+  return codec.boolCodec.decode(hexToBytes(string))
 }
 
 export const newPoolKey = (token0: string, token1: string, feeTier: FeeTier): PoolKey => {
@@ -383,7 +389,7 @@ export const decodeLiquidityTicks = (string: string): LiquidityTick[] => {
     const tick: LiquidityTick = {
       index: decodeI256(parts[i]),
       liquidityChange: decodeU256(parts[i + 1]) as Liquidity,
-      sign: decodeBool(hexToBytes(parts[i + 2]))
+      sign: decodeBool(parts[i + 2])
     }
     ticks.push(tick)
   }

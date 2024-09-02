@@ -124,7 +124,7 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                     bit = part_bit
                 }
                 if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                    let mut index = chunk * CHUNK_SIZE + bit
+                    let index = chunk * CHUNK_SIZE + bit
                     return true, (toI256!(index) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
                 } else {
                     return false, 0i
@@ -145,8 +145,8 @@ Abstract Contract Tickmap() extends Decimal(), BatchHelper() {
                 if(part & mask != 0) {
                     bit = part_bit
                     if (chunk > limitingChunk || (chunk == limitingChunk && bit >= limitingBit)) {
-                        index = chunk * CHUNK_SIZE + bit
-                        return true, (toI256!(index) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
+                        let bitIndex = chunk * CHUNK_SIZE + bit
+                        return true, (toI256!(bitIndex) - (GLOBAL_MAX_TICK / toI256!(tickSpacing))) * toI256!(tickSpacing)
                     } else {
                         return false, 0i
                     }
