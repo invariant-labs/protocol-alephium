@@ -1,11 +1,13 @@
 import {
+  Address,
   addressFromContractId,
   DUST_AMOUNT,
   hexToString,
   NodeProvider,
   SignerProvider,
   stringToHex,
-  TransactionBuilder
+  TransactionBuilder,
+  web3
 } from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
@@ -29,16 +31,22 @@ export class FungibleToken {
     this.network = network
     const nodeUrl = getNodeUrl(network)
     this.nodeProvider = new NodeProvider(nodeUrl)
+    web3.setCurrentNodeProvider(this.nodeProvider)
     this.builder = TransactionBuilder.from(nodeUrl)
   }
 
   static async deploy(
     signer: SignerProvider,
+    network: Network,
     supply = 0n as TokenAmount,
     name: string = '',
     symbol: string = '',
     decimals: bigint = 0n
   ): Promise<string> {
+    const nodeUrl = getNodeUrl(network)
+    const nodeProvider = new NodeProvider(nodeUrl)
+    web3.setCurrentNodeProvider(nodeProvider)
+
     const deployResult = await waitTxConfirmed(
       TokenFaucet.deploy(signer, {
         initialFields: {
@@ -89,13 +97,13 @@ export class FungibleToken {
     return await signAndSend(signer, tx)
   }
 
-  async getAllBalances(tokens: string[], owner: string): Promise<Map<string, bigint>> {
+  async getAllBalances(tokens: string[], owner: Address): Promise<Map<string, TokenAmount>> {
     const balances = await Promise.all(tokens.map(token => this.getBalanceOf(owner, token)))
 
     return new Map(tokens.map((token, i) => [token, balances[i]]))
   }
 
-  async getBalanceOf(owner: string, tokenId: string): Promise<bigint> {
+  async getBalanceOf(owner: Address, tokenId: string): Promise<TokenAmount> {
     return balanceOf(tokenId, owner)
   }
 

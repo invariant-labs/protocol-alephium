@@ -53,8 +53,8 @@ describe('simulateInvariantSwap tests', () => {
     feeTier = newFeeTier(toPercentage(1n, 2n), 1n)
 
     token = FungibleToken.load(Network.Local)
-    token0 = await FungibleToken.deploy(deployer, suppliedAmount, 'Coin', 'COIN', 0n)
-    token1 = await FungibleToken.deploy(deployer, suppliedAmount, 'Coin', 'COIN', 0n)
+    token0 = await FungibleToken.deploy(deployer, Network.Local, suppliedAmount, 'Coin', 'COIN', 0n)
+    token1 = await FungibleToken.deploy(deployer, Network.Local, suppliedAmount, 'Coin', 'COIN', 0n)
 
     await invariant.addFeeTier(deployer, feeTier)
 

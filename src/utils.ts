@@ -351,13 +351,22 @@ export const getMaxBatch = (tickSpacing: bigint): bigint => {
   return lastBatch
 }
 
-export function getNodeUrl(network: Network) {
+export function getNodeUrl(network: Network): string {
   if (network === Network.Local || network === Network.Devnet) {
     return 'http://127.0.0.1:22973'
+  } else if (network === Network.Testnet) {
+    return 'https://node.testnet.alephium.org'
+  } else if (network === Network.Mainnet) {
+    return 'https://node.mainnet.alephium.org'
   } else {
-    // we don't have this yet
-    return 'http://127.0.0.1:22973'
+    throw new Error('Invalid network')
   }
+}
+
+export function setNodeProvider(network: Network): void {
+  const nodeUrl = getNodeUrl(network)
+  const nodeProvider = new NodeProvider(nodeUrl)
+  web3.setCurrentNodeProvider(nodeProvider)
 }
 
 export const signAndSend = async (
@@ -365,10 +374,12 @@ export const signAndSend = async (
   tx: Omit<SignExecuteScriptTxResult, 'signature'>
 ): Promise<string> => {
   const { address } = await signer.getSelectedAccount()
-  const { txId } = await signer.signAndSubmitUnsignedTx({
-    signerAddress: address,
-    unsignedTx: tx.unsignedTx
-  })
+  const { txId } = await waitTxConfirmed(
+    signer.signAndSubmitUnsignedTx({
+      signerAddress: address,
+      unsignedTx: tx.unsignedTx
+    })
+  )
   return txId
 }
 
