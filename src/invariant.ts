@@ -50,7 +50,6 @@ import {
   getMaxBatch,
   decodePools,
   decodePoolKeys,
-  getNodeUrl,
   signAndSend,
   decodePositions,
   Page,
@@ -70,20 +69,19 @@ import {
   DUST_AMOUNT,
   MAP_ENTRY_DEPOSIT,
   SignerProvider,
-  TransactionBuilder
+  TransactionBuilder,
+  web3
 } from '@alephium/web3'
 
 export class Invariant {
   instance: InvariantInstance
   network: Network
   address: Address
-  builder: TransactionBuilder
 
   private constructor(address: Address, network: Network) {
     this.address = address
     this.instance = InvariantFactory.at(address)
     this.network = network
-    this.builder = TransactionBuilder.from(getNodeUrl(network))
   }
 
   static async deploy(
@@ -116,12 +114,13 @@ export class Invariant {
   }
 
   async addFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = AddFeeTier.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       feeTier: wrapFeeTier(feeTier)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT },
       publicKey
     )
@@ -134,12 +133,13 @@ export class Invariant {
   }
 
   async removeFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = RemoveFeeTier.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       feeTier: wrapFeeTier(feeTier)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode },
       publicKey
     )
@@ -159,6 +159,7 @@ export class Invariant {
     initSqrtPrice: SqrtPrice
   ) {
     const initTick = calculateTick(initSqrtPrice, feeTier.tickSpacing)
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = CreatePool.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       token0: token0Id,
@@ -168,7 +169,7 @@ export class Invariant {
       initTick
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n },
       publicKey
     )
@@ -187,12 +188,13 @@ export class Invariant {
   }
 
   async withdrawProtocolFeeTx(signer: SignerProvider, poolKey: PoolKey) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = WithdrawProtocolFee.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       poolKey: wrapPoolKey(poolKey)
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
       publicKey
     )
@@ -205,13 +207,14 @@ export class Invariant {
   }
 
   async changeFeeReceiverTx(signer: SignerProvider, poolKey: PoolKey, newFeeReceiver: Address) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = ChangeFeeReceiver.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       poolKey: wrapPoolKey(poolKey),
       newFeeReceiver
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode },
       publicKey
     )
@@ -228,12 +231,13 @@ export class Invariant {
   }
 
   async changeProtocolFeeTx(signer: SignerProvider, fee: bigint) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = ChangeProtocolFee.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       newFee: fee
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode },
       publicKey
     )
@@ -255,6 +259,7 @@ export class Invariant {
     slippageLimitLower: SqrtPrice,
     slippageLimitUpper: SqrtPrice
   ) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       poolKey: wrapPoolKey(poolKey),
@@ -275,7 +280,7 @@ export class Invariant {
       tokens.shift()
     }
 
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       {
         signerAddress: address,
         bytecode: txBytecode,
@@ -313,12 +318,13 @@ export class Invariant {
   }
 
   async removePositionTx(signer: SignerProvider, index: bigint) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = RemovePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       index
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
       publicKey
     )
@@ -331,12 +337,13 @@ export class Invariant {
   }
 
   async claimFeeTx(signer: SignerProvider, index: bigint) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = ClaimFee.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       index
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
       publicKey
     )
@@ -349,13 +356,14 @@ export class Invariant {
   }
 
   async transferPositionTx(signer: SignerProvider, index: bigint, recipient: Address) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = TransferPosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       index,
       recipient
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n },
       publicKey
     )
@@ -380,6 +388,7 @@ export class Invariant {
     approvedAmount = amount
   ) {
     const tokenId = xToY ? poolKey.tokenX : poolKey.tokenY
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = Swap.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
       poolKey: wrapPoolKey(poolKey),
@@ -389,7 +398,7 @@ export class Invariant {
       sqrtPriceLimit: { v: sqrtPriceLimit }
     })
     const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await this.builder.buildExecuteScriptTx(
+    const tx = await builder.buildExecuteScriptTx(
       {
         signerAddress: address,
         bytecode: txBytecode,

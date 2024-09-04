@@ -20,8 +20,20 @@ describe('get position with associates tests', () => {
     const initialFee = 0n as Percentage
     const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
 
-    const token0 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token0', 'TK0')
-    const token1 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token1', 'TK1')
+    const token0 = await FungibleToken.deploy(
+      deployer,
+      Network.Local,
+      0n as TokenAmount,
+      'Token0',
+      'TK0'
+    )
+    const token1 = await FungibleToken.deploy(
+      deployer,
+      Network.Local,
+      0n as TokenAmount,
+      'Token1',
+      'TK1'
+    )
 
     const feeTier = newFeeTier(...getBasicFeeTickSpacing())
     const poolKey = newPoolKey(token0, token1, feeTier)

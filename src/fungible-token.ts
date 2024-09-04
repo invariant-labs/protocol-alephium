@@ -1,15 +1,17 @@
 import {
+  Address,
   addressFromContractId,
   DUST_AMOUNT,
   hexToString,
   NodeProvider,
   SignerProvider,
   stringToHex,
-  TransactionBuilder
+  TransactionBuilder,
+  web3
 } from '@alephium/web3'
 import { Network } from './network'
 import { TokenFaucet, Withdraw } from '../artifacts/ts'
-import { balanceOf, getNodeUrl, signAndSend, waitTxConfirmed } from './utils'
+import { balanceOf, signAndSend, waitTxConfirmed } from './utils'
 import { MAX_U256 } from './consts'
 import { TokenAmount } from './types'
 
@@ -22,18 +24,14 @@ export type TokenMetaData = {
 
 export class FungibleToken {
   network: Network
-  nodeProvider: NodeProvider
-  builder: TransactionBuilder
 
   private constructor(network: Network) {
     this.network = network
-    const nodeUrl = getNodeUrl(network)
-    this.nodeProvider = new NodeProvider(nodeUrl)
-    this.builder = TransactionBuilder.from(nodeUrl)
   }
 
   static async deploy(
     signer: SignerProvider,
+    network: Network,
     supply = 0n as TokenAmount,
     name: string = '',
     symbol: string = '',
@@ -70,6 +68,7 @@ export class FungibleToken {
   async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
     const tokenAddress = addressFromContractId(tokenId)
     const tokenFaucet = TokenFaucet.at(tokenAddress)
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const bytecode = Withdraw.script.buildByteCodeToDeploy({
       token: tokenFaucet.contractId,
       amount: value
@@ -77,7 +76,7 @@ export class FungibleToken {
 
     const { address, publicKey } = await signer.getSelectedAccount()
 
-    const unsignedTxBuild = await this.builder.buildExecuteScriptTx(
+    const unsignedTxBuild = await builder.buildExecuteScriptTx(
       { signerAddress: address, bytecode, attoAlphAmount: DUST_AMOUNT },
       publicKey
     )
@@ -89,13 +88,13 @@ export class FungibleToken {
     return await signAndSend(signer, tx)
   }
 
-  async getAllBalances(tokens: string[], owner: string): Promise<Map<string, bigint>> {
+  async getAllBalances(tokens: string[], owner: Address): Promise<Map<string, TokenAmount>> {
     const balances = await Promise.all(tokens.map(token => this.getBalanceOf(owner, token)))
 
     return new Map(tokens.map((token, i) => [token, balances[i]]))
   }
 
-  async getBalanceOf(owner: string, tokenId: string): Promise<bigint> {
+  async getBalanceOf(owner: Address, tokenId: string): Promise<TokenAmount> {
     return balanceOf(tokenId, owner)
   }
 
@@ -106,7 +105,8 @@ export class FungibleToken {
   }
 
   async getTokenMetadata(tokenId: string): Promise<TokenMetaData> {
-    const metadata = await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)
+    const nodeProvider = web3.getCurrentNodeProvider()
+    const metadata = await nodeProvider.fetchFungibleTokenMetaData(tokenId)
     return {
       symbol: hexToString(metadata.symbol),
       name: hexToString(metadata.name),
@@ -116,14 +116,17 @@ export class FungibleToken {
   }
 
   async getTokenName(tokenId: string): Promise<string> {
-    return hexToString((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).name)
+    const nodeProvider = web3.getCurrentNodeProvider()
+    return hexToString((await nodeProvider.fetchFungibleTokenMetaData(tokenId)).name)
   }
 
   async getTokenSymbol(tokenId: string): Promise<string> {
-    return hexToString((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).symbol)
+    const nodeProvider = web3.getCurrentNodeProvider()
+    return hexToString((await nodeProvider.fetchFungibleTokenMetaData(tokenId)).symbol)
   }
 
   async getTokenDecimals(tokenId: string): Promise<bigint> {
-    return BigInt((await this.nodeProvider.fetchFungibleTokenMetaData(tokenId)).decimals)
+    const nodeProvider = web3.getCurrentNodeProvider()
+    return BigInt((await nodeProvider.fetchFungibleTokenMetaData(tokenId)).decimals)
   }
 }

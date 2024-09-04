@@ -10,6 +10,7 @@ import {
   FIXED_POINT_DENOMINATOR as _FIXED_POINT_DENOMINATOR,
   SQRT_PRICE_SCALE
 } from '../artifacts/ts/constants'
+import { Network } from './network'
 import {
   FeeGrowth,
   FixedPoint,
@@ -58,4 +59,35 @@ export enum VMError {
   OutOfGas = 'OutOfGas',
   NotEnoughBalance = 'Not enough approved balance for address',
   MaxStoredAssets = 'max token number is 8'
+}
+
+export const INVARIANT_ADDRESS = {
+  [Network.Local]: '',
+  [Network.Testnet]: 'yLnStmQ8W6Jw8RijHD8j4oTRdNrTZGCXiEGYwxwxWZcT',
+  [Network.Mainnet]: ''
+}
+export const BTC_ID = {
+  [Network.Local]: '',
+  [Network.Testnet]: '01542eade199c4e6fa9a6394000c04fc0e5925aaf3ae755a9d4c3b38bc9d6c00',
+  [Network.Mainnet]: ''
+}
+export const ETH_ID = {
+  [Network.Local]: '',
+  [Network.Testnet]: '71a8a31956ce7a21aacbf4c38ee310e1fe639de41d4e5afa17982f5394889200',
+  [Network.Mainnet]: ''
+}
+export const USDC_ID = {
+  [Network.Local]: '',
+  [Network.Testnet]: '0a6b4f8d2ecf3b61d3132ee4c7ed038ed0c43155443d76125df2fdb24190fa00',
+  [Network.Mainnet]: ''
+}
+export const USDT_ID = {
+  [Network.Local]: '',
+  [Network.Testnet]: 'a88d24ee6216295cceaeab3580741177747d839443fb440367f3ed7ab356d000',
+  [Network.Mainnet]: ''
+}
+export const SOL_ID = {
+  [Network.Local]: '',
+  [Network.Testnet]: 'cc5adb7475e36e6272c9dfbe86bb703ed606d079b6d5163ff81803fe2ba29000',
+  [Network.Mainnet]: ''
 }

@@ -75,7 +75,13 @@ export {
   CHUNK_SIZE,
   MAX_FEE_TIERS,
   MAX_SWAP_STEPS,
-  MAX_U256
+  MAX_U256,
+  INVARIANT_ADDRESS,
+  BTC_ID,
+  ETH_ID,
+  USDC_ID,
+  USDT_ID,
+  SOL_ID
 } from './consts'
 
 export { FEE_TIERS } from './computed-consts'
@@ -86,6 +92,7 @@ export {
   newFeeTier,
   newPoolKey,
   getMaxBatch,
+  setOfficialNodeProvider,
   waitTxConfirmed,
   signAndSend,
   simulateInvariantSwap

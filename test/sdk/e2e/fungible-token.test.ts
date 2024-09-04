@@ -10,12 +10,13 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let token: FungibleToken
 let admin: PrivateKeyWallet
 let token0: string
+const network = Network.Local
 
 describe('fungible token tests', () => {
   beforeAll(async () => {
     admin = await getSigner(ONE_ALPH * 1000n, 0)
     token = FungibleToken.load(Network.Local)
-    token0 = await FungibleToken.deploy(admin, 1000n as TokenAmount, 'Coin', 'COIN', 12n)
+    token0 = await FungibleToken.deploy(admin, network, 1000n as TokenAmount, 'Coin', 'COIN', 12n)
   })
 
   test('set metadata', async () => {
@@ -32,6 +33,7 @@ describe('fungible token tests', () => {
   test('change instance', async () => {
     const secondToken = await FungibleToken.deploy(
       admin,
+      network,
       1000n as TokenAmount,
       'SecondCoin',
       'SCOIN',
@@ -42,10 +44,38 @@ describe('fungible token tests', () => {
   })
 
   test('get all balances', async () => {
-    const token0 = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
-    const token1 = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
-    const token2 = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
-    const token3 = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
+    const token0 = await FungibleToken.deploy(
+      admin,
+      network,
+      0n as TokenAmount,
+      'Coin',
+      'COIN',
+      12n
+    )
+    const token1 = await FungibleToken.deploy(
+      admin,
+      network,
+      0n as TokenAmount,
+      'Coin',
+      'COIN',
+      12n
+    )
+    const token2 = await FungibleToken.deploy(
+      admin,
+      network,
+      0n as TokenAmount,
+      'Coin',
+      'COIN',
+      12n
+    )
+    const token3 = await FungibleToken.deploy(
+      admin,
+      network,
+      0n as TokenAmount,
+      'Coin',
+      'COIN',
+      12n
+    )
 
     await token.mint(admin, 100n as TokenAmount, token0)
     await token.mint(admin, 200n as TokenAmount, token1)
@@ -63,10 +93,10 @@ describe('fungible token tests', () => {
 
   test('get metadata for all tokens', async () => {
     const tokenAddresses = [
-      await FungibleToken.deploy(admin, 0n as TokenAmount, 'CoinONE', 'COIN1', 12n),
-      await FungibleToken.deploy(admin, 0n as TokenAmount, 'CoinTWO', 'COIN2', 13n),
-      await FungibleToken.deploy(admin, 0n as TokenAmount, 'CoinTHREE', 'COIN3', 14n),
-      await FungibleToken.deploy(admin, 0n as TokenAmount, 'CoinFOUR', 'COIN4', 15n)
+      await FungibleToken.deploy(admin, network, 0n as TokenAmount, 'CoinONE', 'COIN1', 12n),
+      await FungibleToken.deploy(admin, network, 0n as TokenAmount, 'CoinTWO', 'COIN2', 13n),
+      await FungibleToken.deploy(admin, network, 0n as TokenAmount, 'CoinTHREE', 'COIN3', 14n),
+      await FungibleToken.deploy(admin, network, 0n as TokenAmount, 'CoinFOUR', 'COIN4', 15n)
     ]
     const metadata = await token.getTokenMetaDataMulti(tokenAddresses)
 

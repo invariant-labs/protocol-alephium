@@ -34,8 +34,8 @@ async function setupEssentials() {
   account = await getSigner(1000n * ONE_ALPH)
   INVARIANT_ADDRESS = (await Invariant.deploy(account, Network.Local)).address
   const initMint = (10n ** 30n) as TokenAmount
-  TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
-  TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
+  TOKEN0_ID = await FungibleToken.deploy(account, Network.Local, initMint, 'Coin', 'COIN', 12n)
+  TOKEN1_ID = await FungibleToken.deploy(account, Network.Local, initMint, 'Coin', 'COIN', 12n)
 }
 
 const main = async () => {
@@ -299,8 +299,22 @@ const usingAlphAsToken = async () => {
 const usingFungibleToken = async () => {
   // deploy token, it will return token ids
   const initMint = 500n as TokenAmount
-  const TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'CoinA', 'ACOIN', 12n)
-  const TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'CoinB', 'BCOIN', 12n)
+  const TOKEN0_ID = await FungibleToken.deploy(
+    account,
+    Network.Local,
+    initMint,
+    'CoinA',
+    'ACOIN',
+    12n
+  )
+  const TOKEN1_ID = await FungibleToken.deploy(
+    account,
+    Network.Local,
+    initMint,
+    'CoinB',
+    'BCOIN',
+    12n
+  )
 
   // load token by passing its address (you can use existing one), it allows you to interact with it
   const token = FungibleToken.load(Network.Local)
