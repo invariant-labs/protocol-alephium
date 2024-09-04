@@ -76,12 +76,12 @@ export {
   MAX_FEE_TIERS,
   MAX_SWAP_STEPS,
   MAX_U256,
-  TESTNET_INVARIANT_ADDRESS,
-  TESTNET_BTC_ID as TESTNET_BTC_ADDRESS,
-  TESTNET_ETH_ID as TESTNET_ETH_ADDRESS,
-  TESTNET_USDC_ID as TESTNET_USDC_ADDRESS,
-  TESTNET_USDT_ID as TESTNET_USDT_ADDRESS,
-  TESTNET_SOL_ID as TESTNET_SOL_ADDRESS
+  INVARIANT_ADDRESS,
+  BTC_ID,
+  ETH_ID,
+  USDC_ID,
+  USDT_ID,
+  SOL_ID
 } from './consts'
 
 export { FEE_TIERS } from './computed-consts'
@@ -92,7 +92,7 @@ export {
   newFeeTier,
   newPoolKey,
   getMaxBatch,
-  setNodeProvider,
+  setOfficialNodeProvider,
   waitTxConfirmed,
   signAndSend,
   simulateInvariantSwap

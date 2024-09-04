@@ -9,7 +9,7 @@ import {
   newPoolKey,
   priceToSqrtPrice,
   toPercentage,
-  setNodeProvider,
+  setOfficialNodeProvider,
   TokenAmount,
   ALPH_TOKEN_ID,
   Price,
@@ -21,7 +21,7 @@ dotenv.config()
 
 const main = async () => {
   const network = Network.Testnet
-  setNodeProvider(network)
+  setOfficialNodeProvider(network)
 
   const privateKey = process.env.DEPLOYER_PK ?? ''
   const account = new PrivateKeyWallet({ privateKey })

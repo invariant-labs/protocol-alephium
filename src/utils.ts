@@ -351,7 +351,7 @@ export const getMaxBatch = (tickSpacing: bigint): bigint => {
   return lastBatch
 }
 
-export function getNodeUrl(network: Network): string {
+function getNodeUrl(network: Network): string {
   if (network === Network.Local || network === Network.Devnet) {
     return 'http://127.0.0.1:22973'
   } else if (network === Network.Testnet) {
@@ -363,7 +363,7 @@ export function getNodeUrl(network: Network): string {
   }
 }
 
-export function setNodeProvider(network: Network): void {
+export function setOfficialNodeProvider(network: Network): void {
   const nodeUrl = getNodeUrl(network)
   const nodeProvider = new NodeProvider(nodeUrl)
   web3.setCurrentNodeProvider(nodeProvider)

@@ -3,7 +3,7 @@ import {
   FungibleToken,
   TokenAmount,
   PrivateKeyWallet,
-  setNodeProvider
+  setOfficialNodeProvider
 } from '@invariant-labs/alph-sdk'
 import dotenv from 'dotenv'
 
@@ -11,14 +11,14 @@ dotenv.config()
 
 const main = async () => {
   const network = Network.Testnet
-  setNodeProvider(network)
+  setOfficialNodeProvider(network)
 
   const privateKey = process.env.DEPLOYER_PK ?? ''
   const account = new PrivateKeyWallet({ privateKey })
   const BTC_ADDRESS = await FungibleToken.deploy(
     account,
     network,
-    1n as TokenAmount,
+    0n as TokenAmount,
     'Bitcoin',
     'BTC',
     8n
@@ -26,7 +26,7 @@ const main = async () => {
   const ETH_ADDRESS = await FungibleToken.deploy(
     account,
     network,
-    2n as TokenAmount,
+    0n as TokenAmount,
     'Ether',
     'ETH',
     18n
@@ -34,7 +34,7 @@ const main = async () => {
   const USDC_ADDRESS = await FungibleToken.deploy(
     account,
     network,
-    3n as TokenAmount,
+    0n as TokenAmount,
     'USDC',
     'USDC',
     6n
