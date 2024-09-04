@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { initTokensXY } from '../../../src/testUtils'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
@@ -17,7 +16,7 @@ describe('query on token pair tests', () => {
 
   test('query on pools', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
-    const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    const invariant = await Invariant.deploy(deployer, initialFee)
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     const feeTier10TS = newFeeTier(fee, 10n)
@@ -29,21 +28,9 @@ describe('query on token pair tests', () => {
     const poolKey0 = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier10TS)
     const poolKey1 = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier20TS)
 
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier10TS,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey0, initSqrtPrice)
 
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier20TS,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey1, initSqrtPrice)
 
     const expectedPool0 = await invariant.getPool(poolKey0)
     const expectedPool1 = await invariant.getPool(poolKey1)
@@ -55,19 +42,14 @@ describe('query on token pair tests', () => {
   })
   test('query max pools', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
-    const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    const invariant = await Invariant.deploy(deployer, initialFee)
     const [tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     for (let tickSpacing = 1n; tickSpacing <= 32n; tickSpacing++) {
       const feeTier = newFeeTier(fee, tickSpacing)
+      const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       await invariant.addFeeTier(deployer, feeTier)
-      await invariant.createPool(
-        deployer,
-        tokenX.contractId,
-        tokenY.contractId,
-        feeTier,
-        initSqrtPrice
-      )
+      await invariant.createPool(deployer, poolKey, initSqrtPrice)
     }
 
     const queriedPools = await invariant.getAllPoolsForPair(tokenX.contractId, tokenY.contractId)

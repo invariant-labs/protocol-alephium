@@ -2,7 +2,6 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { FungibleToken } from '../../../src/fungible-token'
 import { Invariant } from '../../../src/invariant'
 import { getSigner } from '@alephium/web3-test'
-import { Network } from '../../../src/network'
 import {
   calculateSqrtPrice,
   getMaxSqrtPrice,
@@ -30,7 +29,7 @@ import {
   VMError
 } from '../../../src/consts'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
+import { FeeTier, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -49,17 +48,16 @@ describe('simulateInvariantSwap tests', () => {
 
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, protocolFee)
+    invariant = await Invariant.deploy(deployer, protocolFee)
     feeTier = newFeeTier(toPercentage(1n, 2n), 1n)
 
-    token = FungibleToken.load(Network.Local)
-    token0 = await FungibleToken.deploy(deployer, Network.Local, suppliedAmount, 'Coin', 'COIN', 0n)
-    token1 = await FungibleToken.deploy(deployer, Network.Local, suppliedAmount, 'Coin', 'COIN', 0n)
+    token = FungibleToken.load()
+    token0 = await FungibleToken.deploy(deployer, suppliedAmount, 'Coin', 'COIN', 0n)
+    token1 = await FungibleToken.deploy(deployer, suppliedAmount, 'Coin', 'COIN', 0n)
+    poolKey = newPoolKey(token0, token1, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-
-    await invariant.createPool(deployer, token0, token1, feeTier, toSqrtPrice(1n))
-    poolKey = newPoolKey(token0, token1, feeTier)
+    await invariant.createPool(deployer, poolKey, toSqrtPrice(1n))
 
     const positionAmount = (suppliedAmount / 2n) as TokenAmount
     await invariant.createPosition(
@@ -71,7 +69,7 @@ describe('simulateInvariantSwap tests', () => {
       positionAmount,
       positionAmount,
       toSqrtPrice(1n),
-      toSqrtPrice(1n)
+      0n as Percentage
     )
   })
   describe('reaches price limit', () => {
@@ -520,7 +518,7 @@ describe('simulateInvariantSwap tests', () => {
         suppliedAmount,
         suppliedAmount,
         toSqrtPrice(1n),
-        toSqrtPrice(1n)
+        0n as Percentage
       )
 
       const tickmap = filterTickmap(
@@ -580,7 +578,7 @@ describe('simulateInvariantSwap tests', () => {
         suppliedAmount,
         suppliedAmount,
         toSqrtPrice(1n),
-        toSqrtPrice(1n)
+        0n as Percentage
       )
 
       const ticks = filterTicks(
@@ -624,7 +622,7 @@ describe('simulateInvariantSwap tests', () => {
         suppliedAmount,
         suppliedAmount,
         toSqrtPrice(1n),
-        toSqrtPrice(1n)
+        0n as Percentage
       )
 
       const pool = await invariant.getPool(poolKey)
@@ -685,7 +683,7 @@ describe('simulateInvariantSwap tests', () => {
         mintAmount,
         mintAmount,
         spotSqrtPrice,
-        spotSqrtPrice
+        0n as Percentage
       )
     }
 

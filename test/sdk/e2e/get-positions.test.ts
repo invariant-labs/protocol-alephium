@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
@@ -31,20 +30,14 @@ describe('get positions test', () => {
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    invariant = await Invariant.deploy(deployer, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     feeTier = newFeeTier(fee, tickSpacing)
     poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
 
     const { sqrtPrice } = await invariant.getPool(poolKey)
@@ -58,7 +51,7 @@ describe('get positions test', () => {
       supply,
       supply,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
     const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
     const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -71,7 +64,7 @@ describe('get positions test', () => {
       approveX,
       approveY,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
   })
   test('get positions', async () => {
@@ -107,7 +100,7 @@ describe('get positions test', () => {
       approveX,
       approveY,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
 
     const [positions, totalPositions] = await invariant.getPositions(positionOwner.address, 1n, 1n)
@@ -135,7 +128,7 @@ describe('get positions test', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const [positions, totalPositions] = await invariant.getPositions(

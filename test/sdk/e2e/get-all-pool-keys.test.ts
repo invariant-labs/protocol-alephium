@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
@@ -27,7 +26,7 @@ describe('get pool keys test', () => {
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    invariant = await Invariant.deploy(deployer, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
@@ -48,13 +47,7 @@ describe('get pool keys test', () => {
 
       const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
-      await invariant.createPool(
-        deployer,
-        tokenX.contractId,
-        tokenY.contractId,
-        feeTier,
-        initSqrtPrice
-      )
+      await invariant.createPool(deployer, poolKey, initSqrtPrice)
     }
 
     const poolKeys = await invariant.getAllPoolKeys()
@@ -72,13 +65,7 @@ describe('get pool keys test', () => {
       const [tokenX, tokenY] = await initTokensXY(deployer, supply)
       const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
-      await invariant.createPool(
-        deployer,
-        tokenX.contractId,
-        tokenY.contractId,
-        feeTier,
-        initSqrtPrice
-      )
+      await invariant.createPool(deployer, poolKey, initSqrtPrice)
     }
 
     const [poolKeys] = await invariant.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
@@ -94,13 +81,7 @@ describe('get pool keys test', () => {
       const [tokenX, tokenY] = await initTokensXY(deployer, supply)
       const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
-      await invariant.createPool(
-        deployer,
-        tokenX.contractId,
-        tokenY.contractId,
-        feeTier,
-        initSqrtPrice
-      )
+      await invariant.createPool(deployer, poolKey, initSqrtPrice)
     }
 
     expectVMError(VMError.OutOfGas, invariant.getPoolKeys(overSingleLimit, 0n))

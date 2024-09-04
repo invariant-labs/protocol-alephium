@@ -13,7 +13,13 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
-import { bitPositionToTick, calculateSqrtPriceAfterSlippage, calculateTick } from './math'
+import {
+  bitPositionToTick,
+  calculateSqrtPriceAfterSlippage,
+  calculateTick,
+  getMaxSqrtPrice,
+  getMinSqrtPrice
+} from './math'
 import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
@@ -75,25 +81,22 @@ import {
 
 export class Invariant {
   instance: InvariantInstance
-  network: Network
   address: Address
 
-  private constructor(address: Address, network: Network) {
+  private constructor(address: Address) {
     this.address = address
     this.instance = InvariantFactory.at(address)
-    this.network = network
   }
 
   static async deploy(
-    signer: SignerProvider,
-    network: Network,
+    deployer: SignerProvider,
     protocolFee: Percentage = 0n as Percentage
   ): Promise<Invariant> {
-    const account = await signer.getSelectedAccount()
-    const clamm = await deployCLAMM(signer)
-    const reserve = await deployReserve(signer)
+    const account = await deployer.getSelectedAccount()
+    const clamm = await deployCLAMM(deployer)
+    const reserve = await deployReserve(deployer)
     const deployResult = await waitTxConfirmed(
-      InvariantFactory.deploy(signer, {
+      InvariantFactory.deploy(deployer, {
         initialFields: {
           config: { admin: account.address, protocolFee: { v: protocolFee } },
           reserveTemplateId: reserve.contractId,
@@ -106,11 +109,11 @@ export class Invariant {
       })
     )
 
-    return new Invariant(deployResult.contractInstance.address, network)
+    return new Invariant(deployResult.contractInstance.address)
   }
 
-  static async load(address: Address, network: Network): Promise<Invariant> {
-    return new Invariant(address, network)
+  static async load(address: Address): Promise<Invariant> {
+    return new Invariant(address)
   }
 
   async addFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
@@ -151,20 +154,14 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
-  async createPoolTx(
-    signer: SignerProvider,
-    token0Id: string,
-    token1Id: string,
-    feeTier: FeeTier,
-    initSqrtPrice: SqrtPrice
-  ) {
-    const initTick = calculateTick(initSqrtPrice, feeTier.tickSpacing)
+  async createPoolTx(signer: SignerProvider, poolKey: PoolKey, initSqrtPrice: SqrtPrice) {
+    const initTick = calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing)
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = CreatePool.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
-      token0: token0Id,
-      token1: token1Id,
-      feeTier: wrapFeeTier(feeTier),
+      token0: poolKey.tokenX,
+      token1: poolKey.tokenY,
+      feeTier: wrapFeeTier(poolKey.feeTier),
       initSqrtPrice: { v: initSqrtPrice },
       initTick
     })
@@ -178,12 +175,10 @@ export class Invariant {
 
   async createPool(
     signer: SignerProvider,
-    token0Id: string,
-    token1Id: string,
-    feeTier: FeeTier,
+    poolKey: PoolKey,
     initSqrtPrice: SqrtPrice
   ): Promise<string> {
-    const tx = await this.createPoolTx(signer, token0Id, token1Id, feeTier, initSqrtPrice)
+    const tx = await this.createPoolTx(signer, poolKey, initSqrtPrice)
     return await signAndSend(signer, tx)
   }
 
@@ -256,9 +251,19 @@ export class Invariant {
     liquidityDelta: Liquidity,
     approvedTokensX: TokenAmount,
     approvedTokensY: TokenAmount,
-    slippageLimitLower: SqrtPrice,
-    slippageLimitUpper: SqrtPrice
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
   ) {
+    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      false
+    )
+    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      true
+    )
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
@@ -300,8 +305,8 @@ export class Invariant {
     liquidityDelta: Liquidity,
     approvedTokensX: TokenAmount,
     approvedTokensY: TokenAmount,
-    slippageLimitLower: SqrtPrice,
-    slippageLimitUpper: SqrtPrice
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
   ): Promise<string> {
     const tx = await this.createPositionTx(
       signer,
@@ -311,8 +316,8 @@ export class Invariant {
       liquidityDelta,
       approvedTokensX,
       approvedTokensY,
-      slippageLimitLower,
-      slippageLimitUpper
+      spotSqrtPrice,
+      slippageTolerance
     )
     return await signAndSend(signer, tx)
   }
@@ -506,8 +511,12 @@ export class Invariant {
     xToY: boolean,
     amount: bigint,
     byAmountIn: boolean,
-    sqrtPriceLimit: bigint
+    sqrtPriceLimit?: bigint
   ): Promise<QuoteResult> {
+    const _sqrtPriceLimit =
+      (sqrtPriceLimit ?? xToY)
+        ? getMinSqrtPrice(poolKey.feeTier.tickSpacing)
+        : getMaxSqrtPrice(poolKey.feeTier.tickSpacing)
     const quoteResult = (
       await this.instance.view.quote({
         args: {
@@ -515,7 +524,7 @@ export class Invariant {
           xToY,
           amount: { v: amount },
           byAmountIn,
-          sqrtPriceLimit: { v: sqrtPriceLimit }
+          sqrtPriceLimit: { v: _sqrtPriceLimit }
         }
       })
     ).returns
@@ -542,8 +551,8 @@ export class Invariant {
     return { x, y }
   }
 
-  async getProtocolFee(): Promise<bigint> {
-    return (await this.instance.view.getProtocolFee()).returns.v
+  async getProtocolFee(): Promise<Percentage> {
+    return (await this.instance.view.getProtocolFee()).returns.v as Percentage
   }
 
   async getPoolKeys(size: bigint, offset: bigint): Promise<[PoolKey[], bigint]> {

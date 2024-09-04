@@ -10,9 +10,9 @@ import {
   getLiquidityByY,
   getMinSqrtPrice,
   Invariant,
-  Network,
   newFeeTier,
   newPoolKey,
+  Percentage,
   Pool,
   Position,
   priceToSqrtPrice,
@@ -32,18 +32,18 @@ let TOKEN1_ID: string
 
 async function setupEssentials() {
   account = await getSigner(1000n * ONE_ALPH)
-  INVARIANT_ADDRESS = (await Invariant.deploy(account, Network.Local)).address
+  INVARIANT_ADDRESS = (await Invariant.deploy(account)).address
   const initMint = (10n ** 30n) as TokenAmount
-  TOKEN0_ID = await FungibleToken.deploy(account, Network.Local, initMint, 'Coin', 'COIN', 12n)
-  TOKEN1_ID = await FungibleToken.deploy(account, Network.Local, initMint, 'Coin', 'COIN', 12n)
+  TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
+  TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'Coin', 'COIN', 12n)
 }
 
 const main = async () => {
   console.log('main guide')
   // load invariant contract
-  const invariant = await Invariant.load(INVARIANT_ADDRESS, Network.Local)
+  const invariant = await Invariant.load(INVARIANT_ADDRESS)
   // load token contract
-  const token = FungibleToken.load(Network.Local)
+  const token = FungibleToken.load()
 
   // set fee tier, make sure that fee tier with specified parameters exists
   const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
@@ -62,13 +62,7 @@ const main = async () => {
   // set pool key, make sure that pool for these tokens does not exist already
   const poolKey = newPoolKey(TOKEN0_ID, TOKEN1_ID, feeTier)
 
-  const createPoolTransactionId = await invariant.createPool(
-    account,
-    poolKey.tokenX,
-    poolKey.tokenY,
-    feeTier,
-    initSqrtPrice
-  )
+  const createPoolTransactionId = await invariant.createPool(account, poolKey, initSqrtPrice)
 
   // print transaction id
   console.log(createPoolTransactionId)
@@ -103,7 +97,7 @@ const main = async () => {
     tokenXAmount,
     tokenYAmount,
     initSqrtPrice,
-    initSqrtPrice
+    0n as Percentage
   )
 
   // print transaction id
@@ -289,7 +283,7 @@ const usingAlphAsToken = async () => {
   // ALPH just like any other token has a Contract Id (Token Id), so it can be used in the same way
 
   // load token contract
-  const token = FungibleToken.load(Network.Local)
+  const token = FungibleToken.load()
 
   // get balance of account
   const accountBalance = await token.getBalanceOf(account.address, ALPH_TOKEN_ID)
@@ -299,25 +293,11 @@ const usingAlphAsToken = async () => {
 const usingFungibleToken = async () => {
   // deploy token, it will return token ids
   const initMint = 500n as TokenAmount
-  const TOKEN0_ID = await FungibleToken.deploy(
-    account,
-    Network.Local,
-    initMint,
-    'CoinA',
-    'ACOIN',
-    12n
-  )
-  const TOKEN1_ID = await FungibleToken.deploy(
-    account,
-    Network.Local,
-    initMint,
-    'CoinB',
-    'BCOIN',
-    12n
-  )
+  const TOKEN0_ID = await FungibleToken.deploy(account, initMint, 'CoinA', 'ACOIN', 12n)
+  const TOKEN1_ID = await FungibleToken.deploy(account, initMint, 'CoinB', 'BCOIN', 12n)
 
   // load token by passing its address (you can use existing one), it allows you to interact with it
-  const token = FungibleToken.load(Network.Local)
+  const token = FungibleToken.load()
 
   // interact with token 0
   const account0Balance = await token.getBalanceOf(account.address, TOKEN0_ID)

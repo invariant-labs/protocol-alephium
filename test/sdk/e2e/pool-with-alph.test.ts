@@ -6,10 +6,9 @@ import { MIN_SQRT_PRICE } from '../../../src/consts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { toLiquidity, toPercentage, toSqrtPrice } from '../../../src/math'
-import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
+import { FeeTier, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -40,7 +39,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
     positionOwner = await getSigner(ONE_ALPH * 2000n, 0)
     swapper = await getSigner(ONE_ALPH * 1000n, 0)
     recipient = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(admin, Network.Local, protocolFee)
+    invariant = await Invariant.deploy(admin, protocolFee)
     feeTier = newFeeTier(fee, tickSpacing)
     tokenY = (await initTokensXY(admin, supply))[0]
     await withdrawTokens(positionOwner, [tokenY, positionOwnerMint])
@@ -48,13 +47,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
     await invariant.addFeeTier(admin, feeTier)
   })
   test('create pool', async () => {
-    await invariant.createPool(
-      poolCreator,
-      tokenY.contractId,
-      ALPH_TOKEN_ID,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(poolCreator, poolKey, initSqrtPrice)
 
     const pool = await invariant.getPool(poolKey)
     const expectedPool = {
@@ -84,7 +77,7 @@ describe('create pool with ALP token as swappable asset tests', () => {
       1000n as TokenAmount,
       tokenYBalance,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
 
     const pool = await invariant.getPool(poolKey)

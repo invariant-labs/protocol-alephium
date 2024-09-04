@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
@@ -31,20 +30,14 @@ describe('get all positions test', () => {
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    invariant = await Invariant.deploy(deployer, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     feeTier = newFeeTier(fee, tickSpacing)
     poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
   })
   test('get all positions', async () => {
@@ -61,7 +54,7 @@ describe('get all positions test', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
 
@@ -95,7 +88,7 @@ describe('get all positions test', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const pages = await invariant.getAllPositions(positionOwner.address, MAX_POSITIONS_QUERIED)
@@ -128,7 +121,7 @@ describe('get all positions test', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const pages = await invariant.getAllPositions(positionOwner.address, undefined, [1, 3])
@@ -161,7 +154,7 @@ describe('get all positions test', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const positionPerPage = 10n

@@ -13,21 +13,21 @@ import {
   TokenAmount,
   ALPH_TOKEN_ID,
   Price,
-  Liquidity
+  Liquidity,
+  Percentage
 } from '@invariant-labs/alph-sdk'
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 const main = async () => {
-  const network = Network.Testnet
-  setOfficialNodeProvider(network)
+  setOfficialNodeProvider(Network.Testnet)
 
   const privateKey = process.env.DEPLOYER_PK ?? ''
   const account = new PrivateKeyWallet({ privateKey })
 
   console.log(`Deployer: ${account.address}, Private Key: ${privateKey}`)
-  const invariant = await Invariant.deploy(account, network, toPercentage(1n, 2n))
+  const invariant = await Invariant.deploy(account, toPercentage(1n, 2n))
   console.log(`Invariant: ${invariant.instance.address.toString()}`)
 
   for (const feeTier of FEE_TIERS) {
@@ -35,46 +35,17 @@ const main = async () => {
   }
   console.log('Successfully added fee tiers')
 
-  const BTCTokenID = await FungibleToken.deploy(
-    account,
-    network,
-    0n as TokenAmount,
-    'Bitcoin',
-    'BTC',
-    8n
-  )
-  const ETHTokenID = await FungibleToken.deploy(
-    account,
-    network,
-    0n as TokenAmount,
-    'Ether',
-    'ETH',
-    12n
-  )
-  const USDCTokenID = await FungibleToken.deploy(
-    account,
-    network,
-    0n as TokenAmount,
-    'USDC',
-    'USDC',
-    6n
-  )
+  const BTCTokenID = await FungibleToken.deploy(account, 0n as TokenAmount, 'Bitcoin', 'BTC', 8n)
+  const ETHTokenID = await FungibleToken.deploy(account, 0n as TokenAmount, 'Ether', 'ETH', 12n)
+  const USDCTokenID = await FungibleToken.deploy(account, 0n as TokenAmount, 'USDC', 'USDC', 6n)
   const USDTTokenID = await FungibleToken.deploy(
     account,
-    network,
     0n as TokenAmount,
     'Tether USD',
     'USDT',
     6n
   )
-  const SOLTokenID = await FungibleToken.deploy(
-    account,
-    network,
-    0n as TokenAmount,
-    'Solana',
-    'SOL',
-    9n
-  )
+  const SOLTokenID = await FungibleToken.deploy(account, 0n as TokenAmount, 'Solana', 'SOL', 9n)
   const decimals = {
     [BTCTokenID]: 8n,
     [ETHTokenID]: 12n,
@@ -127,20 +98,14 @@ const main = async () => {
       10 ** 24
     try {
       const poolSqrtPrice = priceToSqrtPrice(BigInt(Math.round(price)) as Price)
-      await invariant.createPool(
-        account,
-        poolKey.tokenX,
-        poolKey.tokenY,
-        poolKey.feeTier,
-        poolSqrtPrice
-      )
+      await invariant.createPool(account, poolKey, poolSqrtPrice)
     } catch (e) {
       console.log('Create pool error', poolKey, e)
     }
   }
   console.log('Successfully added pools')
 
-  const token = FungibleToken.load(network)
+  const token = FungibleToken.load()
   await token.mint(account, (2n ** 96n - 1n) as TokenAmount, BTCTokenID)
   await token.mint(account, (2n ** 96n - 1n) as TokenAmount, ETHTokenID)
   await token.mint(account, (2n ** 96n - 1n) as TokenAmount, USDCTokenID)
@@ -182,7 +147,7 @@ const main = async () => {
         approvedAmountX,
         approvedAmountY,
         poolSqrtPrice,
-        poolSqrtPrice
+        0n as Percentage
       )
     } catch (e) {
       console.log('Create position error', poolKey, e)
