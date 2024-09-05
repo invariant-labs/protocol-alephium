@@ -13,6 +13,7 @@ import {
   TransferPosition,
   WithdrawProtocolFee
 } from '../artifacts/ts'
+import { PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
   bitPositionToTick,
   calculateSqrtPriceAfterSlippage,
@@ -20,7 +21,6 @@ import {
   getMaxSqrtPrice,
   getMinSqrtPrice
 } from './math'
-import { Network } from './network'
 import { getReserveAddress } from './testUtils'
 import {
   decodePool,
@@ -28,7 +28,6 @@ import {
   decodeTick,
   FeeTier,
   Liquidity,
-  LiquidityTick,
   Percentage,
   Pool,
   PoolKey,
@@ -610,7 +609,7 @@ export class Invariant {
       actualPositionsCount = totalPositions
     }
 
-    const promises: Promise<[[Position, Pool][], bigint]>[] = []
+    const calls: { getPositions: { args: { owner: string; size: bigint; offset: bigint } } }[] = []
     const pageIndexes: number[] = []
 
     for (
@@ -622,12 +621,26 @@ export class Invariant {
         continue
       }
       pageIndexes.push(i)
-      promises.push(
-        this.getPositions(owner, positionsPerPageLimit, BigInt(i) * positionsPerPageLimit)
-      )
+      calls.push({
+        getPositions: {
+          args: {
+            owner,
+            size: positionsPerPageLimit,
+            offset: BigInt(i) * positionsPerPageLimit
+          }
+        }
+      })
     }
 
-    const positionsEntriesList = await Promise.all(promises)
+    let multicallResult = await this.instance.multicall(...calls)
+    if (!(multicallResult instanceof Array)) {
+      multicallResult = [multicallResult]
+    }
+
+    const positionsEntriesList: [[Position, Pool][], bigint][] = multicallResult.map(response => {
+      return decodePositions(response.getPositions.returns)
+    })
+
     pages = [
       ...pages,
       ...positionsEntriesList.map(([positionsEntries], index) => {
@@ -641,13 +654,27 @@ export class Invariant {
   async getAllPoolKeys() {
     const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
 
-    const promises: Promise<[PoolKey[], bigint]>[] = []
+    const calls: { getPoolKeys: { args: { size: bigint; offset: bigint } } }[] = []
     for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_QUERIED)); i++) {
-      promises.push(this.getPoolKeys(MAX_POOL_KEYS_QUERIED, BigInt(i) * MAX_POOL_KEYS_QUERIED))
+      calls.push({
+        getPoolKeys: {
+          args: { size: MAX_POOL_KEYS_QUERIED, offset: BigInt(i) * MAX_POOL_KEYS_QUERIED }
+        }
+      })
     }
 
-    const poolKeysEntries = await Promise.all(promises)
-    return [...poolKeys, ...poolKeysEntries.map(([poolKeys]) => poolKeys).flat()]
+    let multicallResult = await this.instance.multicall(...calls)
+    if (!(multicallResult instanceof Array)) {
+      multicallResult = [multicallResult]
+    }
+
+    const poolKeysEntries: PoolKey[] = multicallResult
+      .map(response => {
+        const [serializedPoolKeys] = response.getPoolKeys.returns
+        return decodePoolKeys(serializedPoolKeys)
+      })
+      .flat()
+    return [...poolKeys, ...poolKeysEntries]
   }
 
   async getRawTickmap(
@@ -664,17 +691,39 @@ export class Invariant {
   }
 
   async getFullTickmap(poolKey: PoolKey): Promise<Tickmap> {
-    const promises: Promise<[bigint, bigint][]>[] = []
+    const calls: {
+      getTickmapSlice: {
+        args: { poolKey: _PoolKey; lowerBatch: bigint; upperBatch: bigint; xToY: boolean }
+      }
+    }[] = []
     const maxBatch = getMaxBatch(poolKey.feeTier.tickSpacing)
     let currentBatch = 0n
 
     while (currentBatch <= maxBatch) {
       let nextBatch = currentBatch + MAX_BATCHES_QUERIED
-      promises.push(this.getRawTickmap(poolKey, currentBatch, nextBatch, true))
+      calls.push({
+        getTickmapSlice: {
+          args: {
+            poolKey: wrapPoolKey(poolKey),
+            lowerBatch: currentBatch,
+            upperBatch: nextBatch,
+            xToY: true
+          }
+        }
+      })
       currentBatch += MAX_BATCHES_QUERIED
     }
 
-    const fullResult: [bigint, bigint][] = (await Promise.all(promises)).flat(1)
+    let multicallResult = await this.instance.multicall(...calls)
+    if (!(multicallResult instanceof Array)) {
+      multicallResult = [multicallResult]
+    }
+
+    const fullResult: [bigint, bigint][] = multicallResult
+      .map(response => {
+        return constructTickmap(response.getTickmapSlice.returns)
+      })
+      .flat(1)
     const storedTickmap = new Map<bigint, bigint>(fullResult)
     return storedTickmap
   }
@@ -700,13 +749,30 @@ export class Invariant {
       }
     }
     const limit = Number(MAX_LIQUIDITY_TICKS_QUERIED)
-    const promises: Promise<LiquidityTick[]>[] = []
+    const calls: {
+      getLiquidityTicks: { args: { poolKey: _PoolKey; indexes: string; length: bigint } }
+    }[] = []
     for (let i = 0; i < tickIndexes.length; i += limit) {
-      promises.push(this.getLiquidityTicks(poolKey, tickIndexes.slice(i, i + limit)))
+      const slice = tickIndexes.slice(i, i + limit)
+      const indexes = toByteVecWithOffset(slice)
+      calls.push({
+        getLiquidityTicks: {
+          args: { poolKey: wrapPoolKey(poolKey), indexes, length: BigInt(slice.length) }
+        }
+      })
     }
 
-    const liquidityTicks = await Promise.all(promises)
-    return liquidityTicks.flat()
+    let multicallResult = await this.instance.multicall(...calls)
+    if (!(multicallResult instanceof Array)) {
+      multicallResult = [multicallResult]
+    }
+
+    const liquidityTicks = multicallResult
+      .map(response => {
+        return decodeLiquidityTicks(response.getLiquidityTicks.returns)
+      })
+      .flat()
+    return liquidityTicks
   }
 
   async getLiquidityTicksAmount(poolKey: PoolKey, lowerTick: bigint, upperTick: bigint) {
