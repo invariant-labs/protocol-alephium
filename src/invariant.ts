@@ -609,11 +609,7 @@ export class Invariant {
       actualPositionsCount = totalPositions
     }
 
-    interface GetPositionsSignature {
-      getPositions: { args: { owner: string; size: bigint; offset: bigint } }
-    }
-
-    const calls: GetPositionsSignature[] = []
+    const calls: { getPositions: { args: { owner: string; size: bigint; offset: bigint } } }[] = []
     const pageIndexes: number[] = []
 
     for (
@@ -658,10 +654,7 @@ export class Invariant {
   async getAllPoolKeys() {
     const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
 
-    interface GetPoolKeysSignature {
-      getPoolKeys: { args: { size: bigint; offset: bigint } }
-    }
-    const calls: GetPoolKeysSignature[] = []
+    const calls: { getPoolKeys: { args: { size: bigint; offset: bigint } } }[] = []
     for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_QUERIED)); i++) {
       calls.push({
         getPoolKeys: {
@@ -698,12 +691,11 @@ export class Invariant {
   }
 
   async getFullTickmap(poolKey: PoolKey): Promise<Tickmap> {
-    interface GetTIckmapSliceSignature {
+    const calls: {
       getTickmapSlice: {
         args: { poolKey: _PoolKey; lowerBatch: bigint; upperBatch: bigint; xToY: boolean }
       }
-    }
-    const calls: GetTIckmapSliceSignature[] = []
+    }[] = []
     const maxBatch = getMaxBatch(poolKey.feeTier.tickSpacing)
     let currentBatch = 0n
 
@@ -757,10 +749,9 @@ export class Invariant {
       }
     }
     const limit = Number(MAX_LIQUIDITY_TICKS_QUERIED)
-    interface GetLiquidityTicksSignature {
+    const calls: {
       getLiquidityTicks: { args: { poolKey: _PoolKey; indexes: string; length: bigint } }
-    }
-    const calls: GetLiquidityTicksSignature[] = []
+    }[] = []
     for (let i = 0; i < tickIndexes.length; i += limit) {
       const slice = tickIndexes.slice(i, i + limit)
       const indexes = toByteVecWithOffset(slice)
