@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
@@ -31,20 +30,14 @@ describe('query liquidity ticks tests', () => {
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    invariant = await Invariant.deploy(deployer, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     feeTier = newFeeTier(fee, tickSpacing)
     poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
   })
   test('get liquidity ticks', async () => {
@@ -61,7 +54,7 @@ describe('query liquidity ticks tests', () => {
       approveX,
       approveY,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
     const ticksAmount = await invariant.getLiquidityTicksAmount(
       poolKey,
@@ -92,20 +85,8 @@ describe('query liquidity ticks tests', () => {
     await invariant.addFeeTier(deployer, feeTier2TS)
     await invariant.addFeeTier(deployer, feeTier10TS)
 
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier2TS,
-      initSqrtPrice
-    )
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier10TS,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey2TS, initSqrtPrice)
+    await invariant.createPool(deployer, poolKey10TS, initSqrtPrice)
 
     const { sqrtPrice } = await invariant.getPool(poolKey)
 
@@ -122,7 +103,7 @@ describe('query liquidity ticks tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
       const ticksAmount = await invariant.getLiquidityTicksAmount(
         poolKey2TS,
@@ -155,7 +136,7 @@ describe('query liquidity ticks tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
       const ticksAmount = await invariant.getLiquidityTicksAmount(
         poolKey10TS,
@@ -196,7 +177,7 @@ describe('query liquidity ticks tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
 
@@ -233,7 +214,7 @@ describe('query liquidity ticks tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
 
@@ -252,7 +233,7 @@ describe('query liquidity ticks tests', () => {
       approveX,
       approveY,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
 
     const singleQueryLiquidityTicks = await invariant.getLiquidityTicks(poolKey, flattenTicks)
@@ -283,7 +264,7 @@ describe('query liquidity ticks tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
 

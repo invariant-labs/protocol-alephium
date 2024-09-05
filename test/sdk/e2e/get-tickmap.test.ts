@@ -1,7 +1,6 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { Invariant } from '../../../src/invariant'
-import { Network } from '../../../src/network'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
@@ -35,20 +34,14 @@ describe('query tickmap tests', () => {
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    invariant = await Invariant.deploy(deployer, initialFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     feeTier = newFeeTier(fee, tickSpacing)
     poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
     await withdrawTokens(positionOwner, [tokenX, supply], [tokenY, supply])
   })
 
@@ -64,7 +57,7 @@ describe('query tickmap tests', () => {
       supply,
       supply,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
     const batchSize = CHUNK_SIZE * CHUNKS_PER_BATCH
     const pool = await invariant.getPool(poolKey)
@@ -81,7 +74,7 @@ describe('query tickmap tests', () => {
           approveX,
           approveY,
           pool.sqrtPrice,
-          pool.sqrtPrice
+          0n as Percentage
         )
       }
       {
@@ -96,7 +89,7 @@ describe('query tickmap tests', () => {
           approveX,
           approveY,
           pool.sqrtPrice,
-          pool.sqrtPrice
+          0n as Percentage
         )
       }
     }
@@ -121,7 +114,7 @@ describe('query tickmap tests', () => {
       approveX,
       approveY,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
 
     const tickmap = await invariant.getFullTickmap(poolKey)
@@ -147,7 +140,7 @@ describe('query tickmap tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     {
@@ -162,7 +155,7 @@ describe('query tickmap tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const tickmap = await invariant.getFullTickmap(poolKey)
@@ -178,13 +171,7 @@ describe('query tickmap tests', () => {
     poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
 
     await invariant.addFeeTier(deployer, feeTier)
-    await invariant.createPool(
-      deployer,
-      tokenX.contractId,
-      tokenY.contractId,
-      feeTier,
-      initSqrtPrice
-    )
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
     const { sqrtPrice } = await invariant.getPool(poolKey)
     {
       const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
@@ -198,7 +185,7 @@ describe('query tickmap tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     {
@@ -213,7 +200,7 @@ describe('query tickmap tests', () => {
         approveX,
         approveY,
         sqrtPrice,
-        sqrtPrice
+        0n as Percentage
       )
     }
     const tickmap = await invariant.getFullTickmap(poolKey)

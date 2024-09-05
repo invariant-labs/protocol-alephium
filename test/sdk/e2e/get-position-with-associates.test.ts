@@ -2,7 +2,6 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
-import { Network } from '../../../src/network'
 import { Invariant } from '../../../src/invariant'
 import { FungibleToken } from '../../../src/fungible-token'
 import { toSqrtPrice } from '../../../src/math'
@@ -13,27 +12,15 @@ web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 let token: FungibleToken
 describe('get position with associates tests', () => {
   beforeAll(async () => {
-    token = FungibleToken.load(Network.Local)
+    token = FungibleToken.load()
   })
   test('get position with associates', async () => {
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
     const initialFee = 0n as Percentage
-    const invariant = await Invariant.deploy(deployer, Network.Local, initialFee)
+    const invariant = await Invariant.deploy(deployer, initialFee)
 
-    const token0 = await FungibleToken.deploy(
-      deployer,
-      Network.Local,
-      0n as TokenAmount,
-      'Token0',
-      'TK0'
-    )
-    const token1 = await FungibleToken.deploy(
-      deployer,
-      Network.Local,
-      0n as TokenAmount,
-      'Token1',
-      'TK1'
-    )
+    const token0 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token0', 'TK0')
+    const token1 = await FungibleToken.deploy(deployer, 0n as TokenAmount, 'Token1', 'TK1')
 
     const feeTier = newFeeTier(...getBasicFeeTickSpacing())
     const poolKey = newPoolKey(token0, token1, feeTier)
@@ -46,7 +33,7 @@ describe('get position with associates tests', () => {
     await token.mint(positionOwner, supply, token1)
 
     const initSqrtPrice = toSqrtPrice(1n)
-    await invariant.createPool(deployer, token0, token1, feeTier, initSqrtPrice)
+    await invariant.createPool(deployer, poolKey, initSqrtPrice)
 
     const [lowerTickIndex, upperTickIndex] = [-20n, 10n]
 
@@ -61,7 +48,7 @@ describe('get position with associates tests', () => {
       supply,
       supply,
       sqrtPrice,
-      sqrtPrice
+      0n as Percentage
     )
 
     const positionRegular = await invariant.getPosition(positionOwner.address, 0n)

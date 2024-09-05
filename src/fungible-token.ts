@@ -3,7 +3,6 @@ import {
   addressFromContractId,
   DUST_AMOUNT,
   hexToString,
-  NodeProvider,
   SignerProvider,
   stringToHex,
   TransactionBuilder,
@@ -23,15 +22,10 @@ export type TokenMetaData = {
 }
 
 export class FungibleToken {
-  network: Network
-
-  private constructor(network: Network) {
-    this.network = network
-  }
+  private constructor() {}
 
   static async deploy(
     signer: SignerProvider,
-    network: Network,
     supply = 0n as TokenAmount,
     name: string = '',
     symbol: string = '',
@@ -61,8 +55,8 @@ export class FungibleToken {
     return deployResult.contractInstance.contractId
   }
 
-  static load(network: Network): FungibleToken {
-    return new FungibleToken(network)
+  static load(): FungibleToken {
+    return new FungibleToken()
   }
 
   async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
