@@ -21,7 +21,9 @@ import {
   CreatePosition,
   TransferPosition,
   CLAMMInstance,
-  ChangeFeeReceiver
+  ChangeFeeReceiver,
+  Invariant,
+  CLAMM
 } from '../artifacts/ts'
 import { deployTokenFaucet, balanceOf } from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
@@ -97,6 +99,26 @@ export async function initTokensXY(signer: SignerProvider, supply: TokenAmount) 
   )
 
   return token0.contractId < token1.contractId ? [token0, token1] : [token1, token0]
+}
+
+export const upgrade = async (invariant: InvariantInstance, signer: SignerProvider) => {
+  await invariant.transact.upgrade({
+    signer,
+    args: {
+      bytecode: Invariant.contract.bytecode
+    },
+    attoAlphAmount: 2n * DUST_AMOUNT
+  })
+}
+
+export const upgradeCLAMM = async (clamm: CLAMMInstance, signer: SignerProvider) => {
+  await clamm.transact.upgrade({
+    signer,
+    args: {
+      bytecode: CLAMM.contract.bytecode
+    },
+    attoAlphAmount: 2n * DUST_AMOUNT
+  })
 }
 
 export async function initFeeTier(

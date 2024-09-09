@@ -118,9 +118,10 @@ export const deployReserve = async (signer: SignerProvider) => {
   return Reserve.at(deployResult.contractInstance.address)
 }
 export async function deployCLAMM(signer: SignerProvider) {
+  const { address } = await signer.getSelectedAccount()
   const deployResult = await waitTxConfirmed(
     CLAMM.deploy(signer, {
-      initialFields: {}
+      initialFields: { admin: address }
     })
   )
   return CLAMM.at(deployResult.contractInstance.address)

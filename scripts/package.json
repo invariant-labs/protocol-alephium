@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "tsc && node dist/index.js",
     "deploy-tokens": "npx tsc && node dist/deploy-tokens.js",
-    "setup": "npx tsc && node dist/setup.js"
+    "setup": "npx tsc && node dist/setup.js",
+    "replace-code": "npx tsc && node dist/replace-code.js"
   },
   "dependencies": {
     "@invariant-labs/alph-sdk": "file:../.",

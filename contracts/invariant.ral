@@ -22,6 +22,10 @@ Contract Invariant(
     // Key: TokenId, Value: ReserveId
     mapping[ByteVec, ByteVec] reserves
 
+    pub fn upgrade(bytecode: ByteVec) -> () {
+        checkCaller!(callerAddress!() == config.admin, InvariantError.NotAdmin)
+        migrate!(bytecode)
+    }
     
     pub fn getProtocolFee() -> Percentage {
         return config.protocolFee

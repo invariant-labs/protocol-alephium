@@ -45,6 +45,7 @@ const main = async () => {
     'USDT',
     6n
   )
+
   const SOLTokenID = await FungibleToken.deploy(account, 0n as TokenAmount, 'Solana', 'SOL', 9n)
   const decimals = {
     [BTCTokenID]: 8n,

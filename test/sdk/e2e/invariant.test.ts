@@ -24,6 +24,14 @@ describe('invariant tests', () => {
     const protocolFee = await loadedInvariant.getProtocolFee()
     expect(protocolFee).toBe(0n)
   })
+  test('upgrade contracts', async () => {
+    const initialFee = 0n as Percentage
+    const deployer = await getSigner(ONE_ALPH * 1000n, 0)
+    const invariant = await Invariant.deploy(deployer, initialFee)
+
+    const loadedInvariant = await Invariant.load(invariant.address)
+    await loadedInvariant.upgradeCode(deployer)
+  })
   test('deploy and add a fee tier', async () => {
     const initialFee = 0n as Percentage
     const deployer = await getSigner(ONE_ALPH * 1000n, 0)
