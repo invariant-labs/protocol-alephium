@@ -6,6 +6,7 @@ import {
   CreatePool,
   CreatePosition,
   Invariant as InvariantFactory,
+  CLAMM as CLAMMFactory,
   InvariantInstance,
   RemoveFeeTier,
   RemovePosition,
@@ -70,6 +71,7 @@ import {
 } from './consts'
 import {
   Address,
+  addressFromContractId,
   ALPH_TOKEN_ID,
   DUST_AMOUNT,
   MAP_ENTRY_DEPOSIT,
@@ -113,6 +115,27 @@ export class Invariant {
 
   static async load(address: Address): Promise<Invariant> {
     return new Invariant(address)
+  }
+
+  async upgradeCode(signer: SignerProvider) {
+    await this.instance.transact.upgrade({
+      signer,
+      args: {
+        bytecode: InvariantFactory.contract.bytecode
+      },
+      attoAlphAmount: 2n * DUST_AMOUNT
+    })
+
+    const clamm = CLAMMFactory.at(
+      addressFromContractId((await this.instance.fetchState()).fields.clamm)
+    )
+    await clamm.transact.upgrade({
+      signer,
+      args: {
+        bytecode: CLAMMFactory.contract.bytecode
+      },
+      attoAlphAmount: 2n * DUST_AMOUNT
+    })
   }
 
   async addFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {

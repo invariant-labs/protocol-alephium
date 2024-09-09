@@ -1,4 +1,8 @@
-Contract CLAMM() extends Uints(), Log(){ 
+Contract CLAMM(admin: Address) extends Uints(), Log(){
+    pub fn upgrade(bytecode: ByteVec) -> () {
+        checkCaller!(callerAddress!() == admin, InvariantError.NotAdmin)
+        migrate!(bytecode)
+    }
     pub fn computeSwapStep(
         currentSqrtPrice: SqrtPrice,
         targetSqrtPrice: SqrtPrice,
