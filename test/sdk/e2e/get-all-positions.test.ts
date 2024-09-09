@@ -6,9 +6,9 @@ import { getBasicFeeTickSpacing } from '../../../src/snippets'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
-import { MAX_POSITIONS_QUERIED } from '../../../src/consts'
 import { FeeTier, Liquidity, Percentage, PoolKey, TokenAmount } from '../../../src/types'
 import { toSqrtPrice } from '../../../src'
+import { POSITIONS_ENTRIES_LIMIT } from '../../../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 
@@ -65,7 +65,7 @@ describe('get all positions test', () => {
       for (const [positionIndex, [position, pool]] of entries.entries()) {
         const expectedPosition = await invariant.getPosition(
           positionOwner.address,
-          BigInt(index) * MAX_POSITIONS_QUERIED + BigInt(positionIndex)
+          BigInt(index) * POSITIONS_ENTRIES_LIMIT + BigInt(positionIndex)
         )
         const expectedPool = await invariant.getPool(expectedPosition.poolKey)
 
@@ -75,7 +75,7 @@ describe('get all positions test', () => {
     }
   })
   test('get all positions with positions count', async () => {
-    for (let i = 1n; i <= MAX_POSITIONS_QUERIED; i++) {
+    for (let i = 1n; i <= POSITIONS_ENTRIES_LIMIT; i++) {
       const { sqrtPrice } = await invariant.getPool(poolKey)
       const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
       const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -91,14 +91,14 @@ describe('get all positions test', () => {
         0n as Percentage
       )
     }
-    const pages = await invariant.getAllPositions(positionOwner.address, MAX_POSITIONS_QUERIED)
+    const pages = await invariant.getAllPositions(positionOwner.address, POSITIONS_ENTRIES_LIMIT)
 
-    expect(pages.map(page => page.entries).flat().length).toBe(Number(MAX_POSITIONS_QUERIED))
+    expect(pages.map(page => page.entries).flat().length).toBe(Number(POSITIONS_ENTRIES_LIMIT))
     for (const { index, entries } of pages) {
       for (const [positionIndex, [position, pool]] of entries.entries()) {
         const expectedPosition = await invariant.getPosition(
           positionOwner.address,
-          BigInt(index) * MAX_POSITIONS_QUERIED + BigInt(positionIndex)
+          BigInt(index) * POSITIONS_ENTRIES_LIMIT + BigInt(positionIndex)
         )
         const expectedPool = await invariant.getPool(expectedPosition.poolKey)
 
@@ -108,7 +108,7 @@ describe('get all positions test', () => {
     }
   })
   test('get all positions with skip pages', async () => {
-    for (let i = 1n; i <= 4n * MAX_POSITIONS_QUERIED; i++) {
+    for (let i = 1n; i <= 4n * POSITIONS_ENTRIES_LIMIT; i++) {
       const { sqrtPrice } = await invariant.getPool(poolKey)
       const approveX = await balanceOf(tokenX.contractId, positionOwner.address)
       const approveY = await balanceOf(tokenY.contractId, positionOwner.address)
@@ -126,12 +126,12 @@ describe('get all positions test', () => {
     }
     const pages = await invariant.getAllPositions(positionOwner.address, undefined, [1, 3])
 
-    expect(pages.map(page => page.entries).flat().length).toBe(Number(MAX_POSITIONS_QUERIED * 2n))
+    expect(pages.map(page => page.entries).flat().length).toBe(Number(POSITIONS_ENTRIES_LIMIT * 2n))
     for (const { index, entries } of pages) {
       for (const [positionIndex, [position, pool]] of entries.entries()) {
         const expectedPosition = await invariant.getPosition(
           positionOwner.address,
-          BigInt(index) * MAX_POSITIONS_QUERIED + BigInt(positionIndex)
+          BigInt(index) * POSITIONS_ENTRIES_LIMIT + BigInt(positionIndex)
         )
         const expectedPool = await invariant.getPool(expectedPosition.poolKey)
 

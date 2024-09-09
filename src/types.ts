@@ -113,6 +113,11 @@ export interface LiquidityTick {
   sign: boolean
 }
 
+export interface LiquidityBreakpoint {
+  liquidity: Liquidity
+  index: bigint
+}
+
 // stores bitmap chunks of ticks that have been initialized
 export type Tickmap = Map<bigint, bigint>
 

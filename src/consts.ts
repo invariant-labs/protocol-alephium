@@ -50,8 +50,8 @@ export const PRICE_SCALE = SQRT_PRICE_SCALE
 export const PRICE_DENOMINATOR = _SQRT_PRICE_DENOMINATOR as Price
 
 export const MAX_BATCHES_QUERIED = 18n
-export const MAX_POOL_KEYS_QUERIED = 117n
-export const MAX_POSITIONS_QUERIED = 83n
+export const MAX_POOL_KEYS_RETURNED = 117n
+export const POSITIONS_ENTRIES_LIMIT = 83n
 export const MAX_LIQUIDITY_TICKS_QUERIED = 269n
 
 export enum VMError {

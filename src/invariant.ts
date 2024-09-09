@@ -66,8 +66,8 @@ import {
   CHUNK_SIZE,
   MAX_BATCHES_QUERIED,
   MAX_LIQUIDITY_TICKS_QUERIED,
-  MAX_POOL_KEYS_QUERIED,
-  MAX_POSITIONS_QUERIED
+  MAX_POOL_KEYS_RETURNED,
+  POSITIONS_ENTRIES_LIMIT
 } from './consts'
 import {
   Address,
@@ -617,7 +617,7 @@ export class Invariant {
     positionsPerPage?: bigint
   ) {
     const firstPageIndex = skipPages?.find(i => !skipPages.includes(i)) || 0
-    const positionsPerPageLimit = positionsPerPage || MAX_POSITIONS_QUERIED
+    const positionsPerPageLimit = positionsPerPage || POSITIONS_ENTRIES_LIMIT
 
     let pages: Page[] = []
     let actualPositionsCount = positionsCount
@@ -655,12 +655,9 @@ export class Invariant {
       })
     }
 
-    let multicallResult = await this.instance.multicall(...calls)
-    if (!(multicallResult instanceof Array)) {
-      multicallResult = [multicallResult]
-    }
-
-    const positionsEntriesList: [[Position, Pool][], bigint][] = multicallResult.map(response => {
+    const positionsEntriesList: [[Position, Pool][], bigint][] = (
+      await this.instance.multicall(...calls)
+    ).map(response => {
       return decodePositions(response.getPositions.returns)
     })
 
@@ -675,23 +672,18 @@ export class Invariant {
   }
 
   async getAllPoolKeys() {
-    const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
+    const [poolKeys, poolKeysCount] = await this.getPoolKeys(MAX_POOL_KEYS_RETURNED, 0n)
 
     const calls: { getPoolKeys: { args: { size: bigint; offset: bigint } } }[] = []
-    for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_QUERIED)); i++) {
+    for (let i = 1; i < Math.ceil(Number(poolKeysCount) / Number(MAX_POOL_KEYS_RETURNED)); i++) {
       calls.push({
         getPoolKeys: {
-          args: { size: MAX_POOL_KEYS_QUERIED, offset: BigInt(i) * MAX_POOL_KEYS_QUERIED }
+          args: { size: MAX_POOL_KEYS_RETURNED, offset: BigInt(i) * MAX_POOL_KEYS_RETURNED }
         }
       })
     }
 
-    let multicallResult = await this.instance.multicall(...calls)
-    if (!(multicallResult instanceof Array)) {
-      multicallResult = [multicallResult]
-    }
-
-    const poolKeysEntries: PoolKey[] = multicallResult
+    const poolKeysEntries: PoolKey[] = (await this.instance.multicall(...calls))
       .map(response => {
         const [serializedPoolKeys] = response.getPoolKeys.returns
         return decodePoolKeys(serializedPoolKeys)
@@ -737,12 +729,7 @@ export class Invariant {
       currentBatch += MAX_BATCHES_QUERIED
     }
 
-    let multicallResult = await this.instance.multicall(...calls)
-    if (!(multicallResult instanceof Array)) {
-      multicallResult = [multicallResult]
-    }
-
-    const fullResult: [bigint, bigint][] = multicallResult
+    const fullResult: [bigint, bigint][] = (await this.instance.multicall(...calls))
       .map(response => {
         return constructTickmap(response.getTickmapSlice.returns)
       })
@@ -785,12 +772,7 @@ export class Invariant {
       })
     }
 
-    let multicallResult = await this.instance.multicall(...calls)
-    if (!(multicallResult instanceof Array)) {
-      multicallResult = [multicallResult]
-    }
-
-    const liquidityTicks = multicallResult
+    const liquidityTicks = (await this.instance.multicall(...calls))
       .map(response => {
         return decodeLiquidityTicks(response.getLiquidityTicks.returns)
       })

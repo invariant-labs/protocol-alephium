@@ -42,7 +42,9 @@ import {
   Percentage,
   SqrtPrice,
   Liquidity,
-  Price
+  Price,
+  TickVariant,
+  LiquidityBreakpoint
 } from './types'
 
 export const calculateSqrtPrice = (tickIndex: bigint): SqrtPrice => {
@@ -850,6 +852,19 @@ const CONCENTRATION_FACTOR = 1.00001526069123
 const calculateConcentration = (tickSpacing: number, minimumRange: number, n: number) => {
   const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (minimumRange + 2 * n)) / 4))
   return concentration / CONCENTRATION_FACTOR
+}
+
+export const calculateLiquidityBreakpoints = (ticks: TickVariant[]): LiquidityBreakpoint[] => {
+  let currentLiquidity = 0n as Liquidity
+
+  return ticks.map(tick => {
+    currentLiquidity = (currentLiquidity +
+      tick.liquidityChange * (tick.sign ? 1n : -1n)) as Liquidity
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index
+    }
+  })
 }
 
 export const toLiquidity = (value: bigint, offset = 0n): Liquidity => {
