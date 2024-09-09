@@ -5,7 +5,7 @@ import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { TokenFaucetInstance } from '../../../artifacts/ts'
 import { expectVMError, initTokensXY, withdrawTokens } from '../../../src/testUtils'
 import { newFeeTier, newPoolKey } from '../../../src/utils'
-import { MAX_POOL_KEYS_QUERIED, VMError } from '../../../src/consts'
+import { MAX_POOL_KEYS_RETURNED, VMError } from '../../../src/consts'
 import { Percentage, PoolKey, TokenAmount } from '../../../src/types'
 import { toSqrtPrice } from '../../../src'
 
@@ -61,18 +61,18 @@ describe('get pool keys test', () => {
     const feeTier = newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
     const expectedPoolKeys: PoolKey[] = []
-    for (let i = 0n; i < MAX_POOL_KEYS_QUERIED; i++) {
+    for (let i = 0n; i < MAX_POOL_KEYS_RETURNED; i++) {
       const [tokenX, tokenY] = await initTokensXY(deployer, supply)
       const poolKey = newPoolKey(tokenX.contractId, tokenY.contractId, feeTier)
       expectedPoolKeys.push(poolKey)
       await invariant.createPool(deployer, poolKey, initSqrtPrice)
     }
 
-    const [poolKeys] = await invariant.getPoolKeys(MAX_POOL_KEYS_QUERIED, 0n)
-    expect(poolKeys.length).toBe(Number(MAX_POOL_KEYS_QUERIED))
+    const [poolKeys] = await invariant.getPoolKeys(MAX_POOL_KEYS_RETURNED, 0n)
+    expect(poolKeys.length).toBe(Number(MAX_POOL_KEYS_RETURNED))
   })
   test('runs out of gas over the limit for single query, querying all passes', async () => {
-    const overSingleLimit = MAX_POOL_KEYS_QUERIED + 1n
+    const overSingleLimit = MAX_POOL_KEYS_RETURNED + 1n
     const feeTier = newFeeTier(1n as Percentage, 1n)
     await invariant.addFeeTier(deployer, feeTier)
 
