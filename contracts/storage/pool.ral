@@ -37,7 +37,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return pool
     }
     
-    pub fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: Liquidity, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (TokenAmount, TokenAmount, Pool) {
+    fn updatePoolLiquidity(mut pool: Pool, liquidityDelta: Liquidity, liquiditySign: Bool, upperTick: I256, lowerTick: I256) -> (TokenAmount, TokenAmount, Pool) {
         let (x, y, updateLiq) = clamm.calculateAmountDelta(pool.currentTickIndex, pool.sqrtPrice, liquidityDelta, liquiditySign, upperTick, lowerTick)
         if (!updateLiq) {
             return x, y, pool
@@ -52,8 +52,7 @@ Abstract Contract PoolHelper(clamm: CLAMM) extends Decimal() {
         return x, y, pool
     }
 
-    @using(checkExternalCaller = false)
-    pub fn poolUpdateTick(
+    fn poolUpdateTick(
         mut pool: Pool,
         nextSqrtPrice: SqrtPrice,
         swapLimit: SqrtPrice,
