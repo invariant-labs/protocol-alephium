@@ -67,11 +67,3 @@ TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: TokenA
     let _ = invariant.swap{callerAddress!() -> swappedToken: swappedAmount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 }
 
-TxScript Flip(invariant: Invariant, value: Bool, tick: I256, poolKey: PoolKey) {
-    invariant.flip(value, tick, poolKey)    
-}
-
-TxScript InitializeChunk(invariant: Invariant, caller: Address, poolKey: PoolKey, chunk: U256) {
-    invariant.initializeChunk{callerAddress!() -> ALPH: 1 alph}(caller, poolKey, chunk)
-}
-
