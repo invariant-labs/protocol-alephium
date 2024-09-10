@@ -1,53 +1,27 @@
 Abstract Contract Decimal() {
-    pub fn getMaxSqrtPrice(tickSpacing: U256) -> SqrtPrice {
-        let maxTick = getMaxTick(tickSpacing)
-        return calculateSqrtPrice(maxTick)
-    }
-
-    pub fn getMinSqrtPrice(tickSpacing: U256) -> SqrtPrice {
-        let minTick = getMinTick(tickSpacing)
-        return calculateSqrtPrice(minTick)
-    }
-
-    pub fn getMaxTick(tickSpacing: U256) -> I256 {
+    fn getMaxTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
         return GLOBAL_MAX_TICK / convertedTickSpacing * convertedTickSpacing
     }
 
-    pub fn getMinTick(tickSpacing: U256) -> I256 {
+    fn getMinTick(tickSpacing: U256) -> I256 {
         let convertedTickSpacing = toI256!(tickSpacing)
         return GLOBAL_MIN_TICK / convertedTickSpacing * convertedTickSpacing
     }
 
-    pub fn mul(l: U256, r:U256, rScale: U256) -> U256 {
+    fn mul(l: U256, r:U256, rScale: U256) -> U256 {
         return (l * r) / rScale
     }
 
-    pub fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
+    fn mulUp(l: U256, r: U256, rScale: U256) -> U256 {
         return (l * r + rScale - 1) / rScale
-    }
-    
-    pub fn divToTokenUp(l: U256, r: U256) -> U256 {
-        return (((l * SQRT_PRICE_DENOMINATOR + (r - 1)) / r) + almostOne(SQRT_PRICE_SCALE)) / SQRT_PRICE_DENOMINATOR
-    }   
+    } 
 
-    pub fn divToToken(l: U256, r: U256) -> U256 {
-        return ((l * SQRT_PRICE_DENOMINATOR) / r) / SQRT_PRICE_DENOMINATOR
-    }   
-
-    pub fn divUp(l: U256, r: U256) -> U256 {
-        return l * SQRT_PRICE_DENOMINATOR + (r - 1) / r
-    }
-
-    pub fn div(l: U256, r: U256) -> U256 {
-        return l * SQRT_PRICE_DENOMINATOR / r
-    }   
-
-    pub fn almostOne(scale: U256) -> U256 {
+    fn almostOne(scale: U256) -> U256 {
         return 10 ** scale - 1
     }
 
-    pub fn one(scale: U256) -> U256 {
+    fn one(scale: U256) -> U256 {
         return 10 ** scale
     }
 
@@ -128,7 +102,7 @@ Abstract Contract Decimal() {
         }
     }
 
-    pub fn rescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U256 {
+    fn rescale(fromValue: U256, fromScale: U256, expectedScale: U256) -> U256 {
         if (expectedScale > fromScale) {
             let multiplierScale = expectedScale - fromScale
             return fromValue * (10 ** multiplierScale)
@@ -152,7 +126,7 @@ Abstract Contract Decimal() {
         } else {
             return a - b
         }
-    }    
+    }
 
     pub fn calculateFeeGrowthInside(
         tickLowerIndex: I256,

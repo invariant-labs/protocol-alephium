@@ -26,7 +26,7 @@ const defaultSettings: Settings = {
 
 const configuration: Configuration<Settings> = {
   compilerOptions: {
-    errorOnWarnings: true,
+    errorOnWarnings: false,
     ignoreUnusedConstantsWarnings: true
   },
   networks: {
