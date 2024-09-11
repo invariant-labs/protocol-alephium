@@ -13,9 +13,10 @@ import {
   verifyPositionList,
   withdrawTokens,
   quote,
-  TokenInstance
+  TokenInstance,
+  deployInvariant
 } from './testUtils'
-import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from './utils'
+import { balanceOf, newFeeTier, newPoolKey } from './utils'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { calculateSqrtPrice, toLiquidity, toPercentage } from './math'
 import { Percentage, PoolKey, Position, TokenAmount } from './types'

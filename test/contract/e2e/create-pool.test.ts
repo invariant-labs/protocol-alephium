@@ -1,7 +1,7 @@
 import { ONE_ALPH, addressFromContractId, fetchContractState, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { CLAMMError, InvariantError } from '../../../src/consts'
 import {
   getPool,
@@ -9,7 +9,8 @@ import {
   initFeeTier,
   initTokensXY,
   expectError,
-  TokenInstance
+  TokenInstance,
+  deployInvariant
 } from '../../../src/testUtils'
 import { CLAMM, Invariant, InvariantInstance } from '../../../artifacts/ts'
 import { calculateSqrtPrice, toPercentage, toSqrtPrice } from '../../../src/math'

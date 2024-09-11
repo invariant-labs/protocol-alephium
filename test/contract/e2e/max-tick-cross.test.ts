@@ -1,8 +1,9 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
-import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { getBasicFeeTickSpacing, initBasicPool } from '../../../src/snippets'
 import {
+  deployInvariant,
   getPool,
   initFeeTier,
   initPosition,

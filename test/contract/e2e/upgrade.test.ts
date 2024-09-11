@@ -1,9 +1,14 @@
 import { web3, ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { expectError, upgrade, upgradeCLAMM } from '../../../src/testUtils'
+import {
+  deployCLAMM,
+  deployInvariant,
+  expectError,
+  upgrade,
+  upgradeCLAMM
+} from '../../../src/testUtils'
 import { Percentage } from '../../../src/types'
-import { deployCLAMM, deployInvariant } from '../../../src/utils'
 import { InvariantError } from '../../../src/consts'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')

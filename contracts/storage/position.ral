@@ -29,7 +29,7 @@ Abstract Contract PositionHelper(clamm: CLAMM) extends Decimal() {
         let isLowerEmpty = updateTick(pool.poolKey, lowerTick, liquidityDelta, maxLiquidityPerTick, false, add)
         let isUpperEmpty = updateTick(pool.poolKey, upperTick, liquidityDelta, maxLiquidityPerTick, true, add)
 
-        let (feeGrowthInsideX, feeGrowthInsideY) = clamm.calculateFeeGrowthInside(
+        let (feeGrowthInsideX, feeGrowthInsideY) = calculateFeeGrowthInside(
             lowerTick.index,
             lowerTick.feeGrowthOutsideX,
             lowerTick.feeGrowthOutsideY,

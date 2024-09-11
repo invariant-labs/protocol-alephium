@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { expectError, expectVMError } from '../../../src/testUtils'
 import { ArithmeticError, MAX_U256, VMError } from '../../../src/consts'
 import { CLAMMInstance } from '../../../artifacts/ts'
-import { deployCLAMM } from '../../../src/utils'
+import { deployCLAMM } from '../../../src/testUtils'
 
 web3.setCurrentNodeProvider('http://127.0.0.1:22973')
 

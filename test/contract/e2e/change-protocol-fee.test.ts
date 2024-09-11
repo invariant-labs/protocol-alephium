@@ -1,7 +1,7 @@
 import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { deployInvariant } from '../../../src/utils'
+import { deployInvariant } from '../../../src/testUtils'
 import { changeProtocolFee, expectError, getProtocolFee } from '../../../src/testUtils'
 import { InvariantError } from '../../../src/consts'
 import { Percentage } from '../../../src/types'

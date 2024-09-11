@@ -25,7 +25,7 @@ Abstract Contract Decimal() {
         return 10 ** scale
     }
 
-    pub fn calculateSqrtPrice(
+    fn calculateSqrtPrice(
         tickIndex: I256
     ) -> SqrtPrice {
         let mut tickIndexAbs = 0
@@ -112,7 +112,7 @@ Abstract Contract Decimal() {
         }
     }
 
-    pub fn wrappingAdd(a: U256, b: U256) -> U256 {
+    fn wrappingAdd(a: U256, b: U256) -> U256 {
         if (b > MAX_U256 - a) {
             return (b - (MAX_U256 - a)) - 1
         } else {
@@ -120,7 +120,7 @@ Abstract Contract Decimal() {
         }
     }
 
-    pub fn wrappingSub(a: U256, b: U256) -> U256 {
+    fn wrappingSub(a: U256, b: U256) -> U256 {
         if (b > a) {
             return MAX_U256 - (b - a) + 1
         } else {
@@ -128,7 +128,7 @@ Abstract Contract Decimal() {
         }
     }
 
-    pub fn calculateFeeGrowthInside(
+    fn calculateFeeGrowthInside(
         tickLowerIndex: I256,
         tickLowerFeeGrowthOutsideX: FeeGrowth,
         tickLowerFeeGrowthOutsideY: FeeGrowth,

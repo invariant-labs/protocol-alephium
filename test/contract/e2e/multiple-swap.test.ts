@@ -1,9 +1,10 @@
 import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
-import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { MAX_SQRT_PRICE, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
+  deployInvariant,
   feeTierExists,
   getPool,
   getReserveBalances,

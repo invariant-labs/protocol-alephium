@@ -5,7 +5,7 @@ struct PoolKey {
 }
 
 Abstract Contract PoolKeyHelper() {
-    pub fn newPoolKey(token0: ByteVec, token1: ByteVec, feeTier: FeeTier) -> PoolKey {
+    fn newPoolKey(token0: ByteVec, token1: ByteVec, feeTier: FeeTier) -> PoolKey {
         assert!(token0 != token1, InvariantError.TokensAreSame)
 
         for (let mut i = 0; i <= size!(token0); i = i + 1) {

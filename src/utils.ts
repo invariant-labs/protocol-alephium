@@ -12,7 +12,7 @@ import {
   stringToHex,
   HexString
 } from '@alephium/web3'
-import { CLAMM, Invariant, InvariantInstance, Reserve } from '../artifacts/ts'
+import { Reserve } from '../artifacts/ts'
 import { TokenFaucet } from '../artifacts/ts/TokenFaucet'
 import { FeeTier as _FeeTier, FeeTiers, PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
@@ -82,30 +82,6 @@ export async function waitTxConfirmed<T extends { txId: string }>(promise: Promi
   return result
 }
 
-export async function deployInvariant(
-  signer: SignerProvider,
-  protocolFee: Percentage
-): Promise<InvariantInstance> {
-  const account = await signer.getSelectedAccount()
-  const clamm = await deployCLAMM(signer)
-  const reserve = await deployReserve(signer)
-
-  const deployResult = await waitTxConfirmed(
-    Invariant.deploy(signer, {
-      initialFields: {
-        config: { admin: account.address, protocolFee: { v: protocolFee } },
-        reserveTemplateId: reserve.contractId,
-        feeTiers: EMPTY_FEE_TIERS,
-        lastReserveId: reserve.contractId,
-        clamm: clamm.contractId,
-        feeTierCount: 0n,
-        poolKeyCount: 0n
-      }
-    })
-  )
-  return Invariant.at(deployResult.contractInstance.address)
-}
-
 export const deployReserve = async (signer: SignerProvider) => {
   const deployResult = await waitTxConfirmed(
     Reserve.deploy(signer, {
@@ -116,15 +92,6 @@ export const deployReserve = async (signer: SignerProvider) => {
     })
   )
   return Reserve.at(deployResult.contractInstance.address)
-}
-export async function deployCLAMM(signer: SignerProvider) {
-  const { address } = await signer.getSelectedAccount()
-  const deployResult = await waitTxConfirmed(
-    CLAMM.deploy(signer, {
-      initialFields: { admin: address }
-    })
-  )
-  return CLAMM.at(deployResult.contractInstance.address)
 }
 
 export async function deployTokenFaucet(

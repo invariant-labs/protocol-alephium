@@ -116,7 +116,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         }
     }
 
-    pub fn getDeltaY(
+    fn getDeltaY(
         sqrtPriceA: SqrtPrice,
         sqrtPriceB: SqrtPrice,
         liquidity: Liquidity,
@@ -145,7 +145,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         }
     }
 
-    pub fn getNextSqrtPriceFromInput(
+    fn getNextSqrtPriceFromInput(
         startingSqrtPrice: SqrtPrice,
         liquidity: Liquidity,
         amount: TokenAmount,
@@ -158,7 +158,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         } 
     }
 
-    pub fn getNextSqrtPriceFromOutput(
+    fn getNextSqrtPriceFromOutput(
         startingSqrtPrice: SqrtPrice,
         liquidity: Liquidity,
         amount: TokenAmount,
@@ -171,7 +171,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         }
     }
 
-    pub fn getNextSqrtPriceXUp(
+    fn getNextSqrtPriceXUp(
         startingSqrtPrice: SqrtPrice,
         liquidity: Liquidity,
         x: TokenAmount,
@@ -199,7 +199,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         return SqrtPrice{v: toU256(result)}
     }
 
-    pub fn getNextSqrtPriceYDown(
+    fn getNextSqrtPriceYDown(
         startingSqrtPrice: SqrtPrice,
         liquidity: Liquidity,
         y: TokenAmount,
@@ -308,7 +308,7 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         assert!(tickIndex >= minTick, CLAMMError.InvalidTickIndex)
     }
     
-    pub fn calculateMinAmountOut(
+    fn calculateMinAmountOut(
         expectedAmountOut: TokenAmount,
         slippage: Percentage
     ) -> TokenAmount {
