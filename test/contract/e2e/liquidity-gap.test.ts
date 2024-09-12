@@ -2,9 +2,10 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
-import { balanceOf, deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { balanceOf, newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError, MIN_SQRT_PRICE } from '../../../src/consts'
 import {
+  deployInvariant,
   expectError,
   getPool,
   getPosition,

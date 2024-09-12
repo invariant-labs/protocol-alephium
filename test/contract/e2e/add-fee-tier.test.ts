@@ -2,8 +2,14 @@ import { ONE_ALPH, web3 } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantError } from '../../../src/consts'
-import { expectError, feeTierExists, getFeeTiers, initFeeTier } from '../../../src/testUtils'
-import { deployInvariant, newFeeTier } from '../../../src/utils'
+import {
+  deployInvariant,
+  expectError,
+  feeTierExists,
+  getFeeTiers,
+  initFeeTier
+} from '../../../src/testUtils'
+import { newFeeTier } from '../../../src/utils'
 import { toPercentage } from '../../../src/math'
 import { FeeTier, Percentage } from '../../../src/types'
 

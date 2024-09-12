@@ -10,7 +10,7 @@ Abstract Contract Log() extends Decimal() {
     const LOG2_DOUBLE_ONE = 1 << LOG2_DOUBLE_SCALE
     const LOG2_ACCURACY = 1 << (31 - LOG2_MIN_BINARY_POSITION)
 
-    pub fn sqrtPriceToX32(val: SqrtPrice) -> U256 {
+    fn sqrtPriceToX32(val: SqrtPrice) -> U256 {
         return val.v * LOG2_ONE / SQRT_PRICE_DENOMINATOR
     }
 
@@ -44,7 +44,7 @@ Abstract Contract Log() extends Decimal() {
         return msb
     }
 
-    pub fn alignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
+    fn alignTickToSpacing(accurateTick: I256, tickSpacing: I256) -> I256 {
         if (accurateTick > 0i) {
             return accurateTick - (accurateTick % tickSpacing)
         } else {
@@ -58,7 +58,7 @@ Abstract Contract Log() extends Decimal() {
         }
     }
 
-    pub fn log2IterativeApproximationX32(mut sqrtPriceX32: U256) -> (Bool, U256) {
+    fn log2IterativeApproximationX32(mut sqrtPriceX32: U256) -> (Bool, U256) {
         let mut sign = true
         if (sqrtPriceX32 < LOG2_ONE) {
             sign = false

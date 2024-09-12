@@ -7,10 +7,11 @@ import {
   initTokensXY,
   initFeeTier,
   initPool,
-  changeFeeReceiver
+  changeFeeReceiver,
+  deployInvariant
 } from '../../../src/testUtils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
-import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantError, SQRT_PRICE_DENOMINATOR } from '../../../src/consts'
 import { FeeTier, PoolKey, TokenAmount } from '../../../src/types'
 import { toPercentage } from '../../../src/math'

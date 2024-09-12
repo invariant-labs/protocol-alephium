@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { TokenFaucetInstance } from '../../../artifacts/ts/'
 import { InvariantInstance } from '../../../artifacts/ts'
-import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 import {
   getBasicFeeTickSpacing,
   initBasicPool,
@@ -19,7 +19,8 @@ import {
   initPosition,
   getPool,
   initTokensXY,
-  initPool
+  initPool,
+  deployInvariant
 } from '../../../src/testUtils'
 import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
 import { calculateSqrtPrice, toLiquidity, toPercentage } from '../../../src/math'

@@ -2,7 +2,7 @@ import { ONE_ALPH } from '@alephium/web3'
 import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { CLAMMInstance } from '../../../artifacts/ts'
-import { deployCLAMM } from '../../../src/utils'
+import { deployCLAMM } from '../../../src/testUtils'
 import { calculateSqrtPrice, expectError, getTickAtSqrtPrice } from '../../../src/testUtils'
 import {
   DecimalError,

@@ -6,7 +6,7 @@ Contract Invariant(
     mut lastReserveId: ByteVec,
     mut feeTierCount: U256,
     mut poolKeyCount: U256
-) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves() {
+) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm), Ticks(), Tickmap(), Positions(clamm), Reserves() {
     // Key: poolKeyCount
     mapping[U256, PoolKey] poolKeys
     // Key: poolKey
@@ -176,7 +176,7 @@ Contract Invariant(
             true,
             Liquidity{v: 0},
             Liquidity{v: 0},
-            clamm.calculateSqrtPrice(index),
+            calculateSqrtPrice(index),
             feeGrowthOutsideX,
             feeGrowthOutsideY, 
             0

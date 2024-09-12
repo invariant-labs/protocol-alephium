@@ -12,7 +12,8 @@ import {
   RemovePosition,
   Swap,
   TransferPosition,
-  WithdrawProtocolFee
+  WithdrawProtocolFee,
+  CLAMM
 } from '../artifacts/ts'
 import { PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
@@ -49,7 +50,6 @@ import {
 import {
   balanceOf,
   EMPTY_FEE_TIERS,
-  deployCLAMM,
   deployReserve,
   waitTxConfirmed,
   constructTickmap,
@@ -94,7 +94,13 @@ export class Invariant {
     protocolFee: Percentage = 0n as Percentage
   ): Promise<Invariant> {
     const account = await deployer.getSelectedAccount()
-    const clamm = await deployCLAMM(deployer)
+    const clammContractId = (
+      await waitTxConfirmed(
+        CLAMM.deploy(deployer, {
+          initialFields: { admin: account.address }
+        })
+      )
+    ).contractInstance.contractId
     const reserve = await deployReserve(deployer)
     const deployResult = await waitTxConfirmed(
       InvariantFactory.deploy(deployer, {
@@ -103,7 +109,7 @@ export class Invariant {
           reserveTemplateId: reserve.contractId,
           feeTiers: EMPTY_FEE_TIERS,
           lastReserveId: reserve.contractId,
-          clamm: clamm.contractId,
+          clamm: clammContractId,
           feeTierCount: 0n,
           poolKeyCount: 0n
         }

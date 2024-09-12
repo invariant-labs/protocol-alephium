@@ -25,7 +25,13 @@ import {
   Invariant,
   CLAMM
 } from '../artifacts/ts'
-import { deployTokenFaucet, balanceOf } from './utils'
+import {
+  deployTokenFaucet,
+  balanceOf,
+  waitTxConfirmed,
+  EMPTY_FEE_TIERS,
+  deployReserve
+} from './utils'
 import { expectAssertionError } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantError, VMError } from './consts'
@@ -88,6 +94,42 @@ export async function expectVMError(error: VMError, script: Promise<any>) {
   }
 
   expect(isError).toBeTruthy()
+}
+
+export async function deployCLAMM(signer: SignerProvider) {
+  const { address } = await signer.getSelectedAccount()
+  const deployResult = await waitTxConfirmed(
+    CLAMM.deploy(signer, {
+      initialFields: { admin: address },
+      exposePrivateFunctions: true
+    })
+  )
+  return CLAMM.at(deployResult.contractInstance.address)
+}
+
+export async function deployInvariant(
+  signer: SignerProvider,
+  protocolFee: Percentage
+): Promise<InvariantInstance> {
+  const account = await signer.getSelectedAccount()
+  const clamm = await deployCLAMM(signer)
+  const reserve = await deployReserve(signer)
+
+  const deployResult = await waitTxConfirmed(
+    Invariant.deploy(signer, {
+      initialFields: {
+        config: { admin: account.address, protocolFee: { v: protocolFee } },
+        reserveTemplateId: reserve.contractId,
+        feeTiers: EMPTY_FEE_TIERS,
+        lastReserveId: reserve.contractId,
+        clamm: clamm.contractId,
+        feeTierCount: 0n,
+        poolKeyCount: 0n
+      },
+      exposePrivateFunctions: true
+    })
+  )
+  return Invariant.at(deployResult.contractInstance.address)
 }
 
 export async function initTokensXY(signer: SignerProvider, supply: TokenAmount) {

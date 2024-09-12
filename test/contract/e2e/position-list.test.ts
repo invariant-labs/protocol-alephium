@@ -3,6 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { getBasicFeeTickSpacing, transferAndVerifyPosition } from '../../../src/snippets'
 import {
+  deployInvariant,
   expectError,
   getPool,
   getPosition,
@@ -19,7 +20,7 @@ import {
 } from '../../../src/testUtils'
 import { calculateSqrtPrice, toLiquidity, toPercentage } from '../../../src/math'
 import { InvariantError, MAX_SQRT_PRICE } from '../../../src/consts'
-import { deployInvariant, newFeeTier, newPoolKey } from '../../../src/utils'
+import { newFeeTier, newPoolKey } from '../../../src/utils'
 import { InvariantInstance, TokenFaucetInstance } from '../../../artifacts/ts'
 import { Liquidity, Percentage, TokenAmount } from '../../../src'
 
