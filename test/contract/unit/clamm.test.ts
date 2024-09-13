@@ -7,7 +7,6 @@ import {
   calculateAmountDelta,
   calculateFeeGrowthInside,
   calculateMaxLiquidityPerTick,
-  calculateMinAmountOut,
   calculateSqrtPrice,
   computeSwapStep,
   expectError,
@@ -1063,118 +1062,6 @@ describe('clamm tests', () => {
     )
   })
 
-  test('calculate min amount out', async () => {
-    const clamm = await deployCLAMM(sender)
-    // 0% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = 0n as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(100n)
-    }
-    // 0.1% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (10n ** 9n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(100n)
-    }
-    // 0.9% fee
-    {
-      const expectedAmountOut = 123n as TokenAmount
-      const slippage = (9n * 10n ** 9n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(122n)
-    }
-    // 1% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (10n ** 10n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(99n)
-    }
-    // 3% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (3n * 10n ** 10n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(97n)
-    }
-    // 5% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (5n * 10n ** 10n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(95n)
-    }
-    // 10% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (10n ** 11n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(90n)
-    }
-    // 20% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (2n * 10n ** 11n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(80n)
-    }
-    // 50% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (5n * 10n ** 11n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(50n)
-    }
-    // 100% fee
-    {
-      const expectedAmountOut = 100n as TokenAmount
-      const slippage = (10n ** 12n) as Percentage
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(0n)
-    }
-  })
-
-  test('calculate min amount out - domain', async () => {
-    const clamm = await deployCLAMM(sender)
-    const minAmount = 0n as TokenAmount
-    const maxAmount = ((1n << 256n) - 1n) as TokenAmount
-    const minFee = 0n as Percentage
-    const maxFee = (10n ** 12n) as Percentage
-    // min amount min fee
-    {
-      const expectedAmountOut = minAmount
-      const slippage = minFee
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(0n)
-    }
-    // min amount max fee
-    {
-      const expectedAmountOut = minAmount
-      const slippage = maxFee
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-      expect(result).toEqual(0n)
-    }
-    // max amount max fee
-    {
-      const expectedAmountOut = maxAmount
-      const slippage = maxFee
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-
-      expect(result).toEqual(0n)
-    }
-    // max amount min fee
-    {
-      const expectedAmountOut = maxAmount
-      const slippage = minFee
-      const result = await calculateMinAmountOut(clamm, expectedAmountOut, slippage)
-
-      expect(result).toEqual(maxAmount)
-    }
-  })
-
   test('is enough amount to change price - domain', async () => {
     const clamm = await deployCLAMM(sender)
     const zeroLiquidity = 0n as Liquidity
@@ -1193,8 +1080,8 @@ describe('clamm tests', () => {
         byAmountIn: false,
         xToY: false
       }
-      await expectError(
-        ArithmeticError.SubUnderflow,
+      await expectVMError(
+        VMError.ArithmeticError,
         isEnoughAmountToChangePrice(
           clamm,
           params.amount,
@@ -1203,8 +1090,7 @@ describe('clamm tests', () => {
           params.fee,
           params.byAmountIn,
           params.xToY
-        ),
-        clamm
+        )
       )
     }
     // L = 0
@@ -1238,8 +1124,8 @@ describe('clamm tests', () => {
         byAmountIn: false,
         xToY: false
       }
-      await expectError(
-        ArithmeticError.SubUnderflow,
+      await expectVMError(
+        VMError.ArithmeticError,
         isEnoughAmountToChangePrice(
           clamm,
           params.amount,
@@ -1248,8 +1134,7 @@ describe('clamm tests', () => {
           params.fee,
           params.byAmountIn,
           params.xToY
-        ),
-        clamm
+        )
       )
     }
     // Max amount
@@ -1261,8 +1146,8 @@ describe('clamm tests', () => {
       byAmountIn: false,
       xToY: false
     }
-    await expectError(
-      ArithmeticError.SubUnderflow,
+    await expectVMError(
+      VMError.ArithmeticError,
       isEnoughAmountToChangePrice(
         clamm,
         params.amount,
@@ -1271,8 +1156,7 @@ describe('clamm tests', () => {
         params.fee,
         params.byAmountIn,
         params.xToY
-      ),
-      clamm
+      )
     )
   })
 
@@ -1954,16 +1838,15 @@ describe('clamm tests', () => {
         x: maxX,
         addX: false
       }
-      await expectError(
-        ArithmeticError.SubUnderflow,
+      await expectVMError(
+        VMError.ArithmeticError,
         getNextSqrtPriceXUp(
           clamm,
           params.startingSqrtPrice,
           params.liquidity,
           params.x,
           params.addX
-        ),
-        clamm
+        )
       )
     })
 
@@ -2211,16 +2094,15 @@ describe('clamm tests', () => {
         amount: maxAmount,
         xToY: false
       }
-      await expectError(
-        ArithmeticError.SubUnderflow,
+      await expectVMError(
+        VMError.ArithmeticError,
         getNextSqrtPriceFromOutput(
           clamm,
           params.startingSqrtPrice,
           params.liquidity,
           params.amount,
           params.xToY
-        ),
-        clamm
+        )
       )
     })
   })

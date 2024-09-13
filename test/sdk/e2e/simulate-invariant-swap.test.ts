@@ -894,9 +894,9 @@ describe('simulateInvariantSwap tests', () => {
 
       // in CLAMM.isEnoughAmountToChangePrice:
       // deltaSqrtPrice < bigMulDiv256(startingSqrtPrice, x, TOKEN_AMOUNT_DENOMINATOR)
-      // subUnderflow
-      await expectError(
-        ArithmeticError.SubUnderflow,
+      // arithmetic error - subUnderflow
+      await expectVMError(
+        VMError.ArithmeticError,
         invariant.swap(swapper, poolKey, xToY, amountIn, byAmountIn, MAX_SQRT_PRICE, suppliedAmount)
       )
     })
