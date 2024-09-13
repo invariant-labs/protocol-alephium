@@ -307,13 +307,6 @@ Contract CLAMM(admin: Address) extends Uints(), Log(){
         assert!(tickIndex <= maxTick, CLAMMError.InvalidTickIndex)
         assert!(tickIndex >= minTick, CLAMMError.InvalidTickIndex)
     }
-    
-    fn calculateMinAmountOut(
-        expectedAmountOut: TokenAmount,
-        slippage: Percentage
-    ) -> TokenAmount {
-        return TokenAmount{v: toU256(bigMulDivUp256(expectedAmountOut.v, (PERCENTAGE_DENOMINATOR - slippage.v), PERCENTAGE_DENOMINATOR))}
-    }
 
     pub fn checkTickToSqrtPriceRelationship(tickIndex: I256, tickSpacing: U256, sqrtPrice: SqrtPrice) -> Bool {
         if (tickIndex + toI256!(tickSpacing) > GLOBAL_MAX_TICK) {

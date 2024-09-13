@@ -606,18 +606,6 @@ export const getNextSqrtPriceYDown = async (
   ).returns.v as SqrtPrice
 }
 
-export const calculateMinAmountOut = async (
-  clamm: CLAMMInstance,
-  expectedAmountOut: TokenAmount,
-  slippage: Percentage
-): Promise<TokenAmount> => {
-  return (
-    await clamm.view.calculateMinAmountOut({
-      args: { expectedAmountOut: { v: expectedAmountOut }, slippage: { v: slippage } }
-    })
-  ).returns.v as TokenAmount
-}
-
 export const isEnoughAmountToChangePrice = async (
   clamm: CLAMMInstance,
   amount: TokenAmount,
