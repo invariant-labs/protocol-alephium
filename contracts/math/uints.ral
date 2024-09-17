@@ -51,14 +51,13 @@ Abstract Contract Uints () {
     }
 
     fn bigSub512(a: U512, b: U512) -> U512 {
-        let lower = a.lower |-| b.lower
         let mut higher = a.higher - b.higher
 
         if (a.lower < b.lower) {
             higher = higher - 1
         }
 
-        return U512 { higher, lower }
+        return U512 { higher, lower: a.lower |-| b.lower}
     }
 
     fn bigDivWrapper(a: U512, b: U256) -> U512 {
@@ -130,7 +129,14 @@ Abstract Contract Uints () {
     
             // r >= v
             if (r.higher > divisor.higher || (r.higher == divisor.higher && r.lower >= divisor.lower)) {
-                r = bigSub512(r, divisor)
+
+                // bigSub512(r, divisor)
+                r.lower = r.lower |-| divisor.lower
+                r.higher = r.higher - divisor.higher
+                if (r.lower < divisor.lower) {
+                    r.higher = r.higher - 1
+                }
+
                 q.lower = q.lower | (1 << j)
             }
         }
