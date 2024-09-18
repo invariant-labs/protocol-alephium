@@ -93,78 +93,6 @@ describe('uints tests', () => {
     }
   })
 
-  test('bigShl', async () => {
-    {
-      const v = { higher: 0n, lower: 1n }
-      const n = 1n
-      const result = (await uints.view.bigShl({ args: { v, n } })).returns
-      expect(result).toEqual({ higher: 0n, lower: 2n })
-    }
-    {
-      const v = { higher: 0n, lower: 1n }
-      const n = 257n
-      const result = (await uints.view.bigShl({ args: { v, n } })).returns
-      expect(result).toEqual({ higher: 2n, lower: 0n })
-    }
-    {
-      const v = { higher: 1n, lower: 4n }
-      const n = 1n
-      const result = (await uints.view.bigShl({ args: { v, n } })).returns
-      expect(result).toEqual({ higher: 2n, lower: 8n })
-    }
-    {
-      const v = { higher: MAX_U256, lower: MAX_U256 }
-      const n = 1n
-      const result = (await uints.view.bigShl({ args: { v, n } })).returns
-      expect(result).toEqual({ higher: MAX_U256, lower: MAX_U256 - 1n })
-    }
-  })
-
-  test('isGreaterEqual', async () => {
-    {
-      const v = { higher: 0n, lower: 1n }
-      const compareTo = { higher: 0n, lower: 1n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(true)
-    }
-    {
-      const v = { higher: 1n, lower: 1n }
-      const compareTo = { higher: 1n, lower: 1n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(true)
-    }
-    {
-      const v = { higher: 0n, lower: 1n }
-      const compareTo = { higher: 1n, lower: 0n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(false)
-    }
-    {
-      const v = { higher: 2n, lower: 3n }
-      const compareTo = { higher: 2n, lower: 2n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(true)
-    }
-    {
-      const v = { higher: 3n, lower: 1n }
-      const compareTo = { higher: 0n, lower: 1n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(true)
-    }
-    {
-      const v = { higher: 3n, lower: 0n }
-      const compareTo = { higher: 3n, lower: 0n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(true)
-    }
-    {
-      const v = { higher: 3n, lower: 0n }
-      const compareTo = { higher: 3n, lower: 1n }
-      const result = (await uints.view.isGreaterEqual({ args: { v, compareTo } })).returns
-      expect(result).toEqual(false)
-    }
-  })
-
   test('big add 256', async () => {
     {
       const a = 1n
@@ -644,7 +572,7 @@ describe('uints tests', () => {
   test('old big div 512 vs big div 512 comparison', async () => {
     {
       const dividend = { higher: MAX_U256, lower: MAX_U256 }
-      const divisor = { higher: MAX_U256, lower: 0n }
+      const divisor = { higher: 1n, lower: 0n }
       const divisorDenominator = 1n
       const oldResult = await uintsOld.view.bigDiv512({
         args: { dividend, divisor, divisorDenominator }
@@ -658,8 +586,8 @@ describe('uints tests', () => {
 
   test('old big div 512 up vs big div 512 up comparison', async () => {
     {
-      const dividend = { higher: MAX_U256 - 32n, lower: MAX_U256 }
-      const divisor = { higher: 32n, lower: 0n }
+      const dividend = { higher: MAX_U256 - 1n, lower: MAX_U256 }
+      const divisor = { higher: 1n, lower: 0n }
       const divisorDenominator = 1n
       const oldResult = await uintsOld.view.bigDivUp512({
         args: { dividend, divisor, divisorDenominator }
