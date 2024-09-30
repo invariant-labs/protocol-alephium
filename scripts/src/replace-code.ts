@@ -1,10 +1,11 @@
+import { Invariant } from '@invariant-labs/alph-sdk'
 import {
-  Invariant,
+  Invariant as InvariantOld,
   Network,
   INVARIANT_ADDRESS,
   setOfficialNodeProvider,
   PrivateKeyWallet
-} from '@invariant-labs/alph-sdk'
+} from 'invariant-old'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -16,11 +17,11 @@ const main = async () => {
   const account = new PrivateKeyWallet({ privateKey })
   console.log(`Deployer: ${account.address}, Private Key: ${privateKey}`)
 
-  let invariant = await Invariant.load(INVARIANT_ADDRESS[Network.Testnet])
-
+  let invariant = await InvariantOld.load(INVARIANT_ADDRESS[Network.Testnet])
   console.log(`Invariant: ${invariant.instance.address.toString()}`)
 
-  await invariant.upgradeCode(account)
+  const code = Invariant.getCode()
+  await invariant.upgradeCode(account, code)
 
   console.log(await invariant.getAllPoolKeys())
   console.log('Upgrade complete')

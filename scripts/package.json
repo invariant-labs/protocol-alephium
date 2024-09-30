@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@invariant-labs/alph-sdk": "file:../.",
+    "invariant-old": "npm:@invariant-labs/alph-sdk@=0.0.8",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
