@@ -123,11 +123,15 @@ export class Invariant {
     return new Invariant(address)
   }
 
-  async upgradeCode(signer: SignerProvider) {
+  static getCode(): { invariant: string; clamm: string } {
+    return { invariant: InvariantFactory.contract.bytecode, clamm: CLAMMFactory.contract.bytecode }
+  }
+
+  async upgradeCode(signer: SignerProvider, code: { invariant: string; clamm: string }) {
     await this.instance.transact.upgrade({
       signer,
       args: {
-        bytecode: InvariantFactory.contract.bytecode
+        bytecode: code.invariant
       },
       attoAlphAmount: 2n * DUST_AMOUNT
     })
@@ -138,7 +142,7 @@ export class Invariant {
     await clamm.transact.upgrade({
       signer,
       args: {
-        bytecode: CLAMMFactory.contract.bytecode
+        bytecode: code.clamm
       },
       attoAlphAmount: 2n * DUST_AMOUNT
     })

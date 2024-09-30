@@ -30,7 +30,7 @@ describe('invariant tests', () => {
     const invariant = await Invariant.deploy(deployer, initialFee)
 
     const loadedInvariant = await Invariant.load(invariant.address)
-    await loadedInvariant.upgradeCode(deployer)
+    await loadedInvariant.upgradeCode(deployer, Invariant.getCode())
   })
   test('deploy and add a fee tier', async () => {
     const initialFee = 0n as Percentage
