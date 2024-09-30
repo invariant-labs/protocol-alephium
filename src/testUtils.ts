@@ -333,6 +333,13 @@ export async function initPosition(
   slippageLimitLower: SqrtPrice,
   slippageLimitUpper: SqrtPrice
 ) {
+  const tokens: { id: string; amount: bigint }[] = []
+  if (approvedTokensX) {
+    tokens.push({ id: poolKey.tokenX, amount: approvedTokensX })
+  }
+  if (approvedTokensY) {
+    tokens.push({ id: poolKey.tokenY, amount: approvedTokensY })
+  }
   return await CreatePosition.execute(signer, {
     initialFields: {
       invariant: invariant.contractId,
@@ -343,10 +350,7 @@ export async function initPosition(
       slippageLimitLower: { v: slippageLimitLower },
       slippageLimitUpper: { v: slippageLimitUpper }
     },
-    tokens: [
-      { id: poolKey.tokenX, amount: approvedTokensX },
-      { id: poolKey.tokenY, amount: approvedTokensY }
-    ],
+    tokens,
     attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
   })
 }

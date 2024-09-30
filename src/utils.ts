@@ -320,7 +320,7 @@ export const getMaxBatch = (tickSpacing: bigint): bigint => {
 }
 
 function getNodeUrl(network: Network): string {
-  if (network === Network.Local || network === Network.Devnet) {
+  if (network === Network.Devnet) {
     return 'http://127.0.0.1:22973'
   } else if (network === Network.Testnet) {
     return 'https://node.testnet.alephium.org'

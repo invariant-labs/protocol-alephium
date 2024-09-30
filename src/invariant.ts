@@ -296,6 +296,7 @@ export class Invariant {
       slippageTolerance,
       true
     )
+
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
       invariant: this.instance.contractId,
@@ -308,10 +309,15 @@ export class Invariant {
     })
     const { address, publicKey } = await signer.getSelectedAccount()
     let attoAlphAmount = MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
-    const tokens = [
-      { id: poolKey.tokenX, amount: approvedTokensX },
-      { id: poolKey.tokenY, amount: approvedTokensY }
-    ]
+    const tokens: { id: string; amount: bigint }[] = []
+
+    if (approvedTokensX) {
+      tokens.push({ id: poolKey.tokenX, amount: approvedTokensX })
+    }
+    if (approvedTokensY) {
+      tokens.push({ id: poolKey.tokenY, amount: approvedTokensY })
+    }
+
     if (poolKey.tokenX === ALPH_TOKEN_ID) {
       attoAlphAmount += approvedTokensX + DUST_AMOUNT
       tokens.shift()
