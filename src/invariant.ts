@@ -481,7 +481,8 @@ export class Invariant {
     amount: TokenAmount,
     byAmountIn: boolean,
     estimatedSqrtPrice: SqrtPrice,
-    slippage: Percentage
+    slippage: Percentage,
+    approvedAmount: TokenAmount = amount
   ) {
     const sqrtPriceAfterSlippage = calculateSqrtPriceAfterSlippage(
       estimatedSqrtPrice,
@@ -495,7 +496,8 @@ export class Invariant {
       xToY,
       amount,
       byAmountIn,
-      (xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n) as SqrtPrice
+      (xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n) as SqrtPrice,
+      approvedAmount
     )
   }
 
@@ -506,7 +508,8 @@ export class Invariant {
     amount: TokenAmount,
     byAmountIn: boolean,
     estimatedSqrtPrice: SqrtPrice,
-    slippage: Percentage
+    slippage: Percentage,
+    approvedAmount: TokenAmount = amount
   ): Promise<string> {
     const tx = await this.swapWithSlippageTx(
       signer,
@@ -515,7 +518,8 @@ export class Invariant {
       amount,
       byAmountIn,
       estimatedSqrtPrice,
-      slippage
+      slippage,
+      approvedAmount
     )
     return await signAndSend(signer, tx)
   }
