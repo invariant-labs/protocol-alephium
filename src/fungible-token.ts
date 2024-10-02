@@ -60,11 +60,9 @@ export class FungibleToken {
   }
 
   async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
-    const tokenAddress = addressFromContractId(tokenId)
-    const tokenFaucet = TokenFaucet.at(tokenAddress)
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const bytecode = Withdraw.script.buildByteCodeToDeploy({
-      token: tokenFaucet.contractId,
+      token: tokenId,
       amount: value
     })
 
@@ -133,19 +131,13 @@ export class FungibleToken {
     valueThree: TokenAmount,
     tokenThreeId: string
   ) {
-    const tokenOneAddress = addressFromContractId(tokenOneId)
-    const tokenTwoAddress = addressFromContractId(tokenTwoId)
-    const tokenThreeAddress = addressFromContractId(tokenThreeId)
-    const tokenOneFaucet = TokenFaucet.at(tokenOneAddress)
-    const tokenTwoFaucet = TokenFaucet.at(tokenTwoAddress)
-    const tokenThreeFaucet = TokenFaucet.at(tokenThreeAddress)
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const bytecode = Airdrop.script.buildByteCodeToDeploy({
-      tokenOne: tokenOneFaucet.contractId,
+      tokenOne: tokenOneId,
       amountOne: valueOne,
-      tokenTwo: tokenTwoFaucet.contractId,
+      tokenTwo: tokenTwoId,
       amountTwo: valueTwo,
-      tokenThree: tokenThreeFaucet.contractId,
+      tokenThree: tokenThreeId,
       amountThree: valueThree
     })
 
