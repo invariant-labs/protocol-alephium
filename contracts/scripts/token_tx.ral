@@ -1,3 +1,9 @@
 TxScript Withdraw(token: TokenFaucet, amount: U256) {
     token.withdraw(amount)
 }
+
+TxScript Airdrop(tokenOne: TokenFaucet, amountOne: U256, tokenTwo: TokenFaucet, amountTwo: U256, tokenThree: TokenFaucet, amountThree: U256) {
+    tokenOne.withdraw(amountOne)
+    tokenTwo.withdraw(amountTwo)
+    tokenThree.withdraw(amountThree)
+}

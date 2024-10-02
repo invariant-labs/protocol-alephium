@@ -91,4 +91,16 @@ describe('fungible token tests', () => {
       decimals: 15n
     })
   })
+
+  test('airdrop tokens', async () => {
+    let tokenOne = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
+    let tokenTwo = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
+    let tokenThree = await FungibleToken.deploy(admin, 0n as TokenAmount, 'Coin', 'COIN', 12n)
+
+    const value = 500n as TokenAmount
+    await token.airdrop(admin, value, tokenOne, value, tokenTwo, value, tokenThree)
+    expect(await token.getBalanceOf(admin.address, tokenOne)).toBe(500n)
+    expect(await token.getBalanceOf(admin.address, tokenTwo)).toBe(500n)
+    expect(await token.getBalanceOf(admin.address, tokenThree)).toBe(500n)
+  })
 })

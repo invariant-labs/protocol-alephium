@@ -7,11 +7,12 @@
     "build": "tsc",
     "start": "tsc && node dist/index.js",
     "deploy-tokens": "npx tsc && node dist/deploy-tokens.js",
-    "setup": "npx tsc && node dist/setup.js",
-    "replace-code": "npx tsc && node dist/replace-code.js"
+    "replace-code": "npx tsc && node dist/replace-code.js",
+    "setup-testnet": "npx tsc && node dist/setup-testnet.js",
+    "setup-devnet": "npx tsc && node dist/setup-devnet.js"
   },
   "dependencies": {
-    "@invariant-labs/alph-sdk": "file:../.",
+    "@invariant-labs/alph-sdk": "file:..",
     "invariant-old": "npm:@invariant-labs/alph-sdk@=0.0.8",
     "dotenv": "^16.4.5"
   },
@@ -19,7 +20,8 @@
     "@types/chai": "^4.3.17",
     "chai": "^5.1.1",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.13.0",    "eslint": "^8.37.0",
+    "@typescript-eslint/parser": "^7.13.0",
+    "eslint": "^8.37.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "typescript": "^5.4.5"

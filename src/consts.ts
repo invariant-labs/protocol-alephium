@@ -63,31 +63,31 @@ export enum VMError {
 
 export const INVARIANT_ADDRESS = {
   [Network.Devnet]: '',
-  [Network.Testnet]: '2326FKQoEWtErAw85891kY1v2qHQJdVCpFArbnQDzrZxK',
+  [Network.Testnet]: '242VBmymDnYfBcy33Dz7x5McrgxuJ16YXhipm4cQYtHKd',
   [Network.Mainnet]: ''
 }
 export const BTC_ID = {
   [Network.Devnet]: '',
-  [Network.Testnet]: '7463907d430f8541526537af69e11db174d614ffa931bbf2c95ffe15d2cc6a00',
+  [Network.Testnet]: '5fcbb6c36160db6275900637cc842e1f0a5bd97f2a030153a4fae717260c2700',
   [Network.Mainnet]: ''
 }
 export const ETH_ID = {
   [Network.Devnet]: '',
-  [Network.Testnet]: '9c396d6bfb35ff87959801795ffcbb19078d8d04ad84a58af082c5763d070d00',
+  [Network.Testnet]: 'd92ea47be07234444f92ae84ef91bdcea7e5965097e4ac987a747cf073d15800',
   [Network.Mainnet]: ''
 }
 export const USDC_ID = {
   [Network.Devnet]: '',
-  [Network.Testnet]: 'bbff7962b2e210e8292e466f5a6a35c2ee24dfb55b1bbaabaa27a1cad1bec100',
+  [Network.Testnet]: 'ec3547bffc2e9841a26cb4511fe6339a8b7a41435fb4be3242a8a73c0629c200',
   [Network.Mainnet]: ''
 }
 export const USDT_ID = {
   [Network.Devnet]: '',
-  [Network.Testnet]: 'b795aab5d9d5288e1673a6ec7ffc600fc48a7ed9f716704123e60e2b77e7cb00',
+  [Network.Testnet]: '042843b9e853fca28f425f8d2d96e9cd089e4e76c755c60cf795b704ede4dc00',
   [Network.Mainnet]: ''
 }
 export const SOL_ID = {
   [Network.Devnet]: '',
-  [Network.Testnet]: '2505310840f04d696887aebc8ecc27e5d2e0a389d9e037e17d2ebe0550277200',
+  [Network.Testnet]: 'c925472266dbd7f2e01313ad787cfb12b7f4be6776e9a3b02daed9dde7706200',
   [Network.Mainnet]: ''
 }
