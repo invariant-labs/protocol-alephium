@@ -9,7 +9,7 @@ import {
   web3
 } from '@alephium/web3'
 import { Network } from './network'
-import { TokenFaucet, Withdraw } from '../artifacts/ts'
+import { Airdrop, TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, signAndSend, waitTxConfirmed } from './utils'
 import { MAX_U256 } from './consts'
 import { TokenAmount } from './types'
@@ -60,11 +60,9 @@ export class FungibleToken {
   }
 
   async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
-    const tokenAddress = addressFromContractId(tokenId)
-    const tokenFaucet = TokenFaucet.at(tokenAddress)
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const bytecode = Withdraw.script.buildByteCodeToDeploy({
-      token: tokenFaucet.contractId,
+      token: tokenId,
       amount: value
     })
 
@@ -122,5 +120,54 @@ export class FungibleToken {
   async getTokenDecimals(tokenId: string): Promise<bigint> {
     const nodeProvider = web3.getCurrentNodeProvider()
     return BigInt((await nodeProvider.fetchFungibleTokenMetaData(tokenId)).decimals)
+  }
+
+  async airdropTx(
+    signer: SignerProvider,
+    valueOne: TokenAmount,
+    tokenOneId: string,
+    valueTwo: TokenAmount,
+    tokenTwoId: string,
+    valueThree: TokenAmount,
+    tokenThreeId: string
+  ) {
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
+    const bytecode = Airdrop.script.buildByteCodeToDeploy({
+      tokenOne: tokenOneId,
+      amountOne: valueOne,
+      tokenTwo: tokenTwoId,
+      amountTwo: valueTwo,
+      tokenThree: tokenThreeId,
+      amountThree: valueThree
+    })
+
+    const { address, publicKey } = await signer.getSelectedAccount()
+
+    const unsignedTxBuild = await builder.buildExecuteScriptTx(
+      { signerAddress: address, bytecode, attoAlphAmount: DUST_AMOUNT * 3n },
+      publicKey
+    )
+    return unsignedTxBuild
+  }
+
+  async airdrop(
+    signer: SignerProvider,
+    valueOne: TokenAmount,
+    tokenOneId: string,
+    valueTwo: TokenAmount,
+    tokenTwoId: string,
+    valueThree: TokenAmount,
+    tokenThreeId: string
+  ) {
+    const tx = await this.airdropTx(
+      signer,
+      valueOne,
+      tokenOneId,
+      valueTwo,
+      tokenTwoId,
+      valueThree,
+      tokenThreeId
+    )
+    return await signAndSend(signer, tx)
   }
 }
