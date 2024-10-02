@@ -89,7 +89,7 @@ export class FungibleToken {
   }
 
   async getBalanceOf(owner: Address, tokenId: string): Promise<TokenAmount> {
-    return balanceOf(tokenId, owner)
+    return await balanceOf(tokenId, owner)
   }
 
   async getTokenMetaDataMulti(tokenId: Array<string>): Promise<Map<string, TokenMetaData>> {
