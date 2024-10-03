@@ -22,19 +22,26 @@ let feeTier: FeeTier
 let poolKey: PoolKey
 
 describe('query tickmap tests', () => {
-  const initialFee = 0n as Percentage
+  const protocolFee = 0n as Percentage
   const [fee] = getBasicFeeTickSpacing()
   const tickSpacing = 1n
   const initSqrtPrice = toSqrtPrice(1n)
   const supply = (10n ** 10n) as TokenAmount
   const lowerTickIndex = GLOBAL_MIN_TICK
   const upperTickIndex = GLOBAL_MAX_TICK
-  const ticks = [-221818n, -221817n, -58n, 5n, 221817n, 221818n]
+  const ticks = [
+    GLOBAL_MIN_TICK,
+    GLOBAL_MIN_TICK + 1n,
+    -58n,
+    5n,
+    GLOBAL_MAX_TICK - 1n,
+    GLOBAL_MAX_TICK
+  ]
 
   beforeEach(async () => {
     deployer = await getSigner(ONE_ALPH * 1000n, 0)
     positionOwner = await getSigner(ONE_ALPH * 1000n, 0)
-    invariant = await Invariant.deploy(deployer, initialFee)
+    invariant = await Invariant.deploy(deployer, protocolFee)
     ;[tokenX, tokenY] = await initTokensXY(deployer, supply)
 
     feeTier = newFeeTier(fee, tickSpacing)
@@ -122,6 +129,11 @@ describe('query tickmap tests', () => {
       if (chunkIndex === 866n) {
         expect(value).toBe(0x80000000000000010000000000000000n)
       } else {
+        if (value !== 0n) {
+          console.log(chunkIndex)
+          console.log(value)
+          console.log(value.toString(16))
+        }
         expect(value).toBe(0n)
       }
     }

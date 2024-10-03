@@ -83,7 +83,7 @@ describe('cross tests', () => {
       expect(await getPool(invariant, poolKey)).toMatchObject({
         liquidity: poolBefore.liquidity + liquidityDelta,
         currentTickIndex: -20n,
-        sqrtPrice: 999254456240199142700995n,
+        sqrtPrice: 999254456240206138000814n,
         feeGrowthGlobalX: 4n * 10n ** 22n,
         feeGrowthGlobalY: 0n,
         feeProtocolTokenX: 2n,

@@ -39,59 +39,65 @@ Abstract Contract Decimal() {
 
         assert!(tickIndexAbs <= toU256!(GLOBAL_MAX_TICK), DecimalError.TickOverBounds)
 
-        if (tickIndexAbs & 0x1 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000049998750) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00001 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1000049998750062496094023) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x2 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000100000000) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00002 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1000100000000000000000000) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x4 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000200010000) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00004 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1000200010000000000000000) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x8 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000400060004) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00008 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1000400060004000100000000) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x10 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1000800280056)  / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00010 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1000800280056007000560028)  / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x20 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1001601200560) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00020 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1001601200560182043688009) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x40 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1003204964963) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x000040 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1003204964963598014666528) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x80 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1006420201726) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00080 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1006420201727613920156533) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x100 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1012881622442) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00100 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1012881622445451097078095) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x200 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1025929181080) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00200 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1025929181087729343658708) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x400 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1052530684591) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00400 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1052530684607338948386589) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x800 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1107820842005) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x00800 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1107820842039993613899215) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x1000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1227267017980) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x01000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1227267018058200482050503) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x2000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 1506184333421) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x02000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 1506184333613467388107955) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x4000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 2268591246242) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x04000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 2268591246822644826925609) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x8000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 5146506242525) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x08000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 5146506245160322222537991) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x00010000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 26486526504348) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x10000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 26486526531474198664033811) / FIXED_POINT_DENOMINATOR
         }
-        if (tickIndexAbs & 0x00020000 != 0) {
-            sqrtPrice.v = (sqrtPrice.v * 701536086265529) / FIXED_POINT_DENOMINATOR
+        if (tickIndexAbs & 0x20000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 701536087702486644953017488) / FIXED_POINT_DENOMINATOR
+        }
+        if (tickIndexAbs & 0x40000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 492152882348911033633683861778) / FIXED_POINT_DENOMINATOR
+        }
+        if (tickIndexAbs & 0x80000 != 0) {
+            sqrtPrice.v = (sqrtPrice.v * 242214459604341065650571799093539783) / FIXED_POINT_DENOMINATOR
         }
 
         if (tickIndex >= 0i) {

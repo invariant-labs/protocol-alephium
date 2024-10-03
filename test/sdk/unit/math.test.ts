@@ -50,7 +50,7 @@ describe('math spec', () => {
       }
       // In current tick
       {
-        const expectedL = 43239299731929n
+        const expectedL = 43239299699070n
         const expectedYUp = 434322n
         const expectedYDown = 434321n
         const lowerTick = 80n
@@ -64,7 +64,7 @@ describe('math spec', () => {
       {
         const lowerTick = 150n
         const upperTick = 800n
-        const expectedResult = { l: 1354882631162n, amount: 0n }
+        const expectedResult = { l: 1354882630774n, amount: 0n }
 
         const resultUp = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
         const resultDown = getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, false)
@@ -77,7 +77,7 @@ describe('math spec', () => {
       const currentSqrtPrice = calculateSqrtPrice(-20000n)
       // Below current tick
       {
-        const expectedL = 278905227910392327n
+        const expectedL = 278905227913027805n
         const expectedX = 0n
         const lowerTick = -22000n
         const upperTick = -21000n
@@ -91,9 +91,9 @@ describe('math spec', () => {
       }
       // In current tick
       {
-        const expectedL = 58494529055434693n
-        const expectedXUp = 77539808126n
-        const expectedXDown = 77539808125n
+        const expectedL = 58494529057380141n
+        const expectedXUp = 77539808174n
+        const expectedXDown = 77539808173n
         const lowerTick = -25000n
         const upperTick = -19000n
 
@@ -121,7 +121,7 @@ describe('math spec', () => {
       const currentSqrtPrice = calculateSqrtPrice(-20000n)
       // Below current tick
       {
-        const expectedL = 278905227910392327n
+        const expectedL = 278905227913027805n
         const expectedX = 0n as TokenAmount
         const lowerTick = -22000n
         const upperTick = -21000n
@@ -135,10 +135,10 @@ describe('math spec', () => {
       }
       // In current tick
       {
-        const expectedXUp = 77539808126n as TokenAmount
-        const expectedXDown = 77539808125n as TokenAmount
-        const expectedLUp = 58494529055434693n
-        const expectedLDown = 58494529055291192n
+        const expectedXUp = 77539808174n as TokenAmount
+        const expectedXDown = 77539808173n as TokenAmount
+        const expectedLUp = 58494529057380141n
+        const expectedLDown = 58494529057221346n
         const lowerTick = -25000n
         const upperTick = -19000n
         const expectedResultUp = { l: expectedLUp, x: expectedXUp }
@@ -164,7 +164,7 @@ describe('math spec', () => {
 
         const x = 430000000n as TokenAmount
         const expectedY = 0n as TokenAmount
-        const expectedResult = { l: 1354882631162385n, y: expectedY }
+        const expectedResult = { l: 1354882630774114n, y: expectedY }
 
         const resultUp = getLiquidity(x, expectedY, lowerTick, upperTick, currentSqrtPrice, true)
 
@@ -377,7 +377,7 @@ describe('math spec', () => {
       const maxConcentration = 10
       const expectedResult = 11
 
-      const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 665388)
 
       expect(result.length).toBe(expectedResult)
     })
@@ -386,7 +386,7 @@ describe('math spec', () => {
       const maxConcentration = 10
       const expectedResult = 124
 
-      const result = getConcentrationArray(tickSpacing, maxConcentration, 221300)
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 664936)
       expect(result.length).toBe(expectedResult)
     })
     it('low current tick ', async () => {

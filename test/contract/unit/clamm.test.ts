@@ -79,20 +79,11 @@ describe('clamm tests', () => {
 
     // max FeeGrowth case inside of domain
     {
-      const maxTickSpacing = 100n
-      const tickSearchRange = 256n
-      const sqrtPriceUpper = 65535383934512647000000000000n
-      const sqrtPriceLowerIndex = 221818n - maxTickSpacing * tickSearchRange
-      const sqrtPriceLower = await calculateSqrtPrice(clamm, sqrtPriceLowerIndex)
-
-      const maxDeltaSqrtPrice = sqrtPriceUpper - sqrtPriceLower
-      const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
-      const maxToken = ((maxLiquidity * maxDeltaSqrtPrice) /
-        LIQUIDITY_DENOMINATOR /
-        SQRT_PRICE_DENOMINATOR) as TokenAmount
+      const maxLiquidity = MAX_U256 as Liquidity
+      const maxToken = MAX_U256 as TokenAmount
       const feeGrowth = await feeGrowthFromFee(clamm, maxLiquidity, maxToken)
 
-      expect(feeGrowth).toStrictEqual(473129365723326089999999999999999n)
+      expect(feeGrowth).toStrictEqual(1000000000000000000000000000000000n)
     }
     // min FeeGrowth case inside of domain
     {
@@ -102,15 +93,11 @@ describe('clamm tests', () => {
         FEE_GROWTH_DENOMINATOR *
         LIQUIDITY_DENOMINATOR *
         basisPoint) as Liquidity
-      const feeGrowth = await feeGrowthFromFee(
-        clamm,
-        maxLiquidity,
-        (minToken + basisPoint) as TokenAmount
-      )
+      await feeGrowthFromFee(clamm, maxLiquidity, (minToken + basisPoint) as TokenAmount)
       // outside of domain trigger overflow due to result not fit into FeeGrowth
       {
         const liquidity = 1n as Liquidity
-        const fee = ((1n << 256n) - 1n) as TokenAmount
+        const fee = MAX_U256 as TokenAmount
 
         await expectError(
           ArithmeticError.CastOverflow,
@@ -391,7 +378,7 @@ describe('clamm tests', () => {
   describe('get delta x - domain', () => {
     let clamm: CLAMMInstance
     const almostMinSqrtPrice = 15259695000000000000n as SqrtPrice
-    const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
+    const maxLiquidity = 1208899457326985091718930756475n as Liquidity
     const minLiquidity = 1n as Liquidity
 
     beforeAll(async () => {

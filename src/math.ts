@@ -56,59 +56,67 @@ export const calculateSqrtPrice = (tickIndex: bigint): SqrtPrice => {
     throw new Error(String(DecimalError.TickOverBounds))
   }
 
-  if (tickIndexAbs & 0x1n) {
-    sqrtPrice = ((sqrtPrice * 1000049998750n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00001n) {
+    sqrtPrice = ((sqrtPrice * 1000049998750062496094023n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x2n) {
-    sqrtPrice = ((sqrtPrice * 1000100000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00002n) {
+    sqrtPrice = ((sqrtPrice * 1000100000000000000000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x4n) {
-    sqrtPrice = ((sqrtPrice * 1000200010000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00004n) {
+    sqrtPrice = ((sqrtPrice * 1000200010000000000000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x8n) {
-    sqrtPrice = ((sqrtPrice * 1000400060004n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00008n) {
+    sqrtPrice = ((sqrtPrice * 1000400060004000100000000n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x10n) {
-    sqrtPrice = ((sqrtPrice * 1000800280056n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00010n) {
+    sqrtPrice = ((sqrtPrice * 1000800280056007000560028n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x20n) {
-    sqrtPrice = ((sqrtPrice * 1001601200560n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00020n) {
+    sqrtPrice = ((sqrtPrice * 1001601200560182043688009n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x40n) {
-    sqrtPrice = ((sqrtPrice * 1003204964963n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00040n) {
+    sqrtPrice = ((sqrtPrice * 1003204964963598014666528n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x80n) {
-    sqrtPrice = ((sqrtPrice * 1006420201726n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00080n) {
+    sqrtPrice = ((sqrtPrice * 1006420201727613920156533n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x100n) {
-    sqrtPrice = ((sqrtPrice * 1012881622442n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00100n) {
+    sqrtPrice = ((sqrtPrice * 1012881622445451097078095n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x200n) {
-    sqrtPrice = ((sqrtPrice * 1025929181080n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00200n) {
+    sqrtPrice = ((sqrtPrice * 1025929181087729343658708n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x400n) {
-    sqrtPrice = ((sqrtPrice * 1052530684591n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00400n) {
+    sqrtPrice = ((sqrtPrice * 1052530684607338948386589n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x800n) {
-    sqrtPrice = ((sqrtPrice * 1107820842005n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x00800n) {
+    sqrtPrice = ((sqrtPrice * 1107820842039993613899215n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x1000n) {
-    sqrtPrice = ((sqrtPrice * 1227267017980n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x01000n) {
+    sqrtPrice = ((sqrtPrice * 1227267018058200482050503n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x2000n) {
-    sqrtPrice = ((sqrtPrice * 1506184333421n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x02000n) {
+    sqrtPrice = ((sqrtPrice * 1506184333613467388107955n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x4000n) {
-    sqrtPrice = ((sqrtPrice * 2268591246242n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x04000n) {
+    sqrtPrice = ((sqrtPrice * 2268591246822644826925609n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x8000n) {
-    sqrtPrice = ((sqrtPrice * 5146506242525n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x08000n) {
+    sqrtPrice = ((sqrtPrice * 5146506245160322222537991n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x00010000n) {
-    sqrtPrice = ((sqrtPrice * 26486526504348n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x10000n) {
+    sqrtPrice = ((sqrtPrice * 26486526531474198664033811n) / FIXED_POINT_DENOMINATOR) as FixedPoint
   }
-  if (tickIndexAbs & 0x00020000n) {
-    sqrtPrice = ((sqrtPrice * 701536086265529n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  if (tickIndexAbs & 0x20000n) {
+    sqrtPrice = ((sqrtPrice * 701536087702486644953017488n) / FIXED_POINT_DENOMINATOR) as FixedPoint
+  }
+  if (tickIndexAbs & 0x40000n) {
+    sqrtPrice = ((sqrtPrice * 492152882348911033633683861778n) /
+      FIXED_POINT_DENOMINATOR) as FixedPoint
+  }
+  if (tickIndexAbs & 0x80000n) {
+    sqrtPrice = ((sqrtPrice * 242214459604341065650571799093539783n) /
+      FIXED_POINT_DENOMINATOR) as FixedPoint
   }
 
   if (tickIndex >= 0n) {
@@ -427,8 +435,8 @@ export const getTickAtSqrtPrice = (sqrtPrice: bigint, tickSpacing: bigint): bigi
     throw new Error(String(LogError.SqrtPriceOutOfRange))
   }
 
-  const sqrtPriceX32 = sqrtPriceToX32(sqrtPrice)
-  const [log2Sign, log2SqrtPrice] = log2IterativeApproximationX32(sqrtPriceX32)
+  const sqrtPriceX64 = sqrtPriceToX64(sqrtPrice)
+  const [log2Sign, log2SqrtPrice] = log2IterativeApproximationX64(sqrtPriceX64)
 
   let absFloorTick: bigint
   let nearerTick: bigint
@@ -467,20 +475,20 @@ export const getTickAtSqrtPrice = (sqrtPrice: bigint, tickSpacing: bigint): bigi
   }
 }
 
-const sqrtPriceToX32 = (val: bigint): bigint => {
+const sqrtPriceToX64 = (val: bigint): bigint => {
   return (val * LOG2_ONE) / SQRT_PRICE_DENOMINATOR
 }
 
-const log2IterativeApproximationX32 = (sqrtPriceX32: bigint): [boolean, bigint] => {
+const log2IterativeApproximationX64 = (sqrtPriceX64: bigint): [boolean, bigint] => {
   let sign = true
-  if (sqrtPriceX32 < LOG2_ONE) {
+  if (sqrtPriceX64 < LOG2_ONE) {
     sign = false
-    sqrtPriceX32 = LOG2_DOUBLE_ONE / (sqrtPriceX32 + 1n)
+    sqrtPriceX64 = LOG2_DOUBLE_ONE / (sqrtPriceX64 + 1n)
   }
 
-  const log2Floor = log2FloorX32(sqrtPriceX32 >> LOG2_SCALE)
+  const log2Floor = log2FloorX64(sqrtPriceX64 >> LOG2_SCALE)
   let result = log2Floor << LOG2_SCALE
-  let y = sqrtPriceX32 >> log2Floor
+  let y = sqrtPriceX64 >> log2Floor
 
   if (y == LOG2_ONE) {
     return [sign, result]
@@ -497,30 +505,34 @@ const log2IterativeApproximationX32 = (sqrtPriceX32: bigint): [boolean, bigint] 
   return [sign, result]
 }
 
-const log2FloorX32 = (sqrtPriceX32: bigint): bigint => {
+const log2FloorX64 = (sqrtPriceX64: bigint): bigint => {
   let msb = 0n
 
-  if (sqrtPriceX32 >= 1n << 32n) {
-    sqrtPriceX32 >>= 32n
+  if (sqrtPriceX64 >= 1n << 64n) {
+    sqrtPriceX64 >>= 64n
+    msb |= 64n
+  }
+  if (sqrtPriceX64 >= 1n << 32n) {
+    sqrtPriceX64 >>= 32n
     msb |= 32n
   }
-  if (sqrtPriceX32 >= 1n << 16n) {
-    sqrtPriceX32 >>= 16n
+  if (sqrtPriceX64 >= 1n << 16n) {
+    sqrtPriceX64 >>= 16n
     msb |= 16n
   }
-  if (sqrtPriceX32 >= 1n << 8n) {
-    sqrtPriceX32 >>= 8n
+  if (sqrtPriceX64 >= 1n << 8n) {
+    sqrtPriceX64 >>= 8n
     msb |= 8n
   }
-  if (sqrtPriceX32 >= 1n << 4n) {
-    sqrtPriceX32 >>= 4n
+  if (sqrtPriceX64 >= 1n << 4n) {
+    sqrtPriceX64 >>= 4n
     msb |= 4n
   }
-  if (sqrtPriceX32 >= 1n << 2n) {
-    sqrtPriceX32 >>= 2n
+  if (sqrtPriceX64 >= 1n << 2n) {
+    sqrtPriceX64 >>= 2n
     msb |= 2n
   }
-  if (sqrtPriceX32 >= 1n << 1n) {
+  if (sqrtPriceX64 >= 1n << 1n) {
     msb |= 1n
   }
 
