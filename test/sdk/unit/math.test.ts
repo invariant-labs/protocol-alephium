@@ -377,7 +377,7 @@ describe('math spec', () => {
       const maxConcentration = 10
       const expectedResult = 11
 
-      const result = getConcentrationArray(tickSpacing, maxConcentration, 665388)
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 547548)
 
       expect(result.length).toBe(expectedResult)
     })
@@ -386,7 +386,7 @@ describe('math spec', () => {
       const maxConcentration = 10
       const expectedResult = 124
 
-      const result = getConcentrationArray(tickSpacing, maxConcentration, 664936)
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 547094)
       expect(result.length).toBe(expectedResult)
     })
     it('low current tick ', async () => {

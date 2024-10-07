@@ -32,8 +32,8 @@ describe('query tickmap tests', () => {
   const ticks = [
     GLOBAL_MIN_TICK,
     GLOBAL_MIN_TICK + 1n,
-    -58n,
-    5n,
+    35n,
+    98n,
     GLOBAL_MAX_TICK - 1n,
     GLOBAL_MAX_TICK
   ]
@@ -126,14 +126,9 @@ describe('query tickmap tests', () => {
 
     const tickmap = await invariant.getFullTickmap(poolKey)
     for (const [chunkIndex, value] of tickmap.entries()) {
-      if (chunkIndex === 866n) {
+      if (chunkIndex === 2139n) {
         expect(value).toBe(0x80000000000000010000000000000000n)
       } else {
-        if (value !== 0n) {
-          console.log(chunkIndex)
-          console.log(value)
-          console.log(value.toString(16))
-        }
         expect(value).toBe(0n)
       }
     }
@@ -174,7 +169,7 @@ describe('query tickmap tests', () => {
     const maxChunk = getMaxChunk(tickSpacing)
     expect(tickmap.get(0n)).toBe(0b11n)
     expect(tickmap.get(maxChunk)).toBe(
-      0x18000000000000000000000000000000000000000000000000000000000000n
+      0x600000000000000n
     )
   })
   test('get tickmap edge tick initialized on tick spacing equal 100', async () => {
@@ -219,6 +214,7 @@ describe('query tickmap tests', () => {
     const maxChunk = getMaxChunk(tickSpacing)
 
     expect(tickmap.get(0n)).toBe(0b11n)
-    expect(tickmap.get(maxChunk)).toBe(0x1800000000000000000000n)
+    
+    expect(tickmap.get(maxChunk)).toBe(0x180000000000000000000000000000000000000000000000000n)
   })
 })

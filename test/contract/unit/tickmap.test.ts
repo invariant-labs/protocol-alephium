@@ -244,7 +244,7 @@ describe('tickmap tests', () => {
   })
   test('next initialized chunk - hitting the limit limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GLOBAL_MAX_TICK - 23n
+    const tick = GLOBAL_MAX_TICK - 25n
     const tickSpacing = 4n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
     const poolKey = newPoolKey(token0Id, token1Id, feeTier)
@@ -502,7 +502,7 @@ describe('tickmap tests', () => {
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = GLOBAL_MAX_TICK - 4n
+      const expected = GLOBAL_MAX_TICK - 3n
       expect(result).toBe(expected)
     }
     {
@@ -511,7 +511,7 @@ describe('tickmap tests', () => {
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = GLOBAL_MAX_TICK - 4n
+      const expected = GLOBAL_MAX_TICK - 3n
       expect(result).toBe(expected)
     }
   })

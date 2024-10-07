@@ -50,63 +50,63 @@ describe('log tests', () => {
     test('min sqrt price -> sqrt(1.0001) ^ MIN_TICK', async () => {
       const minSqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK)
       const result = await sqrtPriceToX64(clamm, minSqrtPriceDecimal)
-      expect(result).toBe(65534n)
+      expect(result).toBe(23727339n)
     })
 
     test('max sqrt price -> sqrt(1.0001) ^ MAX_TICK', async () => {
       const maxSqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK)
       const result = await sqrtPriceToX64(clamm, maxSqrtPriceDecimal)
-      expect(result).toBe(5192410085712699832897385122752987n)
+      expect(result).toBe(14341362215642069715256648712895n)
     })
   })
 
   describe('log2 iterative approximation x64', () => {
     test('log2 of 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([true, 0n])
     })
 
     test('log2 > 0 when x > 1', async () => {
       const sqrtPriceDecimal = 879_000000000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([true, 180403980057034096640n])
     })
 
     test('log2 < 0 when x < 1', async () => {
       const sqrtPriceDecimal = 5900000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([false, 136599418782046486528n])
     })
 
     test('log2 of max sqrt price', async () => {
       const maxSqrtPrice = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK)
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, maxSqrtPrice)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([true, 885444295875638853632n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, maxSqrtPrice)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([true, 728645524035954540544n])
     })
 
     test('log2 of min sqrt price', async () => {
       const maxSqrtPrice = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK)
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, maxSqrtPrice)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([false, 885444121623709614080n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, maxSqrtPrice)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([false, 728645523220022951936n])
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) - 1', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, -19999n)) - 1n) as SqrtPrice
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([false, 26610365048300503040n])
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) + 1', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, 19999n)) - 1n) as SqrtPrice
-      const sqrtPriceX32 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([true, 26610365048300503040n])
     })
   })
