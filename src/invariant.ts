@@ -13,7 +13,8 @@ import {
   Swap,
   TransferPosition,
   WithdrawProtocolFee,
-  CLAMM
+  CLAMM,
+  CreatePoolAndPosition
 } from '../artifacts/ts'
 import { PoolKey as _PoolKey } from '../artifacts/ts/types'
 import {
@@ -167,6 +168,13 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async addFeeTierExecute(signer: SignerProvider, feeTier: FeeTier) {
+    return await AddFeeTier.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, feeTier: wrapFeeTier(feeTier) },
+      attoAlphAmount: MAP_ENTRY_DEPOSIT
+    })
+  }
+
   async removeFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = RemoveFeeTier.script.buildByteCodeToDeploy({
@@ -184,6 +192,12 @@ export class Invariant {
   async removeFeeTier(signer: SignerProvider, feeTier: FeeTier): Promise<string> {
     const tx = await this.removeFeeTierTx(signer, feeTier)
     return await signAndSend(signer, tx)
+  }
+
+  async removeFeeTierExecute(signer: SignerProvider, feeTier: FeeTier) {
+    return await RemoveFeeTier.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, feeTier: wrapFeeTier(feeTier) }
+    })
   }
 
   async createPoolTx(signer: SignerProvider, poolKey: PoolKey, initSqrtPrice: SqrtPrice) {
@@ -214,6 +228,20 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async createPoolExecute(signer: SignerProvider, poolKey: PoolKey, initSqrtPrice: SqrtPrice) {
+    return await CreatePool.execute(signer, {
+      initialFields: {
+        invariant: this.instance.contractId,
+        token0: poolKey.tokenX,
+        token1: poolKey.tokenY,
+        feeTier: wrapFeeTier(poolKey.feeTier),
+        initSqrtPrice: { v: initSqrtPrice },
+        initTick: calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing)
+      },
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n
+    })
+  }
+
   async withdrawProtocolFeeTx(signer: SignerProvider, poolKey: PoolKey) {
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = WithdrawProtocolFee.script.buildByteCodeToDeploy({
@@ -231,6 +259,13 @@ export class Invariant {
   async withdrawProtocolFee(signer: SignerProvider, poolKey: PoolKey): Promise<string> {
     const tx = await this.withdrawProtocolFeeTx(signer, poolKey)
     return await signAndSend(signer, tx)
+  }
+
+  async withdrawProtocolFeeExecute(signer: SignerProvider, poolKey: PoolKey) {
+    return await WithdrawProtocolFee.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, poolKey: wrapPoolKey(poolKey) },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
   }
 
   async changeFeeReceiverTx(signer: SignerProvider, poolKey: PoolKey, newFeeReceiver: Address) {
@@ -257,6 +292,20 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async changeFeeReceiverExecute(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    newFeeReceiver: Address
+  ) {
+    return await ChangeFeeReceiver.execute(signer, {
+      initialFields: {
+        invariant: this.instance.contractId,
+        poolKey: wrapPoolKey(poolKey),
+        newFeeReceiver
+      }
+    })
+  }
+
   async changeProtocolFeeTx(signer: SignerProvider, fee: bigint) {
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = ChangeProtocolFee.script.buildByteCodeToDeploy({
@@ -273,6 +322,12 @@ export class Invariant {
   async changeProtocolFee(signer: SignerProvider, fee: bigint): Promise<string> {
     const tx = await this.changeProtocolFeeTx(signer, fee)
     return await signAndSend(signer, tx)
+  }
+
+  async changeProtocolFeeExecute(signer: SignerProvider, fee: bigint) {
+    return await ChangeProtocolFee.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, newFee: { v: fee } }
+    })
   }
 
   async createPositionTx(
@@ -360,6 +415,46 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async createPositionExecute(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    lowerTick: bigint,
+    upperTick: bigint,
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
+  ) {
+    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      false
+    )
+    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      true
+    )
+
+    return await CreatePosition.execute(signer, {
+      initialFields: {
+        invariant: this.instance.contractId,
+        poolKey: wrapPoolKey(poolKey),
+        lowerTick,
+        upperTick,
+        liquidityDelta: { v: liquidityDelta },
+        slippageLimitLower: { v: slippageLimitLower },
+        slippageLimitUpper: { v: slippageLimitUpper }
+      },
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n,
+      tokens: [
+        { id: poolKey.tokenX, amount: approvedTokensX },
+        { id: poolKey.tokenY, amount: approvedTokensY }
+      ]
+    })
+  }
+
   async removePositionTx(signer: SignerProvider, index: bigint) {
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = RemovePosition.script.buildByteCodeToDeploy({
@@ -379,6 +474,12 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async removePositionExecute(signer: SignerProvider, index: bigint) {
+    return await RemovePosition.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, index }
+    })
+  }
+
   async claimFeeTx(signer: SignerProvider, index: bigint) {
     const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
     const txBytecode = ClaimFee.script.buildByteCodeToDeploy({
@@ -396,6 +497,13 @@ export class Invariant {
   async claimFee(signer: SignerProvider, index: bigint): Promise<string> {
     const tx = await this.claimFeeTx(signer, index)
     return await signAndSend(signer, tx)
+  }
+
+  async claimFeeExecute(signer: SignerProvider, index: bigint) {
+    return await ClaimFee.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, index },
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
   }
 
   async transferPositionTx(signer: SignerProvider, index: bigint, recipient: Address) {
@@ -419,6 +527,13 @@ export class Invariant {
   ): Promise<string> {
     const tx = await this.transferPositionTx(signer, index, recipient)
     return await signAndSend(signer, tx)
+  }
+
+  async transferPositionExecute(signer: SignerProvider, index: bigint, recipient: Address) {
+    return await TransferPosition.execute(signer, {
+      initialFields: { invariant: this.instance.contractId, index, recipient },
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
+    })
   }
 
   async swapTx(
@@ -474,6 +589,29 @@ export class Invariant {
     return await signAndSend(signer, tx)
   }
 
+  async swapExecute(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    xToY: boolean,
+    amount: TokenAmount,
+    byAmountIn: boolean,
+    sqrtPriceLimit: SqrtPrice,
+    approvedAmount = amount
+  ) {
+    return await Swap.execute(signer, {
+      initialFields: {
+        invariant: this.instance.contractId,
+        poolKey: wrapPoolKey(poolKey),
+        xToY,
+        amount: { v: amount },
+        byAmountIn,
+        sqrtPriceLimit: { v: sqrtPriceLimit }
+      },
+      tokens: [{ id: xToY ? poolKey.tokenX : poolKey.tokenY, amount: approvedAmount }],
+      attoAlphAmount: DUST_AMOUNT * 2n
+    })
+  }
+
   async swapWithSlippageTx(
     signer: SignerProvider,
     poolKey: PoolKey,
@@ -522,6 +660,27 @@ export class Invariant {
       approvedAmount
     )
     return await signAndSend(signer, tx)
+  }
+
+  async swapWithSlippageExecute(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    xToY: boolean,
+    amount: TokenAmount,
+    byAmountIn: boolean,
+    estimatedSqrtPrice: SqrtPrice,
+    slippage: Percentage,
+    approvedAmount: TokenAmount = amount
+  ) {
+    return await this.swapExecute(
+      signer,
+      poolKey,
+      xToY,
+      amount,
+      byAmountIn,
+      calculateSqrtPriceAfterSlippage(estimatedSqrtPrice, slippage, !xToY),
+      approvedAmount
+    )
   }
 
   async feeTierExist(feeTier: FeeTier): Promise<boolean> {
@@ -814,5 +973,128 @@ export class Invariant {
         })
       ).returns
     )
+  }
+
+  async createPoolAndPositionTx(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    initSqrtPrice: SqrtPrice,
+    lowerTick: bigint,
+    upperTick: bigint,
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
+  ) {
+    const initTick = calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing)
+    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      false
+    )
+    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      true
+    )
+
+    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
+    const txBytecode = CreatePoolAndPosition.script.buildByteCodeToDeploy({
+      invariant: this.instance.contractId,
+      poolKey: wrapPoolKey(poolKey),
+      initSqrtPrice: { v: initSqrtPrice },
+      initTick,
+      lowerTick,
+      upperTick,
+      liquidityDelta: { v: liquidityDelta },
+      slippageLimitLower: { v: slippageLimitLower },
+      slippageLimitUpper: { v: slippageLimitUpper }
+    })
+
+    const { address, publicKey } = await signer.getSelectedAccount()
+    const tx = await builder.buildExecuteScriptTx(
+      {
+        signerAddress: address,
+        bytecode: txBytecode,
+        attoAlphAmount: MAP_ENTRY_DEPOSIT * 11n + DUST_AMOUNT * 2n,
+        tokens: [
+          { id: poolKey.tokenX, amount: approvedTokensX },
+          { id: poolKey.tokenY, amount: approvedTokensY }
+        ]
+      },
+      publicKey
+    )
+    return tx
+  }
+
+  async createPoolAndPosition(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    initSqrtPrice: SqrtPrice,
+    lowerTick: bigint,
+    upperTick: bigint,
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
+  ): Promise<string> {
+    const tx = await this.createPoolAndPositionTx(
+      signer,
+      poolKey,
+      initSqrtPrice,
+      lowerTick,
+      upperTick,
+      liquidityDelta,
+      approvedTokensX,
+      approvedTokensY,
+      spotSqrtPrice,
+      slippageTolerance
+    )
+    return await signAndSend(signer, tx)
+  }
+
+  async createPoolAndPositionExecute(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    initSqrtPrice: SqrtPrice,
+    lowerTick: bigint,
+    upperTick: bigint,
+    liquidityDelta: Liquidity,
+    approvedTokensX: TokenAmount,
+    approvedTokensY: TokenAmount,
+    spotSqrtPrice: SqrtPrice,
+    slippageTolerance: Percentage
+  ) {
+    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      false
+    )
+    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
+      spotSqrtPrice,
+      slippageTolerance,
+      true
+    )
+
+    return await CreatePoolAndPosition.execute(signer, {
+      initialFields: {
+        invariant: this.instance.contractId,
+        poolKey: wrapPoolKey(poolKey),
+        initSqrtPrice: { v: initSqrtPrice },
+        initTick: calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing),
+        lowerTick,
+        upperTick,
+        liquidityDelta: { v: liquidityDelta },
+        slippageLimitLower: { v: slippageLimitLower },
+        slippageLimitUpper: { v: slippageLimitUpper }
+      },
+      attoAlphAmount: MAP_ENTRY_DEPOSIT * 11n + DUST_AMOUNT * 2n,
+      tokens: [
+        { id: poolKey.tokenX, amount: approvedTokensX },
+        { id: poolKey.tokenY, amount: approvedTokensY }
+      ]
+    })
   }
 }

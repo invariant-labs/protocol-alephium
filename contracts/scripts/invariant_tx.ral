@@ -67,3 +67,26 @@ TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: TokenA
     let _ = invariant.swap{callerAddress!() -> swappedToken: swappedAmount}(poolKey, xToY, amount, byAmountIn, sqrtPriceLimit)
 }
 
+TxScript CreatePoolAndPosition(
+    invariant: Invariant,
+    poolKey: PoolKey,
+    initSqrtPrice: SqrtPrice,
+    initTick: I256, 
+    lowerTick: I256,
+    upperTick: I256,
+    liquidityDelta: Liquidity,
+    slippageLimitLower: SqrtPrice,
+    slippageLimitUpper: SqrtPrice
+) {
+    invariant.createPool{callerAddress!() -> ALPH: 5 * mapEntryDeposit!() }(poolKey.tokenX, poolKey.tokenY, poolKey.feeTier, initSqrtPrice, initTick)
+
+    let amountX = tokenRemaining!(callerAddress!(), poolKey.tokenX)
+    let amountY = tokenRemaining!(callerAddress!(), poolKey.tokenY)
+    if(poolKey.tokenX == ALPH) {
+        invariant.createPosition{callerAddress!() -> ALPH: amountX, poolKey.tokenY: amountY}
+            (poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)    
+    } else {
+        invariant.createPosition{callerAddress!() -> poolKey.tokenX: amountX, poolKey.tokenY: amountY, ALPH: mapEntryDeposit!() * 6}
+            (poolKey, lowerTick, upperTick, liquidityDelta, slippageLimitLower, slippageLimitUpper)
+    }
+}
