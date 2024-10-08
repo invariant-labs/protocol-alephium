@@ -137,7 +137,8 @@ export class FungibleToken {
         amountTwo: valueTwo,
         tokenThree: tokenThreeId,
         amountThree: valueThree
-      }
+      },
+      attoAlphAmount: DUST_AMOUNT * 3n
     })
 
     if (options.waitForTxConfirmation) {
