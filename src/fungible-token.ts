@@ -67,7 +67,8 @@ export class FungibleToken {
     options: Options = DEFAULT_OPTIONS
   ) {
     const result = await Withdraw.execute(signer, {
-      initialFields: { token: tokenId, amount: value }
+      initialFields: { token: tokenId, amount: value },
+      attoAlphAmount: DUST_AMOUNT
     })
 
     if (options.waitForTxConfirmation) {
