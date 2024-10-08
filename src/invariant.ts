@@ -31,6 +31,7 @@ import {
   decodeTick,
   FeeTier,
   Liquidity,
+  Options,
   Percentage,
   Pool,
   PoolKey,
@@ -65,10 +66,13 @@ import {
 } from './utils'
 import {
   CHUNK_SIZE,
+  CONFIRMATIONS,
+  DEFAULT_OPTIONS,
   MAX_BATCHES_QUERIED,
   MAX_LIQUIDITY_TICKS_QUERIED,
   MAX_POOL_KEYS_RETURNED,
-  POSITIONS_ENTRIES_LIMIT
+  POSITIONS_ENTRIES_LIMIT,
+  REQUEST_INTERVAL
 } from './consts'
 import {
   Address,
@@ -78,6 +82,7 @@ import {
   MAP_ENTRY_DEPOSIT,
   SignerProvider,
   TransactionBuilder,
+  waitForTxConfirmation,
   web3
 } from '@alephium/web3'
 
@@ -149,87 +154,46 @@ export class Invariant {
     })
   }
 
-  async addFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = AddFeeTier.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      feeTier: wrapFeeTier(feeTier)
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT },
-      publicKey
-    )
-    return tx
-  }
-
-  async addFeeTier(signer: SignerProvider, feeTier: FeeTier): Promise<string> {
-    const tx = await this.addFeeTierTx(signer, feeTier)
-    return await signAndSend(signer, tx)
-  }
-
-  async addFeeTierExecute(signer: SignerProvider, feeTier: FeeTier) {
-    return await AddFeeTier.execute(signer, {
+  async addFeeTier(
+    signer: SignerProvider,
+    feeTier: FeeTier,
+    options: Options = DEFAULT_OPTIONS
+  ): Promise<string> {
+    const { txId } = await AddFeeTier.execute(signer, {
       initialFields: { invariant: this.instance.contractId, feeTier: wrapFeeTier(feeTier) },
       attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return txId
   }
 
-  async removeFeeTierTx(signer: SignerProvider, feeTier: FeeTier) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = RemoveFeeTier.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      feeTier: wrapFeeTier(feeTier)
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode },
-      publicKey
-    )
-    return tx
-  }
-
-  async removeFeeTier(signer: SignerProvider, feeTier: FeeTier): Promise<string> {
-    const tx = await this.removeFeeTierTx(signer, feeTier)
-    return await signAndSend(signer, tx)
-  }
-
-  async removeFeeTierExecute(signer: SignerProvider, feeTier: FeeTier) {
-    return await RemoveFeeTier.execute(signer, {
+  async removeFeeTier(
+    signer: SignerProvider,
+    feeTier: FeeTier,
+    options: Options = DEFAULT_OPTIONS
+  ): Promise<string> {
+    const result = await RemoveFeeTier.execute(signer, {
       initialFields: { invariant: this.instance.contractId, feeTier: wrapFeeTier(feeTier) }
     })
-  }
 
-  async createPoolTx(signer: SignerProvider, poolKey: PoolKey, initSqrtPrice: SqrtPrice) {
-    const initTick = calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing)
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = CreatePool.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      token0: poolKey.tokenX,
-      token1: poolKey.tokenY,
-      feeTier: wrapFeeTier(poolKey.feeTier),
-      initSqrtPrice: { v: initSqrtPrice },
-      initTick
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n },
-      publicKey
-    )
-    return tx
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
   async createPool(
     signer: SignerProvider,
     poolKey: PoolKey,
-    initSqrtPrice: SqrtPrice
+    initSqrtPrice: SqrtPrice,
+    options: Options = DEFAULT_OPTIONS
   ): Promise<string> {
-    const tx = await this.createPoolTx(signer, poolKey, initSqrtPrice)
-    return await signAndSend(signer, tx)
-  }
-
-  async createPoolExecute(signer: SignerProvider, poolKey: PoolKey, initSqrtPrice: SqrtPrice) {
-    return await CreatePool.execute(signer, {
+    const result = await CreatePool.execute(signer, {
       initialFields: {
         invariant: this.instance.contractId,
         token0: poolKey.tokenX,
@@ -240,154 +204,62 @@ export class Invariant {
       },
       attoAlphAmount: MAP_ENTRY_DEPOSIT * 5n
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
-  async withdrawProtocolFeeTx(signer: SignerProvider, poolKey: PoolKey) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = WithdrawProtocolFee.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      poolKey: wrapPoolKey(poolKey)
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
-      publicKey
-    )
-    return tx
-  }
-
-  async withdrawProtocolFee(signer: SignerProvider, poolKey: PoolKey): Promise<string> {
-    const tx = await this.withdrawProtocolFeeTx(signer, poolKey)
-    return await signAndSend(signer, tx)
-  }
-
-  async withdrawProtocolFeeExecute(signer: SignerProvider, poolKey: PoolKey) {
-    return await WithdrawProtocolFee.execute(signer, {
+  async withdrawProtocolFee(
+    signer: SignerProvider,
+    poolKey: PoolKey,
+    options: Options = DEFAULT_OPTIONS
+  ): Promise<string> {
+    const result = await WithdrawProtocolFee.execute(signer, {
       initialFields: { invariant: this.instance.contractId, poolKey: wrapPoolKey(poolKey) },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
-  }
 
-  async changeFeeReceiverTx(signer: SignerProvider, poolKey: PoolKey, newFeeReceiver: Address) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = ChangeFeeReceiver.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      poolKey: wrapPoolKey(poolKey),
-      newFeeReceiver
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode },
-      publicKey
-    )
-    return tx
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
   async changeFeeReceiver(
     signer: SignerProvider,
     poolKey: PoolKey,
-    newFeeReceiver: Address
+    newFeeReceiver: Address,
+    options: Options = DEFAULT_OPTIONS
   ): Promise<string> {
-    const tx = await this.changeFeeReceiverTx(signer, poolKey, newFeeReceiver)
-    return await signAndSend(signer, tx)
-  }
-
-  async changeFeeReceiverExecute(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    newFeeReceiver: Address
-  ) {
-    return await ChangeFeeReceiver.execute(signer, {
+    const result = await ChangeFeeReceiver.execute(signer, {
       initialFields: {
         invariant: this.instance.contractId,
         poolKey: wrapPoolKey(poolKey),
         newFeeReceiver
       }
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
-  async changeProtocolFeeTx(signer: SignerProvider, fee: bigint) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = ChangeProtocolFee.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      newFee: fee
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode },
-      publicKey
-    )
-    return tx
-  }
-  async changeProtocolFee(signer: SignerProvider, fee: bigint): Promise<string> {
-    const tx = await this.changeProtocolFeeTx(signer, fee)
-    return await signAndSend(signer, tx)
-  }
-
-  async changeProtocolFeeExecute(signer: SignerProvider, fee: bigint) {
-    return await ChangeProtocolFee.execute(signer, {
+  async changeProtocolFee(signer: SignerProvider, fee: bigint, options: Options = DEFAULT_OPTIONS) {
+    const result = await ChangeProtocolFee.execute(signer, {
       initialFields: { invariant: this.instance.contractId, newFee: { v: fee } }
     })
-  }
 
-  async createPositionTx(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    lowerTick: bigint,
-    upperTick: bigint,
-    liquidityDelta: Liquidity,
-    approvedTokensX: TokenAmount,
-    approvedTokensY: TokenAmount,
-    spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
-  ) {
-    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
-      spotSqrtPrice,
-      slippageTolerance,
-      false
-    )
-    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
-      spotSqrtPrice,
-      slippageTolerance,
-      true
-    )
-
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = CreatePosition.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      poolKey: wrapPoolKey(poolKey),
-      lowerTick,
-      upperTick,
-      liquidityDelta: { v: liquidityDelta },
-      slippageLimitLower: { v: slippageLimitLower },
-      slippageLimitUpper: { v: slippageLimitUpper }
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    let attoAlphAmount = MAP_ENTRY_DEPOSIT * 6n + DUST_AMOUNT * 2n
-    const tokens: { id: string; amount: bigint }[] = []
-
-    if (approvedTokensX) {
-      tokens.push({ id: poolKey.tokenX, amount: approvedTokensX })
-    }
-    if (approvedTokensY) {
-      tokens.push({ id: poolKey.tokenY, amount: approvedTokensY })
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
     }
 
-    if (poolKey.tokenX === ALPH_TOKEN_ID) {
-      attoAlphAmount += approvedTokensX + DUST_AMOUNT
-      tokens.shift()
-    }
-
-    const tx = await builder.buildExecuteScriptTx(
-      {
-        signerAddress: address,
-        bytecode: txBytecode,
-        attoAlphAmount,
-        tokens
-      },
-      publicKey
-    )
-    return tx
+    return result.txId
   }
 
   async createPosition(
@@ -399,32 +271,8 @@ export class Invariant {
     approvedTokensX: TokenAmount,
     approvedTokensY: TokenAmount,
     spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
-  ): Promise<string> {
-    const tx = await this.createPositionTx(
-      signer,
-      poolKey,
-      lowerTick,
-      upperTick,
-      liquidityDelta,
-      approvedTokensX,
-      approvedTokensY,
-      spotSqrtPrice,
-      slippageTolerance
-    )
-    return await signAndSend(signer, tx)
-  }
-
-  async createPositionExecute(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    lowerTick: bigint,
-    upperTick: bigint,
-    liquidityDelta: Liquidity,
-    approvedTokensX: TokenAmount,
-    approvedTokensY: TokenAmount,
-    spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
+    slippageTolerance: Percentage,
+    options: Options = DEFAULT_OPTIONS
   ) {
     const slippageLimitLower = calculateSqrtPriceAfterSlippage(
       spotSqrtPrice,
@@ -437,7 +285,7 @@ export class Invariant {
       true
     )
 
-    return await CreatePosition.execute(signer, {
+    const result = await CreatePosition.execute(signer, {
       initialFields: {
         invariant: this.instance.contractId,
         poolKey: wrapPoolKey(poolKey),
@@ -453,119 +301,59 @@ export class Invariant {
         { id: poolKey.tokenY, amount: approvedTokensY }
       ]
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
-  async removePositionTx(signer: SignerProvider, index: bigint) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = RemovePosition.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      index
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
-      publicKey
-    )
-    return tx
-  }
-
-  async removePosition(signer: SignerProvider, index: bigint): Promise<string> {
-    const tx = await this.removePositionTx(signer, index)
-    return await signAndSend(signer, tx)
-  }
-
-  async removePositionExecute(signer: SignerProvider, index: bigint) {
-    return await RemovePosition.execute(signer, {
+  async removePosition(signer: SignerProvider, index: bigint, options: Options = DEFAULT_OPTIONS) {
+    const result = await RemovePosition.execute(signer, {
       initialFields: { invariant: this.instance.contractId, index }
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
-  async claimFeeTx(signer: SignerProvider, index: bigint) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = ClaimFee.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      index
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: DUST_AMOUNT * 2n },
-      publicKey
-    )
-    return tx
-  }
-
-  async claimFee(signer: SignerProvider, index: bigint): Promise<string> {
-    const tx = await this.claimFeeTx(signer, index)
-    return await signAndSend(signer, tx)
-  }
-
-  async claimFeeExecute(signer: SignerProvider, index: bigint) {
-    return await ClaimFee.execute(signer, {
+  async claimFee(
+    signer: SignerProvider,
+    index: bigint,
+    options: Options = DEFAULT_OPTIONS
+  ): Promise<string> {
+    const result = await ClaimFee.execute(signer, {
       initialFields: { invariant: this.instance.contractId, index },
       attoAlphAmount: DUST_AMOUNT * 2n
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
-  async transferPositionTx(signer: SignerProvider, index: bigint, recipient: Address) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = TransferPosition.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      index,
-      recipient
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode: txBytecode, attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n },
-      publicKey
-    )
-    return tx
-  }
   async transferPosition(
     signer: SignerProvider,
     index: bigint,
-    recipient: Address
-  ): Promise<string> {
-    const tx = await this.transferPositionTx(signer, index, recipient)
-    return await signAndSend(signer, tx)
-  }
-
-  async transferPositionExecute(signer: SignerProvider, index: bigint, recipient: Address) {
-    return await TransferPosition.execute(signer, {
+    recipient: Address,
+    options: Options = DEFAULT_OPTIONS
+  ) {
+    const result = await TransferPosition.execute(signer, {
       initialFields: { invariant: this.instance.contractId, index, recipient },
       attoAlphAmount: MAP_ENTRY_DEPOSIT * 2n
     })
-  }
 
-  async swapTx(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    xToY: boolean,
-    amount: TokenAmount,
-    byAmountIn: boolean,
-    sqrtPriceLimit: SqrtPrice,
-    approvedAmount = amount
-  ) {
-    const tokenId = xToY ? poolKey.tokenX : poolKey.tokenY
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = Swap.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      poolKey: wrapPoolKey(poolKey),
-      xToY,
-      amount: { v: amount },
-      byAmountIn,
-      sqrtPriceLimit: { v: sqrtPriceLimit }
-    })
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      {
-        signerAddress: address,
-        bytecode: txBytecode,
-        tokens: [{ id: tokenId, amount: approvedAmount }],
-        attoAlphAmount: DUST_AMOUNT * 2n
-      },
-      publicKey
-    )
-    return tx
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 
   async swap(
@@ -575,30 +363,10 @@ export class Invariant {
     amount: TokenAmount,
     byAmountIn: boolean,
     sqrtPriceLimit: SqrtPrice,
-    approvedAmount = amount
-  ): Promise<string> {
-    const tx = await this.swapTx(
-      signer,
-      poolKey,
-      xToY,
-      amount,
-      byAmountIn,
-      sqrtPriceLimit,
-      approvedAmount
-    )
-    return await signAndSend(signer, tx)
-  }
-
-  async swapExecute(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    xToY: boolean,
-    amount: TokenAmount,
-    byAmountIn: boolean,
-    sqrtPriceLimit: SqrtPrice,
-    approvedAmount = amount
+    approvedAmount = amount,
+    options: Options = DEFAULT_OPTIONS
   ) {
-    return await Swap.execute(signer, {
+    const result = await Swap.execute(signer, {
       initialFields: {
         invariant: this.instance.contractId,
         poolKey: wrapPoolKey(poolKey),
@@ -610,33 +378,12 @@ export class Invariant {
       tokens: [{ id: xToY ? poolKey.tokenX : poolKey.tokenY, amount: approvedAmount }],
       attoAlphAmount: DUST_AMOUNT * 2n
     })
-  }
 
-  async swapWithSlippageTx(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    xToY: boolean,
-    amount: TokenAmount,
-    byAmountIn: boolean,
-    estimatedSqrtPrice: SqrtPrice,
-    slippage: Percentage,
-    approvedAmount: TokenAmount = amount
-  ) {
-    const sqrtPriceAfterSlippage = calculateSqrtPriceAfterSlippage(
-      estimatedSqrtPrice,
-      slippage,
-      !xToY
-    )
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
 
-    return this.swapTx(
-      signer,
-      poolKey,
-      xToY,
-      amount,
-      byAmountIn,
-      (xToY ? sqrtPriceAfterSlippage - 1n : sqrtPriceAfterSlippage + 1n) as SqrtPrice,
-      approvedAmount
-    )
+    return result.txId
   }
 
   async swapWithSlippage(
@@ -647,39 +394,18 @@ export class Invariant {
     byAmountIn: boolean,
     estimatedSqrtPrice: SqrtPrice,
     slippage: Percentage,
-    approvedAmount: TokenAmount = amount
-  ): Promise<string> {
-    const tx = await this.swapWithSlippageTx(
-      signer,
-      poolKey,
-      xToY,
-      amount,
-      byAmountIn,
-      estimatedSqrtPrice,
-      slippage,
-      approvedAmount
-    )
-    return await signAndSend(signer, tx)
-  }
-
-  async swapWithSlippageExecute(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    xToY: boolean,
-    amount: TokenAmount,
-    byAmountIn: boolean,
-    estimatedSqrtPrice: SqrtPrice,
-    slippage: Percentage,
-    approvedAmount: TokenAmount = amount
+    approvedAmount: TokenAmount = amount,
+    options: Options = DEFAULT_OPTIONS
   ) {
-    return await this.swapExecute(
+    return await this.swap(
       signer,
       poolKey,
       xToY,
       amount,
       byAmountIn,
       calculateSqrtPriceAfterSlippage(estimatedSqrtPrice, slippage, !xToY),
-      approvedAmount
+      approvedAmount,
+      options
     )
   }
 
@@ -975,59 +701,6 @@ export class Invariant {
     )
   }
 
-  async createPoolAndPositionTx(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    initSqrtPrice: SqrtPrice,
-    lowerTick: bigint,
-    upperTick: bigint,
-    liquidityDelta: Liquidity,
-    approvedTokensX: TokenAmount,
-    approvedTokensY: TokenAmount,
-    spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
-  ) {
-    const initTick = calculateTick(initSqrtPrice, poolKey.feeTier.tickSpacing)
-    const slippageLimitLower = calculateSqrtPriceAfterSlippage(
-      spotSqrtPrice,
-      slippageTolerance,
-      false
-    )
-    const slippageLimitUpper = calculateSqrtPriceAfterSlippage(
-      spotSqrtPrice,
-      slippageTolerance,
-      true
-    )
-
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const txBytecode = CreatePoolAndPosition.script.buildByteCodeToDeploy({
-      invariant: this.instance.contractId,
-      poolKey: wrapPoolKey(poolKey),
-      initSqrtPrice: { v: initSqrtPrice },
-      initTick,
-      lowerTick,
-      upperTick,
-      liquidityDelta: { v: liquidityDelta },
-      slippageLimitLower: { v: slippageLimitLower },
-      slippageLimitUpper: { v: slippageLimitUpper }
-    })
-
-    const { address, publicKey } = await signer.getSelectedAccount()
-    const tx = await builder.buildExecuteScriptTx(
-      {
-        signerAddress: address,
-        bytecode: txBytecode,
-        attoAlphAmount: MAP_ENTRY_DEPOSIT * 11n + DUST_AMOUNT * 2n,
-        tokens: [
-          { id: poolKey.tokenX, amount: approvedTokensX },
-          { id: poolKey.tokenY, amount: approvedTokensY }
-        ]
-      },
-      publicKey
-    )
-    return tx
-  }
-
   async createPoolAndPosition(
     signer: SignerProvider,
     poolKey: PoolKey,
@@ -1038,34 +711,8 @@ export class Invariant {
     approvedTokensX: TokenAmount,
     approvedTokensY: TokenAmount,
     spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
-  ): Promise<string> {
-    const tx = await this.createPoolAndPositionTx(
-      signer,
-      poolKey,
-      initSqrtPrice,
-      lowerTick,
-      upperTick,
-      liquidityDelta,
-      approvedTokensX,
-      approvedTokensY,
-      spotSqrtPrice,
-      slippageTolerance
-    )
-    return await signAndSend(signer, tx)
-  }
-
-  async createPoolAndPositionExecute(
-    signer: SignerProvider,
-    poolKey: PoolKey,
-    initSqrtPrice: SqrtPrice,
-    lowerTick: bigint,
-    upperTick: bigint,
-    liquidityDelta: Liquidity,
-    approvedTokensX: TokenAmount,
-    approvedTokensY: TokenAmount,
-    spotSqrtPrice: SqrtPrice,
-    slippageTolerance: Percentage
+    slippageTolerance: Percentage,
+    options: Options = DEFAULT_OPTIONS
   ) {
     const slippageLimitLower = calculateSqrtPriceAfterSlippage(
       spotSqrtPrice,
@@ -1078,7 +725,7 @@ export class Invariant {
       true
     )
 
-    return await CreatePoolAndPosition.execute(signer, {
+    const result = await CreatePoolAndPosition.execute(signer, {
       initialFields: {
         invariant: this.instance.contractId,
         poolKey: wrapPoolKey(poolKey),
@@ -1096,5 +743,11 @@ export class Invariant {
         { id: poolKey.tokenY, amount: approvedTokensY }
       ]
     })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 }
