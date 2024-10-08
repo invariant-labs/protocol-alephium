@@ -159,16 +159,16 @@ export class Invariant {
     feeTier: FeeTier,
     options: Options = DEFAULT_OPTIONS
   ): Promise<string> {
-    const { txId } = await AddFeeTier.execute(signer, {
+    const result = await AddFeeTier.execute(signer, {
       initialFields: { invariant: this.instance.contractId, feeTier: wrapFeeTier(feeTier) },
       attoAlphAmount: MAP_ENTRY_DEPOSIT
     })
 
     if (options.waitForTxConfirmation) {
-      await waitForTxConfirmation(txId, CONFIRMATIONS, REQUEST_INTERVAL)
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
     }
 
-    return txId
+    return result.txId
   }
 
   async removeFeeTier(

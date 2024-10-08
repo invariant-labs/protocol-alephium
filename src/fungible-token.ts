@@ -6,13 +6,14 @@ import {
   SignerProvider,
   stringToHex,
   TransactionBuilder,
+  waitForTxConfirmation,
   web3
 } from '@alephium/web3'
 import { Network } from './network'
 import { Airdrop, TokenFaucet, Withdraw } from '../artifacts/ts'
 import { balanceOf, signAndSend, waitTxConfirmed } from './utils'
-import { MAX_U256 } from './consts'
-import { TokenAmount } from './types'
+import { CONFIRMATIONS, DEFAULT_OPTIONS, MAX_U256, REQUEST_INTERVAL } from './consts'
+import { Options, TokenAmount } from './types'
 
 export type TokenMetaData = {
   symbol: string
@@ -59,25 +60,21 @@ export class FungibleToken {
     return new FungibleToken()
   }
 
-  async mintTx(signer: SignerProvider, value: TokenAmount, tokenId: string) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const bytecode = Withdraw.script.buildByteCodeToDeploy({
-      token: tokenId,
-      amount: value
+  async mint(
+    signer: SignerProvider,
+    value: TokenAmount,
+    tokenId: string,
+    options: Options = DEFAULT_OPTIONS
+  ) {
+    const result = await Withdraw.execute(signer, {
+      initialFields: { token: tokenId, amount: value }
     })
 
-    const { address, publicKey } = await signer.getSelectedAccount()
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
 
-    const unsignedTxBuild = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode, attoAlphAmount: DUST_AMOUNT },
-      publicKey
-    )
-    return unsignedTxBuild
-  }
-
-  async mint(signer: SignerProvider, value: TokenAmount, tokenId: string) {
-    const tx = await this.mintTx(signer, value, tokenId)
-    return await signAndSend(signer, tx)
+    return result.txId
   }
 
   async getAllBalances(tokens: string[], owner: Address): Promise<Map<string, TokenAmount>> {
@@ -122,34 +119,6 @@ export class FungibleToken {
     return BigInt((await nodeProvider.fetchFungibleTokenMetaData(tokenId)).decimals)
   }
 
-  async airdropTx(
-    signer: SignerProvider,
-    valueOne: TokenAmount,
-    tokenOneId: string,
-    valueTwo: TokenAmount,
-    tokenTwoId: string,
-    valueThree: TokenAmount,
-    tokenThreeId: string
-  ) {
-    const builder = TransactionBuilder.from(web3.getCurrentNodeProvider())
-    const bytecode = Airdrop.script.buildByteCodeToDeploy({
-      tokenOne: tokenOneId,
-      amountOne: valueOne,
-      tokenTwo: tokenTwoId,
-      amountTwo: valueTwo,
-      tokenThree: tokenThreeId,
-      amountThree: valueThree
-    })
-
-    const { address, publicKey } = await signer.getSelectedAccount()
-
-    const unsignedTxBuild = await builder.buildExecuteScriptTx(
-      { signerAddress: address, bytecode, attoAlphAmount: DUST_AMOUNT * 3n },
-      publicKey
-    )
-    return unsignedTxBuild
-  }
-
   async airdrop(
     signer: SignerProvider,
     valueOne: TokenAmount,
@@ -157,17 +126,24 @@ export class FungibleToken {
     valueTwo: TokenAmount,
     tokenTwoId: string,
     valueThree: TokenAmount,
-    tokenThreeId: string
+    tokenThreeId: string,
+    options: Options = DEFAULT_OPTIONS
   ) {
-    const tx = await this.airdropTx(
-      signer,
-      valueOne,
-      tokenOneId,
-      valueTwo,
-      tokenTwoId,
-      valueThree,
-      tokenThreeId
-    )
-    return await signAndSend(signer, tx)
+    const result = await Airdrop.execute(signer, {
+      initialFields: {
+        tokenOne: tokenOneId,
+        amountOne: valueOne,
+        tokenTwo: tokenTwoId,
+        amountTwo: valueTwo,
+        tokenThree: tokenThreeId,
+        amountThree: valueThree
+      }
+    })
+
+    if (options.waitForTxConfirmation) {
+      await waitForTxConfirmation(result.txId, CONFIRMATIONS, REQUEST_INTERVAL)
+    }
+
+    return result.txId
   }
 }
