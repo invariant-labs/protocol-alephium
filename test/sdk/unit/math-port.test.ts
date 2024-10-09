@@ -105,7 +105,8 @@ describe('math spec - port', () => {
     test('max x', async () => {
       const currentTickIndex = GLOBAL_MIN_TICK
       const currentSqrtPrice = toSqrtPrice(1n)
-      const liquidityDelta = maxLiquidity
+      const liquidityDelta =
+        14894636928365657818617562894966478347089917844485661564914997061885569n as Liquidity
       const liquiditySign = true
       const upperTick = GLOBAL_MAX_TICK
       const lowerTick = GLOBAL_MIN_TICK + 1n
@@ -119,7 +120,7 @@ describe('math spec - port', () => {
         lowerTick
       )
       expect(result).toEqual([
-        75880998414682858767056931020720040283888865803509762441587530402105305752645n,
+        115792089237316195423570985008687907853269984665640564039457584007913126723661n,
         0n,
         false
       ])
@@ -128,7 +129,8 @@ describe('math spec - port', () => {
     test('max y', async () => {
       const currentTickIndex = GLOBAL_MAX_TICK
       const currentSqrtPrice = toSqrtPrice(1n)
-      const liquidityDelta = maxLiquidity
+      const liquidityDelta =
+        14894636928373696130999721733782910261271218958219522272590008580045463n as Liquidity
       const liquiditySign = true
       const upperTick = GLOBAL_MAX_TICK - 1n
       const lowerTick = GLOBAL_MIN_TICK
@@ -143,7 +145,7 @@ describe('math spec - port', () => {
       )
       expect(result).toEqual([
         0n,
-        75880996274614937472454279923345931777432945506580976077368827511053494714377n,
+        115792089237316195423570985008687907853269984665640564039457584007913122202687n,
         false
       ])
     })
@@ -248,7 +250,7 @@ describe('math spec - port', () => {
     test('shouldnt overflow in intermediate operations', async () => {
       const sqrtPriceA = toSqrtPrice(1n)
       const sqrtPriceB = toSqrtPrice(5n, 1n)
-      const liquidity = ((1n << 256n) - 1n) as Liquidity
+      const liquidity = MAX_U256 as Liquidity
       getDeltaX(sqrtPriceA, sqrtPriceB, liquidity, true)
       getDeltaX(sqrtPriceA, sqrtPriceB, liquidity, false)
     })
@@ -261,11 +263,14 @@ describe('math spec - port', () => {
     })
   })
   describe('get delta x - domain', () => {
-    const almostMinSqrtPrice = 15259695000000000000n as SqrtPrice
-    const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
+    const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
+    const maxLiquidity = MAX_U256 as Liquidity
     const minLiquidity = 1n as Liquidity
 
     test('maximalize delta sqrt price and liquidity', async () => {
+      const maxLiquidity =
+        14893892252372018684584396344694974244327977275368655982357119807809415n as Liquidity
+
       const params = {
         sqrtPriceA: MAX_SQRT_PRICE,
         sqrtPriceB: MIN_SQRT_PRICE,
@@ -274,10 +279,10 @@ describe('math spec - port', () => {
       const resultUp = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, true)
       const resultDown = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, false)
       expect(resultUp).toEqual(
-        75884792730156830614567103553061795263351065677581979504561495713443442818879n
+        115792089237316195423570985008687907853269984665640564039457584007913127186298n
       )
       expect(resultDown).toEqual(
-        75884792730156830614567103553061795263351065677581979504561495713443442818878n
+        115792089237316195423570869216598670494368815695259202827259764340774619665833n
       )
     })
     test('maximalize delta sqrt price and minimalize liquidity', async () => {
@@ -288,8 +293,8 @@ describe('math spec - port', () => {
       }
       const resultUp = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, true)
       const resultDown = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, false)
-      expect(resultUp).toEqual(1n)
-      expect(resultDown).toEqual(0n)
+      expect(resultUp).toEqual(7774469n)
+      expect(resultDown).toEqual(7774468n)
     })
     test('minimize denominator on maximize liquidity which fit into token amounts', async () => {
       const params = {
@@ -300,16 +305,16 @@ describe('math spec - port', () => {
       const resultUp = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, true)
       const resultDown = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, false)
       expect(resultUp).toEqual(
-        3794315473971847510172532341754979462199874072217062973965311338137066234n
+        1157920892373161954235709850086879078532699846656405640394575840079131296n
       )
       expect(resultDown).toEqual(
-        3794315473971847510172532341754979462199874072217062973965311338137066233n
+        578960446186580977117854925043439539266349923328202820197287920039565648n
       )
     })
     test('minimize denominator on minimize liquidity which fit into token amounts', async () => {
       const params = {
         sqrtPriceA: MIN_SQRT_PRICE,
-        sqrtPriceB: almostMinSqrtPrice,
+        sqrtPriceB: (almostMinSqrtPrice + 99999n) as SqrtPrice,
         liquidity: minLiquidity
       }
       const resultUp = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, true)
@@ -320,7 +325,7 @@ describe('math spec - port', () => {
     test('delta price limited by search range on max liquidity', async () => {
       const searchLimit = 256n
       const tickSpacing = 100n
-      const maxSearchLimit = 221818n - searchLimit * tickSpacing
+      const maxSearchLimit = GLOBAL_MAX_TICK - searchLimit * tickSpacing
       const minSearchSqrtPrice = calculateSqrtPrice(maxSearchLimit)
 
       const params = {
@@ -329,13 +334,11 @@ describe('math spec - port', () => {
         liquidity: maxLiquidity
       }
       const resultUp = getDeltaX(params.sqrtPriceA, params.sqrtPriceB, params.liquidity, true)
-      expect(resultUp).toEqual(
-        45875017378130362421757891862614875858481775310156442203847653871247n
-      )
+      expect(resultUp).toEqual(3867064427937095529780795325095328040602638051663673509970074n)
     })
     test('minimal price difference', async () => {
-      const almostMaxSqrtPrice = (MAX_SQRT_PRICE - toSqrtPrice(1n)) as SqrtPrice
-      const almostMinSqrtPrice = (MIN_SQRT_PRICE + toSqrtPrice(1n)) as SqrtPrice
+      const almostMaxSqrtPrice = (MAX_SQRT_PRICE - 1n) as SqrtPrice
+      const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
       const paramsUpperBound = {
         sqrtPriceA: MAX_SQRT_PRICE,
         sqrtPriceB: almostMaxSqrtPrice,
@@ -360,9 +363,9 @@ describe('math spec - port', () => {
         paramsBottomBound.liquidity,
         paramsBottomBound.roundingUp
       )
-      expect(resultUp).toEqual(269608649375997235557394191156352599353486422139915865816324471n)
+      expect(resultUp).toEqual(1915744226453965600842067n)
       expect(resultDown).toEqual(
-        75883634844601460750582416171430603974060896681619645705711819135499453546638n
+        1157920892373161954235709850086879078532699846656405640394575840079131296n
       )
     })
     test('zero liquidity', async () => {
@@ -463,14 +466,16 @@ describe('math spec - port', () => {
     const maxLiquidity = (2n ** 256n - 1n) as Liquidity
 
     it('maximize delta sqrt price and liquidity', async () => {
+      const maxLiquidity =
+        14893892252377511760793030683811718275421081100289805046680361113347505n as Liquidity
       const resultUp = getDeltaY(MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, true)
       const resultDown = getDeltaY(MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, false)
 
       expect(resultUp).toStrictEqual(
-        75884790229800029582010010030152469040784228171629896065450012281800526658806n
+        115792089237316195423570985008687907853269984665640564039457584007913125390908n
       )
       expect(resultDown).toStrictEqual(
-        75884790229800029582010010030152469040784228171629896065450012281800526658805n
+        115792089237316195423570985008687907853269984665640564039457584007913125390907n
       )
     })
 

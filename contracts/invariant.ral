@@ -178,7 +178,7 @@ Contract Invariant(
             Liquidity{v: 0},
             calculateSqrtPrice(index),
             feeGrowthOutsideX,
-            feeGrowthOutsideY, 
+            feeGrowthOutsideY,
             0
         )
     }

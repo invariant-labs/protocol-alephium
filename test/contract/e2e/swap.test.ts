@@ -409,10 +409,9 @@ describe('swap tests', () => {
       const dexBalance = await getReserveBalances(invariant, poolKey)
       expect(dexBalance).toStrictEqual({ x: 500n, y: 2499n })
 
-      await expectError(
-        InvariantError.TickLimitReached,
+      await expectVMError(
+        VMError.OutOfGas,
         initSwap(invariant, swapper, poolKey, false, swapAmount, true, MAX_SQRT_PRICE),
-        invariant
       )
     }
   })

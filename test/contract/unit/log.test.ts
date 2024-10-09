@@ -14,9 +14,9 @@ import {
 import { SqrtPrice } from '../../../src/types'
 import { toSqrtPrice } from '../../../src/math'
 
-const sqrtPriceToX32 = async (clamm: CLAMMInstance, val: bigint): Promise<bigint> => {
+const sqrtPriceToX64 = async (clamm: CLAMMInstance, val: bigint): Promise<bigint> => {
   return (
-    await clamm.view.sqrtPriceToX32({
+    await clamm.view.sqrtPriceToX64({
       args: {
         val: { v: val }
       }
@@ -24,14 +24,14 @@ const sqrtPriceToX32 = async (clamm: CLAMMInstance, val: bigint): Promise<bigint
   ).returns
 }
 
-const log2IterativeApproximationX32 = async (
+const log2IterativeApproximationX64 = async (
   clamm: CLAMMInstance,
-  sqrtPriceX32: bigint
+  sqrtPriceX64: bigint
 ): Promise<[boolean, bigint]> => {
   return (
-    await clamm.view.log2IterativeApproximationX32({
+    await clamm.view.log2IterativeApproximationX64({
       args: {
-        sqrtPriceX32
+        sqrtPriceX64
       }
     })
   ).returns
@@ -46,68 +46,68 @@ describe('log tests', () => {
     clamm = await deployCLAMM(sender)
   })
 
-  describe('sqrt price to x32', () => {
+  describe('sqrt price to x64', () => {
     test('min sqrt price -> sqrt(1.0001) ^ MIN_TICK', async () => {
-      const minSqrtPriceDecimal = await calculateSqrtPrice(clamm, -221818n)
-      const result = await sqrtPriceToX32(clamm, minSqrtPriceDecimal)
-      expect(result).toBe(65536n)
+      const minSqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK)
+      const result = await sqrtPriceToX64(clamm, minSqrtPriceDecimal)
+      expect(result).toBe(23727339n)
     })
 
     test('max sqrt price -> sqrt(1.0001) ^ MAX_TICK', async () => {
-      const maxSqrtPriceDecimal = await calculateSqrtPrice(clamm, 221818n)
-      const result = await sqrtPriceToX32(clamm, maxSqrtPriceDecimal)
-      expect(result).toBe(281472330729535n)
+      const maxSqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK)
+      const result = await sqrtPriceToX64(clamm, maxSqrtPriceDecimal)
+      expect(result).toBe(14341362215642069715256648712895n)
     })
   })
 
-  describe('log2 iterative approximation x32', () => {
+  describe('log2 iterative approximation x64', () => {
     test('log2 of 1', async () => {
       const sqrtPriceDecimal = 1_000000000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
       expect(result).toStrictEqual([true, 0n])
     })
 
     test('log2 > 0 when x > 1', async () => {
       const sqrtPriceDecimal = 879_000000000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([true, 42003464192n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([true, 180403980057034096640n])
     })
 
     test('log2 < 0 when x < 1', async () => {
       const sqrtPriceDecimal = 5900000000000000000000n
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([false, 31804489728n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([false, 136599418782046486528n])
     })
 
     test('log2 of max sqrt price', async () => {
-      const maxSqrtPrice = await calculateSqrtPrice(clamm, 221818n)
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, maxSqrtPrice)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([true, 68719345664n])
+      const maxSqrtPrice = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, maxSqrtPrice)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([true, 728645524035954540544n])
     })
 
     test('log2 of min sqrt price', async () => {
-      const maxSqrtPrice = await calculateSqrtPrice(clamm, -221818n)
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, maxSqrtPrice)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([false, 68719345664n])
+      const maxSqrtPrice = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK)
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, maxSqrtPrice)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([false, 728645523220022951936n])
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) - 1', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, -19999n)) - 1n) as SqrtPrice
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([false, 6195642368n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([false, 26610365048300503040n])
     })
 
     test('log2 of sqrt(1.0001 ^ (-19_999)) + 1', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, 19999n)) - 1n) as SqrtPrice
-      const sqrtPriceX32 = await sqrtPriceToX32(clamm, sqrtPriceDecimal)
-      const result = await log2IterativeApproximationX32(clamm, sqrtPriceX32)
-      expect(result).toStrictEqual([true, 6195642368n])
+      const sqrtPriceX64 = await sqrtPriceToX64(clamm, sqrtPriceDecimal)
+      const result = await log2IterativeApproximationX64(clamm, sqrtPriceX64)
+      expect(result).toStrictEqual([true, 26610365048300503040n])
     })
   })
 
@@ -169,47 +169,47 @@ describe('log tests', () => {
     test('around max - 1 tick / get tick at sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       const sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(221818n - 1n)
+      expect(result).toBe(GLOBAL_MAX_TICK - 1n)
     })
 
     test('around max - 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)) -
         1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(221818n - 2n)
+      expect(result).toBe(GLOBAL_MAX_TICK - 2n)
     })
 
     test('around max - 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK - 1n)) +
         1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(221818n - 1n)
+      expect(result).toBe(GLOBAL_MAX_TICK - 1n)
     })
 
     test('around min + 1 tick / get tick at sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       const sqrtPriceDecimal = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(-(221818n - 1n))
+      expect(result).toBe(GLOBAL_MIN_TICK + 1n)
     })
 
     test('around min + 1 tick / get tick slightly below sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)) -
         1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(-221818n)
+      expect(result).toBe(GLOBAL_MIN_TICK)
     })
 
     test('around min + 1 tick / get tick slightly above sqrt(1.0001 ^ (MAX_TICK - 1))', async () => {
       let sqrtPriceDecimal = ((await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK + 1n)) +
         1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(-(221818n - 1n))
+      expect(result).toBe(GLOBAL_MIN_TICK + 1n)
     })
 
     test('get tick slightly below at max tick', async () => {
       const sqrtPriceDecimal = (MAX_SQRT_PRICE - 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(221818n - 1n)
+      expect(result).toBe(GLOBAL_MAX_TICK - 1n)
     })
 
     test('around 19999 tick / get tick at sqrt(1.0001 ^ 19999)', async () => {
@@ -268,7 +268,7 @@ describe('log tests', () => {
     test('get tick slightly above at min tick', async () => {
       const sqrtPriceDecimal = (MIN_SQRT_PRICE + 1n) as SqrtPrice
       const result = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
-      expect(result).toBe(-221818n)
+      expect(result).toBe(GLOBAL_MIN_TICK)
     })
   })
 
@@ -366,7 +366,15 @@ describe('log tests', () => {
 
   describe('all ticks', () => {
     test.skip('all positive ticks', async () => {
+      const oneProgressPercent = GLOBAL_MAX_TICK / 100n
+      let lastPercent = 0n
+
       for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        if (lastPercent < i / oneProgressPercent) {
+          lastPercent = i / oneProgressPercent
+          console.log(`[all positive ticks] \n${lastPercent}% completed`)
+        }
+
         const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
         {
           const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
@@ -381,10 +389,18 @@ describe('log tests', () => {
           expect(tick).toBe(i)
         }
       }
-    }, 3600000)
+    }, 36000000)
 
     test.skip('all negative ticks', async () => {
+      const oneProgressPercent = GLOBAL_MAX_TICK / 100n
+      let lastPercent = 0n
+
       for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        if (lastPercent < i / oneProgressPercent) {
+          lastPercent = i / oneProgressPercent
+          console.log(`[all negative ticks] \n${lastPercent}% completed`)
+        }
+
         const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
         {
           const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, 1n)
@@ -399,11 +415,21 @@ describe('log tests', () => {
           expect(tick).toBe(-i)
         }
       }
-    }, 3600000)
+    }, 36000000)
 
     test.skip('all positive ticks, tick spacing greater than 1', async () => {
+      const oneProgressPercent = GLOBAL_MAX_TICK / 100n
+      let lastPercent = 0n
+
       const tickSpacing = 3n
       for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        if (lastPercent < i / oneProgressPercent) {
+          lastPercent = i / oneProgressPercent
+          console.log(
+            `[all positive ticks, tick spacing greater than 1] \n${lastPercent}% completed`
+          )
+        }
+
         const sqrtPriceDecimal = await calculateSqrtPrice(clamm, i)
         {
           const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
@@ -435,11 +461,21 @@ describe('log tests', () => {
           expect(tick).toBe(expectedTick)
         }
       }
-    }, 3600000)
+    }, 36000000)
 
     test.skip('all negative ticks, tick spacing greater than 1', async () => {
+      const oneProgressPercent = GLOBAL_MAX_TICK / 100n
+      let lastPercent = 0n
+
       const tickSpacing = 4n
       for (let i = 0n; i < GLOBAL_MAX_TICK; i++) {
+        if (lastPercent < i / oneProgressPercent) {
+          lastPercent = i / oneProgressPercent
+          console.log(
+            `[all negative ticks, tick spacing greater than 1] \n${lastPercent}% completed`
+          )
+        }
+
         const sqrtPriceDecimal = await calculateSqrtPrice(clamm, -i)
         {
           const tick = await getTickAtSqrtPrice(clamm, sqrtPriceDecimal, tickSpacing)
@@ -471,6 +507,6 @@ describe('log tests', () => {
           expect(tick).toBe(expectedTick)
         }
       }
-    }, 3600000)
+    }, 36000000)
   })
 })

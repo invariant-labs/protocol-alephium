@@ -59,7 +59,8 @@ export enum VMError {
   ArithmeticError = 'ArithmeticError',
   OutOfGas = 'OutOfGas',
   NotEnoughBalance = 'Not enough approved balance for address',
-  MaxStoredAssets = 'max token number is 8'
+  MaxStoredAssets = 'max token number is 8',
+  VMExecutionError = 'VM execution error: Assertion Failed in Contract'
 }
 
 export const INVARIANT_ADDRESS = {

@@ -3,7 +3,7 @@ import { getSigner } from '@alephium/web3-test'
 import { PrivateKeyWallet } from '@alephium/web3-wallet'
 import { InvariantInstance } from '../../../artifacts/ts'
 import { deployTokenFaucet, newFeeTier, newPoolKey } from '../../../src/utils'
-import { GLOBAL_MIN_TICK, GLOBAL_MAX_TICK } from '../../../src/consts'
+import { GLOBAL_MIN_TICK, GLOBAL_MAX_TICK, SEARCH_RANGE } from '../../../src/consts'
 import { Percentage, PoolKey, TokenAmount, wrapPoolKey } from '../../../src/types'
 import { deployInvariant } from '../../../src/testUtils'
 
@@ -88,7 +88,6 @@ const nextInitialized = async (
   ).returns
 }
 
-const TICK_SEARCH_RANGE = 256n
 const protocolFee = 100n as Percentage
 describe('tickmap tests', () => {
   beforeAll(async () => {
@@ -207,12 +206,7 @@ describe('tickmap tests', () => {
 
     await flip(invariant, true, tick, poolKey)
 
-    const [isSome, index] = await nextInitialized(
-      invariant,
-      -TICK_SEARCH_RANGE,
-      tickSpacing,
-      poolKey
-    )
+    const [isSome, index] = await nextInitialized(invariant, -SEARCH_RANGE, tickSpacing, poolKey)
     expect(isSome).toBeTruthy()
     expect(index).toBe(tick)
   })
@@ -229,7 +223,7 @@ describe('tickmap tests', () => {
 
     await flip(invariant, true, tick, poolKey)
 
-    const [isSome] = await nextInitialized(invariant, -TICK_SEARCH_RANGE - 1n, tickSpacing, poolKey)
+    const [isSome] = await nextInitialized(invariant, -SEARCH_RANGE - 1n, tickSpacing, poolKey)
     expect(isSome).toBeFalsy()
   })
   test('next initialized chunk - farther than limit', async () => {
@@ -250,7 +244,7 @@ describe('tickmap tests', () => {
   })
   test('next initialized chunk - hitting the limit limit', async () => {
     const invariant = await deployInvariant(sender, protocolFee)
-    const tick = GLOBAL_MAX_TICK - 22n
+    const tick = GLOBAL_MAX_TICK - 25n
     const tickSpacing = 4n
     const feeTier = newFeeTier(0n as Percentage, tickSpacing)
     const poolKey = newPoolKey(token0Id, token1Id, feeTier)
@@ -385,12 +379,7 @@ describe('tickmap tests', () => {
 
     await flip(invariant, true, tick, poolKey)
 
-    const [isSome, index] = await prevInitialized(
-      invariant,
-      TICK_SEARCH_RANGE,
-      tickSpacing,
-      poolKey
-    )
+    const [isSome, index] = await prevInitialized(invariant, SEARCH_RANGE, tickSpacing, poolKey)
     expect(isSome).toBeTruthy()
     expect(index).toBe(tick)
   })
@@ -407,7 +396,7 @@ describe('tickmap tests', () => {
 
     await flip(invariant, true, tick, poolKey)
 
-    const [isSome] = await prevInitialized(invariant, TICK_SEARCH_RANGE + 1n, tickSpacing, poolKey)
+    const [isSome] = await prevInitialized(invariant, SEARCH_RANGE + 1n, tickSpacing, poolKey)
     expect(isSome).toBeFalsy()
   })
   test('prev initialized chunk - further than limit', async () => {
@@ -479,7 +468,7 @@ describe('tickmap tests', () => {
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      expect(result).toBe(TICK_SEARCH_RANGE)
+      expect(result).toBe(SEARCH_RANGE)
     }
     {
       const tick = 0n
@@ -487,7 +476,7 @@ describe('tickmap tests', () => {
       const up = false
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      expect(result).toBe(-TICK_SEARCH_RANGE)
+      expect(result).toBe(-SEARCH_RANGE)
     }
     {
       const tick = 60n
@@ -495,7 +484,7 @@ describe('tickmap tests', () => {
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = tick + TICK_SEARCH_RANGE * tickSpacing
+      const expected = tick + SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
     }
     {
@@ -504,7 +493,7 @@ describe('tickmap tests', () => {
       const up = false
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = tick - TICK_SEARCH_RANGE * tickSpacing
+      const expected = tick - SEARCH_RANGE * tickSpacing
       expect(result).toBe(expected)
     }
     {
@@ -522,7 +511,7 @@ describe('tickmap tests', () => {
       const up = true
       const result = (await invariant.view.getSearchLimit({ args: { tick, tickSpacing, up } }))
         .returns
-      const expected = tick
+      const expected = GLOBAL_MAX_TICK - 3n
       expect(result).toBe(expected)
     }
   })
@@ -550,7 +539,7 @@ describe('tickmap tests', () => {
 
         await flip(invariant, true, minIndex, poolKey)
       }
-      const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing
+      const tickEdgeDiff = (SEARCH_RANGE / tickSpacing) * tickSpacing
       {
         const [isSome] = await nextInitialized(
           invariant,
@@ -578,7 +567,7 @@ describe('tickmap tests', () => {
       const maxIndex = GLOBAL_MAX_TICK - (GLOBAL_MAX_TICK % tickSpacing)
       const minIndex = -maxIndex
 
-      const tickEdgeDiff = (TICK_SEARCH_RANGE / tickSpacing) * tickSpacing
+      const tickEdgeDiff = (SEARCH_RANGE / tickSpacing) * tickSpacing
       {
         const [isSome] = await nextInitialized(
           invariant,

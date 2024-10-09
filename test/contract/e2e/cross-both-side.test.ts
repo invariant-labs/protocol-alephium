@@ -185,7 +185,7 @@ describe('cross tests', () => {
         feeProtocolTokenX: 4n,
         feeProtocolTokenY: 2n,
         liquidity: expectedLiquidity,
-        sqrtPrice: 999500149964999999999999n
+        sqrtPrice: 999500149965006998740208n
       })
 
       expect(await getTick(invariant, poolKey, -20n)).toMatchObject({

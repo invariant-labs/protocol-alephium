@@ -79,20 +79,11 @@ describe('clamm tests', () => {
 
     // max FeeGrowth case inside of domain
     {
-      const maxTickSpacing = 100n
-      const tickSearchRange = 256n
-      const sqrtPriceUpper = 65535383934512647000000000000n
-      const sqrtPriceLowerIndex = 221818n - maxTickSpacing * tickSearchRange
-      const sqrtPriceLower = await calculateSqrtPrice(clamm, sqrtPriceLowerIndex)
-
-      const maxDeltaSqrtPrice = sqrtPriceUpper - sqrtPriceLower
-      const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
-      const maxToken = ((maxLiquidity * maxDeltaSqrtPrice) /
-        LIQUIDITY_DENOMINATOR /
-        SQRT_PRICE_DENOMINATOR) as TokenAmount
+      const maxLiquidity = MAX_U256 as Liquidity
+      const maxToken = MAX_U256 as TokenAmount
       const feeGrowth = await feeGrowthFromFee(clamm, maxLiquidity, maxToken)
 
-      expect(feeGrowth).toStrictEqual(473129365723326089999999999999999n)
+      expect(feeGrowth).toStrictEqual(1000000000000000000000000000000000n)
     }
     // min FeeGrowth case inside of domain
     {
@@ -102,15 +93,11 @@ describe('clamm tests', () => {
         FEE_GROWTH_DENOMINATOR *
         LIQUIDITY_DENOMINATOR *
         basisPoint) as Liquidity
-      const feeGrowth = await feeGrowthFromFee(
-        clamm,
-        maxLiquidity,
-        (minToken + basisPoint) as TokenAmount
-      )
+      await feeGrowthFromFee(clamm, maxLiquidity, (minToken + basisPoint) as TokenAmount)
       // outside of domain trigger overflow due to result not fit into FeeGrowth
       {
         const liquidity = 1n as Liquidity
-        const fee = ((1n << 256n) - 1n) as TokenAmount
+        const fee = MAX_U256 as TokenAmount
 
         await expectError(
           ArithmeticError.CastOverflow,
@@ -185,7 +172,7 @@ describe('clamm tests', () => {
     }
     // max value inside domain
     {
-      const liquidity = ((1n << 256n) - 1n) as Liquidity
+      const liquidity = MAX_U256 as Liquidity
       const feeGrowth = (100000n * 10n ** 28n) as FeeGrowth
       const out = await toFee(clamm, liquidity, feeGrowth)
       expect(out).toStrictEqual(
@@ -194,8 +181,8 @@ describe('clamm tests', () => {
     }
     // Overflow
     {
-      const liquidity = ((1n << 256n) - 1n) as Liquidity
-      const feeGrowth = ((1n << 256n) - 1n) as FeeGrowth
+      const liquidity = MAX_U256 as Liquidity
+      const feeGrowth = MAX_U256 as FeeGrowth
       await expectError(ArithmeticError.CastOverflow, toFee(clamm, liquidity, feeGrowth), clamm)
     }
     // FeeGrowth = 0
@@ -376,7 +363,7 @@ describe('clamm tests', () => {
     test('shouldnt overflow in intermediate operations', async () => {
       const sqrtPriceA = toSqrtPrice(1n)
       const sqrtPriceB = toSqrtPrice(5n, 1n)
-      const liquidity = ((1n << 256n) - 1n) as Liquidity
+      const liquidity = MAX_U256 as Liquidity
       await getDeltaX(clamm, sqrtPriceA, sqrtPriceB, liquidity, true)
       await getDeltaX(clamm, sqrtPriceA, sqrtPriceB, liquidity, false)
     })
@@ -390,39 +377,75 @@ describe('clamm tests', () => {
   })
   describe('get delta x - domain', () => {
     let clamm: CLAMMInstance
-    const almostMinSqrtPrice = 15259695000000000000n as SqrtPrice
-    const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
+    const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
+    const maxLiquidity = MAX_U256 as Liquidity
     const minLiquidity = 1n as Liquidity
 
     beforeAll(async () => {
       clamm = await deployCLAMM(sender)
     })
     test('maximalize delta sqrt price and liquidity', async () => {
-      const params = {
-        sqrtPriceA: MAX_SQRT_PRICE,
-        sqrtPriceB: MIN_SQRT_PRICE,
-        liquidity: maxLiquidity
+      {
+        const maxLiquidity =
+          14893892252372018684584396344694974244327977275368655982357119807809415n as Liquidity
+        const params = {
+          sqrtPriceA: MAX_SQRT_PRICE,
+          sqrtPriceB: MIN_SQRT_PRICE,
+          liquidity: maxLiquidity
+        }
+        const resultUp = await getDeltaX(
+          clamm,
+          params.sqrtPriceA,
+          params.sqrtPriceB,
+          params.liquidity,
+          true
+        )
+        expect(resultUp).toEqual(
+          115792089237316195423570985008687907853269984665640564039457584007913127186298n
+        )
+
+        await expectVMError(
+          VMError.VMExecutionError,
+          getDeltaX(
+            clamm,
+            params.sqrtPriceA,
+            params.sqrtPriceB,
+            (params.liquidity + 1n) as Liquidity,
+            true
+          )
+        )
       }
-      const resultUp = await getDeltaX(
-        clamm,
-        params.sqrtPriceA,
-        params.sqrtPriceB,
-        params.liquidity,
-        true
-      )
-      const resultDown = await getDeltaX(
-        clamm,
-        params.sqrtPriceA,
-        params.sqrtPriceB,
-        params.liquidity,
-        false
-      )
-      expect(resultUp).toEqual(
-        75884792730156830614567103553061795263351065677581979504561495713443442818879n
-      )
-      expect(resultDown).toEqual(
-        75884792730156830614567103553061795263351065677581979504561495713443442818878n
-      )
+
+      {
+        const maxLiquidity =
+          14893892252372018684584411238587226621839738068399339794075395228890515n as Liquidity
+        const params = {
+          sqrtPriceA: MAX_SQRT_PRICE,
+          sqrtPriceB: MIN_SQRT_PRICE,
+          liquidity: maxLiquidity
+        }
+        const resultUp = await getDeltaX(
+          clamm,
+          params.sqrtPriceA,
+          params.sqrtPriceB,
+          params.liquidity,
+          false
+        )
+        expect(resultUp).toEqual(
+          115792089237316195423570985008687907853269984665640564039457584007913124933217n
+        )
+
+        await expectVMError(
+          VMError.VMExecutionError,
+          getDeltaX(
+            clamm,
+            params.sqrtPriceA,
+            params.sqrtPriceB,
+            (params.liquidity + 1n) as Liquidity,
+            false
+          )
+        )
+      }
     })
     test('maximalize delta sqrt price and minimalize liquidity', async () => {
       const params = {
@@ -444,8 +467,8 @@ describe('clamm tests', () => {
         params.liquidity,
         false
       )
-      expect(resultUp).toEqual(1n)
-      expect(resultDown).toEqual(0n)
+      expect(resultUp).toEqual(7774469n)
+      expect(resultDown).toEqual(7774468n)
     })
     test('minimize denominator on maximize liquidity which fit into token amounts', async () => {
       const params = {
@@ -468,16 +491,16 @@ describe('clamm tests', () => {
         false
       )
       expect(resultUp).toEqual(
-        3794315473971847510172532341754979462199874072217062973965311338137066234n
+        1157920892373161954235709850086879078532699846656405640394575840079131296n
       )
       expect(resultDown).toEqual(
-        3794315473971847510172532341754979462199874072217062973965311338137066233n
+        578960446186580977117854925043439539266349923328202820197287920039565648n
       )
     })
     test('minimize denominator on minimize liquidity which fit into token amounts', async () => {
       const params = {
         sqrtPriceA: MIN_SQRT_PRICE,
-        sqrtPriceB: almostMinSqrtPrice,
+        sqrtPriceB: (almostMinSqrtPrice + 99999n) as SqrtPrice,
         liquidity: minLiquidity
       }
       const resultUp = await getDeltaX(
@@ -500,7 +523,7 @@ describe('clamm tests', () => {
     test('delta price limited by search range on max liquidity', async () => {
       const searchLimit = 256n
       const tickSpacing = 100n
-      const maxSearchLimit = 221818n - searchLimit * tickSpacing
+      const maxSearchLimit = GLOBAL_MAX_TICK - searchLimit * tickSpacing
       const minSearchSqrtPrice = await calculateSqrtPrice(clamm, maxSearchLimit)
 
       const params = {
@@ -515,13 +538,13 @@ describe('clamm tests', () => {
         params.liquidity,
         true
       )
-      expect(resultUp).toEqual(
-        45875017378130362421757891862614875858481775310156442203847653871247n
-      )
+      expect(resultUp).toEqual(3867064427937095529780795325095328040602638051663673509970074n)
     })
     test('minimal price difference', async () => {
-      const almostMaxSqrtPrice = (MAX_SQRT_PRICE - toSqrtPrice(1n)) as SqrtPrice
-      const almostMinSqrtPrice = (MIN_SQRT_PRICE + toSqrtPrice(1n)) as SqrtPrice
+      const almostMaxSqrtPrice = (MAX_SQRT_PRICE - 1n) as SqrtPrice
+      const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
+      const maxLiquidity =
+        115792089237316195423570985008687907853269984665640564039457584007913129639935n as Liquidity
       const paramsUpperBound = {
         sqrtPriceA: MAX_SQRT_PRICE,
         sqrtPriceB: almostMaxSqrtPrice,
@@ -548,9 +571,9 @@ describe('clamm tests', () => {
         paramsBottomBound.liquidity,
         paramsBottomBound.roundingUp
       )
-      expect(resultUp).toEqual(269608649375997235557394191156352599353486422139915865816324471n)
+      expect(resultUp).toEqual(1915744226453965600842067n)
       expect(resultDown).toEqual(
-        75883634844601460750582416171430603974060896681619645705711819135499453546638n
+        1157920892373161954235709850086879078532699846656405640394575840079131296n
       )
     })
     test('zero liquidity', async () => {
@@ -629,8 +652,8 @@ describe('clamm tests', () => {
 
     test('overflow', async () => {
       const sqrtPriceA = toSqrtPrice(1n)
-      const sqrtPriceB = (2n ** 256n - 1n) as SqrtPrice
-      const liquidity = (2n ** 256n - 1n) as Liquidity
+      const sqrtPriceB = MAX_U256 as SqrtPrice
+      const liquidity = MAX_U256 as Liquidity
 
       await expectError(
         ArithmeticError.CastOverflow,
@@ -647,7 +670,7 @@ describe('clamm tests', () => {
     test('huge liquidity', async () => {
       const sqrtPriceA = 1_000000000000000000000000n as SqrtPrice
       const sqrtPriceB = 1_000000000000000001000000n as SqrtPrice
-      const liquidity = (2n ** 256n - 1n) as Liquidity
+      const liquidity = MAX_U256 as Liquidity
 
       const resultUp = await getDeltaY(clamm, sqrtPriceA, sqrtPriceB, liquidity, true)
       const resultDown = await getDeltaY(clamm, sqrtPriceA, sqrtPriceB, liquidity, false)
@@ -660,21 +683,23 @@ describe('clamm tests', () => {
   describe('get delta y - domain', () => {
     let clamm: CLAMMInstance
     const minLiquidity = 1n as Liquidity
-    const maxLiquidity = (2n ** 256n - 1n) as Liquidity
+    const maxLiquidity = MAX_U256 as Liquidity
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
     })
 
     it('maximize delta sqrt price and liquidity', async () => {
+      const maxLiquidity =
+        14893892252377511760793030683811718275421081100289805046680361113347505n as Liquidity
       const resultUp = await getDeltaY(clamm, MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, true)
       const resultDown = await getDeltaY(clamm, MAX_SQRT_PRICE, MIN_SQRT_PRICE, maxLiquidity, false)
 
       expect(resultUp).toStrictEqual(
-        75884790229800029582010010030152469040784228171629896065450012281800526658806n
+        115792089237316195423570985008687907853269984665640564039457584007913125390908n
       )
       expect(resultDown).toStrictEqual(
-        75884790229800029582010010030152469040784228171629896065450012281800526658805n
+        115792089237316195423570985008687907853269984665640564039457584007913125390907n
       )
     })
 
@@ -808,12 +833,12 @@ describe('clamm tests', () => {
     const clamm = await deployCLAMM(sender)
 
     const minY = 1n as TokenAmount
-    const maxY = ((1n << 256n) - 1n) as TokenAmount
+    const maxY = MAX_U256 as TokenAmount
     const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
     const almostMaxSqrtPrice = (MAX_SQRT_PRICE - 1n) as SqrtPrice
     const minSqrtPriceOutsideDomain = 1n as SqrtPrice
     const minLiquidity = 1n as Liquidity
-    const maxLiquidity = ((1n << 256n) - 1n) as Liquidity
+    const maxLiquidity = MAX_U256 as Liquidity
     const minOverflowTokenY = 115792089237316195423570985008687907853269984665575031n
     const oneLiquidity = toLiquidity(1n)
 
@@ -834,7 +859,7 @@ describe('clamm tests', () => {
           params.y,
           true
         )
-        expect(nextSqrtPrice).toEqual(15258932000000000001n)
+        expect(nextSqrtPrice).toEqual(MIN_SQRT_PRICE + 1n)
       }
       // decreases almostMinSqrtPrice
       {
@@ -851,7 +876,7 @@ describe('clamm tests', () => {
           params.y,
           false
         )
-        expect(nextSqrtPrice).toEqual(15258932000000000000n)
+        expect(nextSqrtPrice).toEqual(MIN_SQRT_PRICE)
       }
     }
     // Max value inside domain
@@ -871,7 +896,7 @@ describe('clamm tests', () => {
           params.y,
           false
         )
-        expect(nextSqrtPrice).toEqual(65535383934512646999999999998n)
+        expect(nextSqrtPrice).toEqual(MAX_SQRT_PRICE - 2n)
       }
       // increases almostMaxSqrtPrice
       {
@@ -888,7 +913,7 @@ describe('clamm tests', () => {
           params.y,
           true
         )
-        expect(nextSqrtPrice).toEqual(65535383934512646999999999999n)
+        expect(nextSqrtPrice).toEqual(MAX_SQRT_PRICE - 1n)
       }
     }
     // Extension TokenAmount to SqrtPrice decimal overflow
@@ -995,7 +1020,7 @@ describe('clamm tests', () => {
         params.y,
         true
       )
-      expect(nextSqrtPrice).toEqual(100000000015258932000000000000n)
+      expect(nextSqrtPrice).toEqual(100000000000000001286261639329n)
     }
     // L = 0
     {
@@ -1030,35 +1055,35 @@ describe('clamm tests', () => {
     }
   })
 
-  test('calculate max liquidity per tick - tick spacing 1, max liquidity / 443637', async () => {
+  test('calculate max liquidity per tick - tick spacing 1, max liquidity / 1095227', async () => {
     const clamm = await deployCLAMM(sender)
     const maxLiquidity = await calculateMaxLiquidityPerTick(clamm, 1n)
     expect(maxLiquidity).toEqual(
-      261006384132333857238172165551313140818439365214444611336425014162283870n
+      105724282945285493713696781588372006765054171113057442922296093876349952n
     )
   })
 
-  test('calculate max liquidity per tick - tick spacing 2, max liquidity / 221819', async () => {
+  test('calculate max liquidity per tick - tick spacing 2, max liquidity / 547613', async () => {
     const clamm = await deployCLAMM(sender)
     const maxLiquidity = await calculateMaxLiquidityPerTick(clamm, 2n)
     expect(maxLiquidity).toEqual(
-      522013944933757384087725004321957225532959384115087883036803072825077900n
+      211448758954437158036005326770343121608270776379743658458542043391798824n
     )
   })
 
-  test('calculate max liquidity per tick - tick spacing 5, max liquidity / 88727', async () => {
+  test('calculate max liquidity per tick - tick spacing 5, max liquidity / 219045', async () => {
     const clamm = await deployCLAMM(sender)
     const maxLiquidity = await calculateMaxLiquidityPerTick(clamm, 5n)
     expect(maxLiquidity).toEqual(
-      1305037804020379314341417888677492847197245310510223089245185614389229091n
+      528622380046639710669364673965111770883927890002696085459415115651638383n
     )
   })
 
-  test('calculate max liquidity per tick - tick spacing 100, max liquidity / 4436', async () => {
+  test('calculate max liquidity per tick - tick spacing 100, max liquidity / 10952', async () => {
     const clamm = await deployCLAMM(sender)
     const maxLiquidity = await calculateMaxLiquidityPerTick(clamm, 100n)
     expect(maxLiquidity).toEqual(
-      26102815427708790672581376241814226296949951457538449963809193870133708214n
+      10572688936935372116834458090639874712679874421625325423617383492322236088n
     )
   })
 
@@ -1066,7 +1091,7 @@ describe('clamm tests', () => {
     const clamm = await deployCLAMM(sender)
     const zeroLiquidity = 0n as Liquidity
     const maxFee = (10n ** 12n) as Percentage
-    const maxAmount = ((1n << 256n) - 1n) as TokenAmount
+    const maxAmount = MAX_U256 as TokenAmount
     const minAmount = 1n as TokenAmount
     const minLiquidity = 1n as Liquidity
     const minFee = 0n as Percentage
@@ -1396,15 +1421,15 @@ describe('clamm tests', () => {
     const clamm = await deployCLAMM(sender)
     {
       const sqrtPrice = await calculateSqrtPrice(clamm, 30n)
-      expect(sqrtPrice).toEqual(1001501050455000000000000n)
+      expect(sqrtPrice).toEqual(1001501050455136530035005n)
     }
     {
       const sqrtPrice = await calculateSqrtPrice(clamm, 20n)
-      expect(sqrtPrice).toEqual(1001000450120000000000000n)
+      expect(sqrtPrice).toEqual(1001000450120021002520210n)
     }
     {
       const sqrtPrice = await calculateSqrtPrice(clamm, 10n)
-      expect(sqrtPrice).toEqual(1000500100010000000000000n)
+      expect(sqrtPrice).toEqual(1000500100010000500010000n)
     }
     {
       const sqrtPrice = await calculateSqrtPrice(clamm, 0n)
@@ -1412,42 +1437,50 @@ describe('clamm tests', () => {
     }
     {
       const sqrtPrice = await calculateSqrtPrice(clamm, -10n)
-      expect(sqrtPrice).toEqual(999500149965000000000000n)
+      expect(sqrtPrice).toEqual(999500149965006998740209n)
     }
     {
       const params = { args: { tickIndex: -20n } }
       const sqrtPrice = await calculateSqrtPrice(clamm, -20n)
-      expect(sqrtPrice).toEqual(999000549780000000000000n)
+      expect(sqrtPrice).toEqual(999000549780071479985003n)
     }
     {
       const params = { args: { tickIndex: -30n } }
       const sqrtPrice = await calculateSqrtPrice(clamm, -30n)
 
-      expect(sqrtPrice).toEqual(998501199320000000000000n)
+      expect(sqrtPrice).toEqual(998501199320305883758749n)
     }
     {
       const result = await calculateSqrtPrice(clamm, 20_000n)
-      expect(result).toBe(2_718145925979000000000000n)
+      expect(result).toBe(2_718145926825224864037656n)
     }
     {
       const result = await calculateSqrtPrice(clamm, 200_000n)
-      expect(result).toBe(22015_455979766288000000000000n)
+      expect(result).toBe(22015_456048552198645701365772n)
     }
     {
       const result = await calculateSqrtPrice(clamm, -20_000n)
-      expect(result).toBe(367897834491000000000000n)
+      expect(result).toBe(367897834377123709894002n)
     }
     {
       const result = await calculateSqrtPrice(clamm, -200_000n)
-      expect(result).toBe(45422634000000000000n)
+      expect(result).toBe(45422633889328990341n)
     }
     {
       const result = await calculateSqrtPrice(clamm, 221_818n)
-      expect(result).toBe(65535_383934512647000000000000n)
+      expect(result).toBe(65535_384161610681941078870693n)
     }
     {
       const result = await calculateSqrtPrice(clamm, -221_818n)
-      expect(result).toBe(15258932000000000000n)
+      expect(result).toBe(15258932449895975601n)
+    }
+    {
+      const result = await calculateSqrtPrice(clamm, GLOBAL_MAX_TICK)
+      expect(result).toBe(MAX_SQRT_PRICE)
+    }
+    {
+      const result = await calculateSqrtPrice(clamm, GLOBAL_MIN_TICK)
+      expect(result).toBe(MIN_SQRT_PRICE)
     }
   })
 
@@ -1541,7 +1574,6 @@ describe('clamm tests', () => {
 
   describe('calculate amount delta - domain', () => {
     let clamm: CLAMMInstance
-    let maxLiquidity = MAX_U256 as Liquidity
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
@@ -1550,7 +1582,8 @@ describe('clamm tests', () => {
     test('max x', async () => {
       const currentTickIndex = GLOBAL_MIN_TICK
       const currentSqrtPrice = toSqrtPrice(1n)
-      const liquidityDelta = maxLiquidity
+      const liquidityDelta =
+        14894636928365657818617562894966478347089917844485661564914997061885569n as Liquidity
       const liquiditySign = true
       const upperTick = GLOBAL_MAX_TICK
       const lowerTick = GLOBAL_MIN_TICK + 1n
@@ -1564,8 +1597,9 @@ describe('clamm tests', () => {
         upperTick,
         lowerTick
       )
+
       expect(result).toEqual([
-        75880998414682858767056931020720040283888865803509762441587530402105305752645n,
+        115792089237316195423570985008687907853269984665640564039457584007913126723661n,
         0n,
         false
       ])
@@ -1574,7 +1608,8 @@ describe('clamm tests', () => {
     test('max y', async () => {
       const currentTickIndex = GLOBAL_MAX_TICK
       const currentSqrtPrice = toSqrtPrice(1n)
-      const liquidityDelta = maxLiquidity
+      const liquidityDelta =
+        14894636928373696130999721733782910261271218958219522272590008580045463n as Liquidity
       const liquiditySign = true
       const upperTick = GLOBAL_MAX_TICK - 1n
       const lowerTick = GLOBAL_MIN_TICK
@@ -1590,7 +1625,7 @@ describe('clamm tests', () => {
       )
       expect(result).toEqual([
         0n,
-        75880996274614937472454279923345931777432945506580976077368827511053494714377n,
+        115792089237316195423570985008687907853269984665640564039457584007913122202687n,
         false
       ])
     })
@@ -1738,8 +1773,8 @@ describe('clamm tests', () => {
     const minLiquidity = 1n as Liquidity
     const maxX = MAX_U256 as TokenAmount
     const minX = 1n as TokenAmount
-    const almostMinSqrtPrice = 15258932000000000001n as SqrtPrice
-    const almostMaxSqrtPrice = 65535383934512646999999999999n as SqrtPrice
+    const almostMinSqrtPrice = (MIN_SQRT_PRICE + 1n) as SqrtPrice
+    const almostMaxSqrtPrice = (MAX_SQRT_PRICE - 1n) as SqrtPrice
 
     beforeEach(async () => {
       clamm = await deployCLAMM(sender)
@@ -1760,14 +1795,14 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(15258932000000000001n)
+      expect(result).toEqual(MIN_SQRT_PRICE + 1n)
     })
 
     test('min value inside domain / decreases almost min sqrt price', async () => {
       const params = {
         startingSqrtPrice: almostMinSqrtPrice,
         liquidity: maxLiquidity,
-        x: ((2n ** 128n - 1n) * 2n ** 64n) as TokenAmount,
+        x: ((2n ** 128n - 1n) * 2n ** 111n) as TokenAmount,
         addX: true
       }
       const result = await getNextSqrtPriceXUp(
@@ -1777,14 +1812,14 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(15258932000000000000n)
+      expect(result).toEqual(MIN_SQRT_PRICE)
     })
 
     test('max value inside domain / decreases max sqrt price', async () => {
       const params = {
         startingSqrtPrice: MAX_SQRT_PRICE,
         liquidity: maxLiquidity,
-        x: (2n ** 128n - 1n) as TokenAmount,
+        x: (2n ** 81n) as TokenAmount,
         addX: true
       }
       const result = await getNextSqrtPriceXUp(
@@ -1794,14 +1829,14 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(65535383934512646999999999999n)
+      expect(result).toEqual(almostMaxSqrtPrice)
     })
 
     test('max value inside domain / increases almost max sqrt price', async () => {
       const params = {
         startingSqrtPrice: almostMaxSqrtPrice,
         liquidity: maxLiquidity,
-        x: (2n ** 128n - 1n) as TokenAmount,
+        x: (2n ** 64n - 1n) as TokenAmount,
         addX: false
       }
       const result = await getNextSqrtPriceXUp(
@@ -1811,7 +1846,7 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(65535383934512647000000000001n)
+      expect(result).toEqual(MAX_SQRT_PRICE)
     })
 
     test('all max', async () => {
@@ -1828,7 +1863,7 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(9999999998474106750n)
+      expect(result).toEqual(9999999999999999872n)
     })
 
     test('subtraction underflow', async () => {
@@ -1864,7 +1899,7 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(65535383934512647000000000000n)
+      expect(result).toEqual(MAX_SQRT_PRICE)
     })
 
     test('liquidity is zero', async () => {
@@ -1898,7 +1933,7 @@ describe('clamm tests', () => {
         params.x,
         params.addX
       )
-      expect(result).toEqual(65535383934512647000000000000n)
+      expect(result).toEqual(MAX_SQRT_PRICE)
     })
   })
 
@@ -1928,14 +1963,14 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(65535383934512647000000000001n)
+      expect(result).toEqual(MAX_SQRT_PRICE + 1n)
     })
 
     test('min result, decrease sqrt_price case', async () => {
       const params = {
         startingSqrtPrice: almostMinSqrtPrice,
         liquidity: maxLiquidity,
-        amount: ((2n ** 128n - 1n) * 10n ** 20n) as TokenAmount,
+        amount: ((2n ** 128n - 1n) * 2n ** 111n) as TokenAmount,
         xToY: true
       }
       const result = await getNextSqrtPriceFromInput(
@@ -1945,7 +1980,7 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(15258931999999999995n)
+      expect(result).toEqual(MIN_SQRT_PRICE)
     })
 
     test('amount = 0', async () => {
@@ -2030,7 +2065,7 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(65535383934512647000000000000n)
+      expect(result).toEqual(MAX_SQRT_PRICE)
     })
 
     test('min result, decrease sqrt_price case', async () => {
@@ -2047,7 +2082,7 @@ describe('clamm tests', () => {
         params.amount,
         params.xToY
       )
-      expect(result).toEqual(15258932000000000000n)
+      expect(result).toEqual(MIN_SQRT_PRICE)
     })
 
     test('amount = 0', async () => {
@@ -2570,7 +2605,8 @@ describe('clamm tests', () => {
       const params = {
         currentSqrtPrice: MAX_SQRT_PRICE,
         targetSqrtPrice: MIN_SQRT_PRICE,
-        liquidity: maxLiquidity,
+        liquidity:
+          14893892252372018684584396344694974244327977275368655982357119807809415n as Liquidity,
         amount: maxAmountNotReachedTargetSqrtPrice,
         byAmountIn: true,
         fee: minFee
@@ -2585,9 +2621,9 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: 15258932000000000000n,
-        amountIn: 75884792730156830614567103553061795263351065677581979504561495713443442818879n,
-        amountOut: 75884790229800029582010010030152469040784228171629896065450012281800526658805n,
+        nextSqrtPrice: MIN_SQRT_PRICE,
+        amountIn: 115792089237316195423570985008687907853269984665640564039457584007913127186298n,
+        amountOut: 115792089237273489678171488614551827950927273765573549347385441617238758671171n,
         feeAmount: 0n
       })
     })
@@ -2596,7 +2632,8 @@ describe('clamm tests', () => {
       const params = {
         currentSqrtPrice: MIN_SQRT_PRICE,
         targetSqrtPrice: MAX_SQRT_PRICE,
-        liquidity: maxLiquidity,
+        liquidity:
+          14893892252372018684584411238587226621839738068399339794075395228890515n as Liquidity,
         amount: maxAmountNotReachedTargetSqrtPrice,
         byAmountIn: true,
         fee: minFee
@@ -2610,10 +2647,11 @@ describe('clamm tests', () => {
         params.byAmountIn,
         params.fee
       )
+
       expect(result).toEqual({
-        nextSqrtPrice: 65535_383934512647000000000000n,
-        amountIn: 75884790229800029582010010030152469040784228171629896065450012281800526658806n,
-        amountOut: 75884792730156830614567103553061795263351065677581979504561495713443442818878n,
+        nextSqrtPrice: MAX_SQRT_PRICE,
+        amountIn: 115792089237273489678171604406641065267122697336558558035293294887223422058656n,
+        amountOut: 115792089237316195423570985008687907853269984665640564039457584007913124933217n,
         feeAmount: 0n
       })
     })
@@ -2628,6 +2666,7 @@ describe('clamm tests', () => {
         byAmountIn: true,
         fee: minFee
       }
+
       const result = await computeSwapStep(
         clamm,
         params.currentSqrtPrice,
@@ -2639,8 +2678,8 @@ describe('clamm tests', () => {
       )
       expect(result).toEqual({
         nextSqrtPrice: MAX_SQRT_PRICE,
-        amountIn: 65535n,
-        amountOut: 65534n,
+        amountIn: 777439029062n,
+        amountOut: 777439029062n,
         feeAmount: 0n
       })
     })
@@ -2665,9 +2704,9 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: 65535383934512647000000000000n,
+        nextSqrtPrice: MAX_SQRT_PRICE,
         amountIn: 269594397044712364927302271135767871256767389391069984018896158734608n,
-        amountOut: 62771017353866807635074993554120737773068233085134433767742n,
+        amountOut: 446035573781064836058621344013922633754231023n,
         feeAmount: 0n
       })
     })
@@ -2691,16 +2730,16 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: 65535383934512647000000000000n,
-        amountIn: 18446743465900796471n,
-        amountOut: 18446744073709559494n,
+        nextSqrtPrice: MAX_SQRT_PRICE,
+        amountIn: 218833870886803958855620056n,
+        amountOut: 218833870886884667854278009n,
         feeAmount: 0n
       })
     })
 
     test('get next sqrt price from output -> get next sqrt price x up / min token change', async () => {
       const params = {
-        currentSqrtPrice: (MAX_SQRT_PRICE - 1_000000000000000000000000n) as SqrtPrice,
+        currentSqrtPrice: 9873007294522358128427212253744918n as SqrtPrice,
         targetSqrtPrice: MAX_SQRT_PRICE,
         liquidity: toLiquidity(10000000000n),
         amount: 1n as TokenAmount,
@@ -2717,8 +2756,8 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: 65534813412874974599766965330n,
-        amountIn: 4294783624n,
+        nextSqrtPrice: MAX_SQRT_PRICE,
+        amountIn: 7675737962355106071345n,
         amountOut: 1n,
         feeAmount: 0n
       })
@@ -2728,11 +2767,13 @@ describe('clamm tests', () => {
       const params = {
         currentSqrtPrice: MAX_SQRT_PRICE,
         targetSqrtPrice: MIN_SQRT_PRICE,
-        liquidity: maxLiquidity,
+        liquidity:
+          14893892252372018684584396344694974244327977275368655982357119807809415n as Liquidity,
         amount: maxAmount,
         byAmountIn: false,
         fee: minFee
       }
+
       const result = await computeSwapStep(
         clamm,
         params.currentSqrtPrice,
@@ -2743,9 +2784,9 @@ describe('clamm tests', () => {
         params.fee
       )
       expect(result).toEqual({
-        nextSqrtPrice: 15258932000000000000n,
-        amountIn: 75884792730156830614567103553061795263351065677581979504561495713443442818879n,
-        amountOut: 75884790229800029582010010030152469040784228171629896065450012281800526658805n,
+        nextSqrtPrice: MIN_SQRT_PRICE,
+        amountIn: 115792089237316195423570985008687907853269984665640564039457584007913127186298n,
+        amountOut: 115792089237273489678171488614551827950927273765573549347385441617238758671171n,
         feeAmount: 0n
       })
     })
