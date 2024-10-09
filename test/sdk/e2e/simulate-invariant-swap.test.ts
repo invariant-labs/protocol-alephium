@@ -659,7 +659,7 @@ describe('simulateInvariantSwap tests', () => {
   })
   it('max ticks crossed', async function () {
     const sqrtPriceLimit = getMinSqrtPrice(feeTier.tickSpacing)
-    const amountIn = 1000000n as TokenAmount
+    const amountIn = 3000000n as TokenAmount
     const byAmountIn = true
     const xToY = true
 
@@ -672,7 +672,7 @@ describe('simulateInvariantSwap tests', () => {
 
     const indexes: bigint[] = []
 
-    for (let i = -12n; i < 5; i += 1n) {
+    for (let i = -40n; i < 5; i += 1n) {
       indexes.push(i + 1n)
       await invariant.createPosition(
         deployer,
