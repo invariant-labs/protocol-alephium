@@ -232,3 +232,7 @@ export function decodeTick(array: [boolean, _Tick]): Tick {
 export function decodePosition(array: [boolean, _Position]): Position {
   return existsOnly(unwrapPosition(array[1]), array[0], InvariantError.PositionNotFound)
 }
+
+export type Options = {
+  waitForTxConfirmation?: boolean
+}

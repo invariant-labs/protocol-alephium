@@ -15,6 +15,7 @@ import {
   FeeGrowth,
   FixedPoint,
   Liquidity,
+  Options,
   Percentage,
   Price,
   SqrtPrice,
@@ -91,3 +92,7 @@ export const SOL_ID = {
   [Network.Testnet]: 'c925472266dbd7f2e01313ad787cfb12b7f4be6776e9a3b02daed9dde7706200',
   [Network.Mainnet]: ''
 }
+
+export const CONFIRMATIONS = 1
+export const REQUEST_INTERVAL = 1000
+export const DEFAULT_OPTIONS: Options = { waitForTxConfirmation: true }
