@@ -3,6 +3,7 @@ export { FungibleToken, TokenMetaData } from './fungible-token'
 export { Network } from './network'
 export {
   calculateSqrtPrice,
+  calculateAmountDelta,
   calculateTick,
   getLiquidityByX,
   getLiquidityByY,
