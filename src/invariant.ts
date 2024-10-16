@@ -679,6 +679,8 @@ export class Invariant {
       })
     }
 
+    // typescript cannot infer the complex type here
+    // @ts-ignore
     const liquidityTicks = (await this.instance.multicall(calls))
       .map(response => {
         return decodeLiquidityTicks(response.getLiquidityTicks.returns)
