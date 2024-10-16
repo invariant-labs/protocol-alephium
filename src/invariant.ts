@@ -561,7 +561,7 @@ export class Invariant {
     }
 
     const positionsEntriesList: [[Position, Pool][], bigint][] = (
-      await this.instance.multicall(...calls)
+      await this.instance.multicall(calls)
     ).map(response => {
       return decodePositions(response.getPositions.returns)
     })
@@ -588,7 +588,7 @@ export class Invariant {
       })
     }
 
-    const poolKeysEntries: PoolKey[] = (await this.instance.multicall(...calls))
+    const poolKeysEntries: PoolKey[] = (await this.instance.multicall(calls))
       .map(response => {
         const [serializedPoolKeys] = response.getPoolKeys.returns
         return decodePoolKeys(serializedPoolKeys)
@@ -634,7 +634,9 @@ export class Invariant {
       currentBatch += MAX_BATCHES_QUERIED
     }
 
-    const fullResult: [bigint, bigint][] = (await this.instance.multicall(...calls))
+    // typescript cannot infer the complex type here
+    // @ts-ignore
+    const fullResult: [bigint, bigint][] = (await this.instance.multicall(calls))
       .map(response => {
         return constructTickmap(response.getTickmapSlice.returns)
       })
@@ -677,7 +679,9 @@ export class Invariant {
       })
     }
 
-    const liquidityTicks = (await this.instance.multicall(...calls))
+    // typescript cannot infer the complex type here
+    // @ts-ignore
+    const liquidityTicks = (await this.instance.multicall(calls))
       .map(response => {
         return decodeLiquidityTicks(response.getLiquidityTicks.returns)
       })
